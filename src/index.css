@@ -1,0 +1,269 @@
+@import "tailwindcss";
+
+@theme {
+  /* === Brand Coral === */
+  --color-coral: #F25E73;
+  --color-coral-50: #FFF1F3;
+  --color-coral-100: #FFE2E7;
+  --color-coral-200: #FFCAD2;
+  --color-coral-300: #FFA7B5;
+  --color-coral-400: #FF8597;
+  --color-coral-500: #F25E73;
+  --color-coral-600: #E04960;
+  --color-coral-700: #B73A4D;
+
+  /* === Pink surface === */
+  --color-blush: #FCE4E6;
+  --color-blush-50: #FFF7F8;
+  --color-blush-100: #FCEFF1;
+  --color-blush-200: #FCE4E6;
+  --color-blush-300: #F8D2D7;
+
+  /* === Neutral canvas === */
+  --color-cream: #FBF7F5;
+  --color-paper: #FFFFFF;
+
+  /* === Ink === */
+  --color-ink: #1A1311;
+  --color-ink-50: #F5F0EE;
+  --color-ink-100: #B6ADA9;
+  --color-ink-200: #8C827E;
+  --color-ink-300: #5C5250;
+
+  /* === Accent === */
+  --color-gold: #D9A15B;
+
+  /* Typography */
+  --font-display: "Fraunces", "Inter", serif;
+  --font-body: "Inter", system-ui, -apple-system, sans-serif;
+  --font-brand: "Fraunces", "Inter", serif;
+}
+
+:root {
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
+  color: #1A1311;
+  background: #FBF7F5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "ss01", "cv11";
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: #FBF7F5;
+  overflow-x: hidden;
+}
+
+html { scroll-behavior: smooth; }
+
+.font-display { font-family: "Fraunces", "Inter", serif; letter-spacing: -0.025em; font-feature-settings: "ss01"; }
+.font-body    { font-family: "Inter", system-ui, sans-serif; }
+.font-brand   { font-family: "Fraunces", "Inter", serif; letter-spacing: -0.025em; }
+
+.tabular { font-variant-numeric: tabular-nums; }
+
+/* === Scrollbar === */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(242,94,115,0.25); border-radius: 999px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(242,94,115,0.45); }
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+
+/* === Focus ring (modern) === */
+*:focus { outline: none; }
+*:focus-visible {
+  outline: 2px solid #F25E73;
+  outline-offset: 3px;
+  border-radius: 12px;
+}
+
+button { -webkit-tap-highlight-color: transparent; }
+
+/* ===== Animations ===== */
+@keyframes riseIn {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes scaleIn { from { opacity: 0; transform: scale(.96); } to { opacity: 1; transform: scale(1); } }
+@keyframes slideInRight { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes slideUp { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes pop { 0%{transform:scale(.92)} 60%{transform:scale(1.04)} 100%{transform:scale(1)} }
+@keyframes blob {
+  0%, 100% { transform: translate(0,0) scale(1); }
+  33%      { transform: translate(20px,-15px) scale(1.05); }
+  66%      { transform: translate(-15px,10px) scale(.95); }
+}
+@keyframes heartbeat {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.06); }
+}
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+@keyframes confetti {
+  0% { opacity: 0; transform: translateY(-20px) rotate(0); }
+  20% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(120vh) rotate(720deg); }
+}
+@keyframes pulseRing {
+  0% { box-shadow: 0 0 0 0 rgba(242,94,115,.45); }
+  70% { box-shadow: 0 0 0 12px rgba(242,94,115,0); }
+  100% { box-shadow: 0 0 0 0 rgba(242,94,115,0); }
+}
+
+.anim-rise    { animation: riseIn .55s cubic-bezier(.2,.7,.2,1) both; }
+.anim-fade    { animation: fadeIn .45s ease-out both; }
+.anim-scale   { animation: scaleIn .4s cubic-bezier(.2,.7,.2,1) both; }
+.anim-right   { animation: slideInRight .5s cubic-bezier(.2,.7,.2,1) both; }
+.anim-up      { animation: slideUp .55s cubic-bezier(.2,.7,.2,1) both; }
+.anim-pop     { animation: pop .35s ease-out both; }
+.anim-blob    { animation: blob 14s ease-in-out infinite; }
+.anim-heartbeat { animation: heartbeat 1.6s ease-in-out infinite; }
+.anim-ring    { animation: pulseRing 2.4s ease-out infinite; }
+
+.delay-1 { animation-delay: .07s; }
+.delay-2 { animation-delay: .14s; }
+.delay-3 { animation-delay: .21s; }
+.delay-4 { animation-delay: .28s; }
+.delay-5 { animation-delay: .35s; }
+.delay-6 { animation-delay: .42s; }
+
+/* ===== Buttons ===== */
+.btn-primary {
+  background: linear-gradient(180deg, #F37085 0%, #E8526A 100%);
+  color: #fff;
+  box-shadow: 0 6px 16px -8px rgba(242,94,115,.55), inset 0 1px 0 rgba(255,255,255,.25);
+  transition: transform .15s ease, box-shadow .15s ease, filter .15s ease;
+}
+.btn-primary:hover { filter: brightness(1.04); box-shadow: 0 10px 22px -8px rgba(242,94,115,.7); }
+.btn-primary:active { transform: translateY(1px); }
+
+.btn-secondary {
+  background: #fff;
+  color: #1A1311;
+  border: 1px solid #ECDDDE;
+  transition: all .15s ease;
+}
+.btn-secondary:hover { background: #FBF7F5; border-color: #D8C9CB; }
+
+.btn-ghost {
+  background: transparent;
+  color: #F25E73;
+  transition: background .15s ease;
+}
+.btn-ghost:hover { background: rgba(242,94,115,.08); }
+
+/* ===== Surfaces ===== */
+.card {
+  background: #fff;
+  border-radius: 24px;
+  border: 1px solid #F1E5E5;
+  box-shadow: 0 1px 2px rgba(26,19,17,.02), 0 8px 24px -16px rgba(26,19,17,.08);
+}
+
+.card-flat {
+  background: #fff;
+  border-radius: 22px;
+  border: 1px solid #F1E5E5;
+}
+
+.card-elevated {
+  background: #fff;
+  border-radius: 28px;
+  box-shadow: 0 2px 6px rgba(26,19,17,.03), 0 24px 48px -28px rgba(26,19,17,.16);
+}
+
+/* ===== Glass ===== */
+.glass {
+  background: rgba(255,255,255,0.72);
+  backdrop-filter: saturate(180%) blur(18px);
+  -webkit-backdrop-filter: saturate(180%) blur(18px);
+}
+
+.glass-strong {
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: saturate(180%) blur(22px);
+  -webkit-backdrop-filter: saturate(180%) blur(22px);
+}
+
+/* ===== Decorative confetti for splash ===== */
+.confetti-dots {
+  background-image:
+    radial-gradient(circle at 12% 18%, #F8D2D7 1.2px, transparent 1.5px),
+    radial-gradient(circle at 88% 12%, #F25E73 1.4px, transparent 2px),
+    radial-gradient(circle at 90% 60%, #F8D2D7 1px, transparent 1.5px),
+    radial-gradient(circle at 8% 75%, #F25E73 1px, transparent 1.5px),
+    radial-gradient(circle at 50% 92%, #F8D2D7 1.2px, transparent 1.5px),
+    radial-gradient(circle at 25% 50%, #FCCBD3 .8px, transparent 1.2px),
+    radial-gradient(circle at 75% 40%, #F8D2D7 1px, transparent 1.5px);
+  background-size: 100% 100%;
+}
+
+/* ===== Modern mesh gradient (warm) ===== */
+.mesh-warm {
+  background:
+    radial-gradient(circle at 18% 8%, #FCE4E6 0%, transparent 40%),
+    radial-gradient(circle at 90% 90%, #FFE2E7 0%, transparent 45%),
+    radial-gradient(circle at 50% 50%, #FFF7F8 0%, transparent 60%),
+    #FBF7F5;
+}
+
+/* ===== Smooth gradient text ===== */
+.text-gradient-coral {
+  background: linear-gradient(135deg, #F37085 0%, #E8526A 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* ===== Pill chip ===== */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: #fff;
+  border: 1px solid #ECDDDE;
+  color: #1A1311;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all .15s ease;
+}
+.chip:hover { background: #FBF7F5; }
+.chip-active {
+  background: #F25E73;
+  color: #fff;
+  border-color: #F25E73;
+  box-shadow: 0 6px 16px -8px rgba(242,94,115,.5);
+}
+
+/* ===== Section heading (modern minimal) ===== */
+.section-eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: #F25E73;
+}
+
+.section-title {
+  font-family: "Fraunces", "Inter", serif;
+  font-weight: 700;
+  font-size: 24px;
+  letter-spacing: -0.025em;
+  color: #1A1311;
+}
+
+/* ===== Hairline ===== */
+.hairline {
+  background: linear-gradient(to right, transparent, #ECDDDE 20%, #ECDDDE 80%, transparent);
+  height: 1px;
+}
