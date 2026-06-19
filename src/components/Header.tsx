@@ -2,7 +2,11 @@ import { Heart, ShoppingBag, Bell } from 'lucide-react';
 import { useUI, useCart, useUser } from '../lib/store';
 import BrandLogo from './BrandLogo';
 
-export default function Header() {
+interface Props {
+  onLogoTap?: () => void;
+}
+
+export default function Header({ onLogoTap }: Props) {
   const { go, setTab } = useUI();
   const { items } = useCart();
   const { wishlist } = useUser();
@@ -11,9 +15,8 @@ export default function Header() {
 
   return (
     <header className="flex flex-shrink-0 items-center justify-between px-5 pb-3 pt-4">
-      {/* Left: logo + brand mark */}
       <button
-        onClick={() => setTab('home')}
+        onClick={onLogoTap ?? (() => setTab('home'))}
         className="flex items-center gap-2.5 transition active:scale-95"
       >
         <BrandLogo size={36} />
@@ -28,7 +31,6 @@ export default function Header() {
         </div>
       </button>
 
-      {/* Right: action icons */}
       <div className="flex items-center gap-1">
         <button
           onClick={() => setTab('profile')}
@@ -38,12 +40,12 @@ export default function Header() {
           <Bell className="h-[19px] w-[19px]" strokeWidth={1.8} />
         </button>
         <button
-          onClick={() => setTab('profile')}
+          onClick={() => go({ name: 'wishlist' })}
           className="relative flex h-10 w-10 items-center justify-center rounded-full text-ink-300 transition active:scale-90 hover:bg-ink-50"
           aria-label="Wishlist"
         >
           <Heart
-            className={`h-[19px] w-[19px] ${wishCount > 0 ? 'fill-coral text-coral' : ''}`}
+            className={"h-[19px] w-[19px] " + (wishCount > 0 ? 'fill-coral text-coral' : '')}
             strokeWidth={1.8}
           />
           {wishCount > 0 && (

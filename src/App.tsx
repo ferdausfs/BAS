@@ -68,7 +68,7 @@ export default function App() {
       <div className="relative h-full w-full">
         <div key={screenKey} className="anim-fade h-full">
           {view.name === 'splash'                             && <SplashScreen />}
-          {view.name === 'tabs' && activeTab === 'home'       && <HomeScreen />}
+          {view.name === 'tabs' && activeTab === 'home'       && <HomeScreen onLogoTap={handleLogoTap} />}
           {view.name === 'tabs' && activeTab === 'categories' && <CategoriesScreen />}
           {view.name === 'tabs' && activeTab === 'orders'     && <OrdersScreen />}
           {view.name === 'tabs' && activeTab === 'profile'    && (
