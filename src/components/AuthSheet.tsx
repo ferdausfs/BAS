@@ -27,6 +27,12 @@ export function AuthSheet({ open, onClose, onSuccess }: Props) {
     setTimeout(() => setToast(null), 4000);
   };
 
+  const fallbackName = () => {
+    if (name.trim()) return name.trim();
+    if (method === 'email') return contact.trim().split('@')[0] || 'User';
+    return 'Bake Art User';
+  };
+
   const reset = () => {
     setStep('input'); setContact(''); setName(''); setOtpDigits(['', '', '', '', '', '']);
   };
@@ -92,8 +98,10 @@ export function AuthSheet({ open, onClose, onSuccess }: Props) {
     const code = otpDigits.join('');
     if (code.length < 6) { showToast('Enter 6-digit OTP', 'err'); return; }
     try {
-      await verifyOTP(contact.trim(), code, method, '');
-      setStep('profile');
+      await verifyOTP(contact.trim(), code, method, fallbackName());
+      showToast('Signed in successfully!', 'ok');
+      onSuccess?.();
+      onClose();
     } catch (e: unknown) {
       showToast(e instanceof Error ? e.message : 'Wrong OTP', 'err');
       setOtpDigits(['', '', '', '', '', '']);
@@ -190,11 +198,20 @@ export function AuthSheet({ open, onClose, onSuccess }: Props) {
               <input
                 className="w-full px-4 py-3 rounded-2xl border border-[var(--color-ink)]/10 bg-white text-[var(--color-ink)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-coral)]/30"
                 type={method === 'phone' ? 'tel' : 'email'}
-                placeholder={method === 'phone' ? '10-digit mobile number' : 'your@email.com'}
+                placeholder={method === 'phone' ? '01XXXXXXXXX' : 'your@email.com'}
                 value={contact}
                 onChange={(e) => setContact(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSend()}
                 autoFocus
+              />
+
+              <input
+                className="w-full px-4 py-3 rounded-2xl border border-[var(--color-ink)]/10 bg-white text-[var(--color-ink)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-coral)]/30"
+                type="text"
+                placeholder="Your name (optional)"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSend()}
               />
 
               <button onClick={handleSend} disabled={sending}

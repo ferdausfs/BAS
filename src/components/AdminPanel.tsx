@@ -241,7 +241,7 @@ export function AdminPanel({ onClose }: Props) {
                   </div>
                 ))}
                 <div>
-                  <label className="text-[10px] font-bold text-ink/50 uppercase">Price (₹)</label>
+                  <label className="text-[10px] font-bold text-ink/50 uppercase">Price (৳)</label>
                   <input type="number" className="w-full mt-0.5 px-3 py-2 rounded-xl border border-ink/10 bg-cream text-xs text-ink focus:outline-none"
                     value={editProduct.price}
                     onChange={(e) => setEditProduct({ ...editProduct, price: +e.target.value })} />
@@ -385,8 +385,8 @@ export function AdminPanel({ onClose }: Props) {
               { label: 'Admin Email', field: 'adminEmail' as const, type: 'email' },
               { label: 'Admin PIN', field: 'adminPin' as const, type: 'password' },
               { label: 'WhatsApp Number', field: 'whatsappNumber' as const, type: 'text' },
-              { label: 'UPI ID', field: 'upiId' as const, type: 'text' },
-              { label: 'Delivery Fee (₹)', field: 'deliveryFee' as const, type: 'number' },
+              { label: 'bKash/Nagad Number', field: 'upiId' as const, type: 'text' },
+              { label: 'Delivery Fee (৳)', field: 'deliveryFee' as const, type: 'number' },
               { label: 'Delivery Estimate', field: 'deliveryEstimate' as const, type: 'text' },
               { label: 'Promo Code', field: 'promoCode' as const, type: 'text' },
               { label: 'Promo Discount (%)', field: 'promoPercent' as const, type: 'number' },

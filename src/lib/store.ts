@@ -166,14 +166,16 @@ export const useUser = create<UserState>()(
   )
 );
 
-export const formatINR = (n: number) => `₹${n.toLocaleString('en-IN')}`;
+export const formatBDT = (n: number) => `৳${n.toLocaleString('en-BD')}`;
+// Backward-compatible alias: existing components still import formatINR.
+export const formatINR = formatBDT;
 
 // Selectors / helpers
 export const cartSubtotal = (items: CartItem[]) =>
   items.reduce((s, i) => s + i.price * i.quantity, 0);
 
 export const freeDeliveryThreshold = 999;
-export const standardDeliveryFee = 49;
+export const standardDeliveryFee = 60;
 export const qualifiesForFreeDelivery = (sub: number) => sub >= freeDeliveryThreshold;
 // ── Auth Store ─────────────────────────────────────────────
 import type { User, SiteSettings } from '../types';

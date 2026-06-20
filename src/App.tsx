@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useUI, useAuthStore, useSettingsStore } from './lib/store';
 import PhoneFrame from './components/PhoneFrame';
 import BottomTabBar from './components/BottomTabBar';
@@ -17,26 +17,46 @@ import { AdminPanel } from './components/AdminPanel';
 import { WishlistScreen } from './components/WishlistScreen';
 
 export default function App() {
-  const { view, tab } = useUI();
+  const { view, tab, chatOpen } = useUI();
   const { user } = useAuthStore();
   const { settings } = useSettingsStore();
 
   const [authOpen, setAuthOpen] = useState(false);
   const [adminOpen, setAdminOpen] = useState(false);
+  const [pendingAdminUnlock, setPendingAdminUnlock] = useState(false);
   const tapCount = useRef(0);
   const logoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // 5-tap logo → admin (only if logged in as admin email)
+  const normalizeEmail = (email?: string) => email?.trim().toLowerCase() ?? '';
+  const isAdminUser = useMemo(
+    () => !!user && normalizeEmail(user.email) === normalizeEmail(settings.adminEmail),
+    [user, settings.adminEmail]
+  );
+
+  useEffect(() => {
+    if (!pendingAdminUnlock || !user) return;
+
+    setPendingAdminUnlock(false);
+    if (isAdminUser) {
+      setAuthOpen(false);
+      setAdminOpen(true);
+    } else {
+      console.log('Not admin email');
+    }
+  }, [pendingAdminUnlock, user, isAdminUser]);
+
+  // 5-tap logo → admin. Before login it opens auth; after admin email login it unlocks.
   const handleLogoTap = () => {
     tapCount.current += 1;
     if (logoTimer.current) clearTimeout(logoTimer.current);
     if (tapCount.current >= 5) {
       tapCount.current = 0;
       // Admin email check
-      if (user && user.email === settings.adminEmail) {
+      if (isAdminUser) {
         setAdminOpen(true);
       } else if (!user) {
-        // Not logged in — open auth first
+        // Not logged in — open auth first, then auto-unlock only for admin email.
+        setPendingAdminUnlock(true);
         setAuthOpen(true);
       } else {
         // Wrong email — silent ignore
@@ -56,7 +76,7 @@ export default function App() {
     view.name === 'customize' ? (view.productId ?? 'custom') : '',
   ].join('-');
 
-  const showTabBar = view.name === 'tabs';
+  const showTabBar = view.name === 'tabs' && !chatOpen && !authOpen && !adminOpen;
 
   return (
     <PhoneFrame onLogoTap={handleLogoTap}>
@@ -106,7 +126,7 @@ export default function App() {
         {showTabBar && <BottomTabBar />}
       </div>
 
-      <AuthSheet open={authOpen} onClose={() => setAuthOpen(false)} />
+      <AuthSheet open={authOpen} onClose={() => setAuthOpen(false)} onSuccess={() => setPendingAdminUnlock(true)} />
       {adminOpen && <AdminPanel onClose={() => setAdminOpen(false)} />}
     </PhoneFrame>
   );

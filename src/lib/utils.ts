@@ -21,16 +21,20 @@ export const hashPass = (s: string): string => {
   return (h >>> 0).toString(36);
 };
 
-// Phone validator (India)
-export const isValidPhone = (p: string): boolean =>
-  /^[6-9]\d{9}$/.test(p.replace(/[\s\-]/g, ''));
+// Phone validator (Bangladesh)
+export const isValidPhone = (p: string): boolean => {
+  const digits = p.replace(/\D/g, '');
+  return /^(?:8801|01)[3-9]\d{8}$/.test(digits);
+};
 
 // WhatsApp link builder
 export const waLink = (number: string, msg: string): string =>
   `https://wa.me/${number.replace(/\D/g, '')}?text=${encodeURIComponent(msg)}`;
 
-// Format price INR
-export const formatINR = (n: number): string => `₹${n.toLocaleString('en-IN')}`;
+// Format price BDT
+export const formatBDT = (n: number): string => `৳${n.toLocaleString('en-BD')}`;
+// Backward-compatible alias: existing admin/components still import formatINR.
+export const formatINR = formatBDT;
 
 // Generate order ID
 export const genOrderId = (): string =>

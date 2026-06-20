@@ -1,5 +1,5 @@
 import { Heart, MapPin, CreditCard, Bell, HelpCircle, Settings, LogOut, ChevronRight, Star, Sparkles, LogIn, X } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useUI, useUser, useOrders, useCart, useAuthStore } from '../lib/store';
 import { useProducts } from '../hooks/useProducts';
 import { useAuth } from '../hooks/useAuth';
@@ -11,7 +11,7 @@ interface Props {
 }
 
 export default function ProfileScreen({ onAuthOpen }: Props) {
-  const { go } = useUI();
+  const { go, setChatOpen } = useUI();
   const { wishlist } = useUser();
   const { orders } = useOrders();
   const { items } = useCart();
@@ -21,6 +21,11 @@ export default function ProfileScreen({ onAuthOpen }: Props) {
   const [contactOpen, setContactOpen] = useState(false);
 
   const wishlistItems = products.filter((p) => wishlist.includes(p.id));
+
+  useEffect(() => {
+    setChatOpen(contactOpen);
+    return () => setChatOpen(false);
+  }, [contactOpen, setChatOpen]);
 
   const menu = [
     { Icon: Heart, label: 'Wishlist', sub: `${wishlist.length} saved items`, accent: 'text-coral', action: () => go({ name: 'wishlist' }) },
@@ -145,7 +150,7 @@ export default function ProfileScreen({ onAuthOpen }: Props) {
               <Sparkles className="h-4 w-4" strokeWidth={2} />
             </div>
             <div className="flex-1">
-              <div className="text-[13px] font-bold text-ink">Invite friends, earn ₹200</div>
+              <div className="text-[13px] font-bold text-ink">Invite friends, earn ৳200</div>
               <div className="text-[11px] text-ink-200">Share your referral link</div>
             </div>
             <button className="rounded-full bg-coral px-3 py-1.5 text-[11px] font-bold text-white active:scale-95">

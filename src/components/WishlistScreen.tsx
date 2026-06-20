@@ -2,7 +2,7 @@ import { Heart, Trash2, ShoppingBag, ArrowLeft } from 'lucide-react';
 import { useUI, useUser, useCart } from '../lib/store';
 import { useProducts } from '../hooks/useProducts';
 
-const formatINR = (n: number) => `₹${n.toLocaleString('en-IN')}`;
+const formatINR = (n: number) => `৳${n.toLocaleString('en-BD')}`;
 
 export function WishlistScreen() {
   const { back, go } = useUI();

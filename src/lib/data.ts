@@ -127,7 +127,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   deliveryFee: 60,
   geminiApiKey: '',
   whatsappNumber: '8801XXXXXXXXX',
-  upiId: 'bakeartstyle@upi',
+  upiId: '01XXXXXXXXX',
   promoTitle: '🎁 Special offer! Order today',
   deliveryEstimate: '2–4 ঘণ্টা',
   coupons: [],

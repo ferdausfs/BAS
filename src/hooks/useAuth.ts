@@ -7,6 +7,14 @@ const DEMO_OTP = '123456';
 
 interface PendingOTP { contact: string; otp: string; expires: number; }
 
+const normalizeBDPhone = (contact: string): string => {
+  const digits = contact.replace(/\D/g, '');
+  if (contact.trim().startsWith('+')) return contact.trim();
+  if (digits.startsWith('880')) return `+${digits}`;
+  if (digits.startsWith('0')) return `+88${digits}`;
+  return `+880${digits}`;
+};
+
 const setPendingOTP = (contact: string) => {
   const record: PendingOTP = { contact, otp: DEMO_OTP, expires: Date.now() + 5 * 60 * 1000 };
   ls.set('bakeart-pending-otp', record);
@@ -46,7 +54,7 @@ export function useAuth() {
     try {
       if (isSupabaseConfigured()) {
         if (method === 'phone') {
-          const phone = contact.startsWith('+') ? contact : `+91${contact.replace(/^0/, '')}`;
+          const phone = normalizeBDPhone(contact);
           const { error } = await supabase.auth.signInWithOtp({ phone });
           if (error) throw new Error(error.message);
         } else {
@@ -77,7 +85,7 @@ export function useAuth() {
         let userId: string;
         let userEmail = '';
         if (method === 'phone') {
-          const phone = contact.startsWith('+') ? contact : `+91${contact.replace(/^0/, '')}`;
+          const phone = normalizeBDPhone(contact);
           const { data, error } = await supabase.auth.verifyOtp({ phone, token: otp, type: 'sms' });
           if (error) throw new Error('Wrong OTP! Please try again.');
           userId = data.user!.id;
@@ -95,7 +103,6 @@ export function useAuth() {
         login({ id: userId, name: finalName, email: userEmail, avatar: '👤' });
       } else {
         if (!verifyPendingOTP(contact, otp)) throw new Error(`Wrong OTP! In demo mode, use ${DEMO_OTP}`);
-        if (!name.trim()) throw new Error('Please enter your name');
         const users = ls.get<Array<{ id: string; name: string; contact: string }>>('bakeart-local-users', []);
         const existing = users.find((u) => u.contact === contact);
         const userId = existing?.id || `local-${Date.now()}`;
