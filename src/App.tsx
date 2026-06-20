@@ -39,6 +39,24 @@ export default function App() {
   }, [user?.email, settings.adminEmail]);
 
   useEffect(() => {
+    try {
+      window.history.replaceState({ bakeArtRoute: true, t: Date.now() }, '');
+    } catch {
+      // ignore history errors
+    }
+
+    const onPopState = () => {
+      if (adminOpen) { setAdminOpen(false); return; }
+      if (authOpen) { setAuthOpen(false); return; }
+      if (notificationsOpen) { setNotificationsOpen(false); return; }
+      useUI.getState().back();
+    };
+
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, [adminOpen, authOpen, notificationsOpen]);
+
+  useEffect(() => {
     if (!pendingAdminUnlock || !user) return;
 
     setPendingAdminUnlock(false);

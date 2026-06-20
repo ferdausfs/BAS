@@ -2,6 +2,16 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { CartItem, Order } from '../types';
 
+const pushBrowserRouteState = () => {
+  try {
+    if (typeof window !== 'undefined') {
+      window.history.pushState({ bakeArtRoute: true, t: Date.now() }, '');
+    }
+  } catch {
+    // ignore history errors
+  }
+};
+
 // ===== App view routing =====
 export type Tab = 'home' | 'categories' | 'orders' | 'profile';
 
@@ -63,7 +73,15 @@ export const useUI = create<UIState>((set, get) => ({
       tab: v.name === 'tabs' ? v.tab : get().tab,
       history: v.name === 'splash' ? [] : get().history,
     }),
-  setTab: (tab) => set({ tab, view: { name: 'tabs', tab }, history: [] }),
+  setTab: (tab) => {
+    const cur = get().view;
+    if (!(cur.name === 'tabs' && cur.tab === tab)) pushBrowserRouteState();
+    set({
+      tab,
+      view: { name: 'tabs', tab },
+      history: cur.name === 'splash' ? [] : [...get().history, cur].slice(-20),
+    });
+  },
   go: (v) => {
     const cur = get().view;
     set({
