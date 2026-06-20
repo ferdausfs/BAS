@@ -1,22 +1,33 @@
 export interface Product {
   id: string;
   name: string;
+  tagline?: string;
   description: string;
   price: number;
-  image_url: string;
+  image: string; // আপনার অরিজিনাল কোডে 'image' ব্যবহার করা হয়েছে
+  image_url?: string;
+  rating?: number;
+  reviews?: number;
+  occasion?: string;
+  flavors?: string[];
+  weights?: { size: string; price: number }[];
+  bestseller?: boolean;
+  newArrival?: boolean;
   category: string;
   stock_status: boolean;
 }
-export interface CartItem extends Product {
-  quantity: number;
-}
+
 export interface Order {
   id: string;
-  customer_name: string;
-  customer_phone: string;
-  customer_address: string;
-  total_amount: number;
-  status: 'pending' | 'completed' | 'cancelled';
+  customer: {
+    name: string;
+    phone: string;
+    email?: string;
+    address: string;
+  };
   items: any[];
-  created_at: string;
+  total: number;
+  status: 'placed' | 'confirmed' | 'baking' | 'ready' | 'out' | 'delivered' | 'pending' | 'completed';
+  createdAt: string;
+  created_at?: string;
 }
