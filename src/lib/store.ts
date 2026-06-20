@@ -153,7 +153,6 @@ export const useCart = create<CartState>()(
 type OrderState = {
   orders: Order[];
   placeOrder: (order: Omit<Order, 'id' | 'createdAt' | 'status'>) => Order;
-  setOrderStatus: (id: string, status: Order['status']) => void;
 };
 
 export const useOrders = create<OrderState>()(
@@ -170,10 +169,6 @@ export const useOrders = create<OrderState>()(
         set((s) => ({ orders: [o, ...s.orders] }));
         useUI.getState().addNotification('✅ Order placed', `Order #${o.id} has been placed successfully.`);
         return o;
-      },
-      setOrderStatus: (id, status) => {
-        set((s) => ({ orders: s.orders.map((o) => (o.id === id ? { ...o, status } : o)) }));
-        useUI.getState().addNotification('📦 Order updated', `Order #${id} status changed to ${status}.`);
       },
     }),
     { name: 'bakeart-orders' }

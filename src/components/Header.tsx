@@ -21,13 +21,13 @@ export default function Header({ onLogoTap, onNotificationsOpen }: Props) {
         onClick={onLogoTap ?? (() => setTab('home'))}
         className="flex items-center gap-2.5 transition active:scale-95"
       >
-        <BrandLogo size={48} />
+        <BrandLogo size={36} />
         <div className="text-left leading-none">
-          <div className="font-brand text-[30px] font-bold leading-[0.9] tracking-normal">
-            <span className="text-[#4b2318]">Bake Art</span>
+          <div className="font-display text-[19px] font-bold tracking-tight">
+            <span className="text-ink">Bake Art</span>
             <span className="text-coral"> Style</span>
           </div>
-          <div className="mt-1 text-[9px] font-bold tracking-[0.2em] text-ink-100 uppercase">
+          <div className="mt-0.5 text-[10px] font-medium tracking-[0.16em] text-ink-100 uppercase">
             Artisan Bakery
           </div>
         </div>
