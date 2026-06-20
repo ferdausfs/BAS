@@ -8,58 +8,29 @@ export function useOrdersHook() {
   const [loading, setLoading] = useState(false);
   const user = useAuthStore((s) => s.user);
   const settings = useSettingsStore((s) => s.settings);
-  const { orders, setOrders, upsertOrder, updateOrderStatus } = useOrdersStore();
+  const { orders, setOrderStatus } = useOrdersStore();
   const incrementNewOrders = useUI((s) => s.incrementNewOrders);
 
-  const isAdmin = user?.email === settings.adminEmail;
-
-  // Fetch all orders (admin) or just the logged-in user's orders (customer)
   const fetchOrders = useCallback(async () => {
     if (!isSupabaseConfigured()) return;
     setLoading(true);
     try {
-      let query = supabase.from('orders').select('*').order('createdAt', { ascending: false }).limit(500);
-      if (!isAdmin && user) {
-        query = query.eq('user_id', user.id);
-      }
-      const { data, error } = await query;
+      const { error } = await supabase.from('orders').select('*').order('createdAt', { ascending: false }).limit(200);
       if (error) throw error;
-      if (data) {
-        setOrders(data as Order[]);
-      }
     } catch (e) {
-      console.warn('Orders fetch failed, using local cache:', e);
+      console.warn('Orders fetch failed, using local:', e);
     } finally {
       setLoading(false);
     }
-  }, [user?.id, isAdmin, setOrders]);
-
-  // Insert a new order into Supabase AND local store (call this instead of store.placeOrder directly when online sync matters)
-  const submitOrder = useCallback(async (data: Omit<Order, 'id' | 'createdAt' | 'status'>): Promise<Order> => {
-    const order: Order = {
-      ...data,
-      id: 'BAS' + Date.now().toString().slice(-6),
-      createdAt: Date.now(),
-      status: 'placed',
-    };
-    upsertOrder(order);
-
-    if (isSupabaseConfigured()) {
-      const { error } = await supabase.from('orders').insert({
-        ...order,
-        user_id: user?.id ?? null,
-      });
-      if (error) console.error('Order sync to Supabase failed:', error);
-    }
-    return order;
-  }, [upsertOrder, user?.id]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, settings.adminEmail]);
 
   const updateStatus = useCallback(async (id: string, status: Order['status']) => {
-    updateOrderStatus(id, status);
+    setOrderStatus(id, status);
     if (!isSupabaseConfigured()) return;
     const { error } = await supabase.from('orders').update({ status }).eq('id', id);
     if (error) console.error('Status update error:', error);
-  }, [updateOrderStatus]);
+  }, [setOrderStatus]);
 
   const subscribeToNewOrders = useCallback(() => {
     if (!isSupabaseConfigured()) return () => {};
@@ -68,18 +39,16 @@ export function useOrdersHook() {
     }
     const channel = supabase
       .channel('new-orders-admin')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' }, (payload) => {
-        const newOrder = payload.new as Order;
-        upsertOrder(newOrder);
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' }, () => {
         playBeep();
         incrementNewOrders();
         if ('Notification' in window && Notification.permission === 'granted') {
-          new Notification('🎂 নতুন অর্ডার!', { body: `${newOrder.customer?.name ?? ''} — ৳${newOrder.total ?? ''}` });
+          new Notification('🎂 New Order!', { body: 'A new order has been placed.' });
         }
       })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
-  }, [incrementNewOrders, upsertOrder]);
+  }, [incrementNewOrders]);
 
-  return { orders, loading, fetchOrders, submitOrder, updateStatus, subscribeToNewOrders };
+  return { orders, loading, fetchOrders, updateStatus, subscribeToNewOrders };
 }

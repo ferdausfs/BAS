@@ -1,11 +1,10 @@
 import { useState } from 'react';
-import { ArrowLeft, MapPin, Clock, Wallet, Check, Shield, Loader2 } from 'lucide-react';
+import { ArrowLeft, MapPin, Clock, Wallet, Check, Shield } from 'lucide-react';
 import {
-  useCart, useUI, formatINR,
+  useCart, useOrders, useUI, formatINR,
   cartSubtotal, qualifiesForFreeDelivery, standardDeliveryFee,
   useLocation,
 } from '../lib/store';
-import { useOrdersHook } from '../hooks/useOrders';
 import { LocationGate } from '../components/LocationGate';
 
 const PAYMENTS = [
@@ -32,12 +31,11 @@ interface Props {
 
 export default function CheckoutScreen({ onBack }: Props) {
   const { items, clear } = useCart();
-  const { submitOrder } = useOrdersHook();
+  const { placeOrder } = useOrders();
   const { back, go } = useUI();
   const { verified: locationVerified, district: detectedDistrict } = useLocation();
 
   const [showLocationGate, setShowLocationGate] = useState(!locationVerified);
-  const [submitting, setSubmitting] = useState(false);
 
   const [form, setForm] = useState({
     name: '',
@@ -53,23 +51,18 @@ export default function CheckoutScreen({ onBack }: Props) {
   const delivery = items.length === 0 ? 0 : (qualifiesForFreeDelivery(subtotal) ? 0 : standardDeliveryFee);
   const total = subtotal + delivery;
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     if (items.length === 0) return;
     if (!form.name || !form.phone || !form.address) return;
-    setSubmitting(true);
-    try {
-      const o = await submitOrder({
-        items,
-        customer: { name: form.name, phone: form.phone, email: '', address: form.address, city: form.district, pin: '' },
-        delivery: { date: form.date, time: form.time },
-        payment: form.payment,
-        subtotal, deliveryFee: delivery, total,
-      });
-      clear();
-      go({ name: 'success', orderId: o.id });
-    } finally {
-      setSubmitting(false);
-    }
+    const o = placeOrder({
+      items,
+      customer: { name: form.name, phone: form.phone, email: '', address: form.address, city: form.district, pin: '' },
+      delivery: { date: form.date, time: form.time },
+      payment: form.payment,
+      subtotal, deliveryFee: delivery, total,
+    });
+    clear();
+    go({ name: 'success', orderId: o.id });
   };
 
   const handleBack = onBack ?? back;
@@ -257,20 +250,11 @@ export default function CheckoutScreen({ onBack }: Props) {
           </div>
           <button
             onClick={handleSubmit}
-            disabled={!form.name || !form.phone || !form.address || submitting}
+            disabled={!form.name || !form.phone || !form.address}
             className="btn-primary ml-auto flex h-14 flex-1 items-center justify-center gap-2 rounded-2xl text-[14px] font-bold tracking-tight disabled:opacity-50"
           >
-            {submitting ? (
-              <>
-                <Loader2 className="h-[18px] w-[18px] animate-spin" />
-                অর্ডার হচ্ছে...
-              </>
-            ) : (
-              <>
-                অর্ডার করুন
-                <Check className="h-[18px] w-[18px]" strokeWidth={2.5} />
-              </>
-            )}
+            অর্ডার করুন
+            <Check className="h-[18px] w-[18px]" strokeWidth={2.5} />
           </button>
         </div>
       </div>

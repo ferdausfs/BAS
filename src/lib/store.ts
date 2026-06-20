@@ -5,6 +5,14 @@ import type { CartItem, Order } from '../types';
 // ===== App view routing =====
 export type Tab = 'home' | 'categories' | 'orders' | 'profile';
 
+export type NotificationItem = {
+  id: string;
+  title: string;
+  body: string;
+  createdAt: number;
+  read: boolean;
+};
+
 export type View =
   | { name: 'splash' }
   | { name: 'tabs'; tab: Tab }
@@ -14,7 +22,8 @@ export type View =
   | { name: 'checkout' }
   | { name: 'success'; orderId: string }
   | { name: 'wishlist' }
-  | { name: 'tracking'; orderId?: string };
+  | { name: 'tracking'; orderId?: string }
+  | { name: 'admin'; tab?: string };
 
 type UIState = {
   view: View;
@@ -28,8 +37,11 @@ type UIState = {
   promoDiscount: number;
   applyPromo: (pct: number) => void;
   clearPromo: () => void;
-  // Admin notifications
+  // Admin/user notifications
   newOrderCount: number;
+  notifications: NotificationItem[];
+  addNotification: (title: string, body: string) => void;
+  markAllRead: () => void;
   incrementNewOrders: () => void;
   clearNewOrders: () => void;
   // Chat
@@ -43,6 +55,7 @@ export const useUI = create<UIState>((set, get) => ({
   history: [],
   promoDiscount: 0,
   newOrderCount: 0,
+  notifications: [],
   chatOpen: false,
   setView: (v) =>
     set({
@@ -72,7 +85,23 @@ export const useUI = create<UIState>((set, get) => ({
   },
   applyPromo: (pct) => set({ promoDiscount: pct }),
   clearPromo: () => set({ promoDiscount: 0 }),
-  incrementNewOrders: () => set((s) => ({ newOrderCount: s.newOrderCount + 1 })),
+  addNotification: (title, body) => set((s) => ({
+    notifications: [
+      { id: `nt-${Date.now()}`, title, body, createdAt: Date.now(), read: false },
+      ...s.notifications,
+    ].slice(0, 30),
+  })),
+  markAllRead: () => set((s) => ({
+    notifications: s.notifications.map((n) => ({ ...n, read: true })),
+    newOrderCount: 0,
+  })),
+  incrementNewOrders: () => set((s) => ({
+    newOrderCount: s.newOrderCount + 1,
+    notifications: [
+      { id: `nt-${Date.now()}`, title: '🎂 New order', body: 'A new cake order has been placed.', createdAt: Date.now(), read: false },
+      ...s.notifications,
+    ].slice(0, 30),
+  })),
   clearNewOrders: () => set({ newOrderCount: 0 }),
   setChatOpen: (v) => set({ chatOpen: v }),
 }));
@@ -116,7 +145,7 @@ export const useCart = create<CartState>()(
         })),
       clear: () => set({ items: [] }),
     }),
-    { name: 'bakeart-cart', version: 2 }
+    { name: 'bakeart-cart' }
   )
 );
 
@@ -124,9 +153,7 @@ export const useCart = create<CartState>()(
 type OrderState = {
   orders: Order[];
   placeOrder: (order: Omit<Order, 'id' | 'createdAt' | 'status'>) => Order;
-  setOrders: (orders: Order[]) => void;
-  upsertOrder: (order: Order) => void;
-  updateOrderStatus: (id: string, status: Order['status']) => void;
+  setOrderStatus: (id: string, status: Order['status']) => void;
 };
 
 export const useOrders = create<OrderState>()(
@@ -141,24 +168,15 @@ export const useOrders = create<OrderState>()(
           status: 'placed',
         };
         set((s) => ({ orders: [o, ...s.orders] }));
+        useUI.getState().addNotification('✅ Order placed', `Order #${o.id} has been placed successfully.`);
         return o;
       },
-      setOrders: (orders) => set({ orders }),
-      upsertOrder: (order) =>
-        set((s) => {
-          const exists = s.orders.find((o) => o.id === order.id);
-          return {
-            orders: exists
-              ? s.orders.map((o) => (o.id === order.id ? order : o))
-              : [order, ...s.orders],
-          };
-        }),
-      updateOrderStatus: (id, status) =>
-        set((s) => ({
-          orders: s.orders.map((o) => (o.id === id ? { ...o, status } : o)),
-        })),
+      setOrderStatus: (id, status) => {
+        set((s) => ({ orders: s.orders.map((o) => (o.id === id ? { ...o, status } : o)) }));
+        useUI.getState().addNotification('📦 Order updated', `Order #${id} status changed to ${status}.`);
+      },
     }),
-    { name: 'bakeart-orders', version: 2 }
+    { name: 'bakeart-orders' }
   )
 );
 
@@ -179,17 +197,19 @@ export const useUser = create<UserState>()(
             : [...s.wishlist, id],
         })),
     }),
-    { name: 'bakeart-user', version: 2 }
+    { name: 'bakeart-user' }
   )
 );
 
-export const formatINR = (n: number) => `৳${n.toLocaleString('en-BD')}`;
+export const formatBDT = (n: number) => `৳${n.toLocaleString('en-BD')}`;
+// Backward-compatible alias: existing components still import formatINR.
+export const formatINR = formatBDT;
 
 // Selectors / helpers
 export const cartSubtotal = (items: CartItem[]) =>
   items.reduce((s, i) => s + i.price * i.quantity, 0);
 
-export const freeDeliveryThreshold = 1500;
+export const freeDeliveryThreshold = 999;
 export const standardDeliveryFee = 60;
 export const qualifiesForFreeDelivery = (sub: number) => sub >= freeDeliveryThreshold;
 // ── Auth Store ─────────────────────────────────────────────
@@ -209,7 +229,7 @@ export const useAuthStore = create<AuthState>()(
       login: (user) => set({ user }),
       logout: () => set({ user: null }),
     }),
-    { name: 'bakeart-auth', version: 2 }
+    { name: 'bakeart-auth' }
   )
 );
 
@@ -229,14 +249,7 @@ export const useSettingsStore = create<SettingsState>()(
           return { settings: next };
         }),
     }),
-    {
-      name: 'bakeart-settings',
-      version: 2,
-      merge: (persisted, current) => {
-        const p = (persisted as { settings?: Partial<SiteSettings> } | undefined)?.settings ?? {};
-        return { ...current, settings: { ...DEFAULT_SETTINGS, ...p } };
-      },
-    }
+    { name: 'bakeart-settings' }
   )
 );
 
@@ -257,7 +270,7 @@ export const useLocation = create<LocationState>()(
       setLocation: (district, lat, lng) => set({ district, lat, lng, verified: true }),
       clearLocation: () => set({ district: null, lat: null, lng: null, verified: false }),
     }),
-    { name: 'bakeart-location', version: 2 }
+    { name: 'bakeart-location' }
   )
 );
 

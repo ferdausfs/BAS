@@ -2,15 +2,13 @@ import { Heart, Trash2, ShoppingBag, ArrowLeft } from 'lucide-react';
 import { useUI, useUser, useCart } from '../lib/store';
 import { useProducts } from '../hooks/useProducts';
 
-const formatINR = (n: number) => `₹${n.toLocaleString('en-IN')}`;
+const formatINR = (n: number) => `৳${n.toLocaleString('en-BD')}`;
 
 export function WishlistScreen() {
   const { back, go } = useUI();
-  const { wishlist: rawWishlist, toggleWish } = useUser();
-  const wishlist = rawWishlist ?? [];
+  const { wishlist, toggleWish } = useUser();
   const { add } = useCart();
-  const { products: rawProducts } = useProducts();
-  const products = rawProducts ?? [];
+  const { products } = useProducts();
 
   const items = products.filter((p) => wishlist.includes(p.id));
 
