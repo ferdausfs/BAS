@@ -1,19 +1,33 @@
 import { useState } from 'react';
 import {
-  ArrowLeft, ArrowRight, Check, Cake, Droplet, Weight, MessageSquare, Eye, Plus,
+  ArrowLeft,
+  ArrowRight,
+  Check,
+  Droplet,
+  Weight,
+  MessageSquare,
+  Eye,
+  Plus,
 } from 'lucide-react';
 import { useUI, useCart, useSettingsStore, formatINR } from '../lib/store';
 import { products } from '../lib/data';
 
 const STEPS = [
-  { id: 'flavour', label: 'Flavour', icon: Droplet },
-  { id: 'weight',  label: 'Weight',  icon: Weight },
-  { id: 'addons',  label: 'Add-ons', icon: Plus },
-  { id: 'message', label: 'Message', icon: MessageSquare },
-  { id: 'review',  label: 'Review',  icon: Eye },
+  { id: 'flavour', label: 'Flavour' },
+  { id: 'weight', label: 'Weight' },
+  { id: 'addons', label: 'Add-ons' },
+  { id: 'message', label: 'Message' },
+  { id: 'review', label: 'Review' },
 ];
 
-const FLAVOURS = ['Chocolate', 'Vanilla', 'Red Velvet', 'Butterscotch', 'Strawberry', 'Pistachio'];
+const FLAVOURS = [
+  'Chocolate',
+  'Vanilla',
+  'Red Velvet',
+  'Butterscotch',
+  'Strawberry',
+  'Pistachio',
+];
 
 const DEFAULT_FLAVOUR_IMAGES: Record<string, string> = {
   Chocolate: '/cakes/chocolate-truffle.png',
@@ -26,9 +40,9 @@ const DEFAULT_FLAVOUR_IMAGES: Record<string, string> = {
 
 const WEIGHTS = [
   { size: '0.5 kg', price: 599 },
-  { size: '1 kg',   price: 899 },
+  { size: '1 kg', price: 899 },
   { size: '1.5 kg', price: 1199 },
-  { size: '2 kg',   price: 1499 },
+  { size: '2 kg', price: 1499 },
 ];
 
 const ADDONS = [
@@ -47,12 +61,15 @@ export default function CustomizeScreen() {
 
   if (view.name !== 'customize') return null;
 
-  const product = view.productId ? products.find((p) => p.id === view.productId) : products[3];
+  const product = view.productId
+    ? products.find((p) => p.id === view.productId)
+    : products[3];
+
   const defaultProduct = product ?? products[3];
 
   const flavorImages = {
     ...DEFAULT_FLAVOUR_IMAGES,
-    ...(settings.customFlavorImages ?? {}),
+    ...((settings as any).customFlavorImages ?? {}),
   };
 
   const [step, setStep] = useState(0);
@@ -66,7 +83,7 @@ export default function CustomizeScreen() {
   const selectedWeight = WEIGHTS.find((w) => w.size === config.weight) ?? WEIGHTS[1];
   const selectedAddons = ADDONS.filter((a) => config.addons.includes(a.id));
   const addonsTotal = selectedAddons.reduce((sum, a) => sum + a.price, 0);
-  const price = selectedWeight.price + addonsTotal;
+  const total = selectedWeight.price + addonsTotal;
   const previewImage = flavorImages[config.flavour] || defaultProduct.image;
 
   const toggleAddon = (id: string) => {
@@ -79,13 +96,11 @@ export default function CustomizeScreen() {
   };
 
   const next = () => {
-    if (step < STEPS.length - 1) setStep((s) => s + 1);
-    else handleFinish();
-  };
+    if (step < STEPS.length - 1) {
+      setStep((s) => s + 1);
+      return;
+    }
 
-  const prev = () => (step > 0 ? setStep((s) => s - 1) : back());
-
-  const handleFinish = () => {
     add({
       productId: defaultProduct.id,
       name: `Custom ${config.flavour} Cake`,
@@ -94,11 +109,16 @@ export default function CustomizeScreen() {
       flavor: config.flavour,
       topping: selectedAddons.map((a) => a.label).join(', ') || undefined,
       message: config.message,
-      price,
+      price: total,
       quantity: 1,
     });
 
     go({ name: 'cart' });
+  };
+
+  const prev = () => {
+    if (step > 0) setStep((s) => s - 1);
+    else back();
   };
 
   const nextLabel =
@@ -135,7 +155,7 @@ export default function CustomizeScreen() {
                   <div
                     className={`flex h-9 w-9 items-center justify-center rounded-full border-2 text-[13px] font-bold transition ${
                       active
-                        ? 'border-coral bg-coral text-white shadow-[0_8px_20px_-10px_rgba(242,94,115,.6)]'
+                        ? 'border-coral bg-coral text-white'
                         : done
                           ? 'border-coral bg-white text-coral'
                           : 'border-ink-50 bg-white text-ink-200'
@@ -147,7 +167,6 @@ export default function CustomizeScreen() {
                     {s.label}
                   </span>
                 </div>
-
                 {i < STEPS.length - 1 && (
                   <div className="-mt-3 mx-0.5 h-0.5 flex-1 rounded-full bg-ink-50" />
                 )}
@@ -170,7 +189,6 @@ export default function CustomizeScreen() {
                 className="h-full w-full object-cover"
               />
             </div>
-
             <div className="absolute right-3 bottom-3 rounded-full bg-white/90 px-3 py-1.5 text-[11px] font-bold text-coral backdrop-blur">
               {config.flavour} · {config.weight}
             </div>
@@ -181,7 +199,6 @@ export default function CustomizeScreen() {
           {step === 0 && (
             <FlavorPicker
               value={config.flavour}
-              flavours={FLAVOURS}
               images={flavorImages}
               onChange={(v) => setConfig({ ...config, flavour: v })}
             />
@@ -206,7 +223,6 @@ export default function CustomizeScreen() {
               <h3 className="px-1 text-[13px] font-bold text-ink">
                 Write a sweet message
               </h3>
-
               <div
                 className="mt-2 overflow-hidden rounded-2xl bg-white p-3.5"
                 style={{ boxShadow: '0 1px 2px rgba(26,19,17,.02), 0 8px 24px -16px rgba(26,19,17,.18)' }}
@@ -223,10 +239,6 @@ export default function CustomizeScreen() {
                   <span>Piped on top of the cake</span>
                   <span className="tabular">{config.message.length}/40</span>
                 </div>
-              </div>
-
-              <div className="mt-3 rounded-2xl bg-blush-50 px-3.5 py-3 text-[11.5px] text-ink-300">
-                💡 Keep it short and sweet for the best look.
               </div>
             </div>
           )}
@@ -259,7 +271,7 @@ export default function CustomizeScreen() {
                 <div className="flex items-center justify-between">
                   <span className="text-[12px] font-semibold text-ink-200">Total</span>
                   <span className="font-display text-[22px] font-bold tabular text-coral">
-                    {formatINR(price)}
+                    {formatINR(total)}
                   </span>
                 </div>
               </div>
@@ -283,12 +295,10 @@ export default function CustomizeScreen() {
 
 function FlavorPicker({
   value,
-  flavours,
   images,
   onChange,
 }: {
   value: string;
-  flavours: string[];
   images: Record<string, string>;
   onChange: (v: string) => void;
 }) {
@@ -310,14 +320,12 @@ function FlavorPicker({
       </div>
 
       <div className="grid grid-cols-2 gap-2.5">
-        {flavours.map((flavour) => (
+        {FLAVOURS.map((flavour) => (
           <button
             key={flavour}
             onClick={() => onChange(flavour)}
             className={`overflow-hidden rounded-2xl border-2 bg-white text-left transition active:scale-[.98] ${
-              value === flavour
-                ? 'border-coral shadow-[0_8px_18px_-12px_rgba(242,94,115,.65)]'
-                : 'border-ink-50'
+              value === flavour ? 'border-coral' : 'border-ink-50'
             }`}
           >
             <div className="aspect-[4/3] bg-cream">
@@ -334,10 +342,6 @@ function FlavorPicker({
           </button>
         ))}
       </div>
-
-      <p className="mt-3 text-[10.5px] text-ink-200">
-        Admin Panel → Settings থেকে প্রতিটি flavour-এর default image URL বদলানো যাবে।
-      </p>
     </section>
   );
 }
@@ -401,7 +405,7 @@ function ChipGroup({
   options,
   onChange,
 }: {
-  icon: typeof Cake;
+  icon: typeof Weight;
   label: string;
   value: string;
   options: string[];
