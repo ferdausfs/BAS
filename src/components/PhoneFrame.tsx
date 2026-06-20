@@ -10,7 +10,7 @@ interface Props {
  * - On small viewports: fullscreen native mobile experience.
  * - On md+: centered "phone" stage with soft warm gradients around it.
  */
-export default function PhoneFrame({ children, onLogoTap }: Props) {
+export default function PhoneFrame({ children }: Props) {
   return (
     <div className="min-h-screen w-full mesh-warm">
       {/* Desktop stage */}
@@ -33,7 +33,7 @@ export default function PhoneFrame({ children, onLogoTap }: Props) {
               }}
             >
               <div className="relative h-full w-full overflow-hidden rounded-[36px] bg-cream">
-                <div className="absolute inset-0 flex flex-col overflow-hidden" data-logo-tap-handler onClick={onLogoTap ? undefined : undefined}>{children}</div>
+                <div className="absolute inset-0 flex flex-col overflow-hidden">{children}</div>
                 <HomeIndicator />
               </div>
             </div>
