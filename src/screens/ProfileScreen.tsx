@@ -1,8 +1,10 @@
-import { Heart, MapPin, CreditCard, Bell, HelpCircle, Settings, LogOut, ChevronRight, Star, Sparkles, LogIn } from 'lucide-react';
+import { Heart, MapPin, CreditCard, Bell, HelpCircle, Settings, LogOut, ChevronRight, Star, Sparkles, LogIn, X } from 'lucide-react';
+import { useState } from 'react';
 import { useUI, useUser, useOrders, useCart, useAuthStore } from '../lib/store';
 import { useProducts } from '../hooks/useProducts';
 import { useAuth } from '../hooks/useAuth';
 import BrandLogo from '../components/BrandLogo';
+import { ChatBot } from '../components/ChatBot';
 
 interface Props {
   onAuthOpen?: () => void;
@@ -16,15 +18,16 @@ export default function ProfileScreen({ onAuthOpen }: Props) {
   const { user } = useAuthStore();
   const { signOut } = useAuth();
   const { products } = useProducts();
+  const [contactOpen, setContactOpen] = useState(false);
 
   const wishlistItems = products.filter((p) => wishlist.includes(p.id));
 
   const menu = [
     { Icon: Heart, label: 'Wishlist', sub: `${wishlist.length} saved items`, accent: 'text-coral', action: () => go({ name: 'wishlist' }) },
     { Icon: MapPin, label: 'Addresses', sub: 'Manage delivery addresses', accent: 'text-ink', action: () => {} },
-    { Icon: CreditCard, label: 'Payment methods', sub: 'UPI & cards', accent: 'text-ink', action: () => {} },
+    { Icon: CreditCard, label: 'Payment methods', sub: 'bKash, Nagad, Cash', accent: 'text-ink', action: () => {} },
     { Icon: Bell, label: 'Notifications', sub: 'Order & promo updates', accent: 'text-ink', action: () => {} },
-    { Icon: HelpCircle, label: 'Help & support', sub: 'FAQs and contact', accent: 'text-ink', action: () => {} },
+    { Icon: HelpCircle, label: 'Contact & Support', sub: 'কোনো সমস্যা? আমাদের জানান', accent: 'text-coral', action: () => setContactOpen(true) },
     { Icon: Settings, label: 'Settings', sub: 'App preferences', accent: 'text-ink', action: () => {} },
   ];
 
@@ -168,6 +171,25 @@ export default function ProfileScreen({ onAuthOpen }: Props) {
           <span className="text-[11px] font-medium tracking-wider uppercase">Bake Art Style · v2.0</span>
         </div>
       </div>
+
+      {/* Contact & Support overlay */}
+      {contactOpen && (
+        <>
+          <div className="fixed inset-0 bg-black/40 z-[60] backdrop-blur-sm" onClick={() => setContactOpen(false)} />
+          <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[420px] z-[61] bg-cream rounded-t-3xl shadow-2xl">
+            <div className="w-10 h-1 bg-ink/10 rounded-full mx-auto mt-3" />
+            <div className="px-5 pt-4 pb-2 flex items-center justify-between">
+              <h2 className="font-display text-lg font-bold text-ink">যোগাযোগ ও সহায়তা</h2>
+              <button onClick={() => setContactOpen(false)} className="w-8 h-8 rounded-full bg-ink/5 flex items-center justify-center">
+                <X className="w-4 h-4 text-ink/60" />
+              </button>
+            </div>
+            <div className="px-5 pb-8">
+              <ChatBot embedded />
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

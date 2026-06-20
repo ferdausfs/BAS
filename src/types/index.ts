@@ -44,7 +44,7 @@ export type Order = {
     pin: string;
   };
   delivery: { date: string; time: string };
-  payment: 'card' | 'mada' | 'stcpay' | 'apple' | 'cash' | 'upi';
+  payment: 'bkash' | 'nagad' | 'cash';
   subtotal: number;
   deliveryFee: number;
   total: number;

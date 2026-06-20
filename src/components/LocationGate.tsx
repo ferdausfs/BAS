@@ -25,7 +25,6 @@ export function LocationGate({ onDismiss }: Props) {
       setStatus('detecting');
       const { latitude: lat, longitude: lng } = pos.coords;
 
-      // Nominatim reverse-geocode
       const r = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`);
       const data = await r.json();
       const city =
@@ -33,12 +32,13 @@ export function LocationGate({ onDismiss }: Props) {
         data.address?.town ||
         data.address?.district ||
         data.address?.county ||
+        data.address?.state_district ||
         '';
 
       const zones = settings.allowedZones ?? [];
       const isAllowed = zones.some((z) => city.toLowerCase().includes(z.toLowerCase()) || z.toLowerCase().includes(city.toLowerCase()));
 
-      setDistrict(city || 'your area');
+      setDistrict(city || 'আপনার এলাকা');
       if (isAllowed) {
         setLocation(city, lat, lng);
         setStatus('allowed');
@@ -47,13 +47,13 @@ export function LocationGate({ onDismiss }: Props) {
         setStatus('out_of_zone');
       }
     } catch (e: unknown) {
-      setErrorMsg(e instanceof Error ? e.message : 'Could not detect location');
+      setErrorMsg(e instanceof Error ? e.message : 'লোকেশন শনাক্ত করা যায়নি');
       setStatus('error');
     }
   };
 
   const openWhatsApp = () => {
-    const msg = `Hi! I'd like to order a cake from ${district || 'my area'}.`;
+    const msg = `হ্যালো! আমি ${district || 'আমার এলাকা'} থেকে একটা কেক অর্ডার করতে চাই।`;
     window.open(waLink(settings.whatsappNumber, msg), '_blank');
   };
 
@@ -66,75 +66,75 @@ export function LocationGate({ onDismiss }: Props) {
         </button>
 
         <div className="text-4xl mb-2">🎂</div>
-        <h1 className="text-xl font-black text-[var(--color-coral)] mb-1">Bake Art Style</h1>
-        <p className="text-xs text-black/40 mb-6">Made with love, served with joy</p>
+        <h1 className="text-xl font-black text-coral mb-1">Bake Art Style</h1>
+        <p className="text-xs text-black/40 mb-6">কুমিল্লা থেকে ভালোবাসা দিয়ে তৈরি</p>
 
         {status === 'idle' && (
           <div className="space-y-4">
-            <div className="w-16 h-16 rounded-full bg-[var(--color-coral)]/10 flex items-center justify-center mx-auto">
-              <MapPin className="w-8 h-8 text-[var(--color-coral)]" />
+            <div className="w-16 h-16 rounded-full bg-coral/10 flex items-center justify-center mx-auto">
+              <MapPin className="w-8 h-8 text-coral" />
             </div>
-            <h2 className="font-bold text-[var(--color-ink)]">Check Delivery Zone</h2>
-            <p className="text-sm text-[var(--color-ink)]/60">We deliver to select cities. Let us check if we deliver to you!</p>
+            <h2 className="font-bold text-ink">ডেলিভারি জোন চেক করুন</h2>
+            <p className="text-sm text-ink/60">পেমেন্টের আগে আমরা যাচাই করবো আপনার এলাকায় ডেলিভারি দিতে পারি কিনা।</p>
             <button onClick={requestLocation}
-              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-[var(--color-coral)] text-white font-bold">
-              <Navigation className="w-4 h-4" /> Detect My Location
+              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-coral text-white font-bold">
+              <Navigation className="w-4 h-4" /> আমার লোকেশন শনাক্ত করুন
             </button>
-            <button onClick={onDismiss} className="text-xs text-[var(--color-ink)]/40">Skip for now</button>
+            <button onClick={onDismiss} className="text-xs text-ink/40">এখন বাদ দিন</button>
           </div>
         )}
 
         {(status === 'requesting' || status === 'detecting') && (
           <div className="space-y-3">
-            <Loader2 className="w-12 h-12 text-[var(--color-coral)] animate-spin mx-auto" />
-            <h2 className="font-bold text-[var(--color-ink)]">
-              {status === 'requesting' ? 'Getting your location...' : 'Detecting area...'}
+            <Loader2 className="w-12 h-12 text-coral animate-spin mx-auto" />
+            <h2 className="font-bold text-ink">
+              {status === 'requesting' ? 'লোকেশন নেওয়া হচ্ছে...' : 'এলাকা শনাক্ত করা হচ্ছে...'}
             </h2>
-            <p className="text-sm text-[var(--color-ink)]/60">Please allow location access in your browser</p>
+            <p className="text-sm text-ink/60">ব্রাউজারে লোকেশন অ্যাক্সেস অনুমতি দিন</p>
           </div>
         )}
 
         {status === 'allowed' && (
           <div className="space-y-3">
             <CheckCircle2 className="w-12 h-12 text-green-500 mx-auto" />
-            <h2 className="font-bold text-[var(--color-ink)]">We deliver to {district}! 🎉</h2>
-            <p className="text-sm text-[var(--color-ink)]/60">Redirecting you to the shop...</p>
+            <h2 className="font-bold text-ink">আমরা {district}-এ ডেলিভারি দিই! 🎉</h2>
+            <p className="text-sm text-ink/60">চেকআউটে নিয়ে যাওয়া হচ্ছে...</p>
           </div>
         )}
 
         {status === 'out_of_zone' && (
           <div className="space-y-4">
             <AlertCircle className="w-12 h-12 text-orange-400 mx-auto" />
-            <h2 className="font-bold text-[var(--color-ink)]">Sorry!</h2>
-            <p className="text-sm text-[var(--color-ink)]/60">
-              We don't deliver to <strong>{district}</strong> yet. Contact us on WhatsApp and we'll try to help!
+            <h2 className="font-bold text-ink">দুঃখিত!</h2>
+            <p className="text-sm text-ink/60">
+              আমরা এখনো <strong>{district}</strong>-এ ডেলিভারি দিই না। WhatsApp-এ যোগাযোগ করুন, আমরা সাহায্য করার চেষ্টা করবো!
             </p>
             <button onClick={openWhatsApp}
               className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl bg-green-500 text-white font-bold text-sm">
-              <MessageCircle className="w-4 h-4" /> Order via WhatsApp
+              <MessageCircle className="w-4 h-4" /> WhatsApp-এ অর্ডার করুন
             </button>
             <div className="text-left">
-              <p className="text-[10px] text-[var(--color-ink)]/40 mb-2">We currently deliver to:</p>
+              <p className="text-[10px] text-ink/40 mb-2">আমরা বর্তমানে ডেলিভারি দিই:</p>
               <div className="flex flex-wrap gap-1.5">
                 {(settings.allowedZones ?? []).map((z) => (
-                  <span key={z} className="px-2 py-0.5 rounded-full bg-[var(--color-coral)]/10 text-[var(--color-coral)] text-[10px] font-bold">{z}</span>
+                  <span key={z} className="px-2 py-0.5 rounded-full bg-coral/10 text-coral text-[10px] font-bold">{z}</span>
                 ))}
               </div>
             </div>
-            <button onClick={onDismiss} className="text-xs text-[var(--color-ink)]/40">Browse anyway</button>
+            <button onClick={onDismiss} className="text-xs text-ink/40">তবুও ব্রাউজ করুন</button>
           </div>
         )}
 
         {status === 'error' && (
           <div className="space-y-4">
             <AlertCircle className="w-12 h-12 text-red-400 mx-auto" />
-            <h2 className="font-bold text-[var(--color-ink)]">Location not found</h2>
-            <p className="text-sm text-[var(--color-ink)]/60">{errorMsg}</p>
+            <h2 className="font-bold text-ink">লোকেশন পাওয়া যায়নি</h2>
+            <p className="text-sm text-ink/60">{errorMsg}</p>
             <button onClick={requestLocation}
-              className="w-full py-3 rounded-2xl bg-[var(--color-coral)] text-white font-bold text-sm">
-              Try Again
+              className="w-full py-3 rounded-2xl bg-coral text-white font-bold text-sm">
+              আবার চেষ্টা করুন
             </button>
-            <button onClick={onDismiss} className="text-xs text-[var(--color-ink)]/40">Skip</button>
+            <button onClick={onDismiss} className="text-xs text-ink/40">বাদ দিন</button>
           </div>
         )}
       </div>

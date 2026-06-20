@@ -2,15 +2,21 @@ import { useState } from 'react';
 import { ArrowLeft, MapPin, Clock, Wallet, Check, Shield } from 'lucide-react';
 import {
   useCart, useOrders, useUI, formatINR,
-  cartSubtotal, qualifiesForFreeDelivery,
+  cartSubtotal, qualifiesForFreeDelivery, standardDeliveryFee,
+  useLocation,
 } from '../lib/store';
+import { LocationGate } from '../components/LocationGate';
 
 const PAYMENTS = [
-  { id: 'apple',  label: 'Apple Pay', sub: 'Express', emoji: '' },
-  { id: 'card',   label: 'Credit card', sub: 'Visa · MC · Amex', emoji: '' },
-  { id: 'upi',    label: 'UPI', sub: 'GPay · PhonePe · Paytm', emoji: '' },
-  { id: 'cash',   label: 'Cash on delivery', sub: 'Pay at your door', emoji: '' },
+  { id: 'bkash', label: 'bKash', sub: 'Send money / Payment', emoji: '📱' },
+  { id: 'nagad', label: 'Nagad', sub: 'Send money / Payment', emoji: '📲' },
+  { id: 'cash',  label: 'Cash on Delivery', sub: 'ডেলিভারির সময় পেমেন্ট', emoji: '💵' },
 ] as const;
+
+const BD_DISTRICTS = [
+  'Comilla', 'Dhaka', 'Chittagong', 'Sylhet', 'Rajshahi',
+  'Khulna', 'Mymensingh', 'Barishal', 'Rangpur',
+];
 
 const SLOTS = [
   { v: '10am - 12pm', hot: false },
@@ -19,33 +25,38 @@ const SLOTS = [
   { v: '6pm - 8pm',   hot: false },
 ];
 
-export default function CheckoutScreen() {
+interface Props {
+  onBack?: () => void;
+}
+
+export default function CheckoutScreen({ onBack }: Props) {
   const { items, clear } = useCart();
   const { placeOrder } = useOrders();
   const { back, go } = useUI();
+  const { verified: locationVerified, district: detectedDistrict } = useLocation();
+
+  const [showLocationGate, setShowLocationGate] = useState(!locationVerified);
 
   const [form, setForm] = useState({
-    name: 'Aanya Sharma',
-    phone: '+91 98765 43210',
-    email: 'aanya@bakeartstyle.com',
-    address: '12 Baker Lane, Apt 4B',
-    city: 'Mumbai',
-    pin: '400001',
+    name: '',
+    phone: '',
+    address: '',
+    district: detectedDistrict || 'Comilla',
     date: new Date().toISOString().slice(0, 10),
     time: '4pm - 6pm',
-    payment: 'apple' as typeof PAYMENTS[number]['id'],
+    payment: 'cash' as typeof PAYMENTS[number]['id'],
   });
 
   const subtotal = cartSubtotal(items);
-  const delivery = items.length === 0 ? 0 : (qualifiesForFreeDelivery(subtotal) ? 0 : 49);
-  const tax = Math.round(subtotal * 0.05);
-  const total = subtotal + delivery + tax;
+  const delivery = items.length === 0 ? 0 : (qualifiesForFreeDelivery(subtotal) ? 0 : standardDeliveryFee);
+  const total = subtotal + delivery;
 
   const handleSubmit = () => {
     if (items.length === 0) return;
+    if (!form.name || !form.phone || !form.address) return;
     const o = placeOrder({
       items,
-      customer: { name: form.name, phone: form.phone, email: form.email, address: form.address, city: form.city, pin: form.pin },
+      customer: { name: form.name, phone: form.phone, email: '', address: form.address, city: form.district, pin: '' },
       delivery: { date: form.date, time: form.time },
       payment: form.payment,
       subtotal, deliveryFee: delivery, total,
@@ -54,16 +65,27 @@ export default function CheckoutScreen() {
     go({ name: 'success', orderId: o.id });
   };
 
+  const handleBack = onBack ?? back;
+
+  // Location gate before checkout (payment step) — must verify zone first
+  if (showLocationGate) {
+    return (
+      <LocationGate
+        onDismiss={() => setShowLocationGate(false)}
+      />
+    );
+  }
+
   if (items.length === 0) {
     return (
       <div className="flex h-full flex-col bg-cream">
-        <Header title="Checkout" onBack={back} />
+        <Header title="চেকআউট" onBack={handleBack} />
         <div className="flex flex-1 flex-col items-center justify-center px-8 text-center">
           <div className="text-5xl">🛒</div>
-          <h2 className="mt-4 font-display text-[20px] font-bold text-ink">Nothing to checkout</h2>
-          <p className="mt-1 text-[12px] text-ink-200">Add a cake first, then come back here.</p>
-          <button onClick={back} className="btn-primary mt-5 h-12 rounded-2xl px-6 text-[13px] font-bold">
-            Back to cakes
+          <h2 className="mt-4 font-display text-[20px] font-bold text-ink">কার্ট খালি</h2>
+          <p className="mt-1 text-[12px] text-ink-200">আগে একটা কেক যোগ করুন।</p>
+          <button onClick={handleBack} className="btn-primary mt-5 h-12 rounded-2xl px-6 text-[13px] font-bold">
+            কেক দেখুন
           </button>
         </div>
       </div>
@@ -72,11 +94,11 @@ export default function CheckoutScreen() {
 
   return (
     <div className="flex h-full flex-col bg-cream">
-      <Header title="Checkout" onBack={back} />
+      <Header title="চেকআউট" onBack={handleBack} />
 
       <div className="no-scrollbar flex-1 overflow-y-auto px-5 pb-32 pt-1">
         {/* Items */}
-        <Section icon={MapPin} title="Items in this order">
+        <Section icon={MapPin} title="অর্ডারের আইটেম">
           <div className="space-y-2.5">
             {items.slice(0, 3).map((it, i) => (
               <div key={i} className="flex items-center gap-3">
@@ -94,25 +116,48 @@ export default function CheckoutScreen() {
             ))}
             {items.length > 3 && (
               <div className="text-center text-[11px] text-ink-200">
-                +{items.length - 3} more items
+                +{items.length - 3} আরও আইটেম
               </div>
             )}
           </div>
         </Section>
 
-        {/* Delivery */}
-        <Section icon={MapPin} title="Delivery address" badge="Default">
-          <div className="space-y-1 text-[12.5px]">
-            <div className="font-bold text-ink">{form.name} · {form.phone}</div>
-            <div className="text-ink-200">{form.address}, {form.city} · {form.pin}</div>
+        {/* Delivery address */}
+        <Section icon={MapPin} title="ডেলিভারি ঠিকানা">
+          <div className="space-y-2.5">
+            <input
+              placeholder="আপনার নাম"
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              className="h-11 w-full rounded-xl border border-ink-50 bg-white px-3 text-[13px] font-medium text-ink outline-none focus:border-coral focus:ring-2 focus:ring-coral/15"
+            />
+            <input
+              placeholder="মোবাইল নম্বর (01XXXXXXXXX)"
+              value={form.phone}
+              onChange={(e) => setForm({ ...form, phone: e.target.value })}
+              className="h-11 w-full rounded-xl border border-ink-50 bg-white px-3 text-[13px] font-medium text-ink outline-none focus:border-coral focus:ring-2 focus:ring-coral/15"
+            />
+            <textarea
+              placeholder="সম্পূর্ণ ঠিকানা (বাসা/রোড/এলাকা)"
+              value={form.address}
+              onChange={(e) => setForm({ ...form, address: e.target.value })}
+              rows={2}
+              className="w-full rounded-xl border border-ink-50 bg-white px-3 py-2.5 text-[13px] font-medium text-ink outline-none focus:border-coral focus:ring-2 focus:ring-coral/15 resize-none"
+            />
+            <select
+              value={form.district}
+              onChange={(e) => setForm({ ...form, district: e.target.value })}
+              className="h-11 w-full rounded-xl border border-ink-50 bg-white px-3 text-[13px] font-medium text-ink outline-none focus:border-coral focus:ring-2 focus:ring-coral/15"
+            >
+              {BD_DISTRICTS.map((d) => (
+                <option key={d} value={d}>{d}</option>
+              ))}
+            </select>
           </div>
-          <button className="mt-3 inline-flex items-center gap-1 rounded-full bg-coral-50 px-3 py-1.5 text-[11.5px] font-bold text-coral active:scale-95">
-            Change address
-          </button>
         </Section>
 
         {/* Date & time */}
-        <Section icon={Clock} title="Delivery time">
+        <Section icon={Clock} title="ডেলিভারি সময়">
           <input
             type="date"
             value={form.date}
@@ -142,7 +187,7 @@ export default function CheckoutScreen() {
         </Section>
 
         {/* Payment */}
-        <Section icon={Wallet} title="Payment method">
+        <Section icon={Wallet} title="পেমেন্ট পদ্ধতি">
           <div className="space-y-2">
             {PAYMENTS.map((p) => (
               <button
@@ -154,8 +199,8 @@ export default function CheckoutScreen() {
                     : 'border-ink-50 bg-white'
                 }`}
               >
-                <div className="flex h-10 w-12 items-center justify-center rounded-lg bg-ink">
-                  <PaymentGlyph id={p.id} active={form.payment === p.id} />
+                <div className="flex h-10 w-12 items-center justify-center rounded-lg bg-ink text-xl">
+                  {p.emoji}
                 </div>
                 <div className="flex-1">
                   <div className="text-[13px] font-bold text-ink">{p.label}</div>
@@ -174,18 +219,17 @@ export default function CheckoutScreen() {
         </Section>
 
         {/* Bill */}
-        <Section title="Bill details" className="!p-0">
+        <Section title="বিল বিবরণ" className="!p-0">
           <div className="space-y-2 px-4 py-4 text-[13px]">
-            <Row label={`Subtotal (${items.length} items)`} value={formatINR(subtotal)} />
+            <Row label={`সাবটোটাল (${items.length} আইটেম)`} value={formatINR(subtotal)} />
             <Row
-              label="Delivery"
-              value={delivery === 0 ? 'FREE' : formatINR(delivery)}
+              label="ডেলিভারি চার্জ"
+              value={delivery === 0 ? 'ফ্রি' : formatINR(delivery)}
               positive={delivery === 0}
             />
-            <Row label="Taxes (GST 5%)" value={formatINR(tax)} />
             <div className="h-px bg-ink-50" />
             <div className="flex items-center justify-between pt-1">
-              <span className="font-display text-[15px] font-bold tracking-tight text-ink">Total</span>
+              <span className="font-display text-[15px] font-bold tracking-tight text-ink">মোট</span>
               <span className="font-display text-[20px] font-bold tabular text-ink">{formatINR(total)}</span>
             </div>
           </div>
@@ -193,7 +237,7 @@ export default function CheckoutScreen() {
 
         <div className="mt-3 flex items-center justify-center gap-2 rounded-2xl bg-cream py-3 text-[11px] text-ink-200">
           <Shield className="h-3.5 w-3.5" />
-          Secured by 256-bit SSL · PCI-DSS compliant
+          নিরাপদ ও বিশ্বস্ত অর্ডার প্রসেসিং
         </div>
       </div>
 
@@ -201,14 +245,15 @@ export default function CheckoutScreen() {
       <div className="absolute right-0 bottom-0 left-0 z-30 border-t border-ink-50/80 bg-white/95 px-5 pt-3 pb-6 backdrop-blur-xl">
         <div className="flex items-center gap-3">
           <div>
-            <div className="text-[10px] font-bold tracking-wider text-ink-200 uppercase">Pay</div>
+            <div className="text-[10px] font-bold tracking-wider text-ink-200 uppercase">পেমেন্ট</div>
             <div className="font-display text-[20px] font-bold tabular text-ink">{formatINR(total)}</div>
           </div>
           <button
             onClick={handleSubmit}
-            className="btn-primary ml-auto flex h-14 flex-1 items-center justify-center gap-2 rounded-2xl text-[14px] font-bold tracking-tight"
+            disabled={!form.name || !form.phone || !form.address}
+            className="btn-primary ml-auto flex h-14 flex-1 items-center justify-center gap-2 rounded-2xl text-[14px] font-bold tracking-tight disabled:opacity-50"
           >
-            Place order
+            অর্ডার করুন
             <Check className="h-[18px] w-[18px]" strokeWidth={2.5} />
           </button>
         </div>
@@ -273,39 +318,5 @@ function Row({ label, value, positive }: { label: string; value: string; positiv
         {value}
       </span>
     </div>
-  );
-}
-
-function PaymentGlyph({ id, active }: { id: string; active?: boolean }) {
-  const color = active ? '#fff' : '#fff';
-  if (id === 'apple') {
-    return (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill={color}>
-        <path d="M16.5 12.6c0-2.3 1.9-3.4 2-3.5-1.1-1.6-2.8-1.8-3.4-1.8-1.4-.1-2.8.9-3.5.9s-1.9-.9-3.1-.9c-1.6 0-3 .9-3.8 2.4-1.6 2.8-.4 7 1.2 9.3.8 1.1 1.7 2.4 2.9 2.4s1.6-.8 3-.8 1.8.8 3.1.8 2.1-.1 3.4-2.1c.9-1.3 1.3-2.5 1.3-2.6-.1 0-2.5-1-2.5-3.7zM14.4 5.6c.6-.8 1.1-1.9.9-3-.9.1-2.1.6-2.7 1.4-.6.7-1.1 1.8-1 2.9 1-.1 2.1-.5 2.8-1.3z" />
-      </svg>
-    );
-  }
-  if (id === 'card') {
-    return (
-      <svg width="22" height="16" viewBox="0 0 22 16" fill={color}>
-        <rect x="0" y="0" width="22" height="16" rx="2" fill={color} />
-        <rect x="0" y="4" width="22" height="3" fill="#1a1311" />
-      </svg>
-    );
-  }
-  if (id === 'upi') {
-    return (
-      <svg width="22" height="16" viewBox="0 0 22 16" fill={color}>
-        <rect x="0" y="0" width="22" height="16" rx="2" fill={color} />
-        <text x="11" y="11" textAnchor="middle" fill="#1a1311" fontSize="7" fontWeight="800" fontFamily="Inter">UPI</text>
-      </svg>
-    );
-  }
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2">
-      <rect x="2" y="6" width="20" height="13" rx="2" />
-      <circle cx="12" cy="12.5" r="2" fill={color} />
-      <path d="M6 6V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2" />
-    </svg>
   );
 }
