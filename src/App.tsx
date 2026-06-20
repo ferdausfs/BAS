@@ -28,10 +28,18 @@ export default function App() {
   const logoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const normalizeEmail = (email?: string) => email?.trim().toLowerCase() ?? '';
-  const isAdminUser = useMemo(
-    () => !!user && normalizeEmail(user.email) === normalizeEmail(settings.adminEmail),
-    [user, settings.adminEmail]
-  );
+
+  const isAdminUser = useMemo(() => {
+    const userEmail = normalizeEmail(user?.email);
+
+    // settings.adminEmail localStorage-এ পুরোনো থাকলেও এই email admin হিসেবে কাজ করবে
+    const allowedAdminEmails = [
+      settings.adminEmail,
+      'umuhammadiswa@gmail.com',
+    ];
+
+    return !!userEmail && allowedAdminEmails.some((email) => normalizeEmail(email) === userEmail);
+  }, [user?.email, settings.adminEmail]);
 
   useEffect(() => {
     if (!pendingAdminUnlock || !user) return;
@@ -49,21 +57,22 @@ export default function App() {
   const handleLogoTap = () => {
     tapCount.current += 1;
     if (logoTimer.current) clearTimeout(logoTimer.current);
+
     if (tapCount.current >= 5) {
       tapCount.current = 0;
-      // Admin email check
+
       if (isAdminUser) {
         setAdminOpen(true);
       } else if (!user) {
-        // Not logged in — open auth first, then auto-unlock only for admin email.
         setPendingAdminUnlock(true);
         setAuthOpen(true);
       } else {
-        // Wrong email — silent ignore
         console.log('Not admin email');
       }
     } else {
-      logoTimer.current = setTimeout(() => { tapCount.current = 0; }, 3000);
+      logoTimer.current = setTimeout(() => {
+        tapCount.current = 0;
+      }, 3000);
     }
   };
 
@@ -82,51 +91,69 @@ export default function App() {
     <PhoneFrame onLogoTap={handleLogoTap}>
       <div className="relative h-full w-full">
         <div key={screenKey} className="anim-fade h-full">
-          {view.name === 'splash'                             && <SplashScreen />}
-          {view.name === 'tabs' && activeTab === 'home'       && (
+          {view.name === 'splash' && <SplashScreen />}
+
+          {view.name === 'tabs' && activeTab === 'home' && (
             <HomeScreen onLogoTap={handleLogoTap} />
           )}
+
           {view.name === 'tabs' && activeTab === 'categories' && <CategoriesScreen />}
-          {view.name === 'tabs' && activeTab === 'orders'     && (
-            user ? <OrdersScreen /> : (
-              <div className="flex flex-col h-full items-center justify-center gap-4 p-8 text-center">
+
+          {view.name === 'tabs' && activeTab === 'orders' && (
+            user ? (
+              <OrdersScreen />
+            ) : (
+              <div className="flex h-full flex-col items-center justify-center gap-4 p-8 text-center">
                 <div className="text-5xl">📋</div>
-                <p className="font-bold text-ink text-lg">Sign in to view orders</p>
-                <button onClick={() => setAuthOpen(true)}
-                  className="px-6 py-3 rounded-2xl bg-coral text-white font-bold text-sm">
+                <p className="text-lg font-bold text-ink">Sign in to view orders</p>
+                <button
+                  onClick={() => setAuthOpen(true)}
+                  className="rounded-2xl bg-coral px-6 py-3 text-sm font-bold text-white"
+                >
                   Sign In
                 </button>
               </div>
             )
           )}
-          {view.name === 'tabs' && activeTab === 'profile'    && (
+
+          {view.name === 'tabs' && activeTab === 'profile' && (
             <ProfileScreen onAuthOpen={() => setAuthOpen(true)} />
           )}
-          {view.name === 'product'   && <ProductScreen />}
+
+          {view.name === 'product' && <ProductScreen />}
           {view.name === 'customize' && <CustomizeScreen />}
-          {view.name === 'cart'      && (
-            user ? <CartScreen /> : (
-              <div className="flex flex-col h-full items-center justify-center gap-4 p-8 text-center">
+
+          {view.name === 'cart' && (
+            user ? (
+              <CartScreen />
+            ) : (
+              <div className="flex h-full flex-col items-center justify-center gap-4 p-8 text-center">
                 <div className="text-5xl">🛒</div>
-                <p className="font-bold text-ink text-lg">Sign in to view cart</p>
-                <button onClick={() => setAuthOpen(true)}
-                  className="px-6 py-3 rounded-2xl bg-coral text-white font-bold text-sm">
+                <p className="text-lg font-bold text-ink">Sign in to view cart</p>
+                <button
+                  onClick={() => setAuthOpen(true)}
+                  className="rounded-2xl bg-coral px-6 py-3 text-sm font-bold text-white"
+                >
                   Sign In
                 </button>
               </div>
             )
           )}
-          {view.name === 'checkout'  && (
-            user ? <CheckoutScreen /> : null
-          )}
-          {view.name === 'success'   && <SuccessScreen />}
-          {view.name === 'wishlist'  && <WishlistScreen />}
+
+          {view.name === 'checkout' && (user ? <CheckoutScreen /> : null)}
+          {view.name === 'success' && <SuccessScreen />}
+          {view.name === 'wishlist' && <WishlistScreen />}
         </div>
 
         {showTabBar && <BottomTabBar />}
       </div>
 
-      <AuthSheet open={authOpen} onClose={() => setAuthOpen(false)} onSuccess={() => setPendingAdminUnlock(true)} />
+      <AuthSheet
+        open={authOpen}
+        onClose={() => setAuthOpen(false)}
+        onSuccess={() => setPendingAdminUnlock(true)}
+      />
+
       {adminOpen && <AdminPanel onClose={() => setAdminOpen(false)} />}
     </PhoneFrame>
   );

@@ -120,7 +120,7 @@ import type { SiteSettings } from '../types';
 
 export const DEFAULT_SETTINGS: SiteSettings = {
   adminPin: '1234',
-  adminEmail: 'admin@bakeartstyle.com',
+  adminEmail: 'umuhammadiswa@gmail.com',
   promoEnabled: true,
   promoCode: 'BAKE20',
   promoPercent: 20,
