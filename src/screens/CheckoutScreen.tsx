@@ -148,6 +148,7 @@ export default function CheckoutScreen({ onBack }: Props) {
 
   const handleBack = onBack ?? back;
 
+  // Location gate before checkout (payment step) — must verify zone first
   if (showLocationGate) {
     return (
       <LocationGate
@@ -177,6 +178,7 @@ export default function CheckoutScreen({ onBack }: Props) {
       <Header title="চেকআউট" onBack={handleBack} />
 
       <div className="no-scrollbar flex-1 overflow-y-auto px-5 pb-32 pt-1">
+        {/* Items */}
         <Section icon={MapPin} title="অর্ডারের আইটেম">
           <div className="space-y-2.5">
             {items.slice(0, 3).map((it, i) => (
@@ -201,6 +203,7 @@ export default function CheckoutScreen({ onBack }: Props) {
           </div>
         </Section>
 
+        {/* Delivery address */}
         <Section icon={MapPin} title="ডেলিভারি ঠিকানা">
           <div className="space-y-2.5">
             <input
@@ -209,7 +212,6 @@ export default function CheckoutScreen({ onBack }: Props) {
               onChange={(e) => setForm({ ...form, name: e.target.value })}
               className="h-11 w-full rounded-xl border border-ink-50 bg-white px-3 text-[13px] font-medium text-ink outline-none focus:border-coral focus:ring-2 focus:ring-coral/15"
             />
-
             <input
               placeholder="মোবাইল নম্বর (01XXXXXXXXX)"
               inputMode="tel"
@@ -259,6 +261,7 @@ export default function CheckoutScreen({ onBack }: Props) {
           </div>
         </Section>
 
+        {/* Date & time */}
         <Section icon={Clock} title="ডেলিভারি সময়">
           <input
             type="date"
@@ -288,6 +291,7 @@ export default function CheckoutScreen({ onBack }: Props) {
           </div>
         </Section>
 
+        {/* Payment */}
         <Section icon={Wallet} title="পেমেন্ট পদ্ধতি">
           <div className="space-y-2">
             {PAYMENTS.map((p) => (
@@ -319,6 +323,7 @@ export default function CheckoutScreen({ onBack }: Props) {
           </div>
         </Section>
 
+        {/* Bill */}
         <Section title="বিল বিবরণ" className="!p-0">
           <div className="space-y-2 px-4 py-4 text-[13px]">
             <Row label={`সাবটোটাল (${items.length} আইটেম)`} value={formatINR(subtotal)} />
@@ -341,6 +346,7 @@ export default function CheckoutScreen({ onBack }: Props) {
         </div>
       </div>
 
+      {/* Sticky CTA */}
       <div className="absolute right-0 bottom-0 left-0 z-30 border-t border-ink-50/80 bg-white/95 px-5 pt-3 pb-6 backdrop-blur-xl">
         <div className="flex items-center gap-3">
           <div>
