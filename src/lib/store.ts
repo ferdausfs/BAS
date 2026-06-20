@@ -1,67 +1,9 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { CartItem, Order } from '../types';
-import { supabase } from './supabase';
-import { isSupabaseConfigured } from './utils';
-
-
-
-const REMOTE_SETTINGS_KEY = 'site_settings';
-
-
-const readRemoteSetting = async <T,>(key: string): Promise<T | null> => {
-  if (!isSupabaseConfigured()) return null;
-  try {
-    const { data, error } = await supabase
-      .from('app_settings')
-      .select('value')
-      .eq('key', key)
-      .maybeSingle();
-
-    if (error) throw error;
-    return (data?.value as T) ?? null;
-  } catch (e) {
-    console.warn(`Remote setting read failed: ${key}`, e);
-    return null;
-  }
-};
-
-const writeRemoteSetting = async (key: string, value: unknown): Promise<void> => {
-  if (!isSupabaseConfigured()) return;
-  try {
-    const { error } = await supabase
-      .from('app_settings')
-      .upsert(
-        { key, value, updated_at: new Date().toISOString() },
-        { onConflict: 'key' }
-      );
-
-    if (error) throw error;
-  } catch (e) {
-    console.warn(`Remote setting write failed: ${key}`, e);
-  }
-};
-
-const pushBrowserRouteState = () => {
-  try {
-    if (typeof window !== 'undefined') {
-      window.history.pushState({ bakeArtRoute: true, t: Date.now() }, '');
-    }
-  } catch {
-    // ignore history errors
-  }
-};
 
 // ===== App view routing =====
 export type Tab = 'home' | 'categories' | 'orders' | 'profile';
-
-export type NotificationItem = {
-  id: string;
-  title: string;
-  body: string;
-  createdAt: number;
-  read: boolean;
-};
 
 export type View =
   | { name: 'splash' }
@@ -72,8 +14,7 @@ export type View =
   | { name: 'checkout' }
   | { name: 'success'; orderId: string }
   | { name: 'wishlist' }
-  | { name: 'tracking'; orderId?: string }
-  | { name: 'admin'; tab?: string };
+  | { name: 'tracking'; orderId?: string };
 
 type UIState = {
   view: View;
@@ -87,11 +28,8 @@ type UIState = {
   promoDiscount: number;
   applyPromo: (pct: number) => void;
   clearPromo: () => void;
-  // Admin/user notifications
+  // Admin notifications
   newOrderCount: number;
-  notifications: NotificationItem[];
-  addNotification: (title: string, body: string) => void;
-  markAllRead: () => void;
   incrementNewOrders: () => void;
   clearNewOrders: () => void;
   // Chat
@@ -105,7 +43,6 @@ export const useUI = create<UIState>((set, get) => ({
   history: [],
   promoDiscount: 0,
   newOrderCount: 0,
-  notifications: [],
   chatOpen: false,
   setView: (v) =>
     set({
@@ -113,18 +50,9 @@ export const useUI = create<UIState>((set, get) => ({
       tab: v.name === 'tabs' ? v.tab : get().tab,
       history: v.name === 'splash' ? [] : get().history,
     }),
-  setTab: (tab) => {
-    const cur = get().view;
-    if (!(cur.name === 'tabs' && cur.tab === tab)) pushBrowserRouteState();
-    set({
-      tab,
-      view: { name: 'tabs', tab },
-      history: cur.name === 'splash' ? [] : [...get().history, cur].slice(-20),
-    });
-  },
+  setTab: (tab) => set({ tab, view: { name: 'tabs', tab }, history: [] }),
   go: (v) => {
     const cur = get().view;
-    pushBrowserRouteState();
     set({
       view: v,
       tab: v.name === 'tabs' ? v.tab : get().tab,
@@ -144,23 +72,7 @@ export const useUI = create<UIState>((set, get) => ({
   },
   applyPromo: (pct) => set({ promoDiscount: pct }),
   clearPromo: () => set({ promoDiscount: 0 }),
-  addNotification: (title, body) => set((s) => ({
-    notifications: [
-      { id: `nt-${Date.now()}`, title, body, createdAt: Date.now(), read: false },
-      ...s.notifications,
-    ].slice(0, 30),
-  })),
-  markAllRead: () => set((s) => ({
-    notifications: s.notifications.map((n) => ({ ...n, read: true })),
-    newOrderCount: 0,
-  })),
-  incrementNewOrders: () => set((s) => ({
-    newOrderCount: s.newOrderCount + 1,
-    notifications: [
-      { id: `nt-${Date.now()}`, title: '🎂 New order', body: 'A new cake order has been placed.', createdAt: Date.now(), read: false },
-      ...s.notifications,
-    ].slice(0, 30),
-  })),
+  incrementNewOrders: () => set((s) => ({ newOrderCount: s.newOrderCount + 1 })),
   clearNewOrders: () => set({ newOrderCount: 0 }),
   setChatOpen: (v) => set({ chatOpen: v }),
 }));
@@ -211,18 +123,16 @@ export const useCart = create<CartState>()(
 // ===== Orders =====
 type OrderState = {
   orders: Order[];
-  setOrders: (orders: Order[]) => void;
   placeOrder: (order: Omit<Order, 'id' | 'createdAt' | 'status'>) => Order;
-  setOrderStatus: (id: string, status: Order['status']) => void;
+  setOrders: (orders: Order[]) => void;
+  upsertOrder: (order: Order) => void;
+  updateOrderStatus: (id: string, status: Order['status']) => void;
 };
 
 export const useOrders = create<OrderState>()(
   persist(
     (set) => ({
       orders: [],
-
-      setOrders: (orders) => set({ orders }),
-
       placeOrder: (data) => {
         const o: Order = {
           ...data,
@@ -230,58 +140,23 @@ export const useOrders = create<OrderState>()(
           createdAt: Date.now(),
           status: 'placed',
         };
-
         set((s) => ({ orders: [o, ...s.orders] }));
-        useUI.getState().addNotification('✅ Order placed', `Order #${o.id} has been placed successfully.`);
-
-        if (isSupabaseConfigured()) {
-          const user = useAuthStore.getState().user;
-          const isUuid =
-            !!user?.id &&
-            /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(user.id);
-
-          void supabase.from('orders').insert({
-            id: o.id,
-            user_id: isUuid ? user!.id : null,
-            customer_name: o.customer.name,
-            customer_phone: o.customer.phone,
-            customer_address: o.customer.address,
-            district: o.customer.city,
-            delivery_date: o.delivery.date,
-            delivery_time: o.delivery.time,
-            payment_method: o.payment,
-            items: o.items,
-            subtotal: o.subtotal,
-            discount: 0,
-            delivery_fee: o.deliveryFee,
-            total: o.total,
-            status: o.status,
-            created_at: new Date(o.createdAt).toISOString(),
-          }).then(({ error }) => {
-            if (error) console.warn('Remote order insert failed:', error.message);
-          });
-        }
-
         return o;
       },
-
-      setOrderStatus: (id, status) => {
+      setOrders: (orders) => set({ orders }),
+      upsertOrder: (order) =>
+        set((s) => {
+          const exists = s.orders.find((o) => o.id === order.id);
+          return {
+            orders: exists
+              ? s.orders.map((o) => (o.id === order.id ? order : o))
+              : [order, ...s.orders],
+          };
+        }),
+      updateOrderStatus: (id, status) =>
         set((s) => ({
           orders: s.orders.map((o) => (o.id === id ? { ...o, status } : o)),
-        }));
-
-        useUI.getState().addNotification('📦 Order updated', `Order #${id} status changed to ${status}.`);
-
-        if (isSupabaseConfigured()) {
-          void supabase
-            .from('orders')
-            .update({ status })
-            .eq('id', id)
-            .then(({ error }) => {
-              if (error) console.warn('Remote order status update failed:', error.message);
-            });
-        }
-      },
+        })),
     }),
     { name: 'bakeart-orders' }
   )
@@ -308,15 +183,13 @@ export const useUser = create<UserState>()(
   )
 );
 
-export const formatBDT = (n: number) => `৳${n.toLocaleString('en-BD')}`;
-// Backward-compatible alias: existing components still import formatINR.
-export const formatINR = formatBDT;
+export const formatINR = (n: number) => `৳${n.toLocaleString('en-BD')}`;
 
 // Selectors / helpers
 export const cartSubtotal = (items: CartItem[]) =>
   items.reduce((s, i) => s + i.price * i.quantity, 0);
 
-export const freeDeliveryThreshold = 999;
+export const freeDeliveryThreshold = 1500;
 export const standardDeliveryFee = 60;
 export const qualifiesForFreeDelivery = (sub: number) => sub >= freeDeliveryThreshold;
 // ── Auth Store ─────────────────────────────────────────────
@@ -343,24 +216,16 @@ export const useAuthStore = create<AuthState>()(
 // ── Settings Store ─────────────────────────────────────────
 type SettingsState = {
   settings: SiteSettings;
-  loadRemoteSettings: () => Promise<void>;
   updateSettings: (patch: Partial<SiteSettings>) => void;
 };
 
 export const useSettingsStore = create<SettingsState>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       settings: DEFAULT_SETTINGS,
-      loadRemoteSettings: async () => {
-        const remote = await readRemoteSetting<Partial<SiteSettings>>(REMOTE_SETTINGS_KEY);
-        if (remote) {
-          set({ settings: { ...DEFAULT_SETTINGS, ...get().settings, ...remote } });
-        }
-      },
       updateSettings: (patch) =>
         set((s) => {
           const next = { ...s.settings, ...patch };
-          void writeRemoteSetting(REMOTE_SETTINGS_KEY, next);
           return { settings: next };
         }),
     }),

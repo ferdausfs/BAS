@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { ArrowLeft, MapPin, Clock, Wallet, Check, Shield, Navigation, Loader2 } from 'lucide-react';
+import { ArrowLeft, MapPin, Clock, Wallet, Check, Shield, Loader2 } from 'lucide-react';
 import {
-  useCart, useOrders, useUI, formatINR,
+  useCart, useUI, formatINR,
   cartSubtotal, qualifiesForFreeDelivery, standardDeliveryFee,
   useLocation,
 } from '../lib/store';
+import { useOrdersHook } from '../hooks/useOrders';
 import { LocationGate } from '../components/LocationGate';
 
 const PAYMENTS = [
@@ -25,173 +26,50 @@ const SLOTS = [
   { v: '6pm - 8pm',   hot: false },
 ];
 
-type CustomerProfile = {
-  name?: string;
-  phone?: string;
-  address?: string;
-  district?: string;
-  payment?: typeof PAYMENTS[number]['id'];
-};
-
-const CUSTOMER_PROFILE_KEY = 'bakeart-customer-profile';
-
-function loadCustomerProfile(): CustomerProfile {
-  try {
-    const raw = localStorage.getItem(CUSTOMER_PROFILE_KEY);
-    return raw ? JSON.parse(raw) : {};
-  } catch {
-    return {};
-  }
-}
-
-function saveCustomerProfile(profile: Required<CustomerProfile>) {
-  localStorage.setItem(CUSTOMER_PROFILE_KEY, JSON.stringify(profile));
-}
-
 interface Props {
   onBack?: () => void;
 }
 
 export default function CheckoutScreen({ onBack }: Props) {
   const { items, clear } = useCart();
-  const { placeOrder } = useOrders();
+  const { submitOrder } = useOrdersHook();
   const { back, go } = useUI();
-  const {
-    verified: locationVerified,
-    district: detectedDistrict,
-    setLocation,
-  } = useLocation();
+  const { verified: locationVerified, district: detectedDistrict } = useLocation();
 
   const [showLocationGate, setShowLocationGate] = useState(!locationVerified);
-  const [gpsLoading, setGpsLoading] = useState(false);
-  const [gpsError, setGpsError] = useState('');
-  const savedCustomer = loadCustomerProfile();
+  const [submitting, setSubmitting] = useState(false);
 
   const [form, setForm] = useState({
-    name: savedCustomer.name || '',
-    phone: savedCustomer.phone || '',
-    address: savedCustomer.address || '',
-    district: savedCustomer.district || detectedDistrict || 'Comilla',
+    name: '',
+    phone: '',
+    address: '',
+    district: detectedDistrict || 'Comilla',
     date: new Date().toISOString().slice(0, 10),
     time: '4pm - 6pm',
-    payment: (savedCustomer.payment || 'cash') as typeof PAYMENTS[number]['id'],
+    payment: 'cash' as typeof PAYMENTS[number]['id'],
   });
 
   const subtotal = cartSubtotal(items);
   const delivery = items.length === 0 ? 0 : (qualifiesForFreeDelivery(subtotal) ? 0 : standardDeliveryFee);
   const total = subtotal + delivery;
 
-  const districtOptions = Array.from(
-    new Set([form.district, savedCustomer.district, detectedDistrict, ...BD_DISTRICTS].filter(Boolean) as string[])
-  );
-
-  const hasSavedCustomer = !!(savedCustomer.name || savedCustomer.phone || savedCustomer.address);
-
-  const applySavedCustomer = () => {
-    const latest = loadCustomerProfile();
-    setForm((prev) => ({
-      ...prev,
-      name: latest.name || prev.name,
-      phone: latest.phone || prev.phone,
-      address: latest.address || prev.address,
-      district: latest.district || prev.district,
-      payment: (latest.payment || prev.payment) as typeof PAYMENTS[number]['id'],
-    }));
-    setGpsError('');
-  };
-
-  const buildAddressFromGeo = (data: any) => {
-    const a = data?.address ?? {};
-    const parts = [
-      a.house_number,
-      a.road,
-      a.neighbourhood,
-      a.suburb,
-      a.village || a.town || a.city,
-      a.district || a.county || a.state_district,
-      a.state,
-      a.postcode,
-      a.country,
-    ].filter(Boolean);
-
-    return parts.length ? parts.join(', ') : (data?.display_name || '');
-  };
-
-  const districtFromGeo = (data: any) => {
-    const a = data?.address ?? {};
-    return (
-      a.city ||
-      a.town ||
-      a.village ||
-      a.district ||
-      a.county ||
-      a.state_district ||
-      a.state ||
-      ''
-    );
-  };
-
-  const useGPSAddress = async () => {
-    setGpsError('');
-
-    if (!('geolocation' in navigator)) {
-      setGpsError('আপনার ব্রাউজারে GPS/location support নেই।');
-      return;
-    }
-
-    setGpsLoading(true);
-    try {
-      const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject, {
-          enableHighAccuracy: true,
-          timeout: 15000,
-          maximumAge: 0,
-        });
-      });
-
-      const { latitude: lat, longitude: lng } = pos.coords;
-      const res = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,
-        { headers: { 'Accept-Language': 'bn,en' } }
-      );
-      const data = await res.json();
-      const gpsAddress = buildAddressFromGeo(data);
-      const gpsDistrict = districtFromGeo(data);
-
-      setLocation(gpsDistrict || form.district, lat, lng);
-      setForm((prev) => ({
-        ...prev,
-        address: gpsAddress || prev.address,
-        district: gpsDistrict || prev.district,
-      }));
-    } catch (e) {
-      setGpsError(e instanceof Error ? e.message : 'GPS দিয়ে ঠিকানা পাওয়া যায়নি। আবার চেষ্টা করুন বা নিজে লিখুন।');
-    } finally {
-      setGpsLoading(false);
-    }
-  };
-
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (items.length === 0) return;
     if (!form.name || !form.phone || !form.address) return;
-
-    saveCustomerProfile({
-      name: form.name,
-      phone: form.phone,
-      address: form.address,
-      district: form.district,
-      payment: form.payment,
-    });
-
-    const o = placeOrder({
-      items,
-      customer: { name: form.name, phone: form.phone, email: '', address: form.address, city: form.district, pin: '' },
-      delivery: { date: form.date, time: form.time },
-      payment: form.payment,
-      subtotal, deliveryFee: delivery, total,
-    });
-    clear();
-    go({ name: 'success', orderId: o.id });
+    setSubmitting(true);
+    try {
+      const o = await submitOrder({
+        items,
+        customer: { name: form.name, phone: form.phone, email: '', address: form.address, city: form.district, pin: '' },
+        delivery: { date: form.date, time: form.time },
+        payment: form.payment,
+        subtotal, deliveryFee: delivery, total,
+      });
+      clear();
+      go({ name: 'success', orderId: o.id });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleBack = onBack ?? back;
@@ -252,27 +130,8 @@ export default function CheckoutScreen({ onBack }: Props) {
         </Section>
 
         {/* Delivery address */}
-        <Section icon={MapPin} title="ডেলিভারি ঠিকানা" badge={hasSavedCustomer ? 'Profile saved' : undefined}>
+        <Section icon={MapPin} title="ডেলিভারি ঠিকানা">
           <div className="space-y-2.5">
-            {hasSavedCustomer && (
-              <div className="rounded-2xl border border-green-100 bg-green-50 p-3">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0 flex-1">
-                    <p className="text-[12px] font-bold text-green-700">Profile থেকে saved info পাওয়া গেছে</p>
-                    <p className="mt-0.5 line-clamp-2 text-[10.5px] text-green-700/75">
-                      {savedCustomer.name || 'নাম নেই'} · {savedCustomer.phone || 'ফোন নেই'} · {savedCustomer.address || 'ঠিকানা নেই'}
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={applySavedCustomer}
-                    className="flex-shrink-0 rounded-xl bg-green-600 px-3 py-2 text-[10.5px] font-bold text-white"
-                  >
-                    Use profile
-                  </button>
-                </div>
-              </div>
-            )}
             <input
               placeholder="আপনার নাম"
               value={form.name}
@@ -281,47 +140,23 @@ export default function CheckoutScreen({ onBack }: Props) {
             />
             <input
               placeholder="মোবাইল নম্বর (01XXXXXXXXX)"
-              inputMode="tel"
               value={form.phone}
               onChange={(e) => setForm({ ...form, phone: e.target.value })}
               className="h-11 w-full rounded-xl border border-ink-50 bg-white px-3 text-[13px] font-medium text-ink outline-none focus:border-coral focus:ring-2 focus:ring-coral/15"
             />
-
-            <div className="rounded-2xl border border-coral/15 bg-coral-50/35 p-3">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-[12px] font-bold text-ink">ঠিকানা দিন</p>
-                  <p className="text-[10.5px] leading-relaxed text-ink-200">
-                    নিজে লিখতে পারেন অথবা GPS দিয়ে auto-fill করতে পারেন। পরে চাইলে edit করা যাবে।
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={useGPSAddress}
-                  disabled={gpsLoading}
-                  className="flex h-10 flex-shrink-0 items-center justify-center gap-1.5 rounded-xl bg-coral px-3 text-[11px] font-bold text-white disabled:opacity-60"
-                >
-                  {gpsLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Navigation className="h-3.5 w-3.5" />}
-                  {gpsLoading ? 'GPS...' : 'GPS'}
-                </button>
-              </div>
-              {gpsError && <p className="mt-2 text-[10.5px] font-medium text-red-500">{gpsError}</p>}
-            </div>
-
             <textarea
-              placeholder="সম্পূর্ণ ঠিকানা লিখুন (বাসা/রোড/এলাকা) অথবা GPS চাপুন"
+              placeholder="সম্পূর্ণ ঠিকানা (বাসা/রোড/এলাকা)"
               value={form.address}
               onChange={(e) => setForm({ ...form, address: e.target.value })}
-              rows={3}
-              className="w-full resize-none rounded-xl border border-ink-50 bg-white px-3 py-2.5 text-[13px] font-medium text-ink outline-none focus:border-coral focus:ring-2 focus:ring-coral/15"
+              rows={2}
+              className="w-full rounded-xl border border-ink-50 bg-white px-3 py-2.5 text-[13px] font-medium text-ink outline-none focus:border-coral focus:ring-2 focus:ring-coral/15 resize-none"
             />
-
             <select
               value={form.district}
               onChange={(e) => setForm({ ...form, district: e.target.value })}
               className="h-11 w-full rounded-xl border border-ink-50 bg-white px-3 text-[13px] font-medium text-ink outline-none focus:border-coral focus:ring-2 focus:ring-coral/15"
             >
-              {districtOptions.map((d) => (
+              {BD_DISTRICTS.map((d) => (
                 <option key={d} value={d}>{d}</option>
               ))}
             </select>
@@ -422,11 +257,20 @@ export default function CheckoutScreen({ onBack }: Props) {
           </div>
           <button
             onClick={handleSubmit}
-            disabled={!form.name || !form.phone || !form.address}
+            disabled={!form.name || !form.phone || !form.address || submitting}
             className="btn-primary ml-auto flex h-14 flex-1 items-center justify-center gap-2 rounded-2xl text-[14px] font-bold tracking-tight disabled:opacity-50"
           >
-            অর্ডার করুন
-            <Check className="h-[18px] w-[18px]" strokeWidth={2.5} />
+            {submitting ? (
+              <>
+                <Loader2 className="h-[18px] w-[18px] animate-spin" />
+                অর্ডার হচ্ছে...
+              </>
+            ) : (
+              <>
+                অর্ডার করুন
+                <Check className="h-[18px] w-[18px]" strokeWidth={2.5} />
+              </>
+            )}
           </button>
         </div>
       </div>

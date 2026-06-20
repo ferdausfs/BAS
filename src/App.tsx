@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useState, useRef } from 'react';
 import { useUI, useAuthStore, useSettingsStore } from './lib/store';
 import PhoneFrame from './components/PhoneFrame';
 import BottomTabBar from './components/BottomTabBar';
@@ -14,81 +14,32 @@ import CheckoutScreen from './screens/CheckoutScreen';
 import SuccessScreen from './screens/SuccessScreen';
 import { AuthSheet } from './components/AuthSheet';
 import { AdminPanel } from './components/AdminPanel';
-import NotificationsSheet from './components/NotificationsSheet';
-import WishlistScreen from './screens/WishlistScreen';
-import TrackingScreen from './screens/TrackingScreen';
-import AdminScreen from './screens/AdminScreen';
+import { WishlistScreen } from './components/WishlistScreen';
 
 export default function App() {
-  const { view, tab, chatOpen } = useUI();
+  const { view, tab } = useUI();
   const { user } = useAuthStore();
-  const { settings, loadRemoteSettings } = useSettingsStore();
+  const { settings } = useSettingsStore();
 
   const [authOpen, setAuthOpen] = useState(false);
   const [adminOpen, setAdminOpen] = useState(false);
-  const [notificationsOpen, setNotificationsOpen] = useState(false);
-  const [pendingAdminUnlock, setPendingAdminUnlock] = useState(false);
   const tapCount = useRef(0);
   const logoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(() => {
-    void loadRemoteSettings();
-  }, [loadRemoteSettings]);
+  const isAdminUser = !!user && user.email === settings.adminEmail;
 
-  const normalizeEmail = (email?: string) => email?.trim().toLowerCase() ?? '';
-  const isAdminUser = useMemo(() => {
-    const userEmail = normalizeEmail(user?.email);
-    const allowedAdminEmails = [settings.adminEmail, 'umuhammadiswa@gmail.com'];
-    return !!userEmail && allowedAdminEmails.some((email) => normalizeEmail(email) === userEmail);
-  }, [user?.email, settings.adminEmail]);
-
-  useEffect(() => {
-    try {
-      window.history.replaceState({ bakeArtRoute: true, t: Date.now() }, '');
-    } catch {
-      // ignore history errors
-    }
-
-    const onPopState = () => {
-      if (adminOpen) { setAdminOpen(false); return; }
-      if (authOpen) { setAuthOpen(false); return; }
-      if (notificationsOpen) { setNotificationsOpen(false); return; }
-      useUI.getState().back();
-    };
-
-    window.addEventListener('popstate', onPopState);
-    return () => window.removeEventListener('popstate', onPopState);
-  }, [adminOpen, authOpen, notificationsOpen]);
-
-  useEffect(() => {
-    if (!pendingAdminUnlock || !user) return;
-
-    setPendingAdminUnlock(false);
-    if (isAdminUser) {
-      setAuthOpen(false);
-      setAdminOpen(true);
-    } else {
-      console.log('Not admin email');
-    }
-  }, [pendingAdminUnlock, user, isAdminUser]);
-
-  // 5-tap logo → admin. Before login it opens auth; after admin email login it unlocks.
+  // 5-tap logo → admin (only works if logged in AND email matches adminEmail)
   const handleLogoTap = () => {
     tapCount.current += 1;
     if (logoTimer.current) clearTimeout(logoTimer.current);
     if (tapCount.current >= 5) {
       tapCount.current = 0;
-      // Admin email check
       if (isAdminUser) {
         setAdminOpen(true);
       } else if (!user) {
-        // Not logged in — open auth first, then auto-unlock only for admin email.
-        setPendingAdminUnlock(true);
         setAuthOpen(true);
-      } else {
-        // Wrong email — silent ignore
-        console.log('Not admin email');
       }
+      // wrong email + logged in → silently ignore
     } else {
       logoTimer.current = setTimeout(() => { tapCount.current = 0; }, 3000);
     }
@@ -101,65 +52,55 @@ export default function App() {
     view.name === 'tabs' ? activeTab : '',
     view.name === 'product' ? view.productId : '',
     view.name === 'customize' ? (view.productId ?? 'custom') : '',
-    view.name === 'success' ? view.orderId : '',
-    view.name === 'tracking' ? (view.orderId ?? '') : '',
-    view.name === 'admin' ? (view.tab ?? 'dashboard') : '',
   ].join('-');
 
-  const showTabBar = view.name === 'tabs' && !chatOpen && !authOpen && !adminOpen && !notificationsOpen;
+  // App requires login before browsing (matches original app behaviour)
+  if (view.name !== 'splash' && !user) {
+    return (
+      <PhoneFrame onLogoTap={handleLogoTap}>
+        <div className="relative h-full w-full flex flex-col items-center justify-center bg-cream px-8 text-center gap-4">
+          <div className="text-5xl">🎂</div>
+          <h1 className="font-display text-2xl font-bold text-ink">Bake Art Style</h1>
+          <p className="text-sm text-ink/50">চালিয়ে যেতে লগইন করুন</p>
+          <button
+            onClick={() => setAuthOpen(true)}
+            className="px-8 py-3.5 rounded-2xl bg-coral text-white font-bold text-sm"
+          >
+            Sign In
+          </button>
+        </div>
+        <AuthSheet open={authOpen} onClose={() => setAuthOpen(false)} />
+      </PhoneFrame>
+    );
+  }
+
+  const showTabBar = view.name === 'tabs';
 
   return (
     <PhoneFrame onLogoTap={handleLogoTap}>
-      <div className="relative h-full w-full">
+      <div className="relative h-full w-full overflow-hidden">
         <div key={screenKey} className="anim-fade h-full">
           {view.name === 'splash'                             && <SplashScreen />}
           {view.name === 'tabs' && activeTab === 'home'       && (
-            <HomeScreen onLogoTap={handleLogoTap} onNotificationsOpen={() => setNotificationsOpen(true)} />
+            <HomeScreen onLogoTap={handleLogoTap} />
           )}
           {view.name === 'tabs' && activeTab === 'categories' && <CategoriesScreen />}
-          {view.name === 'tabs' && activeTab === 'orders'     && (
-            user ? <OrdersScreen /> : (
-              <div className="flex flex-col h-full items-center justify-center gap-4 p-8 text-center">
-                <div className="text-5xl">📋</div>
-                <p className="font-bold text-ink text-lg">Sign in to view orders</p>
-                <button onClick={() => setAuthOpen(true)}
-                  className="px-6 py-3 rounded-2xl bg-coral text-white font-bold text-sm">
-                  Sign In
-                </button>
-              </div>
-            )
-          )}
+          {view.name === 'tabs' && activeTab === 'orders'     && <OrdersScreen />}
           {view.name === 'tabs' && activeTab === 'profile'    && (
             <ProfileScreen onAuthOpen={() => setAuthOpen(true)} />
           )}
           {view.name === 'product'   && <ProductScreen />}
           {view.name === 'customize' && <CustomizeScreen />}
-          {view.name === 'cart'      && (
-            user ? <CartScreen /> : (
-              <div className="flex flex-col h-full items-center justify-center gap-4 p-8 text-center">
-                <div className="text-5xl">🛒</div>
-                <p className="font-bold text-ink text-lg">Sign in to view cart</p>
-                <button onClick={() => setAuthOpen(true)}
-                  className="px-6 py-3 rounded-2xl bg-coral text-white font-bold text-sm">
-                  Sign In
-                </button>
-              </div>
-            )
-          )}
-          {view.name === 'checkout'  && (
-            user ? <CheckoutScreen /> : null
-          )}
+          {view.name === 'cart'      && <CartScreen />}
+          {view.name === 'checkout'  && <CheckoutScreen />}
           {view.name === 'success'   && <SuccessScreen />}
           {view.name === 'wishlist'  && <WishlistScreen />}
-          {view.name === 'tracking'  && <TrackingScreen />}
-          {view.name === 'admin'     && <AdminScreen />}
         </div>
 
         {showTabBar && <BottomTabBar />}
-        <NotificationsSheet open={notificationsOpen} onClose={() => setNotificationsOpen(false)} />
       </div>
 
-      <AuthSheet open={authOpen} onClose={() => setAuthOpen(false)} onSuccess={() => setPendingAdminUnlock(true)} />
+      <AuthSheet open={authOpen} onClose={() => setAuthOpen(false)} />
       {adminOpen && <AdminPanel onClose={() => setAdminOpen(false)} />}
     </PhoneFrame>
   );
