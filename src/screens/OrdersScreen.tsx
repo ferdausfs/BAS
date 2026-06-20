@@ -1,4 +1,4 @@
-import { Check, Package, ChefHat, Truck, Receipt } from 'lucide-react';
+import { Check, Package, ChefHat, Truck, Receipt, Search } from 'lucide-react';
 import { useOrders, useUI, formatINR } from '../lib/store';
 
 const STATUSES: { key: string; label: string; icon: any }[] = [
@@ -12,7 +12,7 @@ const STATUSES: { key: string; label: string; icon: any }[] = [
 
 export default function OrdersScreen() {
   const { orders } = useOrders();
-  const { setTab } = useUI();
+  const { setTab, go } = useUI();
 
   return (
     <div className="flex h-full flex-col bg-cream">
@@ -140,6 +140,12 @@ export default function OrdersScreen() {
                         );
                       })}
                     </div>
+                    <button
+                      onClick={() => go({ name: 'tracking', orderId: o.id })}
+                      className="mt-3 flex h-10 w-full items-center justify-center gap-2 rounded-2xl bg-coral-50 text-[12px] font-bold text-coral transition active:scale-[.98]"
+                    >
+                      <Search className="h-4 w-4" /> Open tracking
+                    </button>
                   </div>
                 </article>
               );

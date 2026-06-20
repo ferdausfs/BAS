@@ -4,14 +4,16 @@ import BrandLogo from './BrandLogo';
 
 interface Props {
   onLogoTap?: () => void;
+  onNotificationsOpen?: () => void;
 }
 
-export default function Header({ onLogoTap }: Props) {
-  const { go, setTab } = useUI();
+export default function Header({ onLogoTap, onNotificationsOpen }: Props) {
+  const { go, setTab, notifications } = useUI();
   const { items } = useCart();
   const { wishlist } = useUser();
   const cartCount = items.reduce((s, i) => s + i.quantity, 0);
   const wishCount = wishlist.length;
+  const unreadCount = notifications.filter((n) => !n.read).length;
 
   return (
     <header className="flex flex-shrink-0 items-center justify-between px-5 pb-3 pt-4">
@@ -33,11 +35,16 @@ export default function Header({ onLogoTap }: Props) {
 
       <div className="flex items-center gap-1">
         <button
-          onClick={() => setTab('profile')}
+          onClick={onNotificationsOpen ?? (() => setTab('profile'))}
           className="relative flex h-10 w-10 items-center justify-center rounded-full text-ink-300 transition active:scale-90 hover:bg-ink-50"
           aria-label="Notifications"
         >
           <Bell className="h-[19px] w-[19px]" strokeWidth={1.8} />
+          {unreadCount > 0 && (
+            <span className="absolute top-1 right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-coral px-1 text-[9px] font-bold text-white">
+              {unreadCount}
+            </span>
+          )}
         </button>
         <button
           onClick={() => go({ name: 'wishlist' })}

@@ -11,7 +11,13 @@ import OccasionIcon from '../components/OccasionIcon';
 
 const ALL_CAT = { id: 'all' as const, name: 'All', icon: '✨', color: '#FFE2E7' };
 
-export default function HomeScreen({ onLogoTap }: { onLogoTap?: () => void }) {
+export default function HomeScreen({
+  onLogoTap,
+  onNotificationsOpen,
+}: {
+  onLogoTap?: () => void;
+  onNotificationsOpen?: () => void;
+}) {
   const { go } = useUI();
   const { wishlist, toggleWish } = useUser();
   const { orders } = useOrders();
@@ -30,7 +36,7 @@ export default function HomeScreen({ onLogoTap }: { onLogoTap?: () => void }) {
 
   return (
     <div className="flex h-full flex-col bg-cream">
-      <Header onLogoTap={onLogoTap} />
+      <Header onLogoTap={onLogoTap} onNotificationsOpen={onNotificationsOpen} />
 
       <div className="no-scrollbar flex-1 overflow-y-auto pb-32">
         {/* Greeting + search */}

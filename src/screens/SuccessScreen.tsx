@@ -2,7 +2,7 @@ import { Check, Home, Receipt } from 'lucide-react';
 import { useUI } from '../lib/store';
 
 export default function SuccessScreen() {
-  const { view, setTab } = useUI();
+  const { view, setTab, go } = useUI();
   const orderId = view.name === 'success' ? view.orderId : '';
 
   return (
@@ -52,7 +52,7 @@ export default function SuccessScreen() {
 
       <div className="relative z-10 w-full max-w-sm space-y-2.5 anim-up delay-5">
         <button
-          onClick={() => setTab('orders')}
+          onClick={() => go({ name: 'tracking', orderId })}
           className="btn-primary flex h-14 w-full items-center justify-center gap-2 rounded-2xl text-[14px] font-bold tracking-tight"
         >
           <Receipt className="h-[18px] w-[18px]" />

@@ -5,6 +5,14 @@ import type { CartItem, Order } from '../types';
 // ===== App view routing =====
 export type Tab = 'home' | 'categories' | 'orders' | 'profile';
 
+export type NotificationItem = {
+  id: string;
+  title: string;
+  body: string;
+  createdAt: number;
+  read: boolean;
+};
+
 export type View =
   | { name: 'splash' }
   | { name: 'tabs'; tab: Tab }
@@ -14,7 +22,8 @@ export type View =
   | { name: 'checkout' }
   | { name: 'success'; orderId: string }
   | { name: 'wishlist' }
-  | { name: 'tracking'; orderId?: string };
+  | { name: 'tracking'; orderId?: string }
+  | { name: 'admin'; tab?: string };
 
 type UIState = {
   view: View;
@@ -28,8 +37,11 @@ type UIState = {
   promoDiscount: number;
   applyPromo: (pct: number) => void;
   clearPromo: () => void;
-  // Admin notifications
+  // Admin/user notifications
   newOrderCount: number;
+  notifications: NotificationItem[];
+  addNotification: (title: string, body: string) => void;
+  markAllRead: () => void;
   incrementNewOrders: () => void;
   clearNewOrders: () => void;
   // Chat
@@ -43,6 +55,7 @@ export const useUI = create<UIState>((set, get) => ({
   history: [],
   promoDiscount: 0,
   newOrderCount: 0,
+  notifications: [],
   chatOpen: false,
   setView: (v) =>
     set({
@@ -72,7 +85,23 @@ export const useUI = create<UIState>((set, get) => ({
   },
   applyPromo: (pct) => set({ promoDiscount: pct }),
   clearPromo: () => set({ promoDiscount: 0 }),
-  incrementNewOrders: () => set((s) => ({ newOrderCount: s.newOrderCount + 1 })),
+  addNotification: (title, body) => set((s) => ({
+    notifications: [
+      { id: `nt-${Date.now()}`, title, body, createdAt: Date.now(), read: false },
+      ...s.notifications,
+    ].slice(0, 30),
+  })),
+  markAllRead: () => set((s) => ({
+    notifications: s.notifications.map((n) => ({ ...n, read: true })),
+    newOrderCount: 0,
+  })),
+  incrementNewOrders: () => set((s) => ({
+    newOrderCount: s.newOrderCount + 1,
+    notifications: [
+      { id: `nt-${Date.now()}`, title: '🎂 New order', body: 'A new cake order has been placed.', createdAt: Date.now(), read: false },
+      ...s.notifications,
+    ].slice(0, 30),
+  })),
   clearNewOrders: () => set({ newOrderCount: 0 }),
   setChatOpen: (v) => set({ chatOpen: v }),
 }));
@@ -138,6 +167,7 @@ export const useOrders = create<OrderState>()(
           status: 'placed',
         };
         set((s) => ({ orders: [o, ...s.orders] }));
+        useUI.getState().addNotification('✅ Order placed', `Order #${o.id} has been placed successfully.`);
         return o;
       },
     }),

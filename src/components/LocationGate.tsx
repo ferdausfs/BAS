@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { MapPin, CheckCircle2, AlertCircle, Loader2, Navigation, MessageCircle, X } from 'lucide-react';
 import { useLocation, useSettingsStore } from '../lib/store';
 import { waLink } from '../lib/utils';
+import { matchZone } from '../lib/zones';
 
 type Status = 'idle' | 'requesting' | 'detecting' | 'allowed' | 'out_of_zone' | 'error';
 
@@ -34,13 +35,12 @@ export function LocationGate({ onDismiss }: Props) {
         data.address?.county ||
         data.address?.state_district ||
         '';
+      const addressText = data.display_name || city;
+      const matchedZone = matchZone(addressText, settings.allowedZones ?? []);
 
-      const zones = settings.allowedZones ?? [];
-      const isAllowed = zones.some((z) => city.toLowerCase().includes(z.toLowerCase()) || z.toLowerCase().includes(city.toLowerCase()));
-
-      setDistrict(city || 'আপনার এলাকা');
-      if (isAllowed) {
-        setLocation(city, lat, lng);
+      setDistrict(matchedZone || city || 'আপনার এলাকা');
+      if (matchedZone) {
+        setLocation(matchedZone, lat, lng);
         setStatus('allowed');
         setTimeout(onDismiss, 1500);
       } else {
