@@ -124,6 +124,7 @@ export const useUI = create<UIState>((set, get) => ({
   },
   go: (v) => {
     const cur = get().view;
+    pushBrowserRouteState();
     set({
       view: v,
       tab: v.name === 'tabs' ? v.tab : get().tab,
@@ -233,10 +234,12 @@ export const useOrders = create<OrderState>()(
         set((s) => ({ orders: [o, ...s.orders] }));
         useUI.getState().addNotification('✅ Order placed', `Order #${o.id} has been placed successfully.`);
 
-        // Remote insert so admin/other browsers can see the order.
+        // Remote insert: admin/other browsers can see this order.
         if (isSupabaseConfigured()) {
           const user = useAuthStore.getState().user;
-          const isUuid = !!user?.id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(user.id);
+          const isUuid =
+            !!user?.id &&
+            /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(user.id);
 
           void supabase.from('orders').insert({
             id: o.id,

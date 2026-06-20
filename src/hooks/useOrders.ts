@@ -25,7 +25,6 @@ const normalizeStatus = (status: string): Order['status'] => {
   if (status === 'pending') return 'placed';
   if (status === 'preparing') return 'baking';
   if (status === 'delivering') return 'out';
-  if (status === 'placed') return 'placed';
   if (status === 'confirmed') return 'confirmed';
   if (status === 'baking') return 'baking';
   if (status === 'ready') return 'ready';
