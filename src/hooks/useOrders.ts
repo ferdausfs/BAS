@@ -8,7 +8,7 @@ export function useOrdersHook() {
   const [loading, setLoading] = useState(false);
   const user = useAuthStore((s) => s.user);
   const settings = useSettingsStore((s) => s.settings);
-  const { orders } = useOrdersStore();
+  const { orders, setOrderStatus } = useOrdersStore();
   const incrementNewOrders = useUI((s) => s.incrementNewOrders);
 
   const fetchOrders = useCallback(async () => {
@@ -26,10 +26,11 @@ export function useOrdersHook() {
   }, [user?.id, settings.adminEmail]);
 
   const updateStatus = useCallback(async (id: string, status: Order['status']) => {
+    setOrderStatus(id, status);
     if (!isSupabaseConfigured()) return;
     const { error } = await supabase.from('orders').update({ status }).eq('id', id);
     if (error) console.error('Status update error:', error);
-  }, []);
+  }, [setOrderStatus]);
 
   const subscribeToNewOrders = useCallback(() => {
     if (!isSupabaseConfigured()) return () => {};
