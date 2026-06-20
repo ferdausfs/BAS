@@ -48,7 +48,7 @@ export type Order = {
   subtotal: number;
   deliveryFee: number;
   total: number;
-  status: 'placed' | 'confirmed' | 'baking' | 'ready' | 'out' | 'delivered';
+  status: 'placed' | 'confirmed' | 'baking' | 'ready' | 'out' | 'delivered' | 'cancelled';
   createdAt: number;
 };
 

@@ -36,7 +36,7 @@
   /* Typography */
   --font-display: "Fraunces", "Inter", serif;
   --font-body: "Inter", system-ui, -apple-system, sans-serif;
-  --font-brand: "Fraunces", "Inter", serif;
+  --font-brand: "Great Vibes", "Fraunces", cursive;
 }
 
 :root {
@@ -60,7 +60,7 @@ html { scroll-behavior: smooth; }
 
 .font-display { font-family: "Fraunces", "Inter", serif; letter-spacing: -0.025em; font-feature-settings: "ss01"; }
 .font-body    { font-family: "Inter", system-ui, sans-serif; }
-.font-brand   { font-family: "Fraunces", "Inter", serif; letter-spacing: -0.025em; }
+.font-brand   { font-family: "Great Vibes", "Fraunces", cursive; letter-spacing: 0; }
 
 .tabular { font-variant-numeric: tabular-nums; }
 
