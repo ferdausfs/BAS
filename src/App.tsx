@@ -22,7 +22,7 @@ import AdminScreen from './screens/AdminScreen';
 export default function App() {
   const { view, tab, chatOpen } = useUI();
   const { user } = useAuthStore();
-  const { settings } = useSettingsStore();
+  const { settings, loadRemoteSettings } = useSettingsStore();
 
   const [authOpen, setAuthOpen] = useState(false);
   const [adminOpen, setAdminOpen] = useState(false);
@@ -30,6 +30,10 @@ export default function App() {
   const [pendingAdminUnlock, setPendingAdminUnlock] = useState(false);
   const tapCount = useRef(0);
   const logoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    void loadRemoteSettings();
+  }, [loadRemoteSettings]);
 
   const normalizeEmail = (email?: string) => email?.trim().toLowerCase() ?? '';
   const isAdminUser = useMemo(() => {

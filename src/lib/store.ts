@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { CartItem, Order } from '../types';
+import { supabase } from './supabase';
+import { isSupabaseConfigured } from './utils';
 
 const pushBrowserRouteState = () => {
   try {
@@ -9,6 +11,52 @@ const pushBrowserRouteState = () => {
     }
   } catch {
     // ignore history errors
+  }
+};
+
+
+const REMOTE_SETTINGS_KEY = 'site_settings';
+
+const pushBrowserRouteState = () => {
+  try {
+    if (typeof window !== 'undefined') {
+      window.history.pushState({ bakeArtRoute: true, t: Date.now() }, '');
+    }
+  } catch {
+    // ignore history errors
+  }
+};
+
+const readRemoteSetting = async <T,>(key: string): Promise<T | null> => {
+  if (!isSupabaseConfigured()) return null;
+  try {
+    const { data, error } = await supabase
+      .from('app_settings')
+      .select('value')
+      .eq('key', key)
+      .maybeSingle();
+
+    if (error) throw error;
+    return (data?.value as T) ?? null;
+  } catch (e) {
+    console.warn(`Remote setting read failed: ${key}`, e);
+    return null;
+  }
+};
+
+const writeRemoteSetting = async (key: string, value: unknown): Promise<void> => {
+  if (!isSupabaseConfigured()) return;
+  try {
+    const { error } = await supabase
+      .from('app_settings')
+      .upsert(
+        { key, value, updated_at: new Date().toISOString() },
+        { onConflict: 'key' }
+      );
+
+    if (error) throw error;
+  } catch (e) {
+    console.warn(`Remote setting write failed: ${key}`, e);
   }
 };
 
@@ -254,16 +302,24 @@ export const useAuthStore = create<AuthState>()(
 // ── Settings Store ─────────────────────────────────────────
 type SettingsState = {
   settings: SiteSettings;
+  loadRemoteSettings: () => Promise<void>;
   updateSettings: (patch: Partial<SiteSettings>) => void;
 };
 
 export const useSettingsStore = create<SettingsState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       settings: DEFAULT_SETTINGS,
+      loadRemoteSettings: async () => {
+        const remote = await readRemoteSetting<Partial<SiteSettings>>(REMOTE_SETTINGS_KEY);
+        if (remote) {
+          set({ settings: { ...DEFAULT_SETTINGS, ...get().settings, ...remote } });
+        }
+      },
       updateSettings: (patch) =>
         set((s) => {
           const next = { ...s.settings, ...patch };
+          void writeRemoteSetting(REMOTE_SETTINGS_KEY, next);
           return { settings: next };
         }),
     }),
