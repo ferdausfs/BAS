@@ -219,6 +219,7 @@ export const useOrders = create<OrderState>()(
   persist(
     (set) => ({
       orders: [],
+
       setOrders: (orders) => set({ orders }),
 
       placeOrder: (data) => {
@@ -232,16 +233,14 @@ export const useOrders = create<OrderState>()(
         set((s) => ({ orders: [o, ...s.orders] }));
         useUI.getState().addNotification('✅ Order placed', `Order #${o.id} has been placed successfully.`);
 
-        // Fire-and-forget remote insert so admin/other browsers can see the order.
+        // Remote insert so admin/other browsers can see the order.
         if (isSupabaseConfigured()) {
           const user = useAuthStore.getState().user;
-          const uuid = user?.id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(user.id)
-            ? user.id
-            : null;
+          const isUuid = !!user?.id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(user.id);
 
           void supabase.from('orders').insert({
             id: o.id,
-            user_id: uuid,
+            user_id: isUuid ? user!.id : null,
             customer_name: o.customer.name,
             customer_phone: o.customer.phone,
             customer_address: o.customer.address,
@@ -265,13 +264,20 @@ export const useOrders = create<OrderState>()(
       },
 
       setOrderStatus: (id, status) => {
-        set((s) => ({ orders: s.orders.map((o) => (o.id === id ? { ...o, status } : o)) }));
+        set((s) => ({
+          orders: s.orders.map((o) => (o.id === id ? { ...o, status } : o)),
+        }));
+
         useUI.getState().addNotification('📦 Order updated', `Order #${id} status changed to ${status}.`);
 
         if (isSupabaseConfigured()) {
-          void supabase.from('orders').update({ status }).eq('id', id).then(({ error }) => {
-            if (error) console.warn('Remote order status update failed:', error.message);
-          });
+          void supabase
+            .from('orders')
+            .update({ status })
+            .eq('id', id)
+            .then(({ error }) => {
+              if (error) console.warn('Remote order status update failed:', error.message);
+            });
         }
       },
     }),

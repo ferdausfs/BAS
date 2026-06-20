@@ -12,20 +12,33 @@ type DbOrderRow = {
   district?: string | null;
   delivery_date: string;
   delivery_time: string;
-  payment_method: Order['payment'] | string;
+  payment_method: string;
   items: Order['items'];
   subtotal: number;
   delivery_fee: number;
   total: number;
-  status: Order['status'] | 'pending' | 'preparing' | 'delivering';
+  status: string;
   created_at: string;
 };
 
-const normalizeStatus = (status: DbOrderRow['status']): Order['status'] => {
+const normalizeStatus = (status: string): Order['status'] => {
   if (status === 'pending') return 'placed';
   if (status === 'preparing') return 'baking';
   if (status === 'delivering') return 'out';
-  return status as Order['status'];
+  if (status === 'placed') return 'placed';
+  if (status === 'confirmed') return 'confirmed';
+  if (status === 'baking') return 'baking';
+  if (status === 'ready') return 'ready';
+  if (status === 'out') return 'out';
+  if (status === 'delivered') return 'delivered';
+  if (status === 'cancelled') return 'cancelled';
+  return 'placed';
+};
+
+const normalizePayment = (payment: string): Order['payment'] => {
+  if (payment === 'bkash') return 'bkash';
+  if (payment === 'nagad') return 'nagad';
+  return 'cash';
 };
 
 const mapDbOrder = (o: DbOrderRow): Order => ({
@@ -43,9 +56,7 @@ const mapDbOrder = (o: DbOrderRow): Order => ({
     date: o.delivery_date ?? '',
     time: o.delivery_time ?? '',
   },
-  payment: (['bkash', 'nagad', 'cash'].includes(String(o.payment_method))
-    ? o.payment_method
-    : 'cash') as Order['payment'],
+  payment: normalizePayment(o.payment_method),
   subtotal: Number(o.subtotal ?? 0),
   deliveryFee: Number(o.delivery_fee ?? 0),
   total: Number(o.total ?? 0),
@@ -55,6 +66,7 @@ const mapDbOrder = (o: DbOrderRow): Order => ({
 
 export function useOrdersHook() {
   const [loading, setLoading] = useState(false);
+
   const user = useAuthStore((s) => s.user);
   const settings = useSettingsStore((s) => s.settings);
   const { orders, setOrders, setOrderStatus } = useOrdersStore();
@@ -64,6 +76,7 @@ export function useOrdersHook() {
     if (!isSupabaseConfigured()) return;
 
     setLoading(true);
+
     try {
       const { data, error } = await supabase
         .from('orders')
@@ -113,7 +126,9 @@ export function useOrdersHook() {
           fetchOrders();
 
           if ('Notification' in window && Notification.permission === 'granted') {
-            new Notification('🎂 New Order!', { body: 'A new order has been placed.' });
+            new Notification('🎂 New Order!', {
+              body: 'A new order has been placed.',
+            });
           }
         }
       )
@@ -128,5 +143,11 @@ export function useOrdersHook() {
     };
   }, [fetchOrders, incrementNewOrders]);
 
-  return { orders, loading, fetchOrders, updateStatus, subscribeToNewOrders };
+  return {
+    orders,
+    loading,
+    fetchOrders,
+    updateStatus,
+    subscribeToNewOrders,
+  };
 }
