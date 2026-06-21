@@ -125,7 +125,16 @@ export default function App() {
             )
           )}
           {view.name === 'checkout'  && (
-            user ? <CheckoutScreen /> : null
+            user ? <CheckoutScreen /> : (
+              <div className="flex flex-col h-full items-center justify-center gap-4 p-8 text-center bg-cream">
+                <div className="text-5xl">🛍️</div>
+                <p className="font-bold text-ink text-lg">Sign in to continue</p>
+                <button onClick={() => setAuthOpen(true)}
+                  className="px-6 py-3 rounded-2xl bg-coral text-white font-bold text-sm">
+                  Sign In
+                </button>
+              </div>
+            )
           )}
           {view.name === 'success'   && <SuccessScreen />}
           {view.name === 'wishlist'  && <WishlistScreen />}

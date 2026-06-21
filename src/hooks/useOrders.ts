@@ -6,6 +6,7 @@ import type { Order } from '../types';
 
 type DbOrderRow = {
   id: string;
+  user_id?: string | null;
   customer_name: string;
   customer_phone: string;
   customer_address: string;
@@ -42,6 +43,7 @@ const normalizePayment = (payment: string): Order['payment'] => {
 
 const mapDbOrder = (o: DbOrderRow): Order => ({
   id: o.id,
+  userId: o.user_id || undefined,
   items: Array.isArray(o.items) ? o.items : [],
   customer: {
     name: o.customer_name ?? '',
@@ -92,6 +94,61 @@ export function useOrdersHook() {
       setLoading(false);
     }
   }, [setOrders, user?.id, settings.adminEmail]);
+
+  const fetchMyOrders = useCallback(async () => {
+    if (!isSupabaseConfigured() || !user?.id) return;
+
+    setLoading(true);
+
+    try {
+      let userContact: string | null = null;
+      try {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('contact')
+          .eq('id', user.id)
+          .single();
+        if (profile?.contact) {
+          userContact = profile.contact;
+        }
+      } catch (profileErr) {
+        console.warn('Profile fetch failed, continuing without profile correlation:', profileErr);
+      }
+
+      let query = supabase.from('orders').select('*');
+      if (userContact) {
+        query = query.or(`user_id.eq.${user.id},customer_phone.eq.${userContact}`);
+      } else {
+        query = query.eq('user_id', user.id);
+      }
+
+      const { data, error } = await query.order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      if (data) {
+        const fetchedOrders = data.map((row) => mapDbOrder(row as DbOrderRow));
+        const localOrders = useOrdersStore.getState().orders;
+        
+        const merged = [...localOrders];
+        fetchedOrders.forEach((fo) => {
+          const idx = merged.findIndex((o) => o.id === fo.id);
+          if (idx > -1) {
+            merged[idx] = fo;
+          } else {
+            merged.push(fo);
+          }
+        });
+        
+        merged.sort((a, b) => b.createdAt - a.createdAt);
+        setOrders(merged);
+      }
+    } catch (e) {
+      console.warn('My orders fetch failed, using local orders:', e);
+    } finally {
+      setLoading(false);
+    }
+  }, [setOrders, user?.id]);
 
   const updateStatus = useCallback(async (id: string, status: Order['status']) => {
     setOrderStatus(id, status);
@@ -153,6 +210,7 @@ export function useOrdersHook() {
     orders,
     loading,
     fetchOrders,
+    fetchMyOrders,
     updateStatus,
     subscribeToNewOrders,
   };

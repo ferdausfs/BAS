@@ -274,7 +274,7 @@ export function ChatBot({ embedded = false }: Props) {
     const productList = products.map((p) => `• ${p.name} — ${formatBDT(p.price)}: ${p.tagline}`).join('\n');
     const zones = (settings.allowedZones ?? []).join(', ');
     const systemPrompt = `তুমি "Bake Bot" 🎂, Bake Art Style বেকারির friendly AI assistant। বাংলা/Banglish-এ short helpful উত্তর দাও। সাধারণ কথাও naturally বলবে, কিন্তু business/app info ভুল বানাবে না।\n\nApp features:\n- Shop/Browse products, Wishlist, Cart, Checkout, Order tracking\n- Custom cake: size, flavour, topping, message\n- Admin: 5 tap logo unlock, dashboard, orders, products, gallery, reviews, customers, zones, settings\n\nStore info:\n- Currency: BDT (৳)\n- Delivery estimate: ${settings.deliveryEstimate}, fee: ৳${settings.deliveryFee}\n- Zones: ${zones}\n- Payment: bKash, Nagad, Cash on Delivery\n${settings.promoEnabled ? `- Promo: ${settings.promoCode} = ${settings.promoPercent}% off` : ''}\n\nProducts:\n${productList}\n\nউত্তর 2-6 লাইনের মধ্যে রাখো।`;
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${settings.geminiApiKey}`, {
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${settings.geminiApiKey}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: `${systemPrompt}\n\nUser: ${userMsg}` }] }] }),

@@ -1,12 +1,12 @@
 import { useCallback, useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { ls, isSupabaseConfigured, fileToBase64 } from '../lib/utils';
+import { ls, isSupabaseConfigured, fileToBase64, safeArray } from '../lib/utils';
 import type { GalleryItem } from '../types';
 
-const LS_KEY = 'bakeart-gallery';
+const LS_KEY = 'bakeart-gallery-v2';
 
 export function useGallery() {
-  const [gallery, setGallery] = useState<GalleryItem[]>(() => ls.get(LS_KEY, []));
+  const [gallery, setGallery] = useState<GalleryItem[]>(() => safeArray<GalleryItem>(ls.get(LS_KEY, []), []));
   const [loading, setLoading] = useState(false);
 
   const fetchGallery = useCallback(async () => {
@@ -16,7 +16,11 @@ export function useGallery() {
       const { data, error } = await supabase
         .from('gallery_items').select('*').order('created_at', { ascending: false });
       if (error) throw error;
-      if (data) { setGallery(data as GalleryItem[]); ls.set(LS_KEY, data); }
+      if (data) {
+        const validated = safeArray<GalleryItem>(data);
+        setGallery(validated);
+        ls.set(LS_KEY, validated);
+      }
     } catch (e) { console.warn('Gallery fetch failed:', e); }
     finally { setLoading(false); }
   }, []);
@@ -25,14 +29,18 @@ export function useGallery() {
     const updated = gallery.find((g) => g.id === item.id)
       ? gallery.map((g) => (g.id === item.id ? item : g))
       : [item, ...gallery];
-    setGallery(updated); ls.set(LS_KEY, updated);
+    const validated = safeArray<GalleryItem>(updated);
+    setGallery(validated);
+    ls.set(LS_KEY, validated);
     if (!isSupabaseConfigured()) return;
     await supabase.from('gallery_items').upsert(item);
   }, [gallery]);
 
   const deleteGalleryItem = useCallback(async (id: string) => {
     const updated = gallery.filter((g) => g.id !== id);
-    setGallery(updated); ls.set(LS_KEY, updated);
+    const validated = safeArray<GalleryItem>(updated);
+    setGallery(validated);
+    ls.set(LS_KEY, validated);
     if (!isSupabaseConfigured()) return;
     await supabase.from('gallery_items').delete().eq('id', id);
   }, [gallery]);

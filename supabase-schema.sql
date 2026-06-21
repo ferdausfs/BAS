@@ -1,3 +1,4 @@
+-- NOTE: admin-rls-fix.sql must be run after this file
 -- ─── Products ──────────────────────────────────────────────
 create table if not exists products (
   id text primary key,

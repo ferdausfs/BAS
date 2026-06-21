@@ -1,5 +1,8 @@
+import { useEffect } from 'react';
 import { Check, Package, ChefHat, Truck, Receipt, Search } from 'lucide-react';
-import { useOrders, useUI, formatINR } from '../lib/store';
+import { useUI, formatINR, useAuthStore } from '../lib/store';
+import { useOrdersHook } from '../hooks/useOrders';
+import { isSupabaseConfigured } from '../lib/utils';
 
 const STATUSES: { key: string; label: string; icon: any }[] = [
   { key: 'placed',    label: 'Placed',    icon: Check },
@@ -11,8 +14,15 @@ const STATUSES: { key: string; label: string; icon: any }[] = [
 ];
 
 export default function OrdersScreen() {
-  const { orders } = useOrders();
+  const { orders, loading, fetchMyOrders } = useOrdersHook();
+  const user = useAuthStore((s) => s.user);
   const { setTab, go } = useUI();
+
+  useEffect(() => {
+    if (isSupabaseConfigured() && user) {
+      fetchMyOrders();
+    }
+  }, [fetchMyOrders, user]);
 
   return (
     <div className="flex h-full flex-col bg-cream">
@@ -27,7 +37,16 @@ export default function OrdersScreen() {
       </header>
 
       <div className="no-scrollbar flex-1 overflow-y-auto px-5 pb-32">
-        {orders.length === 0 ? (
+        {loading ? (
+          <div className="flex flex-col items-center justify-center pt-16 text-center anim-fade">
+            <div className="flex gap-1.5 justify-center py-4">
+              {[0, 1, 2].map((i) => (
+                <div key={i} className="h-2 w-2 animate-bounce rounded-full bg-coral" style={{ animationDelay: `${i * 0.15}s` }} />
+              ))}
+            </div>
+            <p className="text-[12px] text-ink-200">Loading your orders...</p>
+          </div>
+        ) : orders.length === 0 ? (
           <div className="flex flex-col items-center justify-center pt-16 text-center anim-fade">
             <div
               className="flex h-24 w-24 items-center justify-center rounded-3xl bg-coral-50 text-5xl"

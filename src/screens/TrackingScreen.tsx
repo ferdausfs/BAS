@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { ArrowLeft, Package, Search } from 'lucide-react';
-import { useOrders, useUI, formatINR } from '../lib/store';
+import { useUI, formatINR, useAuthStore } from '../lib/store';
+import { useOrdersHook } from '../hooks/useOrders';
+import { isSupabaseConfigured } from '../lib/utils';
 import OrderTimeline from '../components/OrderTimeline';
 import type { Order } from '../types';
 
@@ -9,7 +11,14 @@ export default function TrackingScreen() {
   const initial = view.name === 'tracking' ? view.orderId ?? '' : '';
   const [query, setQuery] = useState(initial);
   const [match, setMatch] = useState<Order | null>(null);
-  const { orders } = useOrders();
+  const { orders, loading, fetchMyOrders } = useOrdersHook();
+  const user = useAuthStore((s) => s.user);
+
+  useEffect(() => {
+    if (isSupabaseConfigured() && user) {
+      fetchMyOrders();
+    }
+  }, [fetchMyOrders, user]);
 
   useEffect(() => {
     if (!query.trim()) {
@@ -47,7 +56,16 @@ export default function TrackingScreen() {
           />
         </div>
 
-        {match ? (
+        {loading ? (
+          <div className="flex flex-col items-center justify-center pt-16 text-center anim-fade">
+            <div className="flex gap-1.5 justify-center py-4">
+              {[0, 1, 2].map((i) => (
+                <div key={i} className="h-2 w-2 animate-bounce rounded-full bg-coral" style={{ animationDelay: `${i * 0.15}s` }} />
+              ))}
+            </div>
+            <p className="text-[12px] text-ink-200">Syncing orders...</p>
+          </div>
+        ) : match ? (
           <article
             className="mt-4 overflow-hidden rounded-3xl bg-white"
             style={{ boxShadow: '0 1px 2px rgba(26,19,17,.02), 0 8px 24px -16px rgba(26,19,17,.16)' }}

@@ -1,9 +1,18 @@
+export function safeArray<T>(v: unknown, fallback: T[] = []): T[] {
+  return Array.isArray(v) ? (v as T[]) : fallback;
+}
+
 // LocalStorage helpers
 export const ls = {
   get: <T>(key: string, fallback: T): T => {
     try {
       const v = localStorage.getItem(key);
-      return v ? (JSON.parse(v) as T) : fallback;
+      if (!v) return fallback;
+      const parsed = JSON.parse(v);
+      if (Array.isArray(fallback)) {
+        return (Array.isArray(parsed) ? parsed : fallback) as unknown as T;
+      }
+      return (parsed !== null && parsed !== undefined ? parsed : fallback) as T;
     } catch {
       return fallback;
     }
