@@ -2,8 +2,9 @@ import { useState } from 'react';
 import { ArrowLeft, MapPin, Clock, Wallet, Check, Shield } from 'lucide-react';
 import {
   useCart, useOrders, useUI, formatINR,
-  cartSubtotal, qualifiesForFreeDelivery, standardDeliveryFee,
+  cartSubtotal, standardDeliveryFee,
   useLocation,
+  useSettingsStore,
 } from '../lib/store';
 import { LocationGate } from '../components/LocationGate';
 
@@ -47,8 +48,13 @@ export default function CheckoutScreen({ onBack }: Props) {
     payment: 'cash' as typeof PAYMENTS[number]['id'],
   });
 
+  const { settings } = useSettingsStore();
+  const currentDeliveryFee = settings.deliveryFee !== undefined ? settings.deliveryFee : standardDeliveryFee;
+  const currentFreeThreshold = settings.freeDeliveryThreshold !== undefined ? settings.freeDeliveryThreshold : 999;
+
   const subtotal = cartSubtotal(items);
-  const delivery = items.length === 0 ? 0 : (qualifiesForFreeDelivery(subtotal) ? 0 : standardDeliveryFee);
+  const isFreeDelivery = subtotal >= currentFreeThreshold;
+  const delivery = items.length === 0 ? 0 : (isFreeDelivery ? 0 : currentDeliveryFee);
   const total = subtotal + delivery;
 
   const handleSubmit = () => {

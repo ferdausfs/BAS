@@ -34,6 +34,7 @@ export type CartItem = {
 
 export type Order = {
   id: string;
+  userId?: string;
   items: CartItem[];
   customer: {
     name: string;
@@ -100,7 +101,7 @@ export interface DbOrder {
   customer_address: string;
   delivery_date: string;
   delivery_time: string;
-  payment_method: 'cod' | 'upi' | 'card';
+  payment_method: 'bkash' | 'nagad' | 'cash';
   payment_screenshot?: string;
   items: DbOrderItem[];
   subtotal: number;
@@ -167,4 +168,5 @@ export interface SiteSettings {
   deliveryEstimate: string;
   coupons: Coupon[];
   allowedZones: string[];
+  customFlavorImages?: Record<string, string>;
 }

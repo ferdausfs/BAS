@@ -1,3 +1,4 @@
+-- NOTE: admin-rls-fix.sql must be run after this file
 -- Repair orders table + RLS policies from scratch
 -- WARNING: This deletes any existing orders data.
 

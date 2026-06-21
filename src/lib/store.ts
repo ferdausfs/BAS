@@ -222,9 +222,15 @@ export const useOrders = create<OrderState>()(
       setOrders: (orders) => set({ orders }),
 
       placeOrder: (data) => {
+        const user = useAuthStore.getState().user;
+        const isUuid =
+          !!user?.id &&
+          /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(user.id);
+
         const o: Order = {
           ...data,
           id: 'BAS' + Date.now().toString().slice(-6),
+          userId: isUuid ? user!.id : undefined,
           createdAt: Date.now(),
           status: 'placed',
         };
