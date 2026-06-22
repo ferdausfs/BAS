@@ -131,10 +131,10 @@ export function ChatBot({ embedded = false }: Props) {
     const savedName = saved.name?.trim().toLowerCase();
 
     const matched = orders.filter((o) => {
-      const orderName = o.customer.name?.trim().toLowerCase();
-      const orderEmail = o.customer.email?.trim().toLowerCase();
+      const orderName = o.customer?.name?.trim().toLowerCase();
+      const orderEmail = o.customer?.email?.trim().toLowerCase();
       return (
-        (!!phone && o.customer.phone === phone) ||
+        (!!phone && o.customer?.phone === phone) ||
         (!!userEmail && orderEmail === userEmail) ||
         (!!savedName && orderName === savedName) ||
         (!!userName && orderName === userName)

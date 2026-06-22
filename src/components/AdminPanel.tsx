@@ -132,8 +132,8 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
 
   const exportCSV = () => {
     const rows = orders.map((o) => [
-      o.id, o.customer.name, o.customer.phone, o.customer.address,
-      o.delivery.date, o.delivery.time,
+      o.id, o.customer?.name || 'Guest', o.customer?.phone || 'N/A', o.customer?.address || 'N/A',
+      o.delivery?.date || '', o.delivery?.time || '',
       o.items.map((i) => `${i.name}×${i.quantity}`).join('; '),
       o.subtotal, o.deliveryFee, o.total, o.status, o.payment,
     ]);
@@ -223,10 +223,10 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
 
             <div className="bg-white rounded-2xl p-4">
               <p className="text-xs font-bold text-ink mb-3">Recent Orders</p>
-              {orders.slice(0, 5).map((o) => (
-                <div key={o.id} className="flex justify-between items-center py-2 border-b border-ink/5 last:border-0">
-                  <div>
-                    <p className="text-xs font-bold text-ink">{o.customer.name}</p>
+            {orders.slice(0, 5).map((o) => (
+              <div key={o.id} className="flex justify-between items-center py-2 border-b border-ink/5 last:border-0">
+                <div>
+                  <p className="text-xs font-bold text-ink">{o.customer?.name || 'Guest'}</p>
                     <p className="text-[10px] text-ink/40">#{o.id}</p>
                   </div>
                   <div className="text-right">
@@ -266,7 +266,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
               <div key={o.id} className="bg-white rounded-2xl p-4">
                 <div className="flex justify-between items-start gap-3 mb-2">
                   <div className="min-w-0">
-                    <p className="font-bold text-sm text-ink truncate">{o.customer.name}</p>
+                    <p className="font-bold text-sm text-ink truncate">{o.customer?.name || 'Guest'}</p>
                     <p className="text-[10px] font-mono text-ink/40">#{o.id} · {new Date(o.createdAt).toLocaleString('en-BD')}</p>
                   </div>
                   <div className="text-right">
@@ -276,10 +276,10 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                 </div>
 
                 <div className="rounded-xl bg-cream p-3 text-[11px] leading-relaxed text-ink/65">
-                  <p><span className="font-bold text-ink">Phone:</span> {o.customer.phone || 'N/A'}</p>
-                  {o.customer.email && <p><span className="font-bold text-ink">Email:</span> {o.customer.email}</p>}
-                  <p><span className="font-bold text-ink">Address:</span> {o.customer.address}, {o.customer.city}</p>
-                  <p><span className="font-bold text-ink">Delivery:</span> {o.delivery.date} · {o.delivery.time}</p>
+                  <p><span className="font-bold text-ink">Phone:</span> {o.customer?.phone || 'N/A'}</p>
+                  {o.customer?.email && <p><span className="font-bold text-ink">Email:</span> {o.customer.email}</p>}
+                  <p><span className="font-bold text-ink">Address:</span> {o.customer?.address || 'N/A'}, {o.customer?.city || ''}</p>
+                  <p><span className="font-bold text-ink">Delivery:</span> {o.delivery?.date || ''} · {o.delivery?.time || ''}</p>
                 </div>
 
                 <div className="mt-2 space-y-1.5">
@@ -314,7 +314,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
 
                 <div className="mt-3 flex gap-2">
                   <a
-                    href={waLink(o.customer.phone || settings.whatsappNumber, `Hello ${o.customer.name}, your Bake Art Style order #${o.id} is now ${o.status}.`)}
+                    href={waLink(o.customer?.phone || settings.whatsappNumber, `Hello ${o.customer?.name || 'Customer'}, your Bake Art Style order #${o.id} is now ${o.status}.`)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex-1 rounded-xl bg-green-50 py-2 text-center text-xs font-bold text-green-700"
