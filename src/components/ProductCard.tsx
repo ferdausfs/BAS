@@ -37,8 +37,7 @@ export default function ProductCard({ product, wished, onOpen, onWish, variant =
     return (
       <article
         onClick={onOpen}
-        className="group relative cursor-pointer overflow-hidden rounded-3xl bg-white transition active:scale-[.98]"
-        style={{ boxShadow: '0 1px 2px rgba(26,19,17,.03), 0 12px 32px -20px rgba(26,19,17,.18)' }}
+        className="group relative cursor-pointer overflow-hidden rounded-3xl bg-white transition active:scale-[.98] product-card-shadow"
       >
         <div className="relative aspect-square overflow-hidden">
           <img
@@ -56,13 +55,13 @@ export default function ProductCard({ product, wished, onOpen, onWish, variant =
             }`}
             style={{ boxShadow: '0 4px 14px -6px rgba(26,19,17,.25)' }}
           >
-            <Heart className={`h-[15px] w-[15px] ${wished ? 'fill-current' : ''}`} strokeWidth={2} />
+            <Heart className={`h-[15px] w-[15px] ${wished ? 'fill-coral' : ''}`} strokeWidth={2} />
           </button>
 
           {/* Badges */}
           <div className="absolute top-3 left-3 flex flex-col gap-1.5">
             {product.bestseller && (
-              <span className="rounded-full bg-ink px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-white">
+              <span className="badge-premium rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide">
                 Bestseller
               </span>
             )}
@@ -84,7 +83,7 @@ export default function ProductCard({ product, wished, onOpen, onWish, variant =
             {product.name}
           </h3>
           <div className="mt-2 flex items-center justify-between">
-            <span className="font-display text-[17px] font-bold tabular text-ink">
+            <span className="font-display text-[17px] font-bold tabular text-gradient-coral">
               {formatINR(product.price)}
             </span>
             <button
@@ -104,8 +103,7 @@ export default function ProductCard({ product, wished, onOpen, onWish, variant =
   return (
     <article
       onClick={onOpen}
-      className="group relative flex w-[170px] flex-shrink-0 cursor-pointer flex-col overflow-hidden rounded-3xl bg-white transition active:scale-[.98]"
-      style={{ boxShadow: '0 1px 2px rgba(26,19,17,.03), 0 12px 32px -20px rgba(26,19,17,.18)' }}
+      className="group relative flex w-[170px] flex-shrink-0 cursor-pointer flex-col overflow-hidden rounded-3xl bg-white transition active:scale-[.98] product-card-shadow"
     >
       <div className="relative aspect-square overflow-hidden">
         <img
@@ -122,12 +120,12 @@ export default function ProductCard({ product, wished, onOpen, onWish, variant =
           }`}
           style={{ boxShadow: '0 4px 12px -6px rgba(26,19,17,.25)' }}
         >
-          <Heart className={`h-3.5 w-3.5 ${wished ? 'fill-current' : ''}`} strokeWidth={2} />
+          <Heart className={`h-3.5 w-3.5 ${wished ? 'fill-coral' : ''}`} strokeWidth={2} />
         </button>
 
         <div className="absolute top-3 left-3 flex flex-col gap-1">
           {product.bestseller && (
-            <span className="rounded-full bg-ink px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white">
+            <span className="badge-premium rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide">
               Best
             </span>
           )}
@@ -149,7 +147,7 @@ export default function ProductCard({ product, wished, onOpen, onWish, variant =
           {product.name}
         </h3>
         <div className="mt-auto flex items-center justify-between pt-2">
-          <span className="font-display text-[15px] font-bold tabular text-ink">
+          <span className="font-display text-[15px] font-bold tabular text-gradient-coral">
             {formatINR(product.price)}
           </span>
           <button

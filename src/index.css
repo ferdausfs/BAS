@@ -161,10 +161,10 @@ button { -webkit-tap-highlight-color: transparent; }
 
 /* ===== Surfaces ===== */
 .card {
-  background: #fff;
+  background: linear-gradient(160deg, #ffffff 0%, #fffbfb 100%);
   border-radius: 24px;
-  border: 1px solid #F1E5E5;
-  box-shadow: 0 1px 2px rgba(26,19,17,.02), 0 8px 24px -16px rgba(26,19,17,.08);
+  border: 1px solid rgba(242,94,115,0.07);
+  box-shadow: 0 1px 2px rgba(26,19,17,.02), 0 8px 24px -16px rgba(26,19,17,.10);
 }
 
 .card-flat {
@@ -174,9 +174,10 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 
 .card-elevated {
-  background: #fff;
+  background: linear-gradient(160deg, #ffffff 0%, #fffcfc 100%);
   border-radius: 28px;
-  box-shadow: 0 2px 6px rgba(26,19,17,.03), 0 24px 48px -28px rgba(26,19,17,.16);
+  border: 1px solid rgba(242,94,115,0.06);
+  box-shadow: 0 2px 6px rgba(26,19,17,.03), 0 20px 48px -20px rgba(26,19,17,.18), 0 0 0 0.5px rgba(242,94,115,0.05);
 }
 
 /* ===== Glass ===== */
@@ -187,10 +188,10 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 
 .glass-strong {
-  background: rgba(255,255,255,0.92);
-  backdrop-filter: saturate(180%) blur(22px);
-  -webkit-backdrop-filter: saturate(180%) blur(22px);
-  border: 1px solid rgba(255,255,255,0.5);
+  background: rgba(255,252,252,0.93);
+  backdrop-filter: saturate(200%) blur(24px);
+  -webkit-backdrop-filter: saturate(200%) blur(24px);
+  border: 1px solid rgba(255,255,255,0.55);
 }
 
 /* ===== Decorative confetti for splash ===== */
@@ -240,10 +241,10 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 .chip:hover { background: #FBF7F5; }
 .chip-active {
-  background: #F25E73;
+  background: linear-gradient(135deg, #F47088 0%, #E8526A 100%);
   color: #fff;
-  border-color: #F25E73;
-  box-shadow: 0 6px 16px -8px rgba(242,94,115,.5);
+  border-color: transparent;
+  box-shadow: 0 4px 12px -4px rgba(242,94,115,.5);
 }
 
 /* ===== Section heading (modern minimal) ===== */
@@ -267,4 +268,37 @@ button { -webkit-tap-highlight-color: transparent; }
 .hairline {
   background: linear-gradient(to right, transparent, #ECDDDE 20%, #ECDDDE 80%, transparent);
   height: 1px;
+}
+
+/* ===== Premium Extras ===== */
+.product-card-shadow {
+  box-shadow: 0 1px 2px rgba(26,19,17,.02), 0 8px 32px -16px rgba(26,19,17,.14), 0 0 0 0.5px rgba(242,94,115,0.06);
+}
+
+.badge-premium {
+  background: linear-gradient(135deg, #D9A15B 0%, #C8894A 100%);
+  color: #fff;
+  box-shadow: 0 2px 8px -4px rgba(217,161,91,.5);
+}
+
+.tab-indicator {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 999px;
+  background: #F25E73;
+  box-shadow: 0 0 6px 1px rgba(242,94,115,.6);
+}
+
+@keyframes shimmerSlide {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+.shimmer {
+  background: linear-gradient(90deg, #f5eded 25%, #fdf5f5 50%, #f5eded 75%);
+  background-size: 200% 100%;
+  animation: shimmerSlide 1.8s ease-in-out infinite;
 }

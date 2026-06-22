@@ -48,7 +48,10 @@ export default function HomeScreen({
 
       <div className="no-scrollbar flex-1 overflow-y-auto pb-32">
         {/* Greeting + search */}
-        <div className="px-5 pt-1 anim-up">
+        <div className="px-5 pt-1 anim-up relative overflow-hidden">
+          {/* Decorative background glow */}
+          <div className="pointer-events-none absolute -right-10 -top-8 h-40 w-40 rounded-full bg-coral/6 blur-3xl" />
+          <div className="pointer-events-none absolute -left-4 top-4 h-24 w-24 rounded-full bg-blush-200/60 blur-2xl" />
           <div className="text-[12px] font-medium tracking-[0.2em] text-ink-200 uppercase">
             Welcome back
           </div>
