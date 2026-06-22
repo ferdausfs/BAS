@@ -101,9 +101,9 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
     );
   }
 
-  const pendingCount = orders.filter((o) => ['placed', 'confirmed', 'baking'].includes(o.status)).length;
-  const totalRevenue = orders.filter((o) => o.status === 'delivered').reduce((s, o) => s + o.total, 0);
-  const todayCount = orders.filter((o) => new Date(o.createdAt).toDateString() === new Date().toDateString()).length;
+  const pendingCount = orders.filter((o) => o && ['placed', 'confirmed', 'baking'].includes(o.status)).length;
+  const totalRevenue = orders.filter((o) => o && o.status === 'delivered').reduce((s, o) => s + (o ? o.total : 0), 0);
+  const todayCount = orders.filter((o) => o && new Date(o.createdAt).toDateString() === new Date().toDateString()).length;
 
   const TABS: { id: AdminTab; label: string; badge?: number }[] = [
     { id: 'dashboard', label: '📊 Dashboard' },
@@ -118,10 +118,16 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
   ];
 
   const ORDER_STATUSES: Order['status'][] = ['placed', 'confirmed', 'baking', 'ready', 'out', 'delivered', 'cancelled'];
-  const filteredOrders = orderFilter === 'all' ? orders : orders.filter((o) => o.status === orderFilter);
+  const filteredOrders = orderFilter === 'all' ? orders.filter(Boolean) : orders.filter((o) => o && o.status === orderFilter);
   const topProducts = Object.entries(
-    orders.reduce<Record<string, number>>((acc, o) => {
-      o.items.forEach((item) => { acc[item.productId] = (acc[item.productId] ?? 0) + item.quantity; });
+    orders.filter(Boolean).reduce<Record<string, number>>((acc, o) => {
+      if (o.items) {
+        o.items.forEach((item) => {
+          if (item && item.productId) {
+            acc[item.productId] = (acc[item.productId] ?? 0) + item.quantity;
+          }
+        });
+      }
       return acc;
     }, {})
   )
