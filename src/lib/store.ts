@@ -398,7 +398,18 @@ export const useSettingsStore = create<SettingsState>()(
           return { settings: next };
         }),
     }),
-    { name: 'bakeart-settings' }
+    {
+      name: 'bakeart-settings',
+      merge: (persisted, current) => ({
+        ...current,
+        ...(persisted as any),
+        settings: {
+          ...DEFAULT_SETTINGS,
+          ...(current as any)?.settings,
+          ...(persisted as any)?.settings,
+        },
+      }),
+    }
   )
 );
 

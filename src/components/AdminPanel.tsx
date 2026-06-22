@@ -35,6 +35,7 @@ interface Props { onClose?: () => void; embedded?: boolean; }
 
 export function AdminPanel({ onClose, embedded = false }: Props) {
   const { settings, updateSettings } = useSettingsStore();
+  const safeSettings = settings ?? DEFAULT_SETTINGS;
   const { products, saveProduct, deleteProduct, uploadProductImage } = useProducts();
   const { orders, fetchOrders, updateStatus, subscribeToNewOrders } = useOrdersHook();
   const { gallery, saveGalleryItem, deleteGalleryItem, uploadGalleryImage } = useGallery();
@@ -49,7 +50,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
   const [tab, setTab] = useState<AdminTab>('dashboard');
   const [editProduct, setEditProduct] = useState<Product | null>(null);
   const [editBanner, setEditBanner] = useState<Banner | null>(null);
-  const [localSettings, setLocalSettings] = useState(settings);
+  const [localSettings, setLocalSettings] = useState(safeSettings);
   const [imgUploading, setImgUploading] = useState(false);
   const [bannerImgUploading, setBannerImgUploading] = useState(false);
   const [galleryUploading, setGalleryUploading] = useState(false);
@@ -78,12 +79,12 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
     }
   }, [pinOk, embedded]);
 
-  useEffect(() => { setLocalSettings(settings); }, [settings]);
+  useEffect(() => { setLocalSettings(safeSettings); }, [safeSettings]);
 
   // PIN screen
   if (!pinOk && !embedded) {
     const tryPin = () => {
-      if (pinInput === settings.adminPin) { setPinOk(true); setPinError(false); }
+      if (pinInput === safeSettings.adminPin) { setPinOk(true); setPinError(false); }
       else { setPinError(true); setPinInput(''); }
     };
     return (
@@ -328,7 +329,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
 
                 <div className="mt-3 flex gap-2">
                   <a
-                    href={waLink(o.customer?.phone || settings.whatsappNumber, `Hello ${o.customer?.name || 'Customer'}, your Bake Art Style order #${o.id || 'N/A'} is now ${o.status || 'placed'}.`)}
+                    href={waLink(o.customer?.phone || safeSettings.whatsappNumber, `Hello ${o.customer?.name || 'Customer'}, your Bake Art Style order #${o.id || 'N/A'} is now ${o.status || 'placed'}.`)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex-1 rounded-xl bg-green-50 py-2 text-center text-xs font-bold text-green-700"
@@ -400,7 +401,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                     </button>
                     <input className="mt-1 w-full px-2 py-1 rounded-lg border border-ink/10 text-[10px] text-ink focus:outline-none bg-cream"
                       placeholder="Or paste image URL"
-                      value={editProduct.image.startsWith('data:') ? '' : editProduct.image}
+                      value={editProduct.image?.startsWith('data:') ? '' : editProduct.image}
                       onChange={(e) => setEditProduct({ ...editProduct, image: e.target.value })} />
                   </div>
                 </div>
@@ -594,7 +595,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                     </button>
                     <input className="mt-1 w-full px-2 py-1 rounded-lg border border-ink/10 text-[10px] text-ink focus:outline-none bg-cream"
                       placeholder="Or paste image URL"
-                      value={editBanner.image.startsWith('data:') ? '' : editBanner.image}
+                      value={editBanner.image?.startsWith('data:') ? '' : editBanner.image}
                       onChange={(e) => setEditBanner({ ...editBanner, image: e.target.value })} />
                   </div>
                 </div>
@@ -786,17 +787,17 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                   <p className="text-[11px] text-ink/45">Checkout location check on/off</p>
                 </div>
                 <button
-                  onClick={() => updateSettings({ deliveryZonesEnabled: !settings.deliveryZonesEnabled })}
-                  className={`h-7 w-12 rounded-full transition-colors ${settings.deliveryZonesEnabled ? 'bg-coral' : 'bg-ink/20'}`}
+                  onClick={() => updateSettings({ deliveryZonesEnabled: !safeSettings.deliveryZonesEnabled })}
+                  className={`h-7 w-12 rounded-full transition-colors ${safeSettings.deliveryZonesEnabled ? 'bg-coral' : 'bg-ink/20'}`}
                 >
-                  <div className={`m-1 h-5 w-5 rounded-full bg-white transition-transform ${settings.deliveryZonesEnabled ? 'translate-x-5' : ''}`} />
+                  <div className={`m-1 h-5 w-5 rounded-full bg-white transition-transform ${safeSettings.deliveryZonesEnabled ? 'translate-x-5' : ''}`} />
                 </button>
               </div>
               <div className="flex flex-wrap gap-2">
-                {(settings.allowedZones ?? []).map((z) => (
+                {(safeSettings.allowedZones ?? []).map((z) => (
                   <span key={z} className="inline-flex items-center gap-1.5 rounded-full border border-ink/10 bg-white px-3 py-1.5 text-xs font-bold text-ink">
                     <MapPin className="h-3 w-3 text-coral" /> {z}
-                    <button onClick={() => updateSettings({ allowedZones: (settings.allowedZones ?? []).filter((x) => x !== z) })} className="text-ink/50">
+                    <button onClick={() => updateSettings({ allowedZones: (safeSettings.allowedZones ?? []).filter((x) => x !== z) })} className="text-ink/50">
                       <X className="h-3 w-3" />
                     </button>
                   </span>
@@ -813,8 +814,8 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                   onClick={() => {
                     const zone = newZone.trim();
                     if (!zone) return;
-                    if (!(settings.allowedZones ?? []).some((z) => z.toLowerCase() === zone.toLowerCase())) {
-                      updateSettings({ allowedZones: [...(settings.allowedZones ?? []), zone] });
+                    if (!(safeSettings.allowedZones ?? []).some((z) => z.toLowerCase() === zone.toLowerCase())) {
+                      updateSettings({ allowedZones: [...(safeSettings.allowedZones ?? []), zone] });
                     }
                     setNewZone('');
                   }}
@@ -827,7 +828,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
             <div className="rounded-2xl bg-white p-4">
               <label className="text-[10px] font-bold uppercase text-ink/50">Out-of-zone message</label>
               <textarea
-                value={settings.outOfZoneMessage ?? ''}
+                value={safeSettings.outOfZoneMessage ?? ''}
                 onChange={(e) => updateSettings({ outOfZoneMessage: e.target.value })}
                 rows={3}
                 className="mt-1 w-full resize-none rounded-xl border border-ink/10 bg-cream p-3 text-xs text-ink focus:outline-none"
