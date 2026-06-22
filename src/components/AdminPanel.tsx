@@ -31,9 +31,9 @@ const EMPTY_BANNER = {
   type: 'new_item' as const, promoCode: '', productId: '', noticeText: '',
 };
 
-interface Props { onClose: () => void; }
+interface Props { onClose?: () => void; embedded?: boolean; }
 
-export function AdminPanel({ onClose }: Props) {
+export function AdminPanel({ onClose, embedded = false }: Props) {
   const { settings, updateSettings } = useSettingsStore();
   const { products, saveProduct, deleteProduct, uploadProductImage } = useProducts();
   const { orders, fetchOrders, updateStatus, subscribeToNewOrders } = useOrdersHook();
@@ -62,18 +62,18 @@ export function AdminPanel({ onClose }: Props) {
   const galleryImgRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (pinOk) {
+    if (pinOk || embedded) {
       fetchOrders();
       clearNewOrders();
       const unsub = subscribeToNewOrders();
       return unsub;
     }
-  }, [pinOk]);
+  }, [pinOk, embedded]);
 
   useEffect(() => { setLocalSettings(settings); }, [settings]);
 
   // PIN screen
-  if (!pinOk) {
+  if (!pinOk && !embedded) {
     const tryPin = () => {
       if (pinInput === settings.adminPin) { setPinOk(true); setPinError(false); }
       else { setPinError(true); setPinInput(''); }
@@ -147,20 +147,25 @@ export function AdminPanel({ onClose }: Props) {
   };
 
   return (
-    <div className="fixed inset-0 z-[70] flex flex-col bg-cream">
+    <div className={embedded
+      ? "flex flex-col bg-cream rounded-3xl overflow-hidden border border-ink/8 mt-4"
+      : "fixed inset-0 z-[70] flex flex-col bg-cream"
+    }>
       {/* Top bar */}
       <div className="flex items-center justify-between px-4 py-3 bg-ink text-white flex-shrink-0">
         <div className="flex items-center gap-2">
           <span className="text-xl">🎂</span>
-          <span className="font-bold text-sm">Admin Panel</span>
+          <span className="font-bold text-sm">Admin Dashboard</span>
         </div>
         <div className="flex items-center gap-2">
           <button onClick={fetchOrders} className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
             <RefreshCw className="w-4 h-4" />
           </button>
-          <button onClick={onClose} className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
-            <X className="w-4 h-4" />
-          </button>
+          {!embedded && onClose && (
+            <button onClick={onClose} className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
+              <X className="w-4 h-4" />
+            </button>
+          )}
         </div>
       </div>
 
@@ -180,7 +185,10 @@ export function AdminPanel({ onClose }: Props) {
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto p-4">
+      <div
+        className={embedded ? "overflow-y-auto p-4" : "flex-1 overflow-y-auto p-4"}
+        style={{ maxHeight: embedded ? '80vh' : undefined }}
+      >
 
         {/* Dashboard */}
         {tab === 'dashboard' && (

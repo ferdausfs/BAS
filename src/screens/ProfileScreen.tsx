@@ -8,9 +8,11 @@ import { useProducts } from '../hooks/useProducts';
 import { useAuth } from '../hooks/useAuth';
 import BrandLogo from '../components/BrandLogo';
 import { ChatBot } from '../components/ChatBot';
+import { AdminPanel } from '../components/AdminPanel';
 
 interface Props {
   onAuthOpen?: () => void;
+  isAdmin?: boolean;
 }
 
 type SavedPayment = 'bkash' | 'nagad' | 'cash';
@@ -58,7 +60,7 @@ function saveCustomerProfile(profile: CustomerProfile) {
   localStorage.setItem(CUSTOMER_PROFILE_KEY, JSON.stringify(profile));
 }
 
-export default function ProfileScreen({ onAuthOpen }: Props) {
+export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
   const { go, setChatOpen } = useUI();
   const { wishlist } = useUser();
   const { orders } = useOrders();
@@ -349,6 +351,18 @@ export default function ProfileScreen({ onAuthOpen }: Props) {
             Sign out
           </button>
         </div>
+
+        {/* Admin Dashboard — only visible to admin users */}
+        {isAdmin && (
+          <div className="px-4 pb-6 anim-up">
+            <div className="flex items-center gap-2 mb-3 mt-4">
+              <span className="text-lg">⚙️</span>
+              <h2 className="font-display text-[17px] font-bold text-ink">Admin Dashboard</h2>
+              <span className="ml-auto rounded-full bg-coral px-2 py-0.5 text-[10px] font-bold text-white uppercase tracking-wide">Admin</span>
+            </div>
+            <AdminPanel embedded />
+          </div>
+        )}
 
         <div className="mt-6 flex items-center justify-center gap-2 text-ink-200">
           <BrandLogo size={18} />
