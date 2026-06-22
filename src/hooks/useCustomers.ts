@@ -47,7 +47,8 @@ export function useCustomers() {
   return { customers: Array.isArray(customers) ? customers : [], loading };
 }
 
-function aggregateFromOrders(orders: any[], profiles: any[] = []): Customer[] {
+function aggregateFromOrders(orders: any[] | null | undefined, profiles: any[] = []): Customer[] {
+  const safeOrders = Array.isArray(orders) ? orders : [];
   const map = new Map<string, Customer>();
 
   profiles.filter(Boolean).forEach((p) => {
@@ -65,7 +66,7 @@ function aggregateFromOrders(orders: any[], profiles: any[] = []): Customer[] {
     });
   });
 
-  orders.filter(Boolean).forEach((o) => {
+  safeOrders.filter(Boolean).forEach((o) => {
     if (!o) return;
     const key = o.userId || o.user_id || o.customer?.phone || `guest-${o.id}`;
     if (!key) return;

@@ -62,14 +62,14 @@ function saveCustomerProfile(userId: string | undefined, profile: CustomerProfil
   localStorage.setItem(key, JSON.stringify(profile));
 }
 
-class AdminErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean }> {
+class AdminErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean; errorMessage: string }> {
   constructor(props: any) {
     super(props);
-    this.state = { hasError: false };
+    this.state = { hasError: false, errorMessage: '' };
   }
 
-  static getDerivedStateFromError() {
-    return { hasError: true };
+  static getDerivedStateFromError(error: any) {
+    return { hasError: true, errorMessage: error?.message || String(error) };
   }
 
   componentDidCatch(error: any, errorInfo: any) {
@@ -79,10 +79,17 @@ class AdminErrorBoundary extends React.Component<{ children: React.ReactNode }, 
   render() {
     if (this.state.hasError) {
       return (
-        <div className="rounded-2xl border border-red-100 bg-red-50 p-5 text-center my-4">
-          <p className="text-lg">⚠️</p>
-          <p className="text-xs font-bold text-red-600 mt-2">অ্যাডমিন ড্যাশবোর্ড লোড হতে সমস্যা হয়েছে</p>
-          <p className="text-[10px] text-red-400 mt-1">অনুগ্রহ করে পেজটি রিলোড করুন।</p>
+        <div className="bg-red-50 border border-red-100 rounded-3xl p-5 mt-4 text-center">
+          <div className="text-3xl mb-2">⚠️</div>
+          <h2 className="text-sm font-bold text-red-700 mb-1">Admin Dashboard Error</h2>
+          <p className="text-xs text-red-500 mb-2">{this.state.errorMessage}</p>
+          <p className="text-xs text-ink/40">Refresh the page to retry.</p>
+          <button
+            onClick={() => this.setState({ hasError: false, errorMessage: '' })}
+            className="mt-3 px-4 py-2 rounded-xl bg-coral text-white text-xs font-bold"
+          >
+            Retry
+          </button>
         </div>
       );
     }

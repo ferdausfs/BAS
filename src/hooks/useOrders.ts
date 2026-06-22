@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { useAuthStore, useSettingsStore, useOrders as useOrdersStore, useUI } from '../lib/store';
+import { useAuthStore, useOrders as useOrdersStore, useUI } from '../lib/store';
 import { isSupabaseConfigured, playBeep } from '../lib/utils';
 import type { Order } from '../types';
 
@@ -69,7 +69,6 @@ export function useOrdersHook() {
   const [loading, setLoading] = useState(false);
 
   const user = useAuthStore((s) => s.user);
-  const settings = useSettingsStore((s) => s.settings);
   const { orders, setOrders, setOrderStatus } = useOrdersStore();
   const incrementNewOrders = useUI((s) => s.incrementNewOrders);
 
@@ -93,7 +92,7 @@ export function useOrdersHook() {
     } finally {
       setLoading(false);
     }
-  }, [setOrders, user?.id, settings.adminEmail]);
+  }, [setOrders]);
 
   const fetchMyOrders = useCallback(async () => {
     if (!isSupabaseConfigured() || !user?.id) return;
