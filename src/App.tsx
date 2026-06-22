@@ -26,10 +26,15 @@ export default function App() {
 
   const [authOpen, setAuthOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [settingsLoading, setSettingsLoading] = useState(true);
 
   useEffect(() => {
     if (isSupabaseConfigured()) {
-      useSettingsStore.getState().loadRemoteSettings();
+      useSettingsStore.getState().loadRemoteSettings().finally(() => {
+        setSettingsLoading(false);
+      });
+    } else {
+      setSettingsLoading(false);
     }
   }, []);
 
@@ -56,10 +61,11 @@ export default function App() {
 
   const normalizeEmail = (email?: string) => email?.trim().toLowerCase() ?? '';
   const isAdminUser = useMemo(() => {
+    if (settingsLoading) return false;
     const userEmail = normalizeEmail(user?.email);
     const allowedAdminEmails = [settings.adminEmail, 'umuhammadiswa@gmail.com'];
     return !!userEmail && allowedAdminEmails.some((email) => normalizeEmail(email) === userEmail);
-  }, [user?.email, settings.adminEmail]);
+  }, [user?.email, settings.adminEmail, settingsLoading]);
 
   const activeTab = view.name === 'tabs' ? view.tab : tab;
 

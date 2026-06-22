@@ -55,5 +55,5 @@ export function useGallery() {
     return urlData.publicUrl;
   }, []);
 
-  return { gallery, loading, fetchGallery, saveGalleryItem, deleteGalleryItem, uploadGalleryImage };
+  return { gallery: Array.isArray(gallery) ? gallery : [], loading, fetchGallery, saveGalleryItem, deleteGalleryItem, uploadGalleryImage };
 }

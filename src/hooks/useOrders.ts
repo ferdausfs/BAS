@@ -207,7 +207,7 @@ export function useOrdersHook() {
   }, [fetchOrders, incrementNewOrders]);
 
   return {
-    orders,
+    orders: Array.isArray(orders) ? orders : [],
     loading,
     fetchOrders,
     fetchMyOrders,
