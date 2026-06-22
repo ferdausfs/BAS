@@ -111,7 +111,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
     { id: 'products', label: '🧁 Products' },
     { id: 'gallery', label: '🖼️ Gallery' },
     { id: 'banners', label: '🖼️ Banners' },
-    { id: 'reviews', label: '⭐ Reviews', badge: reviews.filter((r) => !r.approved).length },
+    { id: 'reviews', label: '⭐ Reviews', badge: reviews.filter((r) => r && !r.approved).length },
     { id: 'customers', label: '👥 Customers', badge: customers.length },
     { id: 'zones', label: '📍 Zones' },
     { id: 'settings', label: '⚙️ Settings' },
@@ -663,7 +663,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
         {/* Reviews */}
         {tab === 'reviews' && (
           <div className="space-y-3">
-            {reviews.map((r) => (
+            {reviews.filter(Boolean).map((r) => (
               <div key={r.id} className={`bg-white rounded-2xl p-4 ${!r.approved ? 'border-2 border-orange-200' : ''}`}>
                 <div className="flex justify-between items-start mb-1">
                   <p className="font-bold text-sm text-ink">{r.user_name}</p>
