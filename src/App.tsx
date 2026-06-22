@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useUI, useAuthStore, useSettingsStore, pushBrowserRouteState } from './lib/store';
 import { isSupabaseConfigured } from './lib/utils';
 import PhoneFrame from './components/PhoneFrame';
@@ -14,7 +14,6 @@ import CartScreen from './screens/CartScreen';
 import CheckoutScreen from './screens/CheckoutScreen';
 import SuccessScreen from './screens/SuccessScreen';
 import { AuthSheet } from './components/AuthSheet';
-import { AdminPanel } from './components/AdminPanel';
 import NotificationsSheet from './components/NotificationsSheet';
 import WishlistScreen from './screens/WishlistScreen';
 import TrackingScreen from './screens/TrackingScreen';
@@ -26,11 +25,7 @@ export default function App() {
   const { settings } = useSettingsStore();
 
   const [authOpen, setAuthOpen] = useState(false);
-  const [adminOpen, setAdminOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
-  const [pendingAdminUnlock, setPendingAdminUnlock] = useState(false);
-  const tapCount = useRef(0);
-  const logoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (isSupabaseConfigured()) {
@@ -66,40 +61,6 @@ export default function App() {
     return !!userEmail && allowedAdminEmails.some((email) => normalizeEmail(email) === userEmail);
   }, [user?.email, settings.adminEmail]);
 
-  useEffect(() => {
-    if (!pendingAdminUnlock || !user) return;
-
-    setPendingAdminUnlock(false);
-    if (isAdminUser) {
-      setAuthOpen(false);
-      setAdminOpen(true);
-    } else {
-      console.log('Not admin email');
-    }
-  }, [pendingAdminUnlock, user, isAdminUser]);
-
-  // 5-tap logo → admin. Before login it opens auth; after admin email login it unlocks.
-  const handleLogoTap = () => {
-    tapCount.current += 1;
-    if (logoTimer.current) clearTimeout(logoTimer.current);
-    if (tapCount.current >= 5) {
-      tapCount.current = 0;
-      // Admin email check
-      if (isAdminUser) {
-        setAdminOpen(true);
-      } else if (!user) {
-        // Not logged in — open auth first, then auto-unlock only for admin email.
-        setPendingAdminUnlock(true);
-        setAuthOpen(true);
-      } else {
-        // Wrong email — silent ignore
-        console.log('Not admin email');
-      }
-    } else {
-      logoTimer.current = setTimeout(() => { tapCount.current = 0; }, 3000);
-    }
-  };
-
   const activeTab = view.name === 'tabs' ? view.tab : tab;
 
   const screenKey = [
@@ -112,15 +73,15 @@ export default function App() {
     view.name === 'admin' ? (view.tab ?? 'dashboard') : '',
   ].join('-');
 
-  const showTabBar = view.name === 'tabs' && !chatOpen && !authOpen && !adminOpen && !notificationsOpen;
+  const showTabBar = view.name === 'tabs' && !chatOpen && !authOpen && !notificationsOpen;
 
   return (
-    <PhoneFrame onLogoTap={handleLogoTap}>
+    <PhoneFrame>
       <div className="relative h-full w-full">
         <div key={screenKey} className="anim-fade h-full">
           {view.name === 'splash'                             && <SplashScreen />}
           {view.name === 'tabs' && activeTab === 'home'       && (
-            <HomeScreen onLogoTap={handleLogoTap} onNotificationsOpen={() => setNotificationsOpen(true)} />
+            <HomeScreen onNotificationsOpen={() => setNotificationsOpen(true)} />
           )}
           {view.name === 'tabs' && activeTab === 'categories' && <CategoriesScreen />}
           {view.name === 'tabs' && activeTab === 'orders'     && (
@@ -136,7 +97,7 @@ export default function App() {
             )
           )}
           {view.name === 'tabs' && activeTab === 'profile'    && (
-            <ProfileScreen onAuthOpen={() => setAuthOpen(true)} />
+            <ProfileScreen onAuthOpen={() => setAuthOpen(true)} isAdmin={isAdminUser} />
           )}
           {view.name === 'product'   && <ProductScreen />}
           {view.name === 'customize' && <CustomizeScreen />}
@@ -152,8 +113,7 @@ export default function App() {
         <NotificationsSheet open={notificationsOpen} onClose={() => setNotificationsOpen(false)} />
       </div>
 
-      <AuthSheet open={authOpen} onClose={() => setAuthOpen(false)} onSuccess={() => setPendingAdminUnlock(true)} />
-      {adminOpen && <AdminPanel onClose={() => setAdminOpen(false)} />}
+      <AuthSheet open={authOpen} onClose={() => setAuthOpen(false)} />
     </PhoneFrame>
   );
 }
