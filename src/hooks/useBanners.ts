@@ -57,5 +57,5 @@ export function useBanners() {
     return urlData.publicUrl;
   }, []);
 
-  return { banners, loading, saveBanner, deleteBanner, uploadBannerImage, refetch: fetchFromSupabase };
+  return { banners: Array.isArray(banners) ? banners : [], loading, saveBanner, deleteBanner, uploadBannerImage, refetch: fetchFromSupabase };
 }

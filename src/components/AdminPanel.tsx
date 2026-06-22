@@ -61,6 +61,14 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
   const bannerImgRef = useRef<HTMLInputElement>(null);
   const galleryImgRef = useRef<HTMLInputElement>(null);
 
+  // Harden all lists on mount
+  const safeOrders = Array.isArray(orders) ? orders : [];
+  const safeProducts = Array.isArray(products) ? products : [];
+  const safeReviews = Array.isArray(reviews) ? reviews : [];
+  const safeGallery = Array.isArray(gallery) ? gallery : [];
+  const safeBanners = Array.isArray(banners) ? banners : [];
+  const safeCustomers = Array.isArray(customers) ? customers : [];
+
   useEffect(() => {
     if (pinOk || embedded) {
       fetchOrders();
@@ -101,9 +109,9 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
     );
   }
 
-  const pendingCount = orders.filter((o) => o && ['placed', 'confirmed', 'baking'].includes(o.status)).length;
-  const totalRevenue = orders.filter((o) => o && o.status === 'delivered').reduce((s, o) => s + (o ? o.total : 0), 0);
-  const todayCount = orders.filter((o) => o && new Date(o.createdAt).toDateString() === new Date().toDateString()).length;
+  const pendingCount = safeOrders.filter((o) => o && ['placed', 'confirmed', 'baking'].includes(o.status)).length;
+  const totalRevenue = safeOrders.filter((o) => o && o.status === 'delivered').reduce((s, o) => s + (o ? o.total : 0), 0);
+  const todayCount = safeOrders.filter((o) => o && o.createdAt && new Date(o.createdAt).toDateString() === new Date().toDateString()).length;
 
   const TABS: { id: AdminTab; label: string; badge?: number }[] = [
     { id: 'dashboard', label: '📊 Dashboard' },
@@ -111,16 +119,16 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
     { id: 'products', label: '🧁 Products' },
     { id: 'gallery', label: '🖼️ Gallery' },
     { id: 'banners', label: '🖼️ Banners' },
-    { id: 'reviews', label: '⭐ Reviews', badge: reviews.filter((r) => r && !r.approved).length },
-    { id: 'customers', label: '👥 Customers', badge: customers.length },
+    { id: 'reviews', label: '⭐ Reviews', badge: safeReviews.filter((r) => r && !r.approved).length },
+    { id: 'customers', label: '👥 Customers', badge: safeCustomers.length },
     { id: 'zones', label: '📍 Zones' },
     { id: 'settings', label: '⚙️ Settings' },
   ];
 
   const ORDER_STATUSES: Order['status'][] = ['placed', 'confirmed', 'baking', 'ready', 'out', 'delivered', 'cancelled'];
-  const filteredOrders = orderFilter === 'all' ? orders.filter(Boolean) : orders.filter((o) => o && o.status === orderFilter);
+  const filteredOrders = orderFilter === 'all' ? safeOrders.filter(Boolean) : safeOrders.filter((o) => o && o.status === orderFilter);
   const topProducts = Object.entries(
-    orders.filter(Boolean).reduce<Record<string, number>>((acc, o) => {
+    safeOrders.filter(Boolean).reduce<Record<string, number>>((acc, o) => {
       if (o.items) {
         o.items.forEach((item) => {
           if (item && item.productId) {
@@ -131,16 +139,16 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
       return acc;
     }, {})
   )
-    .map(([id, qty]) => ({ product: products.find((p) => p.id === id), qty }))
+    .map(([id, qty]) => ({ product: safeProducts.find((p) => p && p.id === id), qty }))
     .filter((x) => x.product)
     .sort((a, b) => b.qty - a.qty)
     .slice(0, 5);
 
   const exportCSV = () => {
-    const rows = orders.filter(Boolean).map((o) => [
-      o.id, o.customer?.name || 'Guest', o.customer?.phone || 'N/A', o.customer?.address || 'N/A',
+    const rows = safeOrders.filter(Boolean).map((o) => [
+      o.id || 'N/A', o.customer?.name || 'Guest', o.customer?.phone || 'N/A', o.customer?.address || 'N/A',
       o.delivery?.date || '', o.delivery?.time || '',
-      o.items?.map((i) => `${i.name}×${i.quantity}`).join('; ') || '',
+      o.items?.map((i) => `${i?.name || 'N/A'}×${i?.quantity || 1}`).join('; ') || '',
       o.subtotal || 0, o.deliveryFee || 0, o.total || 0, o.status || 'placed', o.payment || 'cash',
     ]);
     const csv = [['ID','Name','Phone','Address','Date','Time','Items','Subtotal','Delivery','Total','Status','Payment'], ...rows]
@@ -204,7 +212,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                 { label: 'Revenue', value: formatINR(totalRevenue) },
                 { label: 'Pending', value: pendingCount },
                 { label: 'Today', value: todayCount },
-                { label: 'Products', value: products.length },
+                { label: 'Products', value: safeProducts.length },
               ].map((s) => (
                 <div key={s.label} className="bg-white rounded-2xl p-4">
                   <p className="text-xl font-black text-coral">{s.value}</p>
@@ -218,10 +226,10 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                 <div key={product!.id} className="flex items-center gap-2.5 py-2 border-b border-ink/5 last:border-0">
                   <img src={product!.image} alt="" className="h-10 w-10 rounded-xl object-cover bg-blush" />
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-xs font-bold text-ink">{product!.name}</p>
+                    <p className="truncate text-xs font-bold text-ink">{product!.name || 'N/A'}</p>
                     <p className="text-[10px] text-ink/40">{qty} sold</p>
                   </div>
-                  <p className="text-xs font-black text-coral">{formatINR(product!.price * qty)}</p>
+                  <p className="text-xs font-black text-coral">{formatINR((product!.price || 0) * qty)}</p>
                 </div>
               ))}
               {topProducts.length === 0 && <p className="text-center text-xs text-ink/30 py-4">No product sales yet</p>}
@@ -229,19 +237,19 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
 
             <div className="bg-white rounded-2xl p-4">
               <p className="text-xs font-bold text-ink mb-3">Recent Orders</p>
-            {orders.filter(Boolean).slice(0, 5).map((o) => (
+            {safeOrders.filter(Boolean).slice(0, 5).map((o) => (
               <div key={o.id} className="flex justify-between items-center py-2 border-b border-ink/5 last:border-0">
                 <div>
                   <p className="text-xs font-bold text-ink">{o.customer?.name || 'Guest'}</p>
-                    <p className="text-[10px] text-ink/40">#{o.id}</p>
+                    <p className="text-[10px] text-ink/40">#{o.id || 'N/A'}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-xs font-black text-coral">{formatINR(o.total)}</p>
-                    <p className="text-[10px] text-ink/50">{STATUS_LABELS[o.status] ?? o.status}</p>
+                    <p className="text-xs font-black text-coral">{formatINR(o.total || 0)}</p>
+                    <p className="text-[10px] text-ink/50">{STATUS_LABELS[o.status || 'placed'] ?? (o.status || 'placed')}</p>
                   </div>
                 </div>
               ))}
-              {orders.length === 0 && <p className="text-center text-xs text-ink/30 py-4">No orders yet</p>}
+              {safeOrders.length === 0 && <p className="text-center text-xs text-ink/30 py-4">No orders yet</p>}
             </div>
           </div>
         )}
@@ -250,7 +258,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
         {tab === 'orders' && (
           <div className="space-y-3">
             <div className="flex items-center justify-between gap-2">
-              <p className="text-xs font-bold text-ink/60">{filteredOrders.length}/{orders.length} orders</p>
+              <p className="text-xs font-bold text-ink/60">{filteredOrders.length}/{safeOrders.length} orders</p>
               <button onClick={exportCSV} className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-coral text-white text-xs font-bold">
                 <Download className="w-3 h-3" /> Export CSV
               </button>
@@ -273,11 +281,11 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                 <div className="flex justify-between items-start gap-3 mb-2">
                   <div className="min-w-0">
                     <p className="font-bold text-sm text-ink truncate">{o.customer?.name || 'Guest'}</p>
-                    <p className="text-[10px] font-mono text-ink/40">#{o.id} · {new Date(o.createdAt).toLocaleString('en-BD')}</p>
+                    <p className="text-[10px] font-mono text-ink/40">#{o.id || 'N/A'} · {o.createdAt ? new Date(o.createdAt).toLocaleString('en-BD') : 'N/A'}</p>
                   </div>
                   <div className="text-right">
-                    <p className="font-black text-coral">{formatINR(o.total)}</p>
-                    <p className="text-[10px] font-bold text-ink/45 capitalize">{o.payment}</p>
+                    <p className="font-black text-coral">{formatINR(o.total || 0)}</p>
+                    <p className="text-[10px] font-bold text-ink/45 capitalize">{o.payment || 'cash'}</p>
                   </div>
                 </div>
 
@@ -289,10 +297,10 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                 </div>
 
                 <div className="mt-2 space-y-1.5">
-                  {o.items.map((i, idx) => (
+                  {(o.items || []).map((i, idx) => (
                     <div key={idx} className="flex items-center justify-between gap-2 text-xs">
-                      <span className="truncate text-ink/65">{i.name} · {i.size} · {i.flavor} ×{i.quantity}</span>
-                      <span className="font-bold text-ink">{formatINR(i.price * i.quantity)}</span>
+                      <span className="truncate text-ink/65">{i?.name || 'N/A'} · {i?.size || 'N/A'} · {i?.flavor || 'N/A'} ×{i?.quantity || 1}</span>
+                      <span className="font-bold text-ink">{formatINR((i?.price || 0) * (i?.quantity || 1))}</span>
                     </div>
                   ))}
                 </div>
@@ -300,7 +308,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                 <div className="mt-3">
                   <label className="text-[10px] font-bold uppercase text-ink/40">Change order status</label>
                   <select
-                    value={o.status}
+                    value={o.status || 'placed'}
                     onChange={(e) => updateStatus(o.id, e.target.value as Order['status'])}
                     className="mt-1 h-10 w-full rounded-xl border border-ink/10 bg-white px-3 text-xs font-bold text-ink focus:outline-none"
                   >
@@ -320,7 +328,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
 
                 <div className="mt-3 flex gap-2">
                   <a
-                    href={waLink(o.customer?.phone || settings.whatsappNumber, `Hello ${o.customer?.name || 'Customer'}, your Bake Art Style order #${o.id} is now ${o.status}.`)}
+                    href={waLink(o.customer?.phone || settings.whatsappNumber, `Hello ${o.customer?.name || 'Customer'}, your Bake Art Style order #${o.id || 'N/A'} is now ${o.status || 'placed'}.`)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex-1 rounded-xl bg-green-50 py-2 text-center text-xs font-bold text-green-700"
@@ -351,7 +359,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
             {editProduct && (
               <div className="bg-white rounded-2xl p-4 space-y-3 border-2 border-coral/30">
                 <p className="font-bold text-sm text-ink">
-                  {products.find((p) => p.id === editProduct.id) ? 'Edit' : 'New'} Product
+                  {safeProducts.find((p) => p && p.id === editProduct.id) ? 'Edit' : 'New'} Product
                 </p>
                 {(['name', 'tagline', 'description'] as const).map((f) => (
                   <div key={f}>
@@ -485,13 +493,13 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
               </div>
             )}
 
-            {products.map((p) => (
+            {safeProducts.filter(Boolean).map((p) => (
               <div key={p.id} className="bg-white rounded-2xl p-3 flex gap-3 items-center">
                 <img src={p.image} alt={p.name} className="w-14 h-14 rounded-xl object-cover flex-shrink-0 bg-blush" />
                 <div className="flex-1 min-w-0">
-                  <p className="font-bold text-sm text-ink truncate">{p.name}</p>
-                  <p className="text-xs font-black text-coral">{formatINR(p.price)}</p>
-                  <p className="text-[10px] text-ink/40">{p.occasion}</p>
+                  <p className="font-bold text-sm text-ink truncate">{p.name || 'N/A'}</p>
+                  <p className="text-xs font-black text-coral">{formatINR(p.price || 0)}</p>
+                  <p className="text-[10px] text-ink/40">{p.occasion || 'birthday'}</p>
                 </div>
                 <div className="flex flex-col gap-1">
                   <button onClick={() => setEditProduct(p)} className="w-8 h-8 rounded-xl bg-ink/5 flex items-center justify-center">
@@ -517,7 +525,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
             {editBanner && (
               <div className="bg-white rounded-2xl p-4 space-y-3 border-2 border-coral/30">
                 <p className="font-bold text-sm text-ink">
-                  {banners.find((b) => b.id === editBanner.id) ? 'Edit' : 'New'} Banner
+                  {safeBanners.find((b) => b && b.id === editBanner.id) ? 'Edit' : 'New'} Banner
                 </p>
                 {(['title', 'subtitle', 'tag', 'color'] as const).map((f) => (
                   <div key={f}>
@@ -555,7 +563,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                       value={editBanner.productId ?? ''}
                       onChange={(e) => setEditBanner({ ...editBanner, productId: e.target.value })}>
                       <option value="">Select product...</option>
-                      {products.map((p) => (
+                      {safeProducts.filter(Boolean).map((p) => (
                         <option key={p.id} value={p.id}>{p.name}</option>
                       ))}
                     </select>
@@ -601,13 +609,13 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
               </div>
             )}
 
-            {banners.map((b) => (
+            {safeBanners.filter(Boolean).map((b) => (
               <div key={b.id} className="bg-white rounded-2xl p-3 flex gap-3 items-center">
                 <img src={b.image} alt={b.title} className="w-14 h-14 rounded-xl object-cover flex-shrink-0 bg-blush" />
                 <div className="flex-1 min-w-0">
-                  <p className="font-bold text-sm text-ink truncate">{b.title}</p>
-                  <p className="text-xs font-bold text-coral capitalize">{b.type}</p>
-                  <p className="text-[10px] text-ink/40 truncate">{b.subtitle}</p>
+                  <p className="font-bold text-sm text-ink truncate">{b.title || 'N/A'}</p>
+                  <p className="text-xs font-bold text-coral capitalize">{b.type || 'new_item'}</p>
+                  <p className="text-[10px] text-ink/40 truncate">{b.subtitle || ''}</p>
                 </div>
                 <div className="flex flex-col gap-1">
                   <button onClick={() => setEditBanner(b)} className="w-8 h-8 rounded-xl bg-ink/5 flex items-center justify-center">
@@ -644,11 +652,11 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
               </button>
             </div>
             <div className="grid grid-cols-2 gap-2">
-              {gallery.map((g) => (
+              {safeGallery.filter(Boolean).map((g) => (
                 <div key={g.id} className="relative rounded-2xl overflow-hidden bg-blush">
-                  <img src={g.image} alt={g.caption} className="w-full h-28 object-cover" />
+                  <img src={g.image} alt={g.caption || ''} className="w-full h-28 object-cover" />
                   <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/60">
-                    <p className="text-[10px] text-white font-medium truncate">{g.caption}</p>
+                    <p className="text-[10px] text-white font-medium truncate">{g.caption || ''}</p>
                   </div>
                   <button onClick={() => deleteGalleryItem(g.id)} className="absolute top-2 right-2 w-6 h-6 rounded-full bg-red-500 flex items-center justify-center">
                     <X className="w-3 h-3 text-white" />
@@ -656,24 +664,24 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                 </div>
               ))}
             </div>
-            {gallery.length === 0 && <div className="text-center py-12 text-ink/30 text-sm">No gallery photos yet</div>}
+            {safeGallery.length === 0 && <div className="text-center py-12 text-ink/30 text-sm">No gallery photos yet</div>}
           </div>
         )}
 
         {/* Reviews */}
         {tab === 'reviews' && (
           <div className="space-y-3">
-            {reviews.filter(Boolean).map((r) => (
+            {safeReviews.filter(Boolean).map((r) => (
               <div key={r.id} className={`bg-white rounded-2xl p-4 ${!r.approved ? 'border-2 border-orange-200' : ''}`}>
                 <div className="flex justify-between items-start mb-1">
-                  <p className="font-bold text-sm text-ink">{r.user_name}</p>
+                  <p className="font-bold text-sm text-ink">{r.user_name || 'Anonymous'}</p>
                   <div className="flex gap-0.5">
                     {Array.from({ length: 5 }).map((_, i) => (
-                      <Star key={i} className={`w-3 h-3 ${i < r.rating ? 'fill-amber-400 text-amber-400' : 'text-ink/20'}`} />
+                      <Star key={i} className={`w-3 h-3 ${i < (r.rating || 5) ? 'fill-amber-400 text-amber-400' : 'text-ink/20'}`} />
                     ))}
                   </div>
                 </div>
-                <p className="text-xs text-ink/60 mb-2">{r.comment}</p>
+                <p className="text-xs text-ink/60 mb-2">{r.comment || ''}</p>
                 {!r.approved && <span className="text-[10px] bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full font-bold">Pending</span>}
                 <div className="flex gap-2 mt-2">
                   {!r.approved && (
@@ -689,7 +697,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                 </div>
               </div>
             ))}
-            {reviews.length === 0 && <div className="text-center py-16 text-ink/30 text-sm">No reviews yet</div>}
+            {safeReviews.length === 0 && <div className="text-center py-16 text-ink/30 text-sm">No reviews yet</div>}
           </div>
         )}
 
@@ -698,17 +706,17 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
               <div className="rounded-2xl bg-white p-4">
-                <p className="text-xl font-black text-coral">{customers.length}</p>
+                <p className="text-xl font-black text-coral">{safeCustomers.length}</p>
                 <p className="text-xs font-bold text-ink">Customers</p>
               </div>
               <div className="rounded-2xl bg-white p-4">
-                <p className="text-xl font-black text-coral">{formatINR(customers.reduce((s, c) => s + c.totalSpent, 0))}</p>
+                <p className="text-xl font-black text-coral">{formatINR(safeCustomers.reduce((s, c) => s + (c?.totalSpent || 0), 0))}</p>
                 <p className="text-xs font-bold text-ink">Total spent</p>
               </div>
             </div>
             {customersLoading && <div className="text-center py-8 text-ink/40 text-sm">Loading customers...</div>}
-            {!customersLoading && customers.filter(Boolean).map((c) => {
-              const customerOrders = orders
+            {!customersLoading && safeCustomers.filter(Boolean).map((c) => {
+              const customerOrders = safeOrders
                 .filter((o) =>
                   o && (
                     (c.phone && o.customer?.phone === c.phone) ||
@@ -725,15 +733,15 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                       {c.avatar ? <img src={c.avatar} alt="" className="h-full w-full rounded-full object-cover" /> : <Users className="h-5 w-5" />}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-bold text-ink">{c.name}</p>
+                      <p className="truncate text-sm font-bold text-ink">{c.name || 'N/A'}</p>
                       <p className="truncate text-[11px] text-ink/45">{c.email || 'No email'} {c.phone ? `· ${c.phone}` : ''}</p>
                       <div className="mt-1 flex flex-wrap gap-1.5">
-                        <span className="rounded-full bg-ink/5 px-2 py-0.5 text-[9px] font-bold text-ink/45 uppercase">{c.source}</span>
-                        <span className="rounded-full bg-coral/10 px-2 py-0.5 text-[9px] font-bold text-coral">{c.orderCount} orders</span>
+                        <span className="rounded-full bg-ink/5 px-2 py-0.5 text-[9px] font-bold text-ink/45 uppercase">{c.source || 'guest'}</span>
+                        <span className="rounded-full bg-coral/10 px-2 py-0.5 text-[9px] font-bold text-coral">{c.orderCount || 1} orders</span>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm font-black text-coral">{formatINR(c.totalSpent)}</p>
+                      <p className="text-sm font-black text-coral">{formatINR(c.totalSpent || 0)}</p>
                       {c.lastOrderDate > 0 && <p className="text-[9px] text-ink/35">{new Date(c.lastOrderDate).toLocaleDateString('en-BD')}</p>}
                     </div>
                   </div>
@@ -743,17 +751,17 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                     {customerOrders.length > 0 ? customerOrders.map((o) => (
                       <div key={o.id} className="flex items-center justify-between border-b border-ink/5 py-1.5 last:border-0">
                         <div>
-                          <p className="text-[11px] font-bold text-ink">#{o.id}</p>
-                          <p className="text-[9px] text-ink/40">{new Date(o.createdAt).toLocaleDateString('en-BD')} · {o.status}</p>
+                          <p className="text-[11px] font-bold text-ink">#{o.id || 'N/A'}</p>
+                          <p className="text-[9px] text-ink/40">{o.createdAt ? new Date(o.createdAt).toLocaleDateString('en-BD') : 'N/A'} · {o.status || 'placed'}</p>
                         </div>
-                        <p className="text-xs font-black text-coral">{formatINR(o.total)}</p>
+                        <p className="text-xs font-black text-coral">{formatINR(o.total || 0)}</p>
                       </div>
                     )) : <p className="text-[11px] text-ink/40">No order history found</p>}
                   </div>
 
                   {c.phone && (
                     <a
-                      href={waLink(c.phone, `Hello ${c.name}, this is Bake Art Style.`)}
+                      href={waLink(c.phone, `Hello ${c.name || 'Customer'}, this is Bake Art Style.`)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="mt-3 block rounded-xl bg-green-50 py-2 text-center text-xs font-bold text-green-700"
@@ -764,7 +772,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                 </div>
               );
             })}
-            {!customersLoading && customers.length === 0 && <div className="text-center py-16 text-ink/30 text-sm">No customers yet</div>}
+            {!customersLoading && safeCustomers.length === 0 && <div className="text-center py-16 text-ink/30 text-sm">No customers yet</div>}
           </div>
         )}
 

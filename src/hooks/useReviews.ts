@@ -56,9 +56,11 @@ export function useReviews(productId?: string) {
     await supabase.from('reviews').delete().eq('id', id);
   }, []);
 
-  const avgRating = reviews.length
-    ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length
+  const safeReviews = Array.isArray(reviews) ? reviews.filter(Boolean) : [];
+
+  const avgRating = safeReviews.length
+    ? safeReviews.reduce((s, r) => s + (r?.rating || 0), 0) / safeReviews.length
     : 0;
 
-  return { reviews, loading, fetchReviews, saveReview, approveReview, deleteReview, avgRating };
+  return { reviews: safeReviews, loading, fetchReviews, saveReview, approveReview, deleteReview, avgRating };
 }

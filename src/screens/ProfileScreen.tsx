@@ -1,8 +1,8 @@
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Heart, MapPin, CreditCard, Bell, HelpCircle, Settings, LogOut,
   ChevronRight, Star, Sparkles, LogIn, X, Save, Check
 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
 import { useUI, useUser, useOrders, useCart, useAuthStore } from '../lib/store';
 import { useProducts } from '../hooks/useProducts';
 import { useAuth } from '../hooks/useAuth';
@@ -62,6 +62,34 @@ function saveCustomerProfile(userId: string | undefined, profile: CustomerProfil
   localStorage.setItem(key, JSON.stringify(profile));
 }
 
+class AdminErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean }> {
+  constructor(props: any) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: any, errorInfo: any) {
+    console.error("AdminPanel render error caught by Boundary:", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="rounded-2xl border border-red-100 bg-red-50 p-5 text-center my-4">
+          <p className="text-lg">⚠️</p>
+          <p className="text-xs font-bold text-red-600 mt-2">অ্যাডমিন ড্যাশবোর্ড লোড হতে সমস্যা হয়েছে</p>
+          <p className="text-[10px] text-red-400 mt-1">অনুগ্রহ করে পেজটি রিলোড করুন।</p>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
   const { go, setChatOpen } = useUI();
   const { wishlist } = useUser();
@@ -81,7 +109,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
     loadCustomerProfile(user?.id, user?.name ?? '')
   );
 
-  const wishlistItems = products.filter((p) => wishlist.includes(p.id));
+  const wishlistItems = (products ?? []).filter((p) => p && wishlist.includes(p.id));
 
   const profileComplete = !!(
     savedProfile.name &&
@@ -129,7 +157,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
     {
       Icon: Heart,
       label: 'Wishlist',
-      sub: `${wishlist.length} saved items`,
+      sub: `${(wishlist ?? []).length} saved items`,
       accent: 'text-coral',
       action: () => go({ name: 'wishlist' }),
     },
@@ -236,9 +264,9 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
         </div>
 
         <div className="mt-4 grid grid-cols-3 gap-2.5 px-5 anim-up delay-1">
-          <Stat label="Orders" value={orders.length} />
-          <Stat label="Wishlist" value={wishlist.length} />
-          <Stat label="In cart" value={items.length} />
+          <Stat label="Orders" value={(orders ?? []).length} />
+          <Stat label="Wishlist" value={(wishlist ?? []).length} />
+          <Stat label="In cart" value={(items ?? []).length} />
         </div>
 
         <div className="mt-4 px-5 anim-up delay-2">
@@ -355,14 +383,16 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
         </div>
 
         {/* Admin Dashboard — only visible to admin users */}
-        {isAdmin && (
+        {isAdmin && user && (
           <div className="px-4 pb-6 anim-up">
             <div className="flex items-center gap-2 mb-3 mt-4">
               <span className="text-lg">⚙️</span>
               <h2 className="font-display text-[17px] font-bold text-ink">Admin Dashboard</h2>
               <span className="ml-auto rounded-full bg-coral px-2 py-0.5 text-[10px] font-bold text-white uppercase tracking-wide">Admin</span>
             </div>
-            <AdminPanel embedded />
+            <AdminErrorBoundary>
+              <AdminPanel embedded />
+            </AdminErrorBoundary>
           </div>
         )}
 

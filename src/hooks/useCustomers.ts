@@ -44,7 +44,7 @@ export function useCustomers() {
     return () => { alive = false; };
   }, [orders]);
 
-  return { customers, loading };
+  return { customers: Array.isArray(customers) ? customers : [], loading };
 }
 
 function aggregateFromOrders(orders: any[], profiles: any[] = []): Customer[] {
