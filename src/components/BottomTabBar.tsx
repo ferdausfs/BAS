@@ -33,6 +33,7 @@ export default function BottomTabBar() {
                   strokeWidth={active ? 2.5 : 1.8}
                 />
               </span>
+              {active && <span className="tab-indicator" />}
               <span className={`relative text-[10.5px] font-semibold tracking-wide ${active ? 'opacity-100' : 'opacity-80'}`}>
                 {t.label}
               </span>

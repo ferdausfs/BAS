@@ -63,8 +63,7 @@ export function ChatBot({ embedded = false }: Props) {
     if (digits.length < 10) {
       return 'WhatsApp number এখনো সেট করা নেই। Admin Panel → Settings থেকে WhatsApp Number দিন, তারপর আমি সরাসরি WhatsApp link দেখাতে পারবো।';
     }
-    const link = waLink(settings.whatsappNumber, 'হ্যালো! আমার একটা প্রশ্ন আছে কেক অর্ডার নিয়ে।');
-    return `আমাদের টিমের সাথে সরাসরি কথা বলতে পারেন 👋\nWhatsApp: ${link}\n\nসাধারণত সকাল ৯টা থেকে রাত ৯টা পর্যন্ত সাপোর্ট পাওয়া যায়।`;
+    return `আমাদের টিমের সাথে সরাসরি কথা বলতে পারেন 👋\n\nনিচের সবুজ WhatsApp বাটনটি চাপুন — সাথে সাথে চ্যাট খুলে যাবে।\n\nসাধারণত সকাল ৯টা থেকে রাত ৯টা পর্যন্ত সাপোর্ট পাওয়া যায়।`;
   };
 
   const menuText = () => {
@@ -303,7 +302,7 @@ Products:
 ${productList}
 
 উত্তর 2-6 লাইনের মধ্যে রাখো।`;
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${settings.geminiApiKey}`, {
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${settings.geminiApiKey}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: `${systemPrompt}\n\nUser: ${userMsg}` }] }] }),
@@ -425,7 +424,7 @@ ${productList}
         onClick={(e) => {
           if (settings.whatsappNumber.replace(/\D/g, '').length < 10) e.preventDefault();
         }}
-        className="flex flex-shrink-0 items-center justify-center gap-2 bg-green-50 py-2.5 text-xs font-bold text-green-700"
+        className="flex flex-shrink-0 items-center justify-center gap-2 bg-green-50 border-t border-green-100 py-3 text-xs font-bold text-green-700 transition"
       >
         <Phone className="h-3.5 w-3.5" /> সরাসরি WhatsApp-এ কথা বলুন
       </a>
