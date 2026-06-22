@@ -704,9 +704,9 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
             {!customersLoading && customers.map((c) => {
               const customerOrders = orders
                 .filter((o) =>
-                  (c.phone && o.customer.phone === c.phone) ||
-                  (c.email && o.customer.email === c.email) ||
-                  (!c.phone && !c.email && o.customer.name === c.name)
+                  (c.phone && o.customer?.phone === c.phone) ||
+                  (c.email && o.customer?.email === c.email) ||
+                  (!c.phone && !c.email && o.customer?.name === c.name)
                 )
                 .slice(0, 4);
 
