@@ -219,7 +219,7 @@ export const useOrders = create<OrderState>()(
     (set) => ({
       orders: [],
 
-      setOrders: (orders) => set({ orders }),
+      setOrders: (orders) => set((s) => ({ orders: Array.isArray(orders) ? orders : s.orders })),
 
       placeOrder: (data) => {
         const user = useAuthStore.getState().user;
