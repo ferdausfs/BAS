@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 import { useState, useEffect } from 'react';
+=======
+import { useState, useEffect, useMemo } from 'react';
+>>>>>>> e8f8544 (Feat: Add tier selection + weight-based pricing system + app optimization (Tasks M, N, O, P))
 import { ArrowLeft, MapPin, Clock, Wallet, Check, Shield, Navigation, Loader2 } from 'lucide-react';
 import {
   useCart, useOrders, useUI, formatINR,
@@ -92,11 +96,21 @@ export default function CheckoutScreen({ onBack }: Props) {
   const currentDeliveryFee = settings.deliveryFee !== undefined ? settings.deliveryFee : standardDeliveryFee;
   const currentFreeThreshold = settings.freeDeliveryThreshold !== undefined ? settings.freeDeliveryThreshold : 999;
 
+<<<<<<< HEAD
   const subtotal = cartSubtotal(items);
   const isFreeDelivery = subtotal >= currentFreeThreshold;
   const delivery = items.length === 0 ? 0 : (isFreeDelivery ? 0 : currentDeliveryFee);
   const discountAmount = promoDiscount > 0 ? (subtotal * promoDiscount) / 100 : 0;
   const total = subtotal + delivery - discountAmount;
+=======
+  const { subtotal, delivery, discountAmount, total } = useMemo(() => {
+    const sub = cartSubtotal(items);
+    const freeDlv = sub >= currentFreeThreshold;
+    const dlv = items.length === 0 ? 0 : (freeDlv ? 0 : currentDeliveryFee);
+    const disc = promoDiscount > 0 ? (sub * promoDiscount) / 100 : 0;
+    return { subtotal: sub, delivery: dlv, discountAmount: disc, total: sub + dlv - disc };
+  }, [items, currentDeliveryFee, currentFreeThreshold, promoDiscount]);
+>>>>>>> e8f8544 (Feat: Add tier selection + weight-based pricing system + app optimization (Tasks M, N, O, P))
 
   const handleLocate = async () => {
     setLocating(true);

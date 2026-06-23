@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 import React, { useEffect, useMemo, useState } from 'react';
+=======
+import React, { useEffect, useMemo, useState, useCallback } from 'react';
+>>>>>>> e8f8544 (Feat: Add tier selection + weight-based pricing system + app optimization (Tasks M, N, O, P))
 import {
   Heart, MapPin, CreditCard, Bell, HelpCircle, Settings, LogOut,
   ChevronRight, Star, Sparkles, LogIn, X, Save, Check
@@ -146,7 +150,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
     setCustomerOpen(true);
   };
 
-  const handleSaveCustomer = () => {
+  const handleSaveCustomer = useCallback(() => {
     const next: CustomerProfile = {
       name: draftProfile.name.trim(),
       phone: draftProfile.phone.trim(),
@@ -158,7 +162,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
     saveCustomerProfile(user?.id, next);
     setSavedProfile(next);
     setCustomerOpen(false);
-  };
+  }, [draftProfile, user?.id]);
 
   const menu = [
     {

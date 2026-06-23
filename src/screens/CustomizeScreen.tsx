@@ -61,11 +61,20 @@ export default function CustomizeScreen() {
     addons: [] as string[],
     message: '',
   });
+  const [customWeight, setCustomWeight] = useState('1');
 
   const selectedWeight = WEIGHTS.find((w) => w.size === config.weight) ?? WEIGHTS[1];
   const selectedAddons = ADDONS.filter((a) => config.addons.includes(a.id));
   const addonsTotal = selectedAddons.reduce((sum, a) => sum + a.price, 0);
+<<<<<<< HEAD
   const total = selectedWeight.price + addonsTotal;
+=======
+  // If product has weight-based pricing, compute dynamically
+  const weightPrice = product?.pricePerUnit && customWeight && +customWeight > 0
+    ? +customWeight * product.pricePerUnit
+    : selectedWeight.price;
+  const total = weightPrice + addonsTotal;
+>>>>>>> e8f8544 (Feat: Add tier selection + weight-based pricing system + app optimization (Tasks M, N, O, P))
   const previewImage = flavorImages[config.flavour] || defaultProduct.image;
 
   const toggleAddon = (id: string) => {
@@ -83,11 +92,18 @@ export default function CustomizeScreen() {
       return;
     }
 
+<<<<<<< HEAD
+=======
+    const finalSize = product?.pricePerUnit
+      ? `${customWeight} ${product?.priceUnit ?? 'kg'}`
+      : config.weight;
+
+>>>>>>> e8f8544 (Feat: Add tier selection + weight-based pricing system + app optimization (Tasks M, N, O, P))
     add({
       productId: defaultProduct.id,
       name: `Custom ${config.flavour} Cake`,
       image: previewImage,
-      size: config.weight,
+      size: finalSize,
       flavor: config.flavour,
       topping: selectedAddons.map((a) => a.label).join(', ') || undefined,
       message: config.message,
@@ -162,13 +178,43 @@ export default function CustomizeScreen() {
           )}
 
           {step === 1 && (
-            <ChipGroup
-              icon={Weight}
-              label="Weight"
-              value={config.weight}
-              options={WEIGHTS.map((w) => w.size)}
-              onChange={(v) => setConfig({ ...config, weight: v })}
-            />
+            product?.pricePerUnit ? (
+              <div className="rounded-2xl bg-white p-3.5" style={{ boxShadow: '0 1px 2px rgba(26,19,17,.02), 0 6px 18px -14px rgba(26,19,17,.16)' }}>
+                <div className="mb-3 flex items-center gap-2.5">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-coral-50 text-coral">
+                    <Weight className="h-4 w-4" strokeWidth={2} />
+                  </div>
+                  <h3 className="font-display text-[14px] font-bold tracking-tight text-ink">Weight</h3>
+                  <span className="ml-auto text-[11px] font-semibold text-ink-200">{product?.priceUnit ?? 'kg'}</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="number"
+                    min="0.25"
+                    step="0.25"
+                    placeholder={`Enter weight in ${product?.priceUnit ?? 'kg'}`}
+                    className="flex-1 px-3 py-2.5 rounded-xl border-2 border-ink/10 bg-cream text-sm font-bold text-ink focus:border-coral focus:outline-none"
+                    value={customWeight}
+                    onChange={(e) => setCustomWeight(e.target.value)}
+                  />
+                  <span className="text-sm font-bold text-ink/50">{product?.priceUnit ?? 'kg'}</span>
+                </div>
+                {customWeight && +customWeight > 0 && (
+                  <div className="mt-2 rounded-xl bg-coral/8 px-3 py-2 flex items-center justify-between">
+                    <span className="text-[11px] text-ink/60">{customWeight} {product?.priceUnit ?? 'kg'} × ৳{product?.pricePerUnit}</span>
+                    <span className="font-display text-base font-bold text-coral">৳{(+customWeight * (product?.pricePerUnit ?? 0)).toLocaleString()}</span>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <ChipGroup
+                icon={Weight}
+                label="Weight"
+                value={config.weight}
+                options={WEIGHTS.map((w) => w.size)}
+                onChange={(v) => setConfig({ ...config, weight: v })}
+              />
+            )
           )}
 
           {step === 2 && <AddonsPicker selected={config.addons} onToggle={toggleAddon} />}
@@ -201,7 +247,11 @@ export default function CustomizeScreen() {
               </div>
               <div className="space-y-2.5 px-5 py-4 text-[13.5px]">
                 <Review label="Flavour" value={config.flavour} />
+<<<<<<< HEAD
                 <Review label="Weight" value={config.weight} />
+=======
+                <Review label="Weight" value={product?.pricePerUnit ? `${customWeight} ${product?.priceUnit ?? 'kg'}` : config.weight} />
+>>>>>>> e8f8544 (Feat: Add tier selection + weight-based pricing system + app optimization (Tasks M, N, O, P))
                 <Review label="Add-ons" value={selectedAddons.map((a) => a.label).join(', ') || '— none —'} />
                 <Review label="Message" value={config.message || '— none —'} last />
               </div>
