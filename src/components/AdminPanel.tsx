@@ -376,6 +376,64 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                     value={editProduct.price}
                     onChange={(e) => setEditProduct({ ...editProduct, price: +e.target.value })} />
                 </div>
+
+                {/* Tier selector */}
+                <div>
+                  <label className="text-[10px] font-bold text-ink/50 uppercase">Tier</label>
+                  <div className="mt-1 flex gap-2">
+                    {(['normal', 'premium', 'custom'] as const).map((t) => (
+                      <button
+                        key={t}
+                        type="button"
+                        onClick={() => setEditProduct(prev => prev ? { ...prev, tier: t } : prev)}
+                        className={`flex-1 py-2 rounded-xl text-[11px] font-bold capitalize transition ${
+                          (editProduct.tier ?? 'normal') === t
+                            ? t === 'premium' ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-white'
+                            : t === 'custom' ? 'bg-coral text-white'
+                            : 'bg-ink text-white'
+                            : 'bg-ink/5 text-ink/50'
+                        }`}
+                      >
+                        {t === 'normal' ? '⚪ Normal' : t === 'premium' ? '⭐ Premium' : '✏️ Custom'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Weight-based Pricing */}
+                <div className="space-y-2 border border-ink/8 rounded-2xl p-3">
+                  <label className="text-[10px] font-bold text-ink/50 uppercase">Weight-based Pricing (optional)</label>
+                  <p className="text-[10px] text-ink/40">If set, price = customer's weight × rate below. Leave blank to use fixed price above.</p>
+                  <div className="flex gap-2">
+                    <div className="flex-1">
+                      <label className="text-[10px] font-bold text-ink/40">Rate per unit (৳)</label>
+                      <input
+                        type="number"
+                        placeholder="e.g. 100"
+                        className="w-full mt-0.5 px-3 py-2 rounded-xl border border-ink/10 bg-cream text-xs text-ink focus:outline-none"
+                        value={editProduct.pricePerUnit ?? ''}
+                        onChange={(e) => setEditProduct(prev => prev ? { ...prev, pricePerUnit: e.target.value ? +e.target.value : undefined } : prev)}
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <label className="text-[10px] font-bold text-ink/40">Unit</label>
+                      <select
+                        className="w-full mt-0.5 px-3 py-2 rounded-xl border border-ink/10 bg-cream text-xs text-ink focus:outline-none"
+                        value={editProduct.priceUnit ?? 'kg'}
+                        onChange={(e) => setEditProduct(prev => prev ? { ...prev, priceUnit: e.target.value as 'kg' | 'pound' } : prev)}
+                      >
+                        <option value="kg">per kg</option>
+                        <option value="pound">per pound</option>
+                      </select>
+                    </div>
+                  </div>
+                  {editProduct.pricePerUnit && (
+                    <p className="text-[10px] text-coral font-semibold">
+                      Example: 2 {editProduct.priceUnit ?? 'kg'} = ৳{(editProduct.pricePerUnit * 2).toLocaleString()}  ·  0.5 {editProduct.priceUnit ?? 'kg'} = ৳{(editProduct.pricePerUnit * 0.5).toLocaleString()}
+                    </p>
+                  )}
+                </div>
+
                 <div>
                   <label className="text-[10px] font-bold text-ink/50 uppercase">Category</label>
                   <select className="w-full mt-0.5 px-3 py-2 rounded-xl border border-ink/10 bg-cream text-xs text-ink focus:outline-none"

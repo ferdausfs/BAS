@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { ArrowLeft, Plus, Minus, Trash2, Tag, ShoppingBag, Sparkles, Truck, Shield } from 'lucide-react';
 import {
   useCart,
@@ -14,6 +14,7 @@ export default function CartScreen() {
   const { back, go, promoDiscount, applyPromo, clearPromo } = useUI();
   const [code, setCode] = useState('');
   const [promoError, setPromoError] = useState('');
+<<<<<<< HEAD
 
   const { settings } = useSettingsStore();
   const currentDeliveryFee = settings.deliveryFee !== undefined ? settings.deliveryFee : standardDeliveryFee;
@@ -30,6 +31,34 @@ export default function CartScreen() {
   const handleAdd = () => {
     go({ name: 'checkout' });
   };
+=======
+
+  const { settings } = useSettingsStore();
+  const currentDeliveryFee = settings.deliveryFee !== undefined ? settings.deliveryFee : standardDeliveryFee;
+  const currentFreeThreshold = settings.freeDeliveryThreshold !== undefined ? settings.freeDeliveryThreshold : 999;
+
+  const {
+    subtotal,
+    delivery,
+    discountAmount,
+    total,
+    remaining,
+    progress,
+  } = useMemo(() => {
+    const sub = cartSubtotal(items);
+    const freeDlv = sub >= currentFreeThreshold;
+    const dlv = items.length === 0 ? 0 : (freeDlv ? 0 : currentDeliveryFee);
+    const disc = promoDiscount > 0 ? (sub * promoDiscount) / 100 : 0;
+    const tot = sub + dlv - disc;
+    const rem = currentFreeThreshold - sub;
+    const prog = Math.min((sub / currentFreeThreshold) * 100, 100);
+    return { subtotal: sub, delivery: dlv, discountAmount: disc, total: tot, remaining: rem, progress: prog };
+  }, [items, currentDeliveryFee, currentFreeThreshold, promoDiscount]);
+
+  const handleAdd = useCallback(() => {
+    go({ name: 'checkout' });
+  }, [go]);
+>>>>>>> e8f8544 (Feat: Add tier selection + weight-based pricing system + app optimization (Tasks M, N, O, P))
 
   if (items.length === 0) {
     return (

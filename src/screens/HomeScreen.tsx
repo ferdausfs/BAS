@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { ArrowRight, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useUI, useUser, useOrders } from '../lib/store';
 import { categories } from '../lib/data';
@@ -32,9 +32,9 @@ export default function HomeScreen({
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [activeNotice, setActiveNotice] = useState<Banner | null>(null);
 
-  const trending = products
+  const trending = useMemo(() => products
     .filter((p) => p.bestseller || p.newArrival)
-    .slice(0, 8);
+    .slice(0, 8), [products]);
 
   useEffect(() => {
     if (banners.length === 0) return;

@@ -18,6 +18,9 @@ export type Product = {
   tags?: string[];
   bestseller?: boolean;
   newArrival?: boolean;
+  tier?: 'normal' | 'premium' | 'custom';
+  priceUnit?: 'kg' | 'pound';
+  pricePerUnit?: number;
 };
 
 export type CartItem = {

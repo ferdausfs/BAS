@@ -28,6 +28,7 @@ export const products: Product[] = [
     flavors: FLAVORS, weights,
     toppings: ['Chocolate truffles', 'Strawberry', 'Gold dust'],
     bestseller: true,
+    tier: 'normal',
   },
   {
     id: 'p2',
@@ -40,6 +41,7 @@ export const products: Product[] = [
     flavors: FLAVORS, weights,
     toppings: ['Cream cheese roses', 'Fresh strawberries', 'White chocolate'],
     bestseller: true,
+    tier: 'premium',
   },
   {
     id: 'p3',
@@ -52,6 +54,7 @@ export const products: Product[] = [
     flavors: FLAVORS, weights,
     toppings: ['Caramel drip', 'Candied nuts', 'Praline crunch'],
     bestseller: true,
+    tier: 'normal',
   },
   {
     id: 'p4',
@@ -64,6 +67,7 @@ export const products: Product[] = [
     flavors: FLAVORS, weights,
     toppings: ['Pink rosettes', 'Fresh strawberries', 'Gold sprinkles'],
     newArrival: true,
+    tier: 'normal',
   },
   {
     id: 'p5',
@@ -74,6 +78,7 @@ export const products: Product[] = [
     image: '/cakes/butterscotch.png',
     rating: 4.6, reviews: 145, occasion: 'birthday',
     flavors: FLAVORS, weights,
+    tier: 'normal',
   },
   {
     id: 'p6',
@@ -85,6 +90,7 @@ export const products: Product[] = [
     rating: 5.0, reviews: 88, occasion: 'anniversary',
     flavors: FLAVORS, weights,
     newArrival: true,
+    tier: 'premium',
   },
 ];
 

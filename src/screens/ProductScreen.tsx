@@ -42,25 +42,53 @@ export default function ProductScreen() {
   const currentImg = activeImg || product.image;
   const [size, setSize] = useState(product.weights[1]?.size ?? product.weights[0]?.size);
   const [addons, setAddons] = useState<Record<string, boolean>>({});
+  const [customWeight, setCustomWeight] = useState('1');
+  const [weightError, setWeightError] = useState('');
   const wished = wishlist.includes(product.id);
 
   const selectedWeight = product.weights.find((w) => w.size === size);
-  const base = product.price + (selectedWeight?.price ?? 0);
   const addonsCost = ADDONS.reduce((s, a) => s + (addons[a.id] ? a.price : 0), 0);
-  const total = base + addonsCost;
   const selectedAddons = ADDONS.filter((a) => addons[a.id]).map((a) => a.name);
 
+  // If weight-based pricing is set, compute dynamically
+  const weightPrice = product.pricePerUnit && customWeight && +customWeight > 0
+    ? +customWeight * product.pricePerUnit
+    : 0;
+  const base = product.pricePerUnit
+    ? weightPrice
+    : (product.price + (selectedWeight?.price ?? 0));
+  const total = base + addonsCost;
+
   const handleAdd = () => {
-    add({
-      productId: product.id,
-      name: product.name,
-      image: product.image,
-      size,
-      flavor: product.flavors[0],
-      topping: selectedAddons.length ? selectedAddons.join(', ') : undefined,
-      price: total,
-      quantity: 1,
-    });
+    if (product.pricePerUnit) {
+      const w = parseFloat(customWeight);
+      if (!customWeight || isNaN(w) || w <= 0) {
+        setWeightError('Please enter a valid weight');
+        return;
+      }
+      setWeightError('');
+      add({
+        productId: product.id,
+        name: product.name,
+        image: product.image,
+        size: `${customWeight} ${product.priceUnit ?? 'kg'}`,
+        flavor: product.flavors[0],
+        topping: selectedAddons.length ? selectedAddons.join(', ') : undefined,
+        price: total,
+        quantity: 1,
+      });
+    } else {
+      add({
+        productId: product.id,
+        name: product.name,
+        image: product.image,
+        size,
+        flavor: product.flavors[0],
+        topping: selectedAddons.length ? selectedAddons.join(', ') : undefined,
+        price: total,
+        quantity: 1,
+      });
+    }
     go({ name: 'cart' });
   };
 
@@ -141,6 +169,15 @@ export default function ProductScreen() {
             <h1 className="flex-1 font-display text-[26px] font-bold leading-[1.1] tracking-tight text-ink">
               {product.name}
             </h1>
+            {product.tier && product.tier !== 'normal' && (
+              <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
+                product.tier === 'premium'
+                  ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-white'
+                  : 'bg-coral/15 text-coral'
+              }`}>
+                {product.tier === 'premium' ? '⭐ Premium' : '✏️ Custom Order'}
+              </span>
+            )}
           </div>
 
           {/* Rating + meta */}
@@ -186,30 +223,60 @@ export default function ProductScreen() {
           <section className="mt-7">
             <div className="flex items-center justify-between">
               <h3 className="font-display text-[15px] font-bold tracking-tight text-ink">Select size</h3>
-              <span className="text-[11px] text-ink-200">Serves 8-12</span>
+              <span className="text-[11px] text-ink-200">{product.pricePerUnit ? 'Weight-based' : 'Serves 8-12'}</span>
             </div>
-            <div className="mt-3 grid grid-cols-4 gap-2">
-              {product.weights.map((w) => {
-                const fullPrice = product.price + w.price;
-                const active = size === w.size;
-                return (
-                  <button
-                    key={w.size}
-                    onClick={() => setSize(w.size)}
-                    className={`flex min-h-[64px] flex-col items-center justify-center rounded-2xl border-2 bg-white transition active:scale-95 ${
-                      active
-                        ? 'border-coral bg-coral-50 text-coral'
-                        : 'border-ink-50 text-ink'
-                    }`}
-                  >
-                    <span className="text-[13px] font-bold">{w.size}</span>
-                    <span className="mt-0.5 text-[11px] font-semibold tabular opacity-70">
-                      {formatINR(fullPrice)}
+            {product.pricePerUnit ? (
+              /* Dynamic weight-based pricing */
+              <div className="mt-3 space-y-3">
+                <div className="flex items-center gap-3">
+                  <input
+                    type="number"
+                    min="0.25"
+                    step="0.25"
+                    placeholder={`Enter weight in ${product.priceUnit ?? 'kg'}`}
+                    className="flex-1 px-3 py-2.5 rounded-xl border-2 border-ink/10 bg-cream text-sm font-bold text-ink focus:border-coral focus:outline-none"
+                    value={customWeight}
+                    onChange={(e) => { setCustomWeight(e.target.value); setWeightError(''); }}
+                  />
+                  <span className="text-sm font-bold text-ink/50">{product.priceUnit ?? 'kg'}</span>
+                </div>
+                {weightError && (
+                  <p className="text-[11px] text-red-500 font-semibold">{weightError}</p>
+                )}
+                {customWeight && +customWeight > 0 && (
+                  <div className="rounded-2xl bg-coral/8 px-4 py-3 flex items-center justify-between">
+                    <span className="text-xs text-ink/60">{customWeight} {product.priceUnit ?? 'kg'} × ৳{product.pricePerUnit}</span>
+                    <span className="font-display text-lg font-bold text-coral">
+                      ৳{(+customWeight * product.pricePerUnit).toLocaleString()}
                     </span>
-                  </button>
-                );
-              })}
-            </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              /* Existing static weight chips */
+              <div className="mt-3 grid grid-cols-4 gap-2">
+                {product.weights.map((w) => {
+                  const fullPrice = product.price + w.price;
+                  const active = size === w.size;
+                  return (
+                    <button
+                      key={w.size}
+                      onClick={() => setSize(w.size)}
+                      className={`flex min-h-[64px] flex-col items-center justify-center rounded-2xl border-2 bg-white transition active:scale-95 ${
+                        active
+                          ? 'border-coral bg-coral-50 text-coral'
+                          : 'border-ink-50 text-ink'
+                      }`}
+                    >
+                      <span className="text-[13px] font-bold">{w.size}</span>
+                      <span className="mt-0.5 text-[11px] font-semibold tabular opacity-70">
+                        {formatINR(fullPrice)}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </section>
 
           {/* Add-ons */}
