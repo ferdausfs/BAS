@@ -156,6 +156,14 @@ export interface Review {
   created_at: string;
 }
 
+export interface CustomAddon {
+  id: string;
+  emoji: string;
+  label: string;
+  price: number;
+  category: 'decoration' | 'theme' | 'flowers' | 'extras';
+}
+
 export interface Coupon {
   id: string;
   code: string;
@@ -184,4 +192,6 @@ export interface SiteSettings {
   coupons: Coupon[];
   allowedZones: string[];
   customFlavorImages?: Record<string, string>;
+  customAddons?: CustomAddon[];
+  defaultPriceUnit?: 'kg' | 'pound';
 }

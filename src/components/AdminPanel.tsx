@@ -9,7 +9,7 @@ import { useBanners } from '../hooks/useBanners';
 import { useSettingsStore, useUI } from '../lib/store';
 import { DEFAULT_SETTINGS } from '../lib/data';
 import { formatINR, waLink } from '../lib/utils';
-import type { Product, Order, Banner } from '../types';
+import type { Product, Order, Banner, CustomAddon } from '../types';
 
 type AdminTab = 'dashboard' | 'orders' | 'products' | 'banners' | 'gallery' | 'reviews' | 'customers' | 'zones' | 'settings';
 
@@ -935,6 +935,74 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                 <div className={`w-4 h-4 rounded-full bg-white m-1 transition-transform ${localSettings.promoEnabled ? 'translate-x-4' : ''}`} />
               </button>
             </div>
+            {/* Custom Cake Add-ons */}
+            <div className="mt-4 space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-[10px] font-bold text-ink/50 uppercase">Custom Cake Add-ons</label>
+                <button
+                  onClick={() => {
+                    const newAddon: CustomAddon = { id: `addon-${Date.now()}`, emoji: '✨', label: 'New Add-on', price: 100, category: 'extras' };
+                    updateSettings({ customAddons: [...(settings.customAddons ?? []), newAddon] });
+                  }}
+                  className="flex items-center gap-1 rounded-lg bg-coral px-2.5 py-1 text-[10px] font-bold text-white"
+                >
+                  <Plus className="h-3 w-3" /> Add
+                </button>
+              </div>
+              <div className="space-y-2">
+                {(settings.customAddons ?? []).map((addon, idx) => (
+                  <div key={addon.id} className="flex items-center gap-2 rounded-xl bg-cream p-2">
+                    <input
+                      value={addon.emoji}
+                      className="w-10 text-center rounded-lg border border-ink/10 bg-white px-1 py-1 text-sm"
+                      onChange={(e) => {
+                        const updated = [...(settings.customAddons ?? [])];
+                        updated[idx] = { ...updated[idx], emoji: e.target.value };
+                        updateSettings({ customAddons: updated });
+                      }}
+                    />
+                    <input
+                      value={addon.label}
+                      className="flex-1 rounded-lg border border-ink/10 bg-white px-2 py-1 text-xs text-ink"
+                      onChange={(e) => {
+                        const updated = [...(settings.customAddons ?? [])];
+                        updated[idx] = { ...updated[idx], label: e.target.value };
+                        updateSettings({ customAddons: updated });
+                      }}
+                    />
+                    <input
+                      type="number"
+                      value={addon.price}
+                      className="w-16 rounded-lg border border-ink/10 bg-white px-2 py-1 text-xs text-ink"
+                      onChange={(e) => {
+                        const updated = [...(settings.customAddons ?? [])];
+                        updated[idx] = { ...updated[idx], price: +e.target.value };
+                        updateSettings({ customAddons: updated });
+                      }}
+                    />
+                    <select
+                      value={addon.category}
+                      className="rounded-lg border border-ink/10 bg-white px-1 py-1 text-[10px] text-ink"
+                      onChange={(e) => {
+                        const updated = [...(settings.customAddons ?? [])];
+                        updated[idx] = { ...updated[idx], category: e.target.value as CustomAddon['category'] };
+                        updateSettings({ customAddons: updated });
+                      }}
+                    >
+                      <option value="decoration">Deco</option>
+                      <option value="theme">Theme</option>
+                      <option value="flowers">Flowers</option>
+                      <option value="extras">Extras</option>
+                    </select>
+                    <button
+                      onClick={() => updateSettings({ customAddons: (settings.customAddons ?? []).filter((_, i) => i !== idx) })}
+                      className="h-6 w-6 rounded-lg bg-red-50 text-red-400 flex items-center justify-center text-xs font-bold"
+                    >✕</button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
             <div className="flex gap-2">
               <button onClick={() => updateSettings(localSettings)}
                 className="flex-1 py-3 rounded-2xl bg-coral text-white font-bold text-sm">Save</button>

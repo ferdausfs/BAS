@@ -138,59 +138,30 @@ export default function ProductScreen() {
 
   return (
     <div className="relative flex h-full flex-col bg-blush-50">
-      {/* Image header */}
-      <div className="relative h-[420px] flex-shrink-0 overflow-hidden rounded-b-[28px] bg-blush-100">
-        <img src={currentImg} alt={product.name} className="absolute inset-0 h-full w-full object-cover" />
+      {/* ONE scrollable area: image + all content (parallax scroll) */}
+      <div className="no-scrollbar relative flex-1 overflow-y-auto bg-blush-50 pb-28">
+        {/* Hero image — scrolls up naturally as user scrolls down */}
+        <div className="relative w-full aspect-[4/3] bg-blush-100">
+          <img src={currentImg} alt={product.name} className="absolute inset-0 h-full w-full object-cover" />
 
-        {/* Soft top fade for control legibility */}
-        <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-blush-100/85 to-transparent" />
+          {/* Soft top fade for control legibility */}
+          <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-blush-100/85 to-transparent" />
 
-        {/* Floating controls */}
-        <button
-          onClick={back}
-          className="absolute top-5 left-5 flex h-11 w-11 items-center justify-center rounded-full bg-white text-ink transition active:scale-90"
-          style={{ boxShadow: '0 8px 22px -10px rgba(26,19,17,.35)' }}
-          aria-label="Back"
-        >
-          <ArrowLeft className="h-[20px] w-[20px]" strokeWidth={2.2} />
-        </button>
-        <div className="absolute top-5 right-5 flex gap-2.5">
-          <button
-            className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-ink transition active:scale-90"
-            style={{ boxShadow: '0 8px 22px -10px rgba(26,19,17,.35)' }}
-            aria-label="Share"
-          >
-            <Share2 className="h-[18px] w-[18px]" strokeWidth={2} />
-          </button>
-          <button
-            onClick={() => toggleWish(product.id)}
-            className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-ink transition active:scale-90"
-            style={{ boxShadow: '0 8px 22px -10px rgba(26,19,17,.35)' }}
-            aria-label="Wishlist"
-          >
-            <Heart
-              className={`h-[19px] w-[19px] ${wished ? 'fill-coral text-coral' : ''}`}
-              strokeWidth={2}
-            />
-          </button>
+          {/* Pagination dots */}
+          <div className="absolute right-0 bottom-5 left-0 flex justify-center gap-1.5 pointer-events-none">
+            {[0, 1, 2].map((i) => (
+              <span
+                key={i}
+                className={`h-1.5 rounded-full transition-all ${
+                  i === 0 ? 'w-5 bg-coral' : 'w-1.5 bg-white/60'
+                }`}
+              />
+            ))}
+          </div>
         </div>
 
-        {/* Pagination dots */}
-        <div className="absolute right-0 bottom-5 left-0 flex justify-center gap-1.5">
-          {[0, 1, 2].map((i) => (
-            <span
-              key={i}
-              className={`h-1.5 rounded-full transition-all ${
-                i === 0 ? 'w-5 bg-coral' : 'w-1.5 bg-white/60'
-              }`}
-            />
-          ))}
-        </div>
-      </div>
-
-      {/* Sheet */}
-      <div className="relative flex-1 overflow-y-auto bg-white">
-        <div className="px-5 pt-6 pb-28">
+        {/* Content sheet below image — flows naturally as user scrolls */}
+        <div className="bg-white rounded-t-[28px] -mt-5 relative z-10 px-5 pt-6">
           {/* Gallery Thumbnail Strip */}
           {product.gallery && product.gallery.length > 0 && (
             <div className="flex gap-2 overflow-x-auto pb-4 scrollbar-hide">
@@ -364,9 +335,9 @@ export default function ProductScreen() {
             Fully customize this cake
           </button>
         </div>
-      </div>
 
-      {/* Reviews Section */}
+        {/* Reviews Section inside scroll container */}
+        <div className="px-5 mt-6 pb-4">
       <section className="px-5 mt-6 pb-4">
         <div className="flex items-center justify-between mb-3">
           <h2 className="font-display text-[17px] font-bold text-ink">Reviews</h2>
@@ -492,6 +463,41 @@ export default function ProductScreen() {
           </div>
         )}
       </section>
+
+        </div>
+      </div>
+
+      {/* Sticky floating controls at top — visible above image, with pointer-events-auto on each button */}
+      <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-5 pt-5 pb-2 pointer-events-none">
+        <button
+          onClick={back}
+          className="pointer-events-auto flex h-11 w-11 items-center justify-center rounded-full bg-white text-ink transition active:scale-90"
+          style={{ boxShadow: '0 8px 22px -10px rgba(26,19,17,.35)' }}
+          aria-label="Back"
+        >
+          <ArrowLeft className="h-[20px] w-[20px]" strokeWidth={2.2} />
+        </button>
+        <div className="flex gap-2.5 pointer-events-auto">
+          <button
+            className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-ink transition active:scale-90"
+            style={{ boxShadow: '0 8px 22px -10px rgba(26,19,17,.35)' }}
+            aria-label="Share"
+          >
+            <Share2 className="h-[18px] w-[18px]" strokeWidth={2} />
+          </button>
+          <button
+            onClick={() => toggleWish(product.id)}
+            className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-ink transition active:scale-90"
+            style={{ boxShadow: '0 8px 22px -10px rgba(26,19,17,.35)' }}
+            aria-label="Wishlist"
+          >
+            <Heart
+              className={`h-[19px] w-[19px] ${wished ? 'fill-coral text-coral' : ''}`}
+              strokeWidth={2}
+            />
+          </button>
+        </div>
+      </div>
 
       {/* Sticky bottom CTA */}
       <div className="absolute right-0 bottom-0 left-0 z-30 border-t border-ink-50/80 bg-white/95 px-5 pt-3 pb-6 backdrop-blur-xl">
