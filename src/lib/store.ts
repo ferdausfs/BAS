@@ -85,6 +85,9 @@ type UIState = {
   promoDiscount: number;
   applyPromo: (pct: number) => void;
   clearPromo: () => void;
+  // Loyalty (pending redemption applied at checkout)
+  pendingLoyaltyRedeem: number;
+  setPendingLoyaltyRedeem: (pts: number) => void;
   // Admin/user notifications
   newOrderCount: number;
   notifications: NotificationItem[];
@@ -102,6 +105,7 @@ export const useUI = create<UIState>((set, get) => ({
   tab: 'home',
   history: [],
   promoDiscount: 0,
+  pendingLoyaltyRedeem: 0,
   newOrderCount: 0,
   notifications: [],
   chatOpen: false,
@@ -142,6 +146,7 @@ export const useUI = create<UIState>((set, get) => ({
   },
   applyPromo: (pct) => set({ promoDiscount: pct }),
   clearPromo: () => set({ promoDiscount: 0 }),
+  setPendingLoyaltyRedeem: (pts) => set({ pendingLoyaltyRedeem: Math.max(0, pts) }),
   addNotification: (title, body) => set((s) => ({
     notifications: [
       { id: `nt-${Date.now()}`, title, body, createdAt: Date.now(), read: false },
@@ -238,6 +243,13 @@ export const useOrders = create<OrderState>()(
         set((s) => ({ orders: [o, ...s.orders] }));
         useUI.getState().addNotification('✅ Order placed', `Order #${o.id} has been placed successfully.`);
         useLoyalty.getState().addPoints(o.id, o.total);
+
+        // If user redeemed loyalty points in cart, deduct them now
+        const pendingRedeem = useUI.getState().pendingLoyaltyRedeem;
+        if (pendingRedeem > 0) {
+          useLoyalty.getState().redeemPoints(pendingRedeem);
+          useUI.getState().setPendingLoyaltyRedeem(0);
+        }
 
         if (isSupabaseConfigured()) {
           const user = useAuthStore.getState().user;

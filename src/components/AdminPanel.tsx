@@ -741,6 +741,14 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                   </div>
                 </div>
                 <p className="text-xs text-ink/60 mb-2">{r.comment || ''}</p>
+                {r.image && (
+                  <img
+                    src={r.image}
+                    alt="review photo"
+                    className="mt-1 h-16 w-16 rounded-xl object-cover cursor-pointer"
+                    onClick={() => window.open(r.image, '_blank')}
+                  />
+                )}
                 {!r.approved && <span className="text-[10px] bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full font-bold">Pending</span>}
                 <div className="flex gap-2 mt-2">
                   {!r.approved && (

@@ -3,6 +3,7 @@ import { ArrowLeft, Plus, Minus, Trash2, Tag, ShoppingBag, Sparkles, Truck, Shie
 import {
   useCart,
   useUI,
+  useLoyalty,
   formatINR,
   cartSubtotal,
   standardDeliveryFee,
@@ -11,9 +12,11 @@ import {
 
 export default function CartScreen() {
   const { items, setQty, remove } = useCart();
-  const { back, go, promoDiscount, applyPromo, clearPromo } = useUI();
+  const { back, go, promoDiscount, applyPromo, clearPromo, setPendingLoyaltyRedeem } = useUI();
+  const { points } = useLoyalty();
   const [code, setCode] = useState('');
   const [promoError, setPromoError] = useState('');
+  const [loyaltyRedeemed, setLoyaltyRedeemed] = useState(0); // points redeemed this session
 
   const { settings } = useSettingsStore();
   const currentDeliveryFee = settings.deliveryFee !== undefined ? settings.deliveryFee : standardDeliveryFee;
@@ -149,6 +152,61 @@ export default function CartScreen() {
           ))}
         </div>
 
+        {/* Loyalty Points Redemption */}
+        {points >= 1000 && (
+          <div className="mx-4 mt-4 rounded-2xl overflow-hidden border border-amber-200 bg-amber-50">
+            <div className="flex items-center justify-between px-4 py-3">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">⭐</span>
+                <div>
+                  <div className="text-[12px] font-bold text-amber-800">
+                    You have {points.toLocaleString()} points
+                  </div>
+                  <div className="text-[10px] text-amber-600">
+                    Redeem 1000 pts = ৳50 off
+                  </div>
+                </div>
+              </div>
+              {loyaltyRedeemed === 0 ? (
+                <button
+                  onClick={() => {
+                    // Calculate max redeemable (multiples of 1000, capped so discount ≤ subtotal)
+                    const maxByPoints = Math.floor(points / 1000);
+                    const maxBySubtotal = Math.floor(subtotal / 50);
+                    const setsToRedeem = Math.max(1, Math.min(maxByPoints, maxBySubtotal));
+                    const ptsToRedeem = setsToRedeem * 1000;
+                    const discountTaka = setsToRedeem * 50;
+                    // Apply as percentage of subtotal (applyPromo takes percentage)
+                    const pct = subtotal > 0 ? Math.min(99, Math.round((discountTaka / subtotal) * 100)) : 0;
+                    applyPromo(pct);
+                    setPendingLoyaltyRedeem(ptsToRedeem);
+                    setLoyaltyRedeemed(ptsToRedeem);
+                  }}
+                  className="rounded-xl bg-amber-500 px-3 py-1.5 text-[11px] font-bold text-white active:scale-95 transition"
+                >
+                  Redeem
+                </button>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] font-bold text-emerald-700">
+                    -{loyaltyRedeemed / 1000 * 50}৳ applied!
+                  </span>
+                  <button
+                    onClick={() => {
+                      clearPromo();
+                      setPendingLoyaltyRedeem(0);
+                      setLoyaltyRedeemed(0);
+                    }}
+                    className="text-[10px] text-ink/40 underline"
+                  >
+                    Remove
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Promo */}
         <div className="mt-4">
           <div className="flex items-center gap-2.5 rounded-2xl border border-dashed border-coral-300 bg-coral-50/30 px-3.5 py-3">
@@ -213,6 +271,13 @@ export default function CartScreen() {
               <Row
                 label="Promo discount"
                 value={'-' + formatINR(discountAmount)}
+                positive
+              />
+            )}
+            {loyaltyRedeemed > 0 && (
+              <Row
+                label={`⭐ Points (${loyaltyRedeemed.toLocaleString()} pts)`}
+                value={'-' + formatINR(Math.round(loyaltyRedeemed / 1000 * 50))}
                 positive
               />
             )}
