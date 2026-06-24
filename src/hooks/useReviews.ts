@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { ls, isSupabaseConfigured } from '../lib/utils';
+import { ls, isSupabaseConfigured, fileToBase64 } from '../lib/utils';
 import type { Review } from '../types';
 
 const LS_KEY = 'bakeart-reviews-v2';
@@ -65,10 +65,20 @@ export function useReviews(productId?: string) {
     await supabase.from('reviews').delete().eq('id', id);
   }, []);
 
+  const uploadReviewImage = useCallback(async (file: File): Promise<string> => {
+    if (!isSupabaseConfigured()) return fileToBase64(file);
+    const ext = file.name.split('.').pop() ?? 'jpg';
+    const path = `reviews/${Date.now()}.${ext}`;
+    const { data, error } = await supabase.storage.from('review-images').upload(path, file);
+    if (error || !data) return fileToBase64(file);
+    const { data: urlData } = supabase.storage.from('review-images').getPublicUrl(path);
+    return urlData.publicUrl;
+  }, []);
+
   const validReviews = reviews.filter((r) => r && typeof r.rating === 'number');
   const avgRating = validReviews.length
     ? validReviews.reduce((s, r) => s + r.rating, 0) / validReviews.length
     : 0;
 
-  return { reviews, loading, fetchReviews, saveReview, approveReview, deleteReview, avgRating };
+  return { reviews, loading, fetchReviews, saveReview, approveReview, deleteReview, uploadReviewImage, avgRating };
 }

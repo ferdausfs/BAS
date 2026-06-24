@@ -151,6 +151,7 @@ export interface Review {
   user_name: string;
   rating: number;
   comment: string;
+  image?: string;
   approved: boolean;
   created_at: string;
 }

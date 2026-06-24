@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { ArrowLeft, Heart, Star, ShoppingBag, Check, Share2, Truck, Sparkles, Shield } from 'lucide-react';
-import { useUI, useCart, useUser, formatINR } from '../lib/store';
+import { useUI, useCart, useUser, useAuthStore, formatINR } from '../lib/store';
 import { useProducts } from '../hooks/useProducts';
+import { useReviews } from '../hooks/useReviews';
+import type { Review } from '../types';
 
 const ADDONS = [
   { id: 'candles', name: 'Birthday candles', price: 20 },
@@ -18,6 +20,48 @@ export default function ProductScreen() {
 
   const product = view.name === 'product' ? products.find((p) => p.id === view.productId) : null;
   const [activeImg, setActiveImg] = useState<string | null>(null);
+
+  // Reviews state
+  const { reviews, saveReview, uploadReviewImage } = useReviews(product?.id);
+  const { user } = useAuthStore();
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewComment, setReviewComment] = useState('');
+  const [reviewImageFile, setReviewImageFile] = useState<File | null>(null);
+  const [reviewImagePreview, setReviewImagePreview] = useState('');
+  const [submittingReview, setSubmittingReview] = useState(false);
+  const [reviewSuccess, setReviewSuccess] = useState(false);
+
+  const handleSubmitReview = async () => {
+    if (!product || !reviewComment.trim() || submittingReview) return;
+    setSubmittingReview(true);
+    try {
+      let imageUrl = '';
+      if (reviewImageFile) {
+        imageUrl = await uploadReviewImage(reviewImageFile);
+      }
+      const review: Review = {
+        id: `r-${Date.now()}`,
+        product_id: product.id,
+        user_id: user?.id,
+        user_name: user?.name || 'Anonymous',
+        rating: reviewRating,
+        comment: reviewComment.trim(),
+        image: imageUrl || undefined,
+        approved: false,
+        created_at: new Date().toISOString(),
+      };
+      await saveReview(review);
+      setReviewSuccess(true);
+      setShowReviewForm(false);
+      setReviewComment('');
+      setReviewRating(5);
+      setReviewImageFile(null);
+      setReviewImagePreview('');
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
 
   // Reset activeImg when product ID changes
   useEffect(() => {
@@ -321,6 +365,133 @@ export default function ProductScreen() {
           </button>
         </div>
       </div>
+
+      {/* Reviews Section */}
+      <section className="px-5 mt-6 pb-4">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="font-display text-[17px] font-bold text-ink">Reviews</h2>
+          {!showReviewForm && (
+            <button
+              onClick={() => setShowReviewForm(true)}
+              className="rounded-xl bg-coral/10 px-3 py-1.5 text-[11px] font-bold text-coral"
+            >
+              + Write a review
+            </button>
+          )}
+        </div>
+
+        {/* Success message */}
+        {reviewSuccess && (
+          <div className="mb-3 rounded-2xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-[12px] text-emerald-700 font-semibold">
+            ✅ Review submitted! It'll appear after admin approval.
+          </div>
+        )}
+
+        {/* Review form */}
+        {showReviewForm && (
+          <div className="mb-4 rounded-2xl bg-white p-4 space-y-3"
+            style={{ boxShadow: '0 1px 2px rgba(26,19,17,.02), 0 8px 24px -16px rgba(26,19,17,.16)' }}>
+            {/* Star rating */}
+            <div>
+              <div className="text-[11px] font-bold text-ink/50 mb-1">Rating</div>
+              <div className="flex gap-1">
+                {[1,2,3,4,5].map((s) => (
+                  <button key={s} onClick={() => setReviewRating(s)}>
+                    <Star className={`h-7 w-7 ${s <= reviewRating ? 'fill-amber-400 text-amber-400' : 'text-ink/20'}`} />
+                  </button>
+                ))}
+              </div>
+            </div>
+            {/* Comment */}
+            <textarea
+              placeholder="Share your experience... How was the taste, design, delivery?"
+              rows={3}
+              maxLength={500}
+              className="w-full resize-none rounded-xl border border-ink/10 bg-cream px-3 py-2.5 text-[13px] text-ink placeholder:text-ink/30 focus:border-coral focus:outline-none"
+              value={reviewComment}
+              onChange={(e) => setReviewComment(e.target.value)}
+            />
+            {/* Photo upload */}
+            <div>
+              <div className="text-[11px] font-bold text-ink/50 mb-1">📸 Add photo (optional)</div>
+              {reviewImagePreview ? (
+                <div className="relative w-20 h-20">
+                  <img src={reviewImagePreview} alt="" className="w-20 h-20 rounded-xl object-cover" />
+                  <button
+                    onClick={() => { setReviewImageFile(null); setReviewImagePreview(''); }}
+                    className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-ink text-white text-[10px] flex items-center justify-center"
+                  >✕</button>
+                </div>
+              ) : (
+                <label className="flex h-16 w-16 cursor-pointer items-center justify-center rounded-xl border-2 border-dashed border-ink/20 bg-cream text-2xl hover:border-coral">
+                  📷
+                  <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    if (file.size > 2 * 1024 * 1024) { alert('Max 2MB'); return; }
+                    setReviewImageFile(file);
+                    const url = URL.createObjectURL(file);
+                    setReviewImagePreview(url);
+                  }} />
+                </label>
+              )}
+            </div>
+            {/* Buttons */}
+            <div className="flex gap-2">
+              <button
+                onClick={handleSubmitReview}
+                disabled={!reviewComment.trim() || submittingReview}
+                className="flex-1 py-2.5 rounded-xl bg-coral text-white text-[13px] font-bold disabled:opacity-50"
+              >
+                {submittingReview ? 'Submitting...' : 'Submit Review'}
+              </button>
+              <button
+                onClick={() => setShowReviewForm(false)}
+                className="px-4 py-2.5 rounded-xl bg-ink/5 text-ink/60 text-[13px] font-bold"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Approved reviews list */}
+        {reviews.length > 0 ? (
+          <div className="space-y-3">
+            {reviews.slice(0, 5).map((r) => (
+              <div key={r.id} className="rounded-2xl bg-white p-4"
+                style={{ boxShadow: '0 1px 2px rgba(26,19,17,.02), 0 4px 12px -8px rgba(26,19,17,.12)' }}>
+                <div className="flex items-start gap-3">
+                  <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-coral/10 font-bold text-coral text-[13px]">
+                    {r.user_name.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <div className="text-[12px] font-bold text-ink">{r.user_name}</div>
+                      <div className="flex">
+                        {[1,2,3,4,5].map((s) => (
+                          <Star key={s} className={`h-3 w-3 ${s <= r.rating ? 'fill-amber-400 text-amber-400' : 'text-ink/15'}`} />
+                        ))}
+                      </div>
+                    </div>
+                    <div className="mt-1 text-[12px] text-ink/70 leading-relaxed">{r.comment}</div>
+                    {r.image && (
+                      <img src={r.image} alt="review" className="mt-2 h-24 w-24 rounded-xl object-cover" />
+                    )}
+                    <div className="mt-1.5 text-[10px] text-ink/30">
+                      {new Date(r.created_at).toLocaleDateString('en-BD', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-6 text-[13px] text-ink/40">
+            No reviews yet. Be the first! 🎂
+          </div>
+        )}
+      </section>
 
       {/* Sticky bottom CTA */}
       <div className="absolute right-0 bottom-0 left-0 z-30 border-t border-ink-50/80 bg-white/95 px-5 pt-3 pb-6 backdrop-blur-xl">
