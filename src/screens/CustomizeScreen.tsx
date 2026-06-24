@@ -2,13 +2,16 @@ import { useState } from 'react';
 import { ArrowLeft, ArrowRight, Check, Droplet, Weight, Plus } from 'lucide-react';
 import { useUI, useCart, useSettingsStore, formatINR } from '../lib/store';
 import { useProducts } from '../hooks/useProducts';
+import type { CustomAddon } from '../types';
 
 const STEPS = [
-  { id: 'flavour', label: 'Flavour' },
-  { id: 'weight', label: 'Weight' },
-  { id: 'addons', label: 'Add-ons' },
-  { id: 'message', label: 'Message' },
-  { id: 'review', label: 'Review' },
+  { id: 'reference', label: 'Reference' },
+  { id: 'flavour',   label: 'Flavour' },
+  { id: 'weight',    label: 'Weight' },
+  { id: 'shape',     label: 'Shape' },
+  { id: 'addons',    label: 'Add-ons' },
+  { id: 'message',   label: 'Message' },
+  { id: 'review',    label: 'Review' },
 ];
 
 const FLAVOURS = ['Chocolate', 'Vanilla', 'Red Velvet', 'Butterscotch', 'Strawberry', 'Pistachio'];
@@ -23,20 +26,13 @@ const DEFAULT_FLAVOUR_IMAGES: Record<string, string> = {
 };
 
 const WEIGHTS = [
-  { size: '0.5 kg', price: 599 },
-  { size: '1 kg', price: 899 },
-  { size: '1.5 kg', price: 1199 },
-  { size: '2 kg', price: 1499 },
+  { size: '0.5 lb', price: 599 },
+  { size: '1 lb', price: 899 },
+  { size: '1.5 lb', price: 1199 },
+  { size: '2 lb', price: 1499 },
 ];
 
-const ADDONS = [
-  { id: 'candles', label: 'Candles', price: 50, emoji: '🕯️' },
-  { id: 'topper', label: 'Cake topper', price: 120, emoji: '✨' },
-  { id: 'photo', label: 'Photo print', price: 180, emoji: '🖼️' },
-  { id: 'flowers', label: 'Fresh flowers', price: 150, emoji: '🌸' },
-  { id: 'choco', label: 'Extra chocolate', price: 100, emoji: '🍫' },
-  { id: 'box', label: 'Premium box', price: 80, emoji: '🎁' },
-];
+
 
 export default function CustomizeScreen() {
   const { view, back, go } = useUI();
@@ -57,22 +53,28 @@ export default function CustomizeScreen() {
   const [step, setStep] = useState(0);
   const [config, setConfig] = useState({
     flavour: defaultProduct.flavors?.[0] || 'Chocolate',
-    weight: '1 kg',
+    weight: '1',
+    shape: 'round',
+    boxType: 'standard',
     addons: [] as string[],
     message: '',
   });
   const [customWeight, setCustomWeight] = useState('1');
+  const [refImagePreview, setRefImagePreview] = useState('');
+  const [refImageFile, setRefImageFile] = useState<File | null>(null);
 
-  const selectedWeight = WEIGHTS.find((w) => w.size === config.weight) ?? WEIGHTS[1];
-  const selectedAddons = ADDONS.filter((a) => config.addons.includes(a.id));
+  const selectedWeight = WEIGHTS.find((w) => w.size === `${config.weight} lb`) ?? WEIGHTS[1];
+  const allAddons: CustomAddon[] = settings.customAddons ?? [];
+  const selectedAddons = allAddons.filter((a) => config.addons.includes(a.id));
   const addonsTotal = selectedAddons.reduce((sum, a) => sum + a.price, 0);
+  const boxExtra = config.boxType === 'custom' ? 50 : 0;
   // removed duplicate
 
   // If product has weight-based pricing, compute dynamically
   const weightPrice = product?.pricePerUnit && customWeight && +customWeight > 0
     ? +customWeight * product.pricePerUnit
     : selectedWeight.price;
-  const total = weightPrice + addonsTotal;
+  const total = weightPrice + addonsTotal + boxExtra;
   const previewImage = flavorImages[config.flavour] || defaultProduct.image;
 
   const toggleAddon = (id: string) => {
@@ -90,18 +92,21 @@ export default function CustomizeScreen() {
       return;
     }
 
-
     const finalSize = product?.pricePerUnit
-      ? `${customWeight} ${product?.priceUnit ?? 'kg'}`
-      : config.weight;
+      ? `${customWeight} ${product?.priceUnit ?? settings.defaultPriceUnit ?? 'pound'}`
+      : `${config.weight} lb`;
 
     add({
       productId: defaultProduct.id,
       name: `Custom ${config.flavour} Cake`,
-      image: previewImage,
+      image: refImagePreview || previewImage,
       size: finalSize,
       flavor: config.flavour,
-      topping: selectedAddons.map((a) => a.label).join(', ') || undefined,
+      topping: [
+        config.shape !== 'round' ? `Shape: ${config.shape}` : '',
+        config.boxType !== 'standard' ? `Box: ${config.boxType}` : '',
+        selectedAddons.map((a) => a.label).join(', '),
+      ].filter(Boolean).join(' · ') || undefined,
       message: config.message,
       price: total,
       quantity: 1,
@@ -116,10 +121,12 @@ export default function CustomizeScreen() {
   };
 
   const nextLabel =
-    step === 0 ? 'Continue · Weight' :
-    step === 1 ? 'Continue · Add-ons' :
-    step === 2 ? 'Continue · Message' :
-    step === 3 ? 'Continue · Review' :
+    step === 0 ? 'Continue · Flavour' :
+    step === 1 ? 'Continue · Weight' :
+    step === 2 ? 'Continue · Shape & Box' :
+    step === 3 ? 'Continue · Add-ons' :
+    step === 4 ? 'Continue · Message' :
+    step === 5 ? 'Continue · Review' :
     'Add to Cart';
 
   return (
@@ -159,13 +166,50 @@ export default function CustomizeScreen() {
               <img src={previewImage} alt={config.flavour} className="h-full w-full object-cover" />
             </div>
             <div className="absolute right-3 bottom-3 rounded-full bg-white/90 px-3 py-1.5 text-[11px] font-bold text-coral backdrop-blur">
-              {config.flavour} · {config.weight}
+              {config.flavour} · {config.weight} lb
             </div>
           </div>
         </div>
 
         <div className="mt-6 space-y-3 px-5">
           {step === 0 && (
+            <section className="rounded-2xl bg-white p-4" style={{ boxShadow: '0 1px 2px rgba(26,19,17,.02), 0 6px 18px -14px rgba(26,19,17,.16)' }}>
+              <div className="mb-3 flex items-center gap-2.5">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-coral-50 text-coral text-lg">📸</div>
+                <div>
+                  <h3 className="font-display text-[14px] font-bold text-ink">Reference Image</h3>
+                  <p className="text-[11px] text-ink/50">Upload a photo of the cake you want</p>
+                </div>
+              </div>
+              {refImagePreview ? (
+                <div className="relative">
+                  <img src={refImagePreview} alt="reference" className="w-full aspect-video rounded-2xl object-cover" />
+                  <button
+                    onClick={() => { setRefImagePreview(''); setRefImageFile(null); }}
+                    className="absolute top-2 right-2 h-8 w-8 rounded-full bg-ink/60 text-white flex items-center justify-center text-sm"
+                  >✕</button>
+                  <div className="mt-2 text-center text-[11px] text-emerald-600 font-semibold">✅ Reference image added</div>
+                </div>
+              ) : (
+                <label className="flex flex-col items-center justify-center gap-2 h-36 rounded-2xl border-2 border-dashed border-ink/15 bg-cream cursor-pointer active:bg-coral/5">
+                  <span className="text-4xl">📷</span>
+                  <span className="text-[12px] font-semibold text-ink/50">Tap to upload reference photo</span>
+                  <span className="text-[10px] text-ink/30">JPG, PNG — max 5MB</span>
+                  <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    setRefImageFile(file);
+                    setRefImagePreview(URL.createObjectURL(file));
+                  }} />
+                </label>
+              )}
+              <p className="mt-3 text-center text-[11px] text-ink/40">
+                Optional — skip if you have a description in the message step
+              </p>
+            </section>
+          )}
+
+          {step === 1 && (
             <FlavorPicker
               value={config.flavour}
               images={flavorImages}
@@ -173,7 +217,7 @@ export default function CustomizeScreen() {
             />
           )}
 
-          {step === 1 && (
+          {step === 2 && (
             product?.pricePerUnit ? (
               <div className="rounded-2xl bg-white p-3.5" style={{ boxShadow: '0 1px 2px rgba(26,19,17,.02), 0 6px 18px -14px rgba(26,19,17,.16)' }}>
                 <div className="mb-3 flex items-center gap-2.5">
@@ -181,23 +225,23 @@ export default function CustomizeScreen() {
                     <Weight className="h-4 w-4" strokeWidth={2} />
                   </div>
                   <h3 className="font-display text-[14px] font-bold tracking-tight text-ink">Weight</h3>
-                  <span className="ml-auto text-[11px] font-semibold text-ink-200">{product?.priceUnit ?? 'kg'}</span>
+                  <span className="ml-auto text-[11px] font-semibold text-ink-200">{product?.priceUnit ?? settings.defaultPriceUnit ?? 'pound'}</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <input
                     type="number"
                     min="0.25"
                     step="0.25"
-                    placeholder={`Enter weight in ${product?.priceUnit ?? 'kg'}`}
+                    placeholder={`Enter weight in ${product?.priceUnit ?? settings.defaultPriceUnit ?? 'pound'}`}
                     className="flex-1 px-3 py-2.5 rounded-xl border-2 border-ink/10 bg-cream text-sm font-bold text-ink focus:border-coral focus:outline-none"
                     value={customWeight}
                     onChange={(e) => setCustomWeight(e.target.value)}
                   />
-                  <span className="text-sm font-bold text-ink/50">{product?.priceUnit ?? 'kg'}</span>
+                  <span className="text-sm font-bold text-ink/50">{product?.priceUnit ?? settings.defaultPriceUnit ?? 'pound'}</span>
                 </div>
                 {customWeight && +customWeight > 0 && (
                   <div className="mt-2 rounded-xl bg-coral/8 px-3 py-2 flex items-center justify-between">
-                    <span className="text-[11px] text-ink/60">{customWeight} {product?.priceUnit ?? 'kg'} × ৳{product?.pricePerUnit}</span>
+                    <span className="text-[11px] text-ink/60">{customWeight} {product?.priceUnit ?? settings.defaultPriceUnit ?? 'pound'} × ৳{product?.pricePerUnit}</span>
                     <span className="font-display text-base font-bold text-coral">৳{(+customWeight * (product?.pricePerUnit ?? 0)).toLocaleString()}</span>
                   </div>
                 )}
@@ -206,16 +250,68 @@ export default function CustomizeScreen() {
               <ChipGroup
                 icon={Weight}
                 label="Weight"
-                value={config.weight}
+                value={`${config.weight} lb`}
                 options={WEIGHTS.map((w) => w.size)}
-                onChange={(v) => setConfig({ ...config, weight: v })}
+                onChange={(v) => setConfig({ ...config, weight: v.replace(' lb', '') })}
               />
             )
           )}
 
-          {step === 2 && <AddonsPicker selected={config.addons} onToggle={toggleAddon} />}
-
           {step === 3 && (
+            <section className="space-y-3">
+              {/* Shape */}
+              <div className="rounded-2xl bg-white p-4" style={{ boxShadow: '0 1px 2px rgba(26,19,17,.02), 0 6px 18px -14px rgba(26,19,17,.16)' }}>
+                <div className="mb-3 flex items-center gap-2.5">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-coral-50 text-coral text-lg">🔷</div>
+                  <h3 className="font-display text-[14px] font-bold text-ink">Cake Shape</h3>
+                  <span className="ml-auto text-[11px] font-semibold text-ink-200 capitalize">{config.shape}</span>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { id: 'round',  emoji: '⭕', label: 'Round',       sub: 'Classic round' },
+                    { id: 'square', emoji: '⬛', label: 'Square',      sub: 'Modern square' },
+                    { id: 'heart',  emoji: '❤️', label: 'Heart',       sub: 'For loved ones' },
+                    { id: 'sheet',  emoji: '▬',  label: 'Sheet/Flat',  sub: 'Flat & wide' },
+                  ].map((s) => (
+                    <button key={s.id} onClick={() => setConfig((prev) => ({ ...prev, shape: s.id }))}
+                      className={`rounded-2xl border-2 p-3 text-left transition active:scale-[.98] ${config.shape === s.id ? 'border-coral bg-coral-50/60' : 'border-ink-50 bg-white'}`}>
+                      <div className="text-2xl">{s.emoji}</div>
+                      <div className="mt-2 text-[12px] font-bold text-ink">{s.label}</div>
+                      <div className="text-[10px] text-ink/50">{s.sub}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Box type */}
+              <div className="rounded-2xl bg-white p-4" style={{ boxShadow: '0 1px 2px rgba(26,19,17,.02), 0 6px 18px -14px rgba(26,19,17,.16)' }}>
+                <div className="mb-3 flex items-center gap-2.5">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-coral-50 text-coral text-lg">📦</div>
+                  <h3 className="font-display text-[14px] font-bold text-ink">Box Type</h3>
+                  <span className="ml-auto text-[11px] font-semibold text-ink-200 capitalize">{config.boxType.replace('_', ' ')}</span>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { id: 'standard', emoji: '📦', label: 'Standard Box',  sub: 'Regular height' },
+                    { id: 'flat',     emoji: '🗂️', label: 'Flat Box',      sub: 'For sheet/flat cakes' },
+                    { id: 'tall',     emoji: '🏛️', label: 'Tall Box',      sub: 'For layered cakes' },
+                    { id: 'custom',   emoji: '🎁', label: 'Custom/Gift',   sub: 'Premium gift box +৳50' },
+                  ].map((b) => (
+                    <button key={b.id} onClick={() => setConfig((prev) => ({ ...prev, boxType: b.id }))}
+                      className={`rounded-2xl border-2 p-3 text-left transition active:scale-[.98] ${config.boxType === b.id ? 'border-coral bg-coral-50/60' : 'border-ink-50 bg-white'}`}>
+                      <div className="text-2xl">{b.emoji}</div>
+                      <div className="mt-2 text-[12px] font-bold text-ink">{b.label}</div>
+                      <div className="text-[10px] text-ink/50">{b.sub}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </section>
+          )}
+
+          {step === 4 && <AddonsPicker addons={allAddons} selected={config.addons} onToggle={toggleAddon} />}
+
+          {step === 5 && (
             <div>
               <h3 className="px-1 text-[13px] font-bold text-ink">Write a sweet message</h3>
               <div className="mt-2 overflow-hidden rounded-2xl bg-white p-3.5" style={{ boxShadow: '0 1px 2px rgba(26,19,17,.02), 0 8px 24px -16px rgba(26,19,17,.18)' }}>
@@ -235,7 +331,7 @@ export default function CustomizeScreen() {
             </div>
           )}
 
-          {step === 4 && (
+          {step === 6 && (
             <div className="overflow-hidden rounded-3xl bg-white" style={{ boxShadow: '0 1px 2px rgba(26,19,17,.02), 0 18px 50px -28px rgba(242,94,115,.25)' }}>
               <div className="bg-cream px-5 py-3.5">
                 <div className="text-[10px] font-bold tracking-wider text-coral uppercase">Your cake</div>
@@ -243,9 +339,10 @@ export default function CustomizeScreen() {
               </div>
               <div className="space-y-2.5 px-5 py-4 text-[13.5px]">
                 <Review label="Flavour" value={config.flavour} />
-                <Review label="Weight" value={config.weight} />
-
-                <Review label="Weight" value={product?.pricePerUnit ? `${customWeight} ${product?.priceUnit ?? 'kg'}` : config.weight} />
+                <Review label="Weight" value={product?.pricePerUnit ? `${customWeight} ${product?.priceUnit ?? settings.defaultPriceUnit ?? 'pound'}` : `${config.weight} lb`} />
+                <Review label="Shape" value={config.shape} />
+                <Review label="Box" value={config.boxType.replace('_', ' ')} />
+                {refImagePreview && <Review label="Reference" value="📸 Photo attached" />}
                 <Review label="Add-ons" value={selectedAddons.map((a) => a.label).join(', ') || '— none —'} />
                 <Review label="Message" value={config.message || '— none —'} last />
               </div>
@@ -311,12 +408,21 @@ function FlavorPicker({
 }
 
 function AddonsPicker({
+  addons,
   selected,
   onToggle,
 }: {
+  addons: CustomAddon[];
   selected: string[];
   onToggle: (id: string) => void;
 }) {
+  // Group by category
+  const categories: { id: CustomAddon['category']; label: string; emoji: string }[] = [
+    { id: 'decoration', label: 'Decoration',  emoji: '✨' },
+    { id: 'theme',      label: 'Theme',        emoji: '🎭' },
+    { id: 'flowers',    label: 'Flowers',      emoji: '🌸' },
+    { id: 'extras',     label: 'Extras',       emoji: '🎁' },
+  ];
   return (
     <section className="rounded-2xl bg-white p-3.5" style={{ boxShadow: '0 1px 2px rgba(26,19,17,.02), 0 6px 18px -14px rgba(26,19,17,.16)' }}>
       <div className="mb-3 flex items-center gap-2.5">
@@ -326,26 +432,34 @@ function AddonsPicker({
         <h3 className="font-display text-[14px] font-bold tracking-tight text-ink">Add-ons</h3>
         <span className="ml-auto text-[11px] font-semibold text-ink-200">{selected.length} selected</span>
       </div>
-
-      <div className="grid grid-cols-2 gap-2">
-        {ADDONS.map((addon) => {
-          const active = selected.includes(addon.id);
-          return (
-            <button
-              key={addon.id}
-              onClick={() => onToggle(addon.id)}
-              className={`rounded-2xl border-2 p-3 text-left transition active:scale-[.98] ${active ? 'border-coral bg-coral-50/60' : 'border-ink-50 bg-white'}`}
-            >
-              <div className="flex items-start justify-between gap-2">
-                <span className="text-xl">{addon.emoji}</span>
-                {active && <Check className="h-4 w-4 text-coral" strokeWidth={3} />}
-              </div>
-              <div className="mt-2 text-[12px] font-bold text-ink">{addon.label}</div>
-              <div className="text-[11px] font-bold text-coral">+{formatINR(addon.price)}</div>
-            </button>
-          );
-        })}
-      </div>
+      {categories.map((cat) => {
+        const items = addons.filter((a) => a.category === cat.id);
+        if (items.length === 0) return null;
+        return (
+          <div key={cat.id} className="mb-4">
+            <div className="mb-2 flex items-center gap-1.5">
+              <span className="text-sm">{cat.emoji}</span>
+              <span className="text-[11px] font-bold uppercase tracking-wide text-ink/40">{cat.label}</span>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              {items.map((addon) => {
+                const active = selected.includes(addon.id);
+                return (
+                  <button key={addon.id} onClick={() => onToggle(addon.id)}
+                    className={`rounded-2xl border-2 p-3 text-left transition active:scale-[.98] ${active ? 'border-coral bg-coral-50/60' : 'border-ink-50 bg-white'}`}>
+                    <div className="flex items-start justify-between gap-2">
+                      <span className="text-xl">{addon.emoji}</span>
+                      {active && <Check className="h-4 w-4 text-coral" strokeWidth={3} />}
+                    </div>
+                    <div className="mt-2 text-[12px] font-bold text-ink">{addon.label}</div>
+                    <div className="text-[11px] font-bold text-coral">+{formatINR(addon.price)}</div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })}
     </section>
   );
 }

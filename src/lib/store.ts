@@ -242,7 +242,7 @@ export const useOrders = create<OrderState>()(
 
         set((s) => ({ orders: [o, ...s.orders] }));
         useUI.getState().addNotification('✅ Order placed', `Order #${o.id} has been placed successfully.`);
-        useLoyalty.getState().addPoints(o.id, o.total);
+        useLoyalty.getState().addPendingPoints(o.id, o.total);
 
         // If user redeemed loyalty points in cart, deduct them now
         const pendingRedeem = useUI.getState().pendingLoyaltyRedeem;
@@ -288,6 +288,13 @@ export const useOrders = create<OrderState>()(
         }));
 
         useUI.getState().addNotification('📦 Order updated', `Order #${id} status changed to ${status}.`);
+
+        if (status === 'confirmed') {
+          useLoyalty.getState().confirmPoints(id);
+        }
+        if (status === 'cancelled') {
+          useLoyalty.getState().cancelPoints(id);
+        }
 
         if (isSupabaseConfigured()) {
           void supabase
@@ -469,7 +476,11 @@ type LoyaltyState = {
   points: number;
   totalEarned: number;
   history: LoyaltyHistory[];
+  pendingPoints: { orderId: string; points: number }[];
   addPoints: (orderId: string, orderTotal: number) => void;
+  addPendingPoints: (orderId: string, orderTotal: number) => void;
+  confirmPoints: (orderId: string) => void;
+  cancelPoints: (orderId: string) => void;
   redeemPoints: (points: number) => void;
 };
 
@@ -479,6 +490,7 @@ export const useLoyalty = create<LoyaltyState>()(
       points: 0,
       totalEarned: 0,
       history: [],
+      pendingPoints: [],
       addPoints: (orderId, orderTotal) => {
         const earned = Math.floor(orderTotal);
         set((s) => ({
@@ -488,6 +500,30 @@ export const useLoyalty = create<LoyaltyState>()(
             { id: `lh-${Date.now()}`, orderId, amount: orderTotal, points: earned, date: Date.now(), type: 'earned' },
             ...s.history,
           ],
+        }));
+      },
+      addPendingPoints: (orderId, orderTotal) => {
+        const pts = Math.floor(orderTotal);
+        set((s) => ({
+          pendingPoints: [...s.pendingPoints, { orderId, points: pts }],
+        }));
+      },
+      confirmPoints: (orderId) => {
+        const pending = get().pendingPoints.find((p) => p.orderId === orderId);
+        if (!pending) return;
+        set((s) => ({
+          points: s.points + pending.points,
+          totalEarned: s.totalEarned + pending.points,
+          history: [
+            { id: `lh-${Date.now()}`, orderId, amount: 0, points: pending.points, date: Date.now(), type: 'earned' },
+            ...s.history,
+          ],
+          pendingPoints: s.pendingPoints.filter((p) => p.orderId !== orderId),
+        }));
+      },
+      cancelPoints: (orderId) => {
+        set((s) => ({
+          pendingPoints: s.pendingPoints.filter((p) => p.orderId !== orderId),
         }));
       },
       redeemPoints: (pts) => {

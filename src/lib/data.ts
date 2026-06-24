@@ -8,10 +8,10 @@ export const categories: Category[] = [
 ];
 
 const weights = [
-  { size: '0.5 kg', price: 0 },
-  { size: '1 kg',   price: 100 },
-  { size: '1.5 kg', price: 250 },
-  { size: '2 kg',   price: 400 },
+  { size: '0.5 lb', price: 0 },
+  { size: '1 lb',   price: 100 },
+  { size: '1.5 lb', price: 250 },
+  { size: '2 lb',   price: 400 },
 ];
 
 const FLAVORS = ['Chocolate', 'Vanilla', 'Red Velvet', 'Butterscotch', 'Strawberry'];
@@ -26,6 +26,7 @@ export const products: Product[] = [
     image: '/cakes/chocolate-truffle.png',
     rating: 4.8, reviews: 256, occasion: 'birthday',
     flavors: FLAVORS, weights,
+    priceUnit: 'pound',
     toppings: ['Chocolate truffles', 'Strawberry', 'Gold dust'],
     bestseller: true,
     tier: 'normal',
@@ -39,6 +40,7 @@ export const products: Product[] = [
     image: '/cakes/red-velvet.png',
     rating: 4.9, reviews: 312, occasion: 'anniversary',
     flavors: FLAVORS, weights,
+    priceUnit: 'pound',
     toppings: ['Cream cheese roses', 'Fresh strawberries', 'White chocolate'],
     bestseller: true,
     tier: 'premium',
@@ -52,6 +54,7 @@ export const products: Product[] = [
     image: '/cakes/butterscotch.png',
     rating: 4.7, reviews: 184, occasion: 'birthday',
     flavors: FLAVORS, weights,
+    priceUnit: 'pound',
     toppings: ['Caramel drip', 'Candied nuts', 'Praline crunch'],
     bestseller: true,
     tier: 'normal',
@@ -65,6 +68,7 @@ export const products: Product[] = [
     image: '/cakes/strawberry-pink.png',
     rating: 4.9, reviews: 220, occasion: 'anniversary',
     flavors: FLAVORS, weights,
+    priceUnit: 'pound',
     toppings: ['Pink rosettes', 'Fresh strawberries', 'Gold sprinkles'],
     newArrival: true,
     tier: 'normal',
@@ -78,6 +82,7 @@ export const products: Product[] = [
     image: '/cakes/butterscotch.png',
     rating: 4.6, reviews: 145, occasion: 'birthday',
     flavors: FLAVORS, weights,
+    priceUnit: 'pound',
     tier: 'normal',
   },
   {
@@ -89,6 +94,7 @@ export const products: Product[] = [
     image: '/cakes/strawberry-pink.png',
     rating: 5.0, reviews: 88, occasion: 'anniversary',
     flavors: FLAVORS, weights,
+    priceUnit: 'pound',
     newArrival: true,
     tier: 'premium',
   },
@@ -147,4 +153,18 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   deliveryEstimate: '2–4 ঘণ্টা',
   coupons: [],
   allowedZones: ['Comilla', 'Dhaka', 'Chittagong', 'Sylhet', 'Rajshahi', 'Khulna', 'Mymensingh', 'Barishal'],
+  customAddons: [
+    { id: 'candles',    emoji: '🕯️', label: 'Candles',              price: 50,  category: 'extras' },
+    { id: 'topper',     emoji: '✨', label: 'Cake Topper',          price: 120, category: 'decoration' },
+    { id: 'photo',      emoji: '🖼️', label: 'Photo Print',          price: 180, category: 'decoration' },
+    { id: 'flowers_r',  emoji: '🌸', label: 'Real Flowers',         price: 250, category: 'flowers' },
+    { id: 'flowers_a',  emoji: '💐', label: 'Artificial Flowers',   price: 120, category: 'flowers' },
+    { id: 'choco',      emoji: '🍫', label: 'Extra Chocolate',      price: 100, category: 'extras' },
+    { id: 'box',        emoji: '🎁', label: 'Premium Box',          price: 80,  category: 'extras' },
+    { id: 'fondant',    emoji: '🎨', label: 'Fondant Coating',      price: 200, category: 'decoration' },
+    { id: 'theme_a',    emoji: '🎭', label: 'Artificial Theme',     price: 300, category: 'theme' },
+    { id: 'knife',      emoji: '🔪', label: 'Knife & Server Set',   price: 150, category: 'extras' },
+    { id: 'choco_drip', emoji: '🫗', label: 'Chocolate Drip',       price: 130, category: 'decoration' },
+  ],
+  defaultPriceUnit: 'pound' as const,
 };
