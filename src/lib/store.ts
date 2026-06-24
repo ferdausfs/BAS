@@ -252,11 +252,6 @@ export const useOrders = create<OrderState>()(
         }
 
         if (isSupabaseConfigured()) {
-          const user = useAuthStore.getState().user;
-          const isUuid =
-            !!user?.id &&
-            /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(user.id);
-
           void supabase.from('orders').insert({
             id: o.id,
             user_id: isUuid ? user!.id : null,
@@ -269,7 +264,7 @@ export const useOrders = create<OrderState>()(
             payment_method: o.payment,
             items: o.items,
             subtotal: o.subtotal,
-            discount: 0,
+            discount: Math.max(0, Math.round(o.subtotal + o.deliveryFee - o.total)),
             delivery_fee: o.deliveryFee,
             total: o.total,
             status: o.status,
@@ -358,7 +353,10 @@ export const useAuthStore = create<AuthState>()(
     (set) => ({
       user: null,
       login: (user) => set({ user }),
-      logout: () => set({ user: null }),
+      logout: () => {
+        set({ user: null });
+        useLocation.getState().clearLocation();
+      },
     }),
     { name: 'bakeart-auth' }
   )
