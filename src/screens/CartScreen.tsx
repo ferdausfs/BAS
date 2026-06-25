@@ -11,6 +11,7 @@ import {
   standardDeliveryFee,
   useSettingsStore,
 } from '../lib/store';
+import { safeArray } from '../lib/utils';
 
 export default function CartScreen() {
   const { items, setQty, remove } = useCart();
@@ -128,7 +129,7 @@ export default function CartScreen() {
 
         {/* Items */}
         <div className="space-y-3">
-          {items.map((item, idx) => (
+          {safeArray(items).map((item, idx) => (
             <article
               key={idx}
               className="flex gap-3 rounded-2xl bg-white p-3 anim-up"

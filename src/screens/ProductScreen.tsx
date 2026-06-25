@@ -3,7 +3,7 @@ import { ArrowLeft, Heart, Star, ShoppingBag, Check, Share2, Truck, Sparkles, Sh
 import { useUI, useCart, useUser, useAuthStore, formatINR } from '../lib/store';
 import { useProducts } from '../hooks/useProducts';
 import { useReviews } from '../hooks/useReviews';
-import { ls } from '../lib/utils';
+import { ls, safeArray } from '../lib/utils';
 import type { Review } from '../types';
 
 const ADDONS = [
@@ -88,8 +88,8 @@ export default function ProductScreen() {
   }
 
   const currentImg = activeImg || product.image;
-  const safeWeights = product.weights?.length ? product.weights : [{ size: '1 kg', price: product.price }];
-  const safeFlavors = product.flavors?.length ? product.flavors : ['Chocolate'];
+  const safeWeights = safeArray(product.weights).length ? safeArray(product.weights) : [{ size: '1 kg', price: product.price }];
+  const safeFlavors = safeArray(product.flavors).length ? safeArray(product.flavors) : ['Chocolate'];
   const [size, setSize] = useState(safeWeights[1]?.size ?? safeWeights[0]?.size);
   const [addons, setAddons] = useState<Record<string, boolean>>({});
   const [customWeight, setCustomWeight] = useState('1');
@@ -175,9 +175,9 @@ export default function ProductScreen() {
         {/* Content sheet below image — flows naturally as user scrolls */}
         <div className="bg-white rounded-t-[28px] -mt-5 relative z-10 px-5 pt-6">
           {/* Gallery Thumbnail Strip */}
-          {product.gallery && product.gallery.length > 0 && (
+          {safeArray(product.gallery).length > 0 && (
             <div className="flex gap-2 overflow-x-auto pb-4 scrollbar-hide">
-              {[product.image, ...product.gallery].map((url, i) => (
+              {[product.image, ...safeArray(product.gallery)].map((url, i) => (
                 <button
                   key={i}
                   onClick={() => setActiveImg(url)}
@@ -221,13 +221,13 @@ export default function ProductScreen() {
               {[...Array(5)].map((_, i) => (
                 <Star
                   key={i}
-                  className={`h-3.5 w-3.5 ${i < Math.round(product.rating) ? 'fill-current' : 'opacity-30'}`}
+                  className={`h-3.5 w-3.5 ${i < Math.round(Number(product.rating ?? 0)) ? 'fill-current' : 'opacity-30'}`}
                   strokeWidth={0}
                 />
               ))}
             </div>
-            <span className="font-bold text-ink">{product.rating}</span>
-            <span className="text-ink-200">({product.reviews.toLocaleString()} reviews)</span>
+            <span className="font-bold text-ink">{Number(product.rating ?? 0)}</span>
+            <span className="text-ink-200">({Number(product.reviews ?? 0).toLocaleString()} reviews)</span>
           </div>
 
           {/* Price */}

@@ -12,7 +12,7 @@ import {
   pushReferralReward,
 } from '../lib/store';
 import { supabase } from '../lib/supabase';
-import { isSupabaseConfigured } from '../lib/utils';
+import { isSupabaseConfigured, safeArray } from '../lib/utils';
 import { LocationGate } from '../components/LocationGate';
 
 const PAYMENTS = [
@@ -137,7 +137,7 @@ export default function CheckoutScreen({ onBack }: Props) {
           next.district = user.district;
         }
 
-        const recentOrder = orders.find(
+        const recentOrder = safeArray(orders).find(
           (o) =>
             o.userId === user.id ||
             (user.email && o.customer?.email?.toLowerCase() === user.email.toLowerCase())
@@ -366,7 +366,7 @@ export default function CheckoutScreen({ onBack }: Props) {
         {/* Items */}
         <Section icon={MapPin} title="অর্ডারের আইটেম">
           <div className="space-y-2.5">
-            {items.slice(0, 3).map((it, i) => (
+            {safeArray(items).slice(0, 3).map((it, i) => (
               <div key={i} className="flex items-center gap-3">
                 <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-xl bg-cream">
                   <img src={it.image} alt="" className="h-full w-full object-cover" />

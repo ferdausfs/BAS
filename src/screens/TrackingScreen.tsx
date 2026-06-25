@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { ArrowLeft, Package, Search, ShoppingCart, CheckCircle2, Flame, Cake, Truck, PartyPopper, RefreshCw } from 'lucide-react';
 import { useUI, formatINR, useAuthStore } from '../lib/store';
 import { useOrdersHook } from '../hooks/useOrders';
-import { isSupabaseConfigured } from '../lib/utils';
+import { isSupabaseConfigured, safeArray } from '../lib/utils';
 import type { Order } from '../types';
 
 const TIMELINE_STEPS: { key: string; Icon: typeof ShoppingCart; label: string; sub: string }[] = [
@@ -116,7 +116,7 @@ export default function TrackingScreen() {
             </div>
 
             <div className="space-y-2.5 px-4 py-3.5">
-              {match.items.slice(0, 3).map((it, i) => (
+              {safeArray(match.items).slice(0, 3).map((it, i) => (
                 <div key={i} className="flex items-center gap-3">
                   <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-xl bg-cream">
                     <img src={it.image} alt="" className="h-full w-full object-cover" />
