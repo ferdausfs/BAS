@@ -146,9 +146,9 @@ export const useUI = create<UIState>((set, get) => ({
     });
     requestAnimationFrame(() => window.scrollTo({ top: 0 }));
   },
-  applyPromo: (pct) => set({ promoDiscount: pct, pendingLoyaltyRedeem: 0 }),
+  applyPromo: (pct) => set((s) => ({ promoDiscount: pct, pendingLoyaltyRedeem: 0 })),
   clearPromo: () => set({ promoDiscount: 0 }),
-  setPendingLoyaltyRedeem: (pts) => set({ pendingLoyaltyRedeem: Math.max(0, pts), promoDiscount: 0 }),
+  setPendingLoyaltyRedeem: (pts) => set((s) => ({ pendingLoyaltyRedeem: Math.max(0, pts), promoDiscount: 0 })),
   clearLoyalty: () => set({ pendingLoyaltyRedeem: 0 }),
   clearAllCheckoutDiscounts: () => set({ promoDiscount: 0, pendingLoyaltyRedeem: 0 }),
   addNotification: (title, body) => set((s) => ({
@@ -164,7 +164,7 @@ export const useUI = create<UIState>((set, get) => ({
   incrementNewOrders: () => set((s) => ({
     newOrderCount: s.newOrderCount + 1,
     notifications: [
-      { id: `nt-${Date.now()}`, title: 'New order', body: 'A new cake order has been placed.', createdAt: Date.now(), read: false },
+      { id: `nt-${Date.now()}`, title: '🎂 New order', body: 'A new cake order has been placed.', createdAt: Date.now(), read: false },
       ...s.notifications,
     ].slice(0, 30),
   })),
@@ -254,7 +254,7 @@ export const useOrders = create<OrderState>()(
         }
 
         set((s) => ({ orders: [o, ...s.orders] }));
-        useUI.getState().addNotification('Order placed', `Order #${o.id} has been placed successfully.`);
+        useUI.getState().addNotification('✅ Order placed', `Order #${o.id} has been placed successfully.`);
         useLoyalty.getState().addPendingPoints(o.id, o.total);
 
         // If user redeemed loyalty points in cart, deduct them now (track per order)
@@ -295,7 +295,7 @@ export const useOrders = create<OrderState>()(
           orders: s.orders.map((o) => (o.id === id ? { ...o, status } : o)),
         }));
 
-        useUI.getState().addNotification('Order updated', `Order #${id} status changed to ${status}.`);
+        useUI.getState().addNotification('📦 Order updated', `Order #${id} status changed to ${status}.`);
 
         if (status === 'confirmed') {
           useLoyalty.getState().confirmPoints(id);
@@ -304,7 +304,7 @@ export const useOrders = create<OrderState>()(
           useLoyalty.getState().cancelPoints(id);
           const refunded = useLoyalty.getState().refundRedeemedPoints(id);
           if (refunded > 0) {
-            useUI.getState().addNotification('Points refunded', `${refunded} loyalty points refunded for cancelled order #${id}.`);
+            useUI.getState().addNotification('↩️ Points refunded', `${refunded} loyalty points refunded for cancelled order #${id}.`);
           }
         }
 
@@ -533,36 +533,16 @@ export const useLoyalty = create<LoyaltyState>()(
         }));
       },
       confirmPoints: (orderId) => {
-        const s = get();
-        // prevent double-credit
-        if (s.history.find((h) => h.orderId === orderId && h.type === 'earned')) {
-          // clean up stale pending entry if any
-          if (s.pendingPoints.find((p) => p.orderId === orderId)) {
-            set({ pendingPoints: s.pendingPoints.filter((p) => p.orderId !== orderId) });
-          }
-          return;
-        }
-        let pending = s.pendingPoints.find((p) => p.orderId === orderId);
-        let pts = pending?.points ?? 0;
-
-        // Fallback: if pending entry missing (e.g. confirm on different device),
-        // credit based on order total from orders store
-        if (!pts) {
-          try {
-            const order = useOrders.getState().orders.find((o) => o.id === orderId);
-            if (order) pts = Math.floor(order.total);
-          } catch {}
-        }
-        if (!pts || pts <= 0) return;
-
-        set((cur) => ({
-          points: cur.points + pts,
-          totalEarned: cur.totalEarned + pts,
+        const pending = get().pendingPoints.find((p) => p.orderId === orderId);
+        if (!pending) return;
+        set((s) => ({
+          points: s.points + pending.points,
+          totalEarned: s.totalEarned + pending.points,
           history: [
-            { id: `lh-${Date.now()}`, orderId, amount: 0, points: pts, date: Date.now(), type: 'earned' },
-            ...cur.history,
+            { id: `lh-${Date.now()}`, orderId, amount: 0, points: pending.points, date: Date.now(), type: 'earned' },
+            ...s.history,
           ],
-          pendingPoints: cur.pendingPoints.filter((p) => p.orderId !== orderId),
+          pendingPoints: s.pendingPoints.filter((p) => p.orderId !== orderId),
         }));
       },
       cancelPoints: (orderId) => {
@@ -585,17 +565,7 @@ export const useLoyalty = create<LoyaltyState>()(
         });
       },
       refundRedeemedPoints: (orderId) => {
-        let redeemed = get().redeemedPoints[orderId] || 0;
-        // Fallback: read from order record if local map is missing (cross-device cancel)
-        if (!redeemed) {
-          try {
-            const order = useOrders.getState().orders.find((o) => o.id === orderId);
-            redeemed = order?.loyaltyPointsRedeemed || 0;
-            // prevent double refund
-            const alreadyRefunded = get().history.find((h) => h.orderId === orderId && h.type === 'refunded');
-            if (alreadyRefunded) redeemed = 0;
-          } catch {}
-        }
+        const redeemed = get().redeemedPoints[orderId] || 0;
         if (redeemed <= 0) return 0;
         set((s) => {
           const nextRedeemed = { ...s.redeemedPoints };

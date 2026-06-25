@@ -18,7 +18,6 @@ export type Product = {
   tags?: string[];
   bestseller?: boolean;
   newArrival?: boolean;
-  inStock?: boolean;
   tier?: 'normal' | 'premium' | 'custom';
   priceUnit?: 'kg' | 'pound';
   pricePerUnit?: number;
@@ -166,23 +165,6 @@ export interface CustomAddon {
   label: string;
   price: number;
   category: 'decoration' | 'theme' | 'flowers' | 'extras';
-}
-
-export interface SavedAddress {
-  id: string;
-  name: string;
-  address: string;
-  district: string;
-  phone: string;
-  isDefault: boolean;
-}
-
-export interface SpecialDate {
-  id: string;
-  type: 'birthday' | 'anniversary' | 'other';
-  name: string;
-  date: string;
-  notifiedYear?: number;
 }
 
 export interface Coupon {
