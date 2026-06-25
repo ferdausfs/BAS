@@ -136,7 +136,7 @@ export default function CartScreen() {
               style={{ boxShadow: '0 1px 2px rgba(26,19,17,.02), 0 8px 24px -16px rgba(26,19,17,.16)' }}
             >
               <div className="h-24 w-24 flex-shrink-0 overflow-hidden rounded-2xl bg-cream">
-                <img src={item.image} alt="" className="h-full w-full object-cover" />
+                <img loading="lazy" decoding="async" src={item.image} alt="" className="h-full w-full object-cover" />
               </div>
               <div className="flex flex-1 flex-col">
                 <div className="flex items-start justify-between gap-2">

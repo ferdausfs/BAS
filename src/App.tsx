@@ -18,7 +18,7 @@ import NotificationsSheet from './components/NotificationsSheet';
 import WishlistScreen from './screens/WishlistScreen';
 import TrackingScreen from './screens/TrackingScreen';
 import AdminScreen from './screens/AdminScreen';
-import DebugOverlay from './components/DebugOverlay';
+import DebugMetrics from './components/DebugMetrics';
 import AppErrorBoundary from './components/AppErrorBoundary';
 
 export default function App() {
@@ -32,9 +32,7 @@ export default function App() {
 
   useEffect(() => {
     if (isSupabaseConfigured()) {
-      useSettingsStore.getState().loadRemoteSettings().finally(() => {
-        setSettingsLoading(false);
-      });
+      useSettingsStore.getState().loadRemoteSettings().finally(() => setSettingsLoading(false));
     } else {
       setSettingsLoading(false);
     }
@@ -57,11 +55,16 @@ export default function App() {
   const isAdminUser = useMemo(() => {
     if (settingsLoading) return false;
     const userEmail = normalizeEmail(user?.email);
-    const allowedAdminEmails = [settings.adminEmail, 'umuhammadiswa@gmail.com'];
-    return !!userEmail && allowedAdminEmails.some((email) => normalizeEmail(email) === userEmail);
+    const allowed = [settings.adminEmail, 'umuhammadiswa@gmail.com'];
+    return !!userEmail && allowed.some((e) => normalizeEmail(e) === userEmail);
   }, [user?.email, settings.adminEmail, settingsLoading]);
 
   const activeTab = view.name === 'tabs' ? view.tab : tab;
+
+  // Expose tab for debug
+  useEffect(() => {
+    (window as any).__BAKEART_TAB__ = activeTab;
+  }, [activeTab]);
 
   const screenKey = [
     view.name,
@@ -77,40 +80,42 @@ export default function App() {
 
   return (
     <AppErrorBoundary>
-      <div key={screenKey} className="h-full w-full overflow-hidden bg-cream">
-        {view.name === 'splash' && <SplashScreen />}
-        {view.name === 'tabs' && activeTab === 'home' && (
-          <HomeScreen onLogoTap={() => {}} onNotificationsOpen={() => setNotificationsOpen(true)} />
-        )}
-        {view.name === 'tabs' && activeTab === 'categories' && <CategoriesScreen />}
-        {view.name === 'tabs' && activeTab === 'orders' && (
-          user ? <OrdersScreen /> : (
-            <div className="flex h-full flex-col items-center justify-center px-8 text-center">
-              <div className="text-5xl mb-4">📋</div>
-              <h2 className="font-bold text-lg mb-2">Sign in to view orders</h2>
-              <button onClick={() => setAuthOpen(true)} className="px-6 py-3 rounded-2xl bg-coral text-white font-bold text-sm">
-                Sign In
-              </button>
-            </div>
-          )
-        )}
-        {view.name === 'tabs' && activeTab === 'profile' && (
-          <ProfileScreen onAuthOpen={() => setAuthOpen(true)} isAdmin={isAdminUser} />
-        )}
-        {view.name === 'product' && <ProductScreen />}
-        {view.name === 'customize' && <CustomizeScreen />}
-        {view.name === 'cart' && <CartScreen />}
-        {view.name === 'checkout' && <CheckoutScreen />}
-        {view.name === 'success' && <SuccessScreen />}
-        {view.name === 'wishlist' && <WishlistScreen />}
-        {view.name === 'tracking' && <TrackingScreen />}
-        {view.name === 'admin' && <AdminScreen />}
+      <div className="h-[100dvh] w-full flex flex-col bg-cream overflow-hidden">
+        <main className="flex-1 min-h-0 relative overflow-hidden">
+          {view.name === 'splash' && <SplashScreen />}
+          {view.name === 'tabs' && activeTab === 'home' && (
+            <HomeScreen onLogoTap={() => {}} onNotificationsOpen={() => setNotificationsOpen(true)} />
+          )}
+          {view.name === 'tabs' && activeTab === 'categories' && <CategoriesScreen />}
+          {view.name === 'tabs' && activeTab === 'orders' && (
+            user ? <OrdersScreen /> : (
+              <div className="flex h-full flex-col items-center justify-center px-8 text-center">
+                <div className="text-5xl mb-4">📋</div>
+                <h2 className="font-bold text-lg mb-2">Sign in to view orders</h2>
+                <button onClick={() => setAuthOpen(true)} className="px-6 py-3 rounded-2xl bg-coral text-white font-bold text-sm">
+                  Sign In
+                </button>
+              </div>
+            )
+          )}
+          {view.name === 'tabs' && activeTab === 'profile' && (
+            <ProfileScreen onAuthOpen={() => setAuthOpen(true)} isAdmin={isAdminUser} />
+          )}
+          {view.name === 'product' && <ProductScreen />}
+          {view.name === 'customize' && <CustomizeScreen />}
+          {view.name === 'cart' && <CartScreen />}
+          {view.name === 'checkout' && <CheckoutScreen />}
+          {view.name === 'success' && <SuccessScreen />}
+          {view.name === 'wishlist' && <WishlistScreen />}
+          {view.name === 'tracking' && <TrackingScreen />}
+          {view.name === 'admin' && <AdminScreen />}
+        </main>
 
         {showTabBar && <BottomTabBar />}
 
         <NotificationsSheet open={notificationsOpen} onClose={() => setNotificationsOpen(false)} />
         <AuthSheet open={authOpen} onClose={() => setAuthOpen(false)} />
-        <DebugOverlay />
+        <DebugMetrics />
       </div>
     </AppErrorBoundary>
   );

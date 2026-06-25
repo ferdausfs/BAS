@@ -148,7 +148,7 @@ export default function ProductScreen() {
       <div className="no-scrollbar relative flex-1 overflow-y-auto bg-blush-50 pb-28">
         {/* Hero image — scrolls up naturally as user scrolls down */}
         <div className="relative w-full aspect-[4/3] bg-blush-100">
-          <img src={currentImg} alt={product.name} className="absolute inset-0 h-full w-full object-cover" />
+          <img loading="lazy" decoding="async" src={currentImg} alt={product.name} className="absolute inset-0 h-full w-full object-cover" />
 
           {/* Soft top fade for control legibility */}
           <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-blush-100/85 to-transparent" />
@@ -185,7 +185,7 @@ export default function ProductScreen() {
                     currentImg === url ? 'border-coral' : 'border-transparent'
                   }`}
                 >
-                  <img src={url} alt="" className="w-full h-full object-cover" />
+                  <img loading="lazy" decoding="async" src={url} alt="" className="w-full h-full object-cover" />
                 </button>
               ))}
             </div>
@@ -407,7 +407,7 @@ export default function ProductScreen() {
               <div className="text-[11px] font-bold text-ink/50 mb-1">Add photo (optional)</div>
               {reviewImagePreview ? (
                 <div className="relative w-20 h-20">
-                  <img src={reviewImagePreview} alt="" className="w-20 h-20 rounded-xl object-cover" />
+                  <img loading="lazy" decoding="async" src={reviewImagePreview} alt="" className="w-20 h-20 rounded-xl object-cover" />
                   <button
                     onClick={() => { setReviewImageFile(null); setReviewImagePreview(''); }}
                     className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-ink text-white flex items-center justify-center"
@@ -469,7 +469,7 @@ export default function ProductScreen() {
                     </div>
                     <div className="mt-1 text-[12px] text-ink/70 leading-relaxed">{r.comment}</div>
                     {r.image && (
-                      <img src={r.image} alt="review" className="mt-2 h-24 w-24 rounded-xl object-cover" />
+                      <img loading="lazy" decoding="async" src={r.image} alt="review" className="mt-2 h-24 w-24 rounded-xl object-cover" />
                     )}
                     <div className="mt-1.5 text-[10px] text-ink/30">
                       {new Date(r.created_at).toLocaleDateString('en-BD', { day: 'numeric', month: 'short', year: 'numeric' })}
