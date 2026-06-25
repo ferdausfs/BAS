@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import {
   Heart, MapPin, CreditCard, Bell, HelpCircle, Settings, LogOut,
-  ChevronRight, Star, Sparkles, LogIn, X, Save, Check, User, AlertTriangle
+  ChevronRight, Star, Sparkles, LogIn, X, Save, Check, User, AlertTriangle,
+  Cake, Gift, Star as StarIcon
 } from 'lucide-react';
 import { useUI, useUser, useOrders, useCart, useAuthStore, useLoyalty } from '../lib/store';
 import { useProducts } from '../hooks/useProducts';
@@ -28,6 +29,7 @@ const saveSpecialDates = (userId: string, dates: SpecialDate[]) =>
 interface Props {
   onAuthOpen?: () => void;
   isAdmin?: boolean;
+  onModalChange?: (open: boolean) => void;
 }
 
 type SavedPayment = 'bkash' | 'nagad' | 'cash';
@@ -114,7 +116,7 @@ class AdminErrorBoundary extends React.Component<{ children: React.ReactNode }, 
   }
 }
 
-export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
+export default function ProfileScreen({ onAuthOpen, isAdmin = false, onModalChange }: Props) {
   const { go, setChatOpen } = useUI();
   const { wishlist } = useUser();
   const { orders } = useOrders();
@@ -168,6 +170,10 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
   }, [contactOpen, customerOpen, setChatOpen]);
 
   useEffect(() => {
+    onModalChange?.(showAddressModal || showDatesModal);
+  }, [showAddressModal, showDatesModal, onModalChange]);
+
+  useEffect(() => {
     if (user?.id) saveAddresses(user.id, addresses);
   }, [addresses, user?.id]);
 
@@ -187,8 +193,8 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
       const diffDays = Math.ceil((eventDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
       if (diffDays >= 0 && diffDays <= 7 && d.notifiedYear !== currentYear) {
         useUI.getState().addNotification(
-          `🎂 ${d.name} in ${diffDays === 0 ? 'today!' : `${diffDays} day${diffDays > 1 ? 's' : ''}!`}`,
-          `Order a special cake now to celebrate! 🎉`
+          `${d.name} in ${diffDays === 0 ? 'today!' : `${diffDays} day${diffDays > 1 ? 's' : ''}!`}`,
+          `Order a special cake now to celebrate!`
         );
         updated[i] = { ...d, notifiedYear: currentYear };
         changed = true;
@@ -368,7 +374,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
                   <div key={h.id} className="flex items-center justify-between px-4 py-2.5">
                     <div>
                       <div className="text-[12px] font-semibold text-ink">
-                        {h.type === 'earned' ? '⭐ Points earned' : '🎁 Points redeemed'}
+                        {h.type === 'earned' ? 'Points earned' : 'Points redeemed'}
                       </div>
                       <div className="text-[10px] text-ink/40">
                         {new Date(h.date).toLocaleDateString('en-BD', { day: 'numeric', month: 'short' })}
@@ -452,7 +458,9 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
               style={{ boxShadow: '0 1px 2px rgba(26,19,17,.02), 0 8px 24px -16px rgba(26,19,17,.16)' }}
             >
               <div className="flex items-center gap-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-coral/10 text-coral text-lg">🎂</div>
+                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-coral/10 text-coral">
+                  <Cake className="h-4 w-4" />
+                </div>
                 <div>
                   <div className="text-[13px] font-bold text-ink">Special Dates</div>
                   <div className="text-[11px] text-ink/50">
@@ -738,7 +746,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
                         <button onClick={() => { setAddrForm({ name: addr.name, address: addr.address, district: addr.district, phone: addr.phone }); setEditingAddress(addr); }}
                           className="rounded-lg bg-coral/10 px-2 py-1 text-[10px] font-bold text-coral">Edit</button>
                         <button onClick={() => setAddresses(prev => prev.filter(a => a.id !== addr.id))}
-                          className="rounded-lg bg-red-50 px-2 py-1 text-[10px] font-bold text-red-400">✕</button>
+                          className="rounded-lg bg-red-50 px-2 py-1 text-[10px] font-bold text-red-400">×</button>
                       </div>
                     </div>
                   ))}
@@ -803,11 +811,13 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
                 <X className="h-4 w-4" />
               </button>
             </div>
-            <p className="mb-3 text-[11px] text-ink/50">We'll remind you 7 days before to order a cake 🎂</p>
+            <p className="mb-3 text-[11px] text-ink/50">We'll remind you 7 days before to order a cake</p>
             <div className="space-y-2 max-h-48 overflow-y-auto mb-3">
               {specialDates.map((d) => (
                 <div key={d.id} className="flex items-center gap-3 rounded-2xl bg-white p-3" style={{ boxShadow: '0 1px 4px rgba(26,19,17,.06)' }}>
-                  <span className="text-xl">{d.type === 'birthday' ? '🎂' : d.type === 'anniversary' ? '💍' : '🎉'}</span>
+                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-coral/10 text-coral">
+                    {d.type === 'birthday' ? <Cake className="h-4 w-4" /> : d.type === 'anniversary' ? <Heart className="h-4 w-4" /> : <Gift className="h-4 w-4" />}
+                  </span>
                   <div className="flex-1">
                     <div className="text-[12px] font-bold text-ink">{d.name}</div>
                     <div className="text-[11px] text-ink/50">{d.type} · {d.date}</div>
@@ -823,9 +833,9 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
                 <div className="flex gap-2">
                   <select value={dateForm.type} onChange={(e) => setDateForm(f => ({ ...f, type: e.target.value as SpecialDate['type'] }))}
                     className="rounded-xl border border-ink/10 bg-cream px-2 py-2 text-[12px] text-ink">
-                    <option value="birthday">🎂 Birthday</option>
-                    <option value="anniversary">💍 Anniversary</option>
-                    <option value="other">🎉 Other</option>
+                    <option value="birthday">Birthday</option>
+                    <option value="anniversary">Anniversary</option>
+                    <option value="other">Other</option>
                   </select>
                   <input value={dateForm.name} onChange={(e) => setDateForm(f => ({ ...f, name: e.target.value }))}
                     placeholder="e.g. Mom's Birthday"

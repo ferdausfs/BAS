@@ -588,7 +588,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                         const alerts = ls.get<{productId: string; productName: string}[]>('bakeart-alerts', []);
                         const hasAlerts = alerts.filter(a => a.productId === p.id);
                         if (hasAlerts.length > 0) {
-                          addNotification('📦 Restocked!', `${hasAlerts.length} customer${hasAlerts.length > 1 ? 's' : ''} waiting for ${p.name} — they've been notified.`);
+                          addNotification('Restocked!', `${hasAlerts.length} customer${hasAlerts.length > 1 ? 's' : ''} waiting for ${p.name} — they've been notified.`);
                           ls.set('bakeart-alerts', alerts.filter(a => a.productId !== p.id));
                         }
                       }
@@ -597,7 +597,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                       (p.inStock ?? true) ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-400'
                     }`}
                   >
-                    {(p.inStock ?? true) ? '✅ In Stock' : '❌ Out of Stock'}
+                    {(p.inStock ?? true) ? 'In Stock' : 'Out of Stock'}
                   </button>
                   <button onClick={() => setEditProduct(p)} className="w-8 h-8 rounded-xl bg-ink/5 flex items-center justify-center">
                     <Edit3 className="w-3.5 h-3.5 text-ink/60" />

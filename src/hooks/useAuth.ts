@@ -13,7 +13,7 @@ export function useAuth() {
       if (event === 'SIGNED_IN' && session?.user) {
         const u = session.user;
         const name = u.user_metadata?.full_name || u.email?.split('@')[0] || 'User';
-        const avatar = u.user_metadata?.avatar_url || '👤';
+        const avatar = u.user_metadata?.avatar_url || '';
         login({ id: u.id, name, email: u.email || '', avatar });
       }
     });
@@ -35,7 +35,7 @@ export function useAuth() {
           if (!data.session) {
             return { needsEmailConfirmation: true };
           } else {
-            login({ id: data.user.id, name, email, avatar: '👤' });
+            login({ id: data.user.id, name, email, avatar: '' });
             return { needsEmailConfirmation: false };
           }
         }
@@ -49,7 +49,7 @@ export function useAuth() {
         const id = `local-${Date.now()}`;
         const newAcc = { id, name, email, password };
         ls.set('bakeart-local-accounts', [...accounts, newAcc]);
-        login({ id, name, email, avatar: '👤' });
+        login({ id, name, email, avatar: '' });
         return { needsEmailConfirmation: false };
       }
     } finally {
@@ -65,7 +65,7 @@ export function useAuth() {
         if (error) throw new Error('Wrong email or password.');
         if (data.user) {
           const name = data.user.user_metadata?.full_name || email.split('@')[0] || 'User';
-          login({ id: data.user.id, name, email, avatar: '👤' });
+          login({ id: data.user.id, name, email, avatar: '' });
         }
       } else {
         const accounts = ls.get<Array<any>>('bakeart-local-accounts', []);
@@ -75,7 +75,7 @@ export function useAuth() {
         if (!matched) {
           throw new Error('Wrong email or password.');
         }
-        login({ id: matched.id, name: matched.name, email, avatar: '👤' });
+        login({ id: matched.id, name: matched.name, email, avatar: '' });
       }
     } finally {
       setLoading(false);
@@ -100,3 +100,4 @@ export function useAuth() {
 
   return { user, loading, signUp, signIn, signOut, signInWithGoogle };
 }
+
