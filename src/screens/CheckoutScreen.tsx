@@ -12,19 +12,15 @@ import {
   pushReferralReward,
 } from '../lib/store';
 import { supabase } from '../lib/supabase';
-import { isSupabaseConfigured, safeArray } from '../lib/utils';
+import { isSupabaseConfigured, safeArray, isValidPhone } from '../lib/utils';
 import { LocationGate } from '../components/LocationGate';
+import { BD_DISTRICTS } from '../lib/zones';
 
 const PAYMENTS = [
   { id: 'bkash', label: 'bKash', sub: 'Send money / Payment', Icon: Phone },
   { id: 'nagad', label: 'Nagad', sub: 'Send money / Payment', Icon: Phone },
   { id: 'cash',  label: 'Cash on Delivery', sub: 'ডেলিভারির সময় পেমেন্ট', Icon: Banknote },
 ] as const;
-
-const BD_DISTRICTS = [
-  'Comilla', 'Dhaka', 'Chittagong', 'Sylhet', 'Rajshahi',
-  'Khulna', 'Mymensingh', 'Barishal', 'Rangpur',
-];
 
 const SLOTS = [
   { v: '10am - 12pm', hot: false },
@@ -91,7 +87,6 @@ export default function CheckoutScreen({ onBack }: Props) {
       }
 
       setReferralApplied(true);
-      earnReferral(code, 'buyer');
     } catch {
       setReferralError("Referral code যাচাই করা যায়নি, আবার চেষ্টা করো");
     } finally {
@@ -259,6 +254,10 @@ export default function CheckoutScreen({ onBack }: Props) {
       setSubmitError('নাম, ফোন এবং ঠিকানা পূরণ করুন।');
       return;
     }
+    if (!isValidPhone(form.phone)) {
+      setSubmitError('সঠিক মোবাইল নম্বর দিন (যেমন 01XXXXXXXXX)');
+      return;
+    }
     if (requiresLocationGate && !locationVerified) {
       setSubmitError('Checkout করার আগে location verify করুন।');
       setShowLocationGate(true);
@@ -314,6 +313,7 @@ export default function CheckoutScreen({ onBack }: Props) {
       }
 
       if (referralApplied && referralInput.trim()) {
+        useWallet.getState().earnReferral(referralInput.trim().toUpperCase(), 'buyer');
         void pushReferralReward(referralInput.trim(), {
           refereeId: user?.id || `guest-${o.id}`,
           refereeName: form.name || 'Customer',

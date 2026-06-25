@@ -1,4 +1,9 @@
 // Bangladesh delivery zones — seller can edit these from admin settings.
+export const BD_DISTRICTS = [
+  'Comilla', 'Dhaka', 'Chittagong', 'Sylhet', 'Rajshahi',
+  'Khulna', 'Mymensingh', 'Barishal', 'Rangpur',
+];
+
 export const DEFAULT_ZONES: string[] = [
   'Dhaka',
   'Gulshan',
