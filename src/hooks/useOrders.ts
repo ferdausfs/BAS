@@ -14,11 +14,18 @@ type DbOrderRow = {
   delivery_date: string;
   delivery_time: string;
   payment_method: string;
+  payment_screenshot?: string | null;
   items: Order['items'];
   subtotal: number;
+  discount?: number | null;
   delivery_fee: number;
   total: number;
   status: string;
+  promo_code?: string | null;
+  gps_lat?: number | null;
+  gps_lng?: number | null;
+  location_address?: string | null;
+  location_verified?: boolean | null;
   created_at: string;
 };
 
@@ -33,6 +40,13 @@ const normalizeStatus = (status: string): Order['status'] => {
   if (status === 'delivered') return 'delivered';
   if (status === 'cancelled') return 'cancelled';
   return 'placed';
+};
+
+const toDbStatus = (status: Order['status']): string => {
+  if (status === 'placed') return 'pending';
+  if (status === 'baking') return 'preparing';
+  if (status === 'out') return 'delivering';
+  return status;
 };
 
 const normalizePayment = (payment: string): Order['payment'] => {
@@ -59,8 +73,15 @@ const mapDbOrder = (o: DbOrderRow): Order => ({
   },
   payment: normalizePayment(o.payment_method),
   subtotal: Number(o.subtotal ?? 0),
+  discount: Number(o.discount ?? 0),
   deliveryFee: Number(o.delivery_fee ?? 0),
   total: Number(o.total ?? 0),
+  promoCode: o.promo_code ?? undefined,
+  paymentScreenshot: o.payment_screenshot ?? undefined,
+  gpsLat: o.gps_lat ?? null,
+  gpsLng: o.gps_lng ?? null,
+  locationAddress: o.location_address ?? undefined,
+  locationVerified: !!o.location_verified,
   status: normalizeStatus(o.status),
   createdAt: o.created_at ? new Date(o.created_at).getTime() : Date.now(),
 });
@@ -128,7 +149,7 @@ export function useOrdersHook() {
       if (data) {
         const fetchedOrders = data.map((row) => mapDbOrder(row as DbOrderRow));
         const localOrders = useOrdersStore.getState().orders;
-        
+
         const merged = [...localOrders];
         fetchedOrders.forEach((fo) => {
           const idx = merged.findIndex((o) => o.id === fo.id);
@@ -138,7 +159,7 @@ export function useOrdersHook() {
             merged.push(fo);
           }
         });
-        
+
         merged.sort((a, b) => b.createdAt - a.createdAt);
         setOrders(merged);
       }
@@ -156,7 +177,7 @@ export function useOrdersHook() {
 
     const { error } = await supabase
       .from('orders')
-      .update({ status })
+      .update({ status: toDbStatus(status) })
       .eq('id', id);
 
     if (error) console.error('Status update error:', error);
@@ -166,10 +187,10 @@ export function useOrdersHook() {
     if (!isSupabaseConfigured()) return () => {};
 
     if ('Notification' in window && Notification.permission === 'default') {
-      Notification.requestPermission();
+      void Notification.requestPermission();
     }
 
-    fetchOrders();
+    void fetchOrders();
 
     let channel: any = null;
     const channelName = `new-orders-admin-${Date.now()}`;
@@ -183,7 +204,7 @@ export function useOrdersHook() {
           () => {
             playBeep();
             incrementNewOrders();
-            fetchOrders();
+            void fetchOrders();
 
             if ('Notification' in window && Notification.permission === 'granted') {
               new Notification('New Order!', {
@@ -196,7 +217,7 @@ export function useOrdersHook() {
           'postgres_changes',
           { event: 'UPDATE', schema: 'public', table: 'orders' },
           () => {
-            fetchOrders();
+            void fetchOrders();
           }
         )
         .subscribe();
@@ -204,7 +225,9 @@ export function useOrdersHook() {
       console.warn('Realtime subscription failed:', e);
     }
 
-    const timer = window.setInterval(fetchOrders, 10000);
+    const timer = window.setInterval(() => {
+      void fetchOrders();
+    }, 10000);
 
     return () => {
       window.clearInterval(timer);

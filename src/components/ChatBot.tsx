@@ -20,13 +20,23 @@ const QUICK_REPLIES = [
 ];
 
 const formatBDT = (n: number) => `৳${n.toLocaleString('en-BD')}`;
+const chatHistoryKey = (userId?: string) => `bakeart-chat-history-${userId || 'guest'}`;
 
 interface Props {
   embedded?: boolean;
 }
 
 export function ChatBot({ embedded = false }: Props) {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<Message[]>(() => {
+    try {
+      const raw = localStorage.getItem(chatHistoryKey());
+      if (!raw) return [];
+      const parsed = JSON.parse(raw) as Array<{ role: 'user' | 'bot'; text: string; time: string }>;
+      return Array.isArray(parsed) ? parsed.map((m) => ({ ...m, time: new Date(m.time) })) : [];
+    } catch {
+      return [];
+    }
+  });
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [showQuick, setShowQuick] = useState(true);
@@ -36,6 +46,21 @@ export function ChatBot({ embedded = false }: Props) {
   const { products } = useProducts();
   const { orders } = useOrders();
   const { user } = useAuthStore();
+  const geminiKey = import.meta.env.VITE_GEMINI_API_KEY || settings.geminiApiKey || '';
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(chatHistoryKey(user?.id));
+      if (!raw) {
+        setMessages([]);
+        return;
+      }
+      const parsed = JSON.parse(raw) as Array<{ role: 'user' | 'bot'; text: string; time: string }>;
+      setMessages(Array.isArray(parsed) ? parsed.map((m) => ({ ...m, time: new Date(m.time) })) : []);
+    } catch {
+      setMessages([]);
+    }
+  }, [user?.id]);
 
   useEffect(() => {
     if (embedded) setTimeout(() => inputRef.current?.focus(), 200);
@@ -44,6 +69,14 @@ export function ChatBot({ embedded = false }: Props) {
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, loading]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(chatHistoryKey(user?.id), JSON.stringify(messages));
+    } catch {
+      // ignore storage failures
+    }
+  }, [messages, user?.id]);
 
   const addBot = (text: string) => {
     setMessages((m) => [...m, { role: 'bot', text, time: new Date() }]);
@@ -94,7 +127,7 @@ export function ChatBot({ embedded = false }: Props) {
     `• Customers: customer list, total spent, order count\n` +
     `• Zones: delivery zone add/remove, zone gating on/off\n` +
     `• Settings: admin email/PIN, WhatsApp, delivery fee, promo, Gemini API key\n\n` +
-    `Admin খুলতে Home logo ৫ বার tap করুন → admin email দিয়ে login → PIN দিন।`;
+    `Admin খুলতে Profile footer logo ৫ বার tap করুন → admin email দিয়ে login → PIN দিন।`;
 
   const orderText = () =>
     `অর্ডার করার ধাপ\n\n` +
@@ -280,7 +313,7 @@ export function ChatBot({ embedded = false }: Props) {
     };
   };
 
-  const callGemini = async (userMsg: string): Promise<string> => {
+  const callGemini = async (userMsg: string, history: Message[]): Promise<string> => {
     const productList = products.map((p) => `• ${p.name} — ${formatBDT(p.price)}: ${p.tagline}`).join('\n');
     const zones = (settings.allowedZones ?? []).join(', ');
     const systemPrompt = `তুমি "BAS", Bake Art Style বেকারির friendly AI assistant। তোমার সাথে যে কোনো বিষয়ে কথা বলা যাবে — সাধারণ গল্প, প্রশ্ন, বা বেকারির ব্যাপার।
@@ -303,10 +336,11 @@ Products:
 ${productList}
 
 উত্তর 2-6 লাইনের মধ্যে রাখো।`;
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${settings.geminiApiKey}`, {
+    const recentHistory = history.slice(-8).map((m) => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.text}`).join('\n');
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: `${systemPrompt}\n\nUser: ${userMsg}` }] }] }),
+      body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: `${systemPrompt}\n\nConversation so far:\n${recentHistory}\nUser: ${userMsg}` }] }] }),
     });
     if (!res.ok) throw new Error('Gemini API failed');
     const data = await res.json();
@@ -321,21 +355,21 @@ ${productList}
 
     setInput('');
     setShowQuick(false);
-    setMessages((m) => [...m, { role: 'user', text, time: new Date() }]);
+    const nextMessages = [...messages, { role: 'user' as const, text, time: new Date() }];
+    setMessages(nextMessages);
     setLoading(true);
 
     try {
-      // First use strong local knowledge. If it is still generic and Gemini key exists, try Gemini.
       const local = ruleBasedReply(text);
-      if (local.matched || !settings.geminiApiKey) {
+      if (local.matched || !geminiKey) {
         await new Promise((r) => setTimeout(r, 300));
-        addBot(local.text);
+        addBot(local.matched ? local.text : `${local.text}\n\n${!geminiKey ? 'Tip: set VITE_GEMINI_API_KEY (or save Gemini API Key in Admin Settings) for AI-powered free chat.' : ''}`.trim());
         if (!local.matched) setShowQuick(true);
         return;
       }
 
       try {
-        const reply = await callGemini(text);
+        const reply = await callGemini(text, nextMessages);
         addBot(reply);
       } catch {
         addBot(local.text);

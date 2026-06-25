@@ -272,7 +272,7 @@ export const useOrders = create<OrderState>()(
         useUI.getState().clearAllCheckoutDiscounts();
 
         if (isSupabaseConfigured()) {
-          void supabase.from('orders').insert({
+          void supabase.from('orders').upsert({
             id: o.id,
             user_id: isUuid ? user!.id : null,
             customer_name: o.customer.name,
@@ -282,14 +282,20 @@ export const useOrders = create<OrderState>()(
             delivery_date: o.delivery.date,
             delivery_time: o.delivery.time,
             payment_method: o.payment,
+            payment_screenshot: o.paymentScreenshot ?? null,
             items: o.items,
             subtotal: o.subtotal,
-            discount: Math.max(0, Math.round(o.subtotal + o.deliveryFee - o.total)),
+            discount: Math.max(0, Math.round(o.discount ?? (o.subtotal + o.deliveryFee - o.total))),
             delivery_fee: o.deliveryFee,
             total: o.total,
-            status: o.status,
+            status: toDbOrderStatus(o.status),
+            promo_code: o.promoCode ?? null,
+            gps_lat: o.gpsLat ?? null,
+            gps_lng: o.gpsLng ?? null,
+            location_address: o.locationAddress ?? o.customer.address,
+            location_verified: o.locationVerified ?? false,
             created_at: new Date(o.createdAt).toISOString(),
-          }).then(({ error }) => {
+          }, { onConflict: 'id' }).then(({ error }) => {
             if (error) console.warn('Remote order insert failed:', error.message);
           });
         }
@@ -321,7 +327,7 @@ export const useOrders = create<OrderState>()(
         if (isSupabaseConfigured()) {
           void supabase
             .from('orders')
-            .update({ status })
+            .update({ status: toDbOrderStatus(status) })
             .eq('id', id)
             .then(({ error }) => {
               if (error) console.warn('Remote order status update failed:', error.message);
@@ -366,6 +372,13 @@ export const freeDeliveryThreshold = 999;
 export const standardDeliveryFee = 60;
 export const qualifiesForFreeDelivery = (sub: number) => sub >= freeDeliveryThreshold;
 
+function toDbOrderStatus(status: Order['status']): string {
+  if (status === 'placed') return 'pending';
+  if (status === 'baking') return 'preparing';
+  if (status === 'out') return 'delivering';
+  return status;
+}
+
 
 // ── Auth Store ─────────────────────────────────────────────
 import type { User, SiteSettings } from '../types';
@@ -407,13 +420,26 @@ export const useSettingsStore = create<SettingsState>()(
       loadRemoteSettings: async () => {
         const remoteSite = await readRemoteSetting<Partial<SiteSettings>>('site_settings');
         const remoteAdmin = await readRemoteSetting<Partial<SiteSettings>>('admin_settings');
-        if (remoteSite || remoteAdmin) {
+        const whatsappNumber = await readRemoteSetting<string>('whatsapp_number');
+        const allowedDistricts = await readRemoteSetting<string[]>('allowed_districts');
+        const deliveryZonesEnabled = await readRemoteSetting<boolean>('delivery_zones_enabled');
+        const outOfZoneMessage = await readRemoteSetting<string>('out_of_zone_message');
+
+        const rowBasedSettings: Partial<SiteSettings> = {
+          ...(whatsappNumber ? { whatsappNumber } : {}),
+          ...(Array.isArray(allowedDistricts) ? { allowedZones: allowedDistricts } : {}),
+          ...(typeof deliveryZonesEnabled === 'boolean' ? { deliveryZonesEnabled } : {}),
+          ...(outOfZoneMessage ? { outOfZoneMessage } : {}),
+        };
+
+        if (remoteSite || remoteAdmin || Object.keys(rowBasedSettings).length > 0) {
           set({
             settings: {
               ...DEFAULT_SETTINGS,
               ...get().settings,
               ...(remoteSite || {}),
               ...(remoteAdmin || {}),
+              ...rowBasedSettings,
             },
           });
         }
@@ -433,13 +459,25 @@ export const useSettingsStore = create<SettingsState>()(
             }
           });
 
-          const patchHasSensitiveKeys = Object.keys(patch).some((k) => 
+          const patchHasSensitiveKeys = Object.keys(patch).some((k) =>
             (ADMIN_ONLY_KEYS as readonly string[]).includes(k)
           );
 
           void writeRemoteSetting('site_settings', nonSensitivePart);
           if (patchHasSensitiveKeys) {
             void writeRemoteSetting('admin_settings', sensitivePart);
+          }
+          if ('whatsappNumber' in patch) {
+            void writeRemoteSetting('whatsapp_number', next.whatsappNumber);
+          }
+          if ('allowedZones' in patch) {
+            void writeRemoteSetting('allowed_districts', next.allowedZones ?? []);
+          }
+          if ('deliveryZonesEnabled' in patch) {
+            void writeRemoteSetting('delivery_zones_enabled', next.deliveryZonesEnabled ?? true);
+          }
+          if ('outOfZoneMessage' in patch) {
+            void writeRemoteSetting('out_of_zone_message', next.outOfZoneMessage ?? '');
           }
 
           return { settings: next };

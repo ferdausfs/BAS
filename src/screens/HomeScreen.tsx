@@ -42,6 +42,7 @@ export default function HomeScreen({
   const { user } = useAuthStore();
   const { products } = useProducts();
   const { banners } = useBanners();
+  const activeBanners = useMemo(() => (banners ?? []).filter((b) => b.active !== false), [banners]);
   const upcoming = getUpcomingDate(user?.id);
 
   const [bannerIdx, setBannerIdx] = useState(0);
@@ -50,14 +51,24 @@ export default function HomeScreen({
   const [activeNotice, setActiveNotice] = useState<Banner | null>(null);
 
   const trending = useMemo(() => products
-    .filter((p) => (p.inStock ?? true) && (p.bestseller || p.newArrival))
+    .filter((p) => (p.approved ?? true) && (p.inStock ?? true) && (p.bestseller || p.newArrival))
     .slice(0, 8), [products]);
 
+  const searchResults = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return [];
+    return products
+      .filter((p) => (p.approved ?? true) && (p.inStock ?? true))
+      .filter((p) => p.name.toLowerCase().includes(q) || p.tagline.toLowerCase().includes(q))
+      .slice(0, 8);
+  }, [products, search]);
+
   useEffect(() => {
-    if (banners.length === 0) return;
-    const t = setInterval(() => setBannerIdx((i) => (i + 1) % banners.length), 5500);
+    if (activeBanners.length === 0) return;
+    setBannerIdx((i) => (i >= activeBanners.length ? 0 : i));
+    const t = setInterval(() => setBannerIdx((i) => (i + 1) % activeBanners.length), 5500);
     return () => clearInterval(t);
-  }, [banners.length]);
+  }, [activeBanners.length]);
 
   return (
     <div className="flex h-full flex-col bg-cream">
@@ -96,14 +107,14 @@ export default function HomeScreen({
         )}
 
         {/* Hero carousel */}
-        {banners.length > 0 && (
+        {activeBanners.length > 0 && (
           <div className="mt-5 px-5 anim-up delay-1">
             <div
               className="relative overflow-hidden rounded-[28px] bg-white"
               style={{ boxShadow: '0 1px 2px rgba(26,19,17,.03), 0 18px 50px -28px rgba(26,19,17,.18)' }}
             >
               <div className="relative aspect-[16/11] w-full overflow-hidden">
-                {banners.map((b, i) => (
+                {activeBanners.map((b, i) => (
                   <div
                     key={b.id}
                     className={`absolute inset-0 transition-opacity duration-700 ${
@@ -155,14 +166,14 @@ export default function HomeScreen({
                 ))}
 
                 <button
-                  onClick={() => setBannerIdx((i) => (i - 1 + banners.length) % banners.length)}
+                  onClick={() => setBannerIdx((i) => (i - 1 + activeBanners.length) % activeBanners.length)}
                   className="absolute top-1/2 left-3 z-20 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-ink backdrop-blur transition active:scale-95 md:flex"
                   aria-label="Previous"
                 >
                   <ChevronLeft className="h-4 w-4" strokeWidth={2.5} />
                 </button>
                 <button
-                  onClick={() => setBannerIdx((i) => (i + 1) % banners.length)}
+                  onClick={() => setBannerIdx((i) => (i + 1) % activeBanners.length)}
                   className="absolute top-1/2 right-3 z-20 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-ink backdrop-blur transition active:scale-95 md:flex"
                   aria-label="Next"
                 >
@@ -170,7 +181,7 @@ export default function HomeScreen({
                 </button>
 
                 <div className="absolute right-0 bottom-3 left-0 z-20 flex justify-center gap-1.5">
-                  {banners.map((_, i) => (
+                  {activeBanners.map((_, i) => (
                     <button
                       key={i}
                       onClick={() => setBannerIdx(i)}
@@ -181,6 +192,27 @@ export default function HomeScreen({
                   ))}
                 </div>
               </div>
+            </div>
+          </div>
+        )}
+
+        {searchResults.length > 0 && (
+          <div className="mt-6 anim-up delay-2">
+            <SectionHeader
+              eyebrow="Search"
+              title={`Results for "${search.trim()}"`}
+              action={{ label: 'See all', onClick: () => go({ name: 'tabs', tab: 'categories' }) }}
+            />
+            <div className="no-scrollbar mt-3 flex gap-3 overflow-x-auto px-5 pb-2">
+              {searchResults.map((p) => (
+                <ProductCard
+                  key={p.id}
+                  product={p}
+                  wished={wishlist.includes(p.id)}
+                  onWish={toggleWish}
+                  onOpen={() => go({ name: 'product', productId: p.id })}
+                />
+              ))}
             </div>
           </div>
         )}

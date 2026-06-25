@@ -13,6 +13,7 @@ create table if not exists products (
   description text,
   approved boolean not null default true,
   badges text[] not null default '{}',
+  data jsonb,
   created_at timestamptz not null default now()
 );
 
@@ -46,6 +47,24 @@ create table if not exists gallery_items (
   created_at timestamptz not null default now()
 );
 
+-- ─── Banners ───────────────────────────────────────────────
+create table if not exists banners (
+  id text primary key,
+  title text not null default '',
+  subtitle text not null default '',
+  image text not null,
+  tag text not null default 'Shop Now',
+  color text not null default '#FFE2E7',
+  type text not null default 'new_item',
+  promo_code text,
+  product_id text references products(id),
+  notice_text text,
+  link text,
+  active boolean not null default true,
+  sort_order integer not null default 0,
+  created_at timestamptz not null default now()
+);
+
 -- ─── Reviews ────────────────────────────────────────────────
 create table if not exists reviews (
   id text primary key,
@@ -63,6 +82,13 @@ create table if not exists profiles (
   id uuid primary key references auth.users(id),
   name text,
   contact text,
+  email text,
+  is_admin boolean not null default false,
+  district text,
+  gps_lat double precision,
+  gps_lng double precision,
+  location_address text,
+  location_verified boolean not null default false,
   created_at timestamptz not null default now()
 );
 
@@ -70,6 +96,7 @@ create table if not exists profiles (
 alter table products enable row level security;
 alter table orders enable row level security;
 alter table gallery_items enable row level security;
+alter table banners enable row level security;
 alter table reviews enable row level security;
 alter table profiles enable row level security;
 
@@ -83,6 +110,9 @@ create policy "Admin update orders" on orders for update using (auth.role() = 'a
 create policy "Public read gallery" on gallery_items for select using (true);
 create policy "Admin manage gallery" on gallery_items for all using (auth.role() = 'authenticated');
 
+create policy "Public read banners" on banners for select using (active = true);
+create policy "Admin manage banners" on banners for all using (auth.role() = 'authenticated');
+
 create policy "Public read approved reviews" on reviews for select using (approved = true);
 create policy "Auth insert review" on reviews for insert with check (auth.uid() = user_id);
 create policy "Admin manage reviews" on reviews for all using (auth.role() = 'authenticated');
@@ -94,6 +124,8 @@ create policy "Users update own profile" on profiles for all using (auth.uid() =
 insert into storage.buckets (id, name, public) values ('product-images', 'product-images', true) on conflict do nothing;
 insert into storage.buckets (id, name, public) values ('payment-screenshots', 'payment-screenshots', false) on conflict do nothing;
 insert into storage.buckets (id, name, public) values ('gallery', 'gallery', true) on conflict do nothing;
+insert into storage.buckets (id, name, public) values ('banner-images', 'banner-images', true) on conflict do nothing;
+insert into storage.buckets (id, name, public) values ('review-images', 'review-images', true) on conflict do nothing;
 
 create policy "Public read product images" on storage.objects for select using (bucket_id = 'product-images');
 create policy "Auth upload product images" on storage.objects for insert with check (bucket_id = 'product-images');
@@ -101,6 +133,10 @@ create policy "Auth upload payment screenshots" on storage.objects for insert wi
 create policy "Admin read payment screenshots" on storage.objects for select using (bucket_id = 'payment-screenshots' and auth.role() = 'authenticated');
 create policy "Public read gallery images" on storage.objects for select using (bucket_id = 'gallery');
 create policy "Auth upload gallery images" on storage.objects for insert with check (bucket_id = 'gallery');
+create policy "Public read banner images" on storage.objects for select using (bucket_id = 'banner-images');
+create policy "Auth upload banner images" on storage.objects for insert with check (bucket_id = 'banner-images');
+create policy "Public read review images" on storage.objects for select using (bucket_id = 'review-images');
+create policy "Auth upload review images" on storage.objects for insert with check (bucket_id = 'review-images');
 
 -- ─── App Settings (Location / Delivery Zone feature) ─────────
 create table if not exists app_settings (
@@ -115,6 +151,8 @@ insert into app_settings (key, value) values
   ('allowed_districts', '["কুমিল্লা"]'),
   ('delivery_zones_enabled', 'true'),
   ('out_of_zone_message', '"আমরা এখনো আপনার এলাকায় ডেলিভারি দিচ্ছি না। অর্ডার করতে WhatsApp এ যোগাযোগ করুন।"')
+  ,('site_settings', '{}'::jsonb)
+  ,('admin_settings', '{}'::jsonb)
 on conflict (key) do nothing;
 
 alter table orders

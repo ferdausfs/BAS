@@ -41,15 +41,16 @@ export default function ProductScreen() {
       if (reviewImageFile) {
         imageUrl = await uploadReviewImage(reviewImageFile);
       }
+      if (!user?.id) return;
       const review: Review = {
         id: `r-${Date.now()}`,
         product_id: product.id,
-        user_id: user?.id,
-        user_name: user?.name || 'Anonymous',
+        user_id: user.id,
+        user_name: user.name || 'Anonymous',
         rating: reviewRating,
         comment: reviewComment.trim(),
         image: imageUrl || undefined,
-        approved: true,
+        approved: false,
         created_at: new Date().toISOString(),
       };
       await saveReview(review);
@@ -360,10 +361,11 @@ export default function ProductScreen() {
           <h2 className="font-display text-[17px] font-bold text-ink">Reviews</h2>
           {!showReviewForm && (
             <button
-              onClick={() => setShowReviewForm(true)}
-              className="rounded-xl bg-ink-50 px-3 py-1.5 text-[11px] font-bold text-ink"
+              onClick={() => user && setShowReviewForm(true)}
+              disabled={!user}
+              className="rounded-xl bg-ink-50 px-3 py-1.5 text-[11px] font-bold text-ink disabled:opacity-50"
             >
-              + Write a review
+              {user ? '+ Write a review' : 'Sign in to review'}
             </button>
           )}
         </div>
@@ -372,7 +374,7 @@ export default function ProductScreen() {
         {reviewSuccess && (
           <div className="mb-3 flex items-center gap-2 rounded-2xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-[12px] text-emerald-700 font-semibold">
             <CheckCircle2 className="h-4 w-4" />
-            Review submitted! Thank you for your feedback.
+            Review submitted! It will appear after admin approval.
           </div>
         )}
 

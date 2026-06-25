@@ -10,7 +10,7 @@ export function WishlistScreen() {
   const { add } = useCart();
   const { products } = useProducts();
 
-  const items = products.filter((p) => wishlist.includes(p.id));
+  const items = products.filter((p) => (p.approved ?? true) && wishlist.includes(p.id));
 
   return (
     <div className="flex flex-col h-full bg-cream">

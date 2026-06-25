@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
+import { supabase } from '../lib/supabase';
+import { isSupabaseConfigured } from '../lib/utils';
 import { X, Plus, Trash2, Edit3, Check, Download, RefreshCw, Star, Image as ImageIcon, Users, MapPin, Clock, CheckCircle2, ChefHat, Package, Truck, PartyPopper, Cake, Lock } from 'lucide-react';
 import { useProducts } from '../hooks/useProducts';
 import { useOrdersHook } from '../hooks/useOrders';
@@ -147,6 +149,21 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
 
   const ORDER_STATUSES: Order['status'][] = ['placed', 'confirmed', 'baking', 'ready', 'out', 'delivered', 'cancelled'];
   const filteredOrders = orderFilter === 'all' ? safeOrders.filter(Boolean) : safeOrders.filter((o) => o && o.status === orderFilter);
+
+  const openPaymentScreenshot = async (pathOrUrl?: string) => {
+    if (!pathOrUrl) return;
+    if (pathOrUrl.startsWith('data:') || pathOrUrl.startsWith('http')) {
+      window.open(pathOrUrl, '_blank');
+      return;
+    }
+    if (!isSupabaseConfigured()) return;
+    const { data, error } = await supabase.storage.from('payment-screenshots').createSignedUrl(pathOrUrl, 60);
+    if (error || !data?.signedUrl) {
+      console.warn('Payment screenshot open failed:', error?.message);
+      return;
+    }
+    window.open(data.signedUrl, '_blank');
+  };
   const topProducts = Object.entries(
     safeOrders.filter(Boolean).reduce<Record<string, number>>((acc, o) => {
       if (o.items) {
@@ -324,6 +341,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                   {o.customer?.email && <p><span className="font-bold text-ink">Email:</span> {o.customer.email}</p>}
                   <p><span className="font-bold text-ink">Address:</span> {o.customer?.address || 'N/A'}, {o.customer?.city || ''}</p>
                   <p><span className="font-bold text-ink">Delivery:</span> {o.delivery?.date || ''} · {o.delivery?.time || ''}</p>
+                  <p><span className="font-bold text-ink">Bill:</span> {formatINR(o.subtotal || 0)} - {formatINR(o.discount || 0)} + {formatINR(o.deliveryFee || 0)} = {formatINR(o.total || 0)}</p>
                 </div>
 
                 <div className="mt-2 space-y-1.5">
@@ -356,7 +374,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                   ))}
                 </div>
 
-                <div className="mt-3 flex gap-2">
+                <div className="mt-3 flex gap-2 flex-wrap">
                   <a
                     href={waLink(o.customer?.phone || safeSettings.whatsappNumber, `Hello ${o.customer?.name || 'Customer'}, your Bake Art Style order #${o.id || 'N/A'} is now ${o.status || 'placed'}.`)}
                     target="_blank"
@@ -365,6 +383,14 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                   >
                     WhatsApp customer
                   </a>
+                  {o.paymentScreenshot && (
+                    <button
+                      onClick={() => void openPaymentScreenshot(o.paymentScreenshot)}
+                      className="rounded-xl bg-amber-50 px-3 py-2 text-xs font-bold text-amber-700"
+                    >
+                      Payment proof
+                    </button>
+                  )}
                   <button
                     onClick={() => navigator.clipboard?.writeText(o.id)}
                     className="rounded-xl bg-ink/5 px-3 py-2 text-xs font-bold text-ink/55"
@@ -720,7 +746,6 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                   <p className="text-[10px] text-ink/40">{p.occasion || 'birthday'}</p>
                 </div>
                 <div className="flex flex-col gap-1">
-                  {/* In Stock toggle */}
                   <button
                     onClick={async () => {
                       const wasOutOfStock = p.inStock === false;
@@ -739,6 +764,14 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                     }`}
                   >
                     {(p.inStock ?? true) ? 'In Stock' : 'Out of Stock'}
+                  </button>
+                  <button
+                    onClick={() => void saveProduct({ ...p, approved: !(p.approved ?? true) })}
+                    className={`rounded-lg px-2 py-1 text-[10px] font-bold transition ${
+                      (p.approved ?? true) ? 'bg-blue-50 text-blue-600' : 'bg-orange-50 text-orange-600'
+                    }`}
+                  >
+                    {(p.approved ?? true) ? 'Approved' : 'Hidden'}
                   </button>
                   <button onClick={() => setEditProduct(p)} className="w-8 h-8 rounded-xl bg-ink/5 flex items-center justify-center">
                     <Edit3 className="w-3.5 h-3.5 text-ink/60" />

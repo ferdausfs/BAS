@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { ls, isSupabaseConfigured, fileToBase64, safeArray } from '../lib/utils';
 import type { GalleryItem } from '../types';
@@ -24,6 +24,10 @@ export function useGallery() {
     } catch (e) { console.warn('Gallery fetch failed:', e); }
     finally { setLoading(false); }
   }, []);
+
+  useEffect(() => {
+    void fetchGallery();
+  }, [fetchGallery]);
 
   const saveGalleryItem = useCallback(async (item: GalleryItem) => {
     const updated = gallery.find((g) => g.id === item.id)

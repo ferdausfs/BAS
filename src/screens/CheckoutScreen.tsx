@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { ArrowLeft, MapPin, Clock, Wallet, Check, Shield, Navigation, Loader2, Phone, Banknote, ShoppingCart, Gift, Users } from 'lucide-react';
+import { ArrowLeft, MapPin, Clock, Wallet, Check, Shield, Navigation, Loader2, Phone, Banknote, ShoppingCart, Gift, Users, Image as ImageIcon, X } from 'lucide-react';
 import {
   useCart, useOrders, useUI, formatINR,
   cartSubtotal, standardDeliveryFee,
@@ -12,6 +12,7 @@ import {
   pushReferralReward,
 } from '../lib/store';
 import { supabase } from '../lib/supabase';
+import { isSupabaseConfigured } from '../lib/utils';
 import { LocationGate } from '../components/LocationGate';
 
 const PAYMENTS = [
@@ -40,7 +41,7 @@ export default function CheckoutScreen({ onBack }: Props) {
   const { items, clear } = useCart();
   const { placeOrder, orders } = useOrders();
   const { back, go, promoDiscount, pendingLoyaltyRedeem } = useUI();
-  const { verified: locationVerified, district: detectedDistrict } = useLocation();
+  const { verified: locationVerified, district: detectedDistrict, lat: locationLat, lng: locationLng } = useLocation();
   const user = useAuthStore((s) => s.user);
 
   // Referral
@@ -61,6 +62,11 @@ export default function CheckoutScreen({ onBack }: Props) {
     }
     if (!user) {
       setReferralError("Referral bonus পেতে আগে sign in করো");
+      return;
+    }
+
+    if (!isSupabaseConfigured()) {
+      setReferralError("Referral validation requires Supabase setup");
       return;
     }
 
@@ -93,9 +99,13 @@ export default function CheckoutScreen({ onBack }: Props) {
     }
   };
 
-  const [showLocationGate, setShowLocationGate] = useState(!locationVerified);
+  const [showLocationGate, setShowLocationGate] = useState(false);
   const [locating, setLocating] = useState(false);
   const [locateError, setLocateError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
+  const [paymentScreenshotFile, setPaymentScreenshotFile] = useState<File | null>(null);
+  const [paymentScreenshotPreview, setPaymentScreenshotPreview] = useState('');
   const [giftMode, setGiftMode] = useState(false);
   const [gift, setGift] = useState({ message: '', hidePrice: false, wrap: false, recipientName: '', recipientPhone: '' });
 
@@ -116,6 +126,15 @@ export default function CheckoutScreen({ onBack }: Props) {
         const next = { ...prev };
         if (!next.name && user.name) {
           next.name = user.name;
+        }
+        if (!next.phone && user.contact) {
+          next.phone = user.contact;
+        }
+        if (!next.address && user.locationAddress) {
+          next.address = user.locationAddress;
+        }
+        if (user.district) {
+          next.district = user.district;
         }
 
         const recentOrder = orders.find(
@@ -148,7 +167,11 @@ export default function CheckoutScreen({ onBack }: Props) {
   const { settings } = useSettingsStore();
   const currentDeliveryFee = settings.deliveryFee !== undefined ? settings.deliveryFee : standardDeliveryFee;
   const currentFreeThreshold = settings.freeDeliveryThreshold !== undefined ? settings.freeDeliveryThreshold : 999;
+  const requiresLocationGate = !!user && !user.isAdmin && settings.deliveryZonesEnabled !== false && !locationVerified && !user.locationVerified;
 
+  useEffect(() => {
+    setShowLocationGate(requiresLocationGate);
+  }, [requiresLocationGate]);
 
   const { subtotal, delivery, promoDiscountAmount, walletDiscount, discountAmount, total } = useMemo(() => {
     const sub = cartSubtotal(items);
@@ -206,31 +229,104 @@ export default function CheckoutScreen({ onBack }: Props) {
     }
   };
 
-  const handleSubmit = () => {
-    if (items.length === 0) return;
-    if (!form.name || !form.phone || !form.address) return;
-    const { settings } = useSettingsStore.getState();
-    const o = placeOrder({
-      items,
-      customer: { name: form.name, phone: form.phone, email: '', address: form.address, city: form.district, pin: '' },
-      delivery: { date: form.date, time: form.time },
-      payment: form.payment,
-      subtotal, deliveryFee: delivery, total,
-      discount: discountAmount,
-      promoCode: promoDiscount > 0 ? settings.promoCode : undefined,
-      loyaltyPointsRedeemed: pendingLoyaltyRedeem > 0 ? pendingLoyaltyRedeem : undefined,
-      gift: giftMode ? gift : undefined,
-    });
-    // Credit the referrer (cross-device) when their code was used on this order
-    if (referralApplied && referralInput.trim()) {
-      void pushReferralReward(referralInput.trim(), {
-        refereeId: user?.id || `guest-${o.id}`,
-        refereeName: form.name || 'Customer',
-        usedAt: Date.now(),
+  const uploadPaymentScreenshot = async (): Promise<string | undefined> => {
+    if (!paymentScreenshotFile) return undefined;
+    if (!isSupabaseConfigured()) {
+      return await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result));
+        reader.onerror = () => reject(new Error('Failed to read screenshot'));
+        reader.readAsDataURL(paymentScreenshotFile);
       });
     }
-    clear();
-    go({ name: 'success', orderId: o.id });
+
+    const ext = paymentScreenshotFile.name.split('.').pop() || 'jpg';
+    const path = `orders/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    const { data, error } = await supabase.storage
+      .from('payment-screenshots')
+      .upload(path, paymentScreenshotFile, { upsert: false });
+
+    if (error || !data) {
+      throw new Error(error?.message || 'Screenshot upload failed');
+    }
+
+    return path;
+  };
+
+  const handleSubmit = async () => {
+    if (items.length === 0) return;
+    if (!form.name || !form.phone || !form.address) {
+      setSubmitError('নাম, ফোন এবং ঠিকানা পূরণ করুন।');
+      return;
+    }
+    if (requiresLocationGate && !locationVerified) {
+      setSubmitError('Checkout করার আগে location verify করুন।');
+      setShowLocationGate(true);
+      return;
+    }
+    if (form.payment !== 'cash' && !paymentScreenshotFile) {
+      setSubmitError('অনলাইন পেমেন্টের জন্য screenshot আপলোড করুন।');
+      return;
+    }
+
+    setSubmitting(true);
+    setSubmitError('');
+
+    try {
+      const { settings } = useSettingsStore.getState();
+      const paymentScreenshot = await uploadPaymentScreenshot();
+
+      const o = placeOrder({
+        items,
+        customer: {
+          name: form.name,
+          phone: form.phone,
+          email: user?.email || '',
+          address: form.address,
+          city: form.district,
+          pin: '',
+        },
+        delivery: { date: form.date, time: form.time },
+        payment: form.payment,
+        subtotal,
+        deliveryFee: delivery,
+        total,
+        discount: Math.round(discountAmount),
+        promoCode: promoDiscount > 0 ? settings.promoCode : undefined,
+        loyaltyPointsRedeemed: pendingLoyaltyRedeem > 0 ? pendingLoyaltyRedeem : undefined,
+        paymentScreenshot,
+        gpsLat: locationLat,
+        gpsLng: locationLng,
+        locationAddress: form.address,
+        locationVerified: locationVerified,
+        gift: giftMode ? gift : undefined,
+      });
+
+      if (isSupabaseConfigured() && user?.id) {
+        await supabase.from('profiles').upsert({
+          id: user.id,
+          name: form.name,
+          contact: form.phone,
+          email: user.email,
+          district: form.district,
+          location_address: form.address,
+        }, { onConflict: 'id' });
+      }
+
+      if (referralApplied && referralInput.trim()) {
+        void pushReferralReward(referralInput.trim(), {
+          refereeId: user?.id || `guest-${o.id}`,
+          refereeName: form.name || 'Customer',
+          usedAt: Date.now(),
+        });
+      }
+      clear();
+      go({ name: 'success', orderId: o.id });
+    } catch (error) {
+      setSubmitError(error instanceof Error ? error.message : 'অর্ডার সাবমিট করা যায়নি। আবার চেষ্টা করুন।');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleBack = onBack ?? back;
@@ -461,6 +557,41 @@ export default function CheckoutScreen({ onBack }: Props) {
             ))}
           </div>
 
+          {form.payment !== 'cash' && (
+            <div className="mt-4 rounded-2xl border border-ink/8 bg-cream p-3">
+              <div className="mb-2 text-[12px] font-bold text-ink">Payment screenshot</div>
+              <div className="text-[10.5px] text-ink-200">Upload your bKash/Nagad payment proof so admin can verify the order.</div>
+              {paymentScreenshotPreview ? (
+                <div className="mt-3 relative inline-block">
+                  <img src={paymentScreenshotPreview} alt="payment screenshot" className="h-24 w-24 rounded-xl object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => { setPaymentScreenshotFile(null); setPaymentScreenshotPreview(''); }}
+                    className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-ink text-white"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              ) : (
+                <label className="mt-3 flex h-20 w-20 cursor-pointer items-center justify-center rounded-xl border-2 border-dashed border-ink/20 bg-white hover:border-coral">
+                  <ImageIcon className="h-6 w-6 text-ink-200" strokeWidth={1.5} />
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      setPaymentScreenshotFile(file);
+                      setPaymentScreenshotPreview(URL.createObjectURL(file));
+                      setSubmitError('');
+                    }}
+                  />
+                </label>
+              )}
+            </div>
+          )}
+
           {/* Referral Code */}
           <div className="mt-4 pt-4 border-t border-ink/5">
             <div className="flex items-center gap-2 mb-2.5">
@@ -539,18 +670,19 @@ export default function CheckoutScreen({ onBack }: Props) {
 
       {/* Sticky CTA */}
       <div className="absolute right-0 bottom-0 left-0 z-30 border-t border-ink-50/80 bg-white/95 px-5 pt-3 pb-6 backdrop-blur-xl">
+        {submitError && <div className="mb-2 text-[11px] font-semibold text-red-500">{submitError}</div>}
         <div className="flex items-center gap-3">
           <div>
             <div className="text-[10px] font-bold tracking-wider text-ink-200 uppercase">পেমেন্ট</div>
             <div className="font-display text-[20px] font-bold tabular text-ink">{formatINR(total)}</div>
           </div>
           <button
-            onClick={handleSubmit}
-            disabled={!form.name || !form.phone || !form.address}
+            onClick={() => void handleSubmit()}
+            disabled={!form.name || !form.phone || !form.address || submitting}
             className="btn-primary ml-auto flex h-14 flex-1 items-center justify-center gap-2 rounded-2xl text-[14px] font-bold tracking-tight disabled:opacity-50"
           >
-            অর্ডার করুন
-            <Check className="h-[18px] w-[18px]" strokeWidth={2.5} />
+            {submitting ? 'Submitting...' : 'অর্ডার করুন'}
+            {submitting ? <Loader2 className="h-[18px] w-[18px] animate-spin" strokeWidth={2.5} /> : <Check className="h-[18px] w-[18px]" strokeWidth={2.5} />}
           </button>
         </div>
       </div>
