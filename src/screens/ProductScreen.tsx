@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Heart, Star, ShoppingBag, Check, Share2, Truck, Sparkles, Shield, Cake, Pencil, CheckCircle2, Camera, X } from 'lucide-react';
+import { ArrowLeft, Heart, Star, ShoppingBag, Check, Share2, Truck, Sparkles, Shield, Cake, Pencil, CheckCircle2, Camera, X, AlertTriangle, Bell } from 'lucide-react';
 import { useUI, useCart, useUser, useAuthStore, formatINR } from '../lib/store';
 import { useProducts } from '../hooks/useProducts';
 import { useReviews } from '../hooks/useReviews';
@@ -538,7 +538,10 @@ export default function ProductScreen() {
             </button>
           ) : (
             <div className="flex flex-1 ml-auto flex-col items-center gap-2">
-              <div className="text-[11px] text-ink/50 font-semibold">⚠️ Currently out of stock</div>
+              <div className="flex items-center gap-1 text-[11px] text-ink/50 font-semibold">
+                <AlertTriangle size={12} />
+                Currently out of stock
+              </div>
               <button
                 onClick={() => {
                   const key = `bakeart-alerts`;
@@ -548,13 +551,14 @@ export default function ProductScreen() {
                     ls.set(key, [...alerts, { productId: product.id, productName: product.name, date: Date.now() }]);
                   }
                   useUI.getState().addNotification(
-                    '🔔 Alert set!',
+                    'Alert set!',
                     `We'll notify you when ${product.name} is back in stock.`
                   );
                 }}
                 className="btn-primary flex w-full items-center justify-center gap-2 rounded-2xl py-4 text-[15px] font-bold"
               >
-                🔔 Notify Me When Available
+                <Bell size={16} />
+                Notify Me When Available
               </button>
             </div>
           )}

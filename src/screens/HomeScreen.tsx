@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
-import { ArrowRight, Sparkles, ChevronLeft, ChevronRight, Megaphone, RefreshCw } from 'lucide-react';
+import { ArrowRight, Sparkles, ChevronLeft, ChevronRight, Megaphone, RefreshCw, Cake } from 'lucide-react';
 import { useUI, useUser, useOrders, useAuthStore } from '../lib/store';
 import { ls } from '../lib/utils';
 import { categories } from '../lib/data';
@@ -85,7 +85,7 @@ export default function HomeScreen({
         {upcoming && (
           <div className="mx-5 mb-3 flex items-center gap-3 rounded-2xl bg-gradient-to-r from-coral/10 to-blush-100 px-4 py-3 anim-up"
             style={{ boxShadow: '0 2px 8px -4px rgba(242,94,115,.2)' }}>
-            <span className="text-2xl flex-shrink-0">🎂</span>
+            <Cake size={22} className="flex-shrink-0 text-coral" />
             <div className="flex-1 min-w-0">
               <div className="text-[12px] font-bold text-ink truncate">{upcoming.name} {upcoming.daysLeft === 0 ? 'is today!' : `in ${upcoming.daysLeft} day${upcoming.daysLeft > 1 ? 's' : ''}!`}</div>
               <div className="text-[11px] text-ink/60">Order a special cake now</div>

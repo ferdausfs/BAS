@@ -186,7 +186,7 @@ export function useOrdersHook() {
             fetchOrders();
 
             if ('Notification' in window && Notification.permission === 'granted') {
-              new Notification('🎂 New Order!', {
+              new Notification('New Order!', {
                 body: 'A new order has been placed.',
               });
             }

@@ -27,6 +27,7 @@ export default function App() {
 
   const [authOpen, setAuthOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [settingsLoading, setSettingsLoading] = useState(true);
 
   useEffect(() => {
@@ -80,7 +81,7 @@ export default function App() {
     view.name === 'admin' ? (view.tab ?? 'dashboard') : '',
   ].join('-');
 
-  const showTabBar = view.name === 'tabs' && !chatOpen && !authOpen && !notificationsOpen;
+  const showTabBar = view.name === 'tabs' && !chatOpen && !authOpen && !notificationsOpen && !profileModalOpen;
 
   return (
     <PhoneFrame>
@@ -106,7 +107,11 @@ export default function App() {
             )
           )}
           {view.name === 'tabs' && activeTab === 'profile'    && (
-            <ProfileScreen onAuthOpen={() => setAuthOpen(true)} isAdmin={isAdminUser} />
+            <ProfileScreen
+              onAuthOpen={() => setAuthOpen(true)}
+              isAdmin={isAdminUser}
+              onModalChange={setProfileModalOpen}
+            />
           )}
           {view.name === 'product'   && <ProductScreen />}
           {view.name === 'customize' && <CustomizeScreen />}

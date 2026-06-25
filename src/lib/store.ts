@@ -164,7 +164,7 @@ export const useUI = create<UIState>((set, get) => ({
   incrementNewOrders: () => set((s) => ({
     newOrderCount: s.newOrderCount + 1,
     notifications: [
-      { id: `nt-${Date.now()}`, title: '🎂 New order', body: 'A new cake order has been placed.', createdAt: Date.now(), read: false },
+      { id: `nt-${Date.now()}`, title: 'New order', body: 'A new cake order has been placed.', createdAt: Date.now(), read: false },
       ...s.notifications,
     ].slice(0, 30),
   })),
@@ -254,7 +254,7 @@ export const useOrders = create<OrderState>()(
         }
 
         set((s) => ({ orders: [o, ...s.orders] }));
-        useUI.getState().addNotification('✅ Order placed', `Order #${o.id} has been placed successfully.`);
+        useUI.getState().addNotification('Order placed', `Order #${o.id} has been placed successfully.`);
         useLoyalty.getState().addPendingPoints(o.id, o.total);
 
         // If user redeemed loyalty points in cart, deduct them now (track per order)
@@ -295,7 +295,7 @@ export const useOrders = create<OrderState>()(
           orders: s.orders.map((o) => (o.id === id ? { ...o, status } : o)),
         }));
 
-        useUI.getState().addNotification('📦 Order updated', `Order #${id} status changed to ${status}.`);
+        useUI.getState().addNotification('Order updated', `Order #${id} status changed to ${status}.`);
 
         if (status === 'confirmed') {
           useLoyalty.getState().confirmPoints(id);
@@ -304,7 +304,7 @@ export const useOrders = create<OrderState>()(
           useLoyalty.getState().cancelPoints(id);
           const refunded = useLoyalty.getState().refundRedeemedPoints(id);
           if (refunded > 0) {
-            useUI.getState().addNotification('↩️ Points refunded', `${refunded} loyalty points refunded for cancelled order #${id}.`);
+            useUI.getState().addNotification('Points refunded', `${refunded} loyalty points refunded for cancelled order #${id}.`);
           }
         }
 

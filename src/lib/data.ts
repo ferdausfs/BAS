@@ -1,10 +1,10 @@
 import type { Product, Category, Banner } from '../types';
 
 export const categories: Category[] = [
-  { id: 'birthday',    name: 'Birthday',    icon: '🎂', color: '#FFE2E7' },
-  { id: 'anniversary', name: 'Anniversary', icon: '❤️', color: '#FFE2E7' },
-  { id: 'cupcakes',    name: 'Cupcakes',    icon: '🧁', color: '#FFE2E7' },
-  { id: 'gift',        name: 'Custom',      icon: '🎁', color: '#FFE2E7' },
+  { id: 'birthday',    name: 'Birthday',    icon: 'cake', color: '#FFE2E7' },
+  { id: 'anniversary', name: 'Anniversary', icon: 'heart', color: '#FFE2E7' },
+  { id: 'cupcakes',    name: 'Cupcakes',    icon: 'cupcake', color: '#FFE2E7' },
+  { id: 'gift',        name: 'Custom',      icon: 'gift', color: '#FFE2E7' },
 ];
 
 const weights = [
@@ -149,22 +149,22 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   geminiApiKey: '',
   whatsappNumber: '8801XXXXXXXXX',
   upiId: '01XXXXXXXXX',
-  promoTitle: '🎁 Special offer! Order today',
+  promoTitle: 'Special offer! Order today',
   deliveryEstimate: '2–4 ঘণ্টা',
   coupons: [],
   allowedZones: ['Comilla', 'Dhaka', 'Chittagong', 'Sylhet', 'Rajshahi', 'Khulna', 'Mymensingh', 'Barishal'],
   customAddons: [
-    { id: 'candles',    emoji: '🕯️', label: 'Candles',              price: 50,  category: 'extras' },
-    { id: 'topper',     emoji: '✨', label: 'Cake Topper',          price: 120, category: 'decoration' },
-    { id: 'photo',      emoji: '🖼️', label: 'Photo Print',          price: 180, category: 'decoration' },
-    { id: 'flowers_r',  emoji: '🌸', label: 'Real Flowers',         price: 250, category: 'flowers' },
-    { id: 'flowers_a',  emoji: '💐', label: 'Artificial Flowers',   price: 120, category: 'flowers' },
-    { id: 'choco',      emoji: '🍫', label: 'Extra Chocolate',      price: 100, category: 'extras' },
-    { id: 'box',        emoji: '🎁', label: 'Premium Box',          price: 80,  category: 'extras' },
-    { id: 'fondant',    emoji: '🎨', label: 'Fondant Coating',      price: 200, category: 'decoration' },
-    { id: 'theme_a',    emoji: '🎭', label: 'Artificial Theme',     price: 300, category: 'theme' },
-    { id: 'knife',      emoji: '🔪', label: 'Knife & Server Set',   price: 150, category: 'extras' },
-    { id: 'choco_drip', emoji: '🫗', label: 'Chocolate Drip',       price: 130, category: 'decoration' },
+    { id: 'candles',    emoji: '', label: 'Candles',              price: 50,  category: 'extras' },
+    { id: 'topper',     emoji: '', label: 'Cake Topper',          price: 120, category: 'decoration' },
+    { id: 'photo',      emoji: '', label: 'Photo Print',          price: 180, category: 'decoration' },
+    { id: 'flowers_r',  emoji: '', label: 'Real Flowers',         price: 250, category: 'flowers' },
+    { id: 'flowers_a',  emoji: '', label: 'Artificial Flowers',   price: 120, category: 'flowers' },
+    { id: 'choco',      emoji: '', label: 'Extra Chocolate',      price: 100, category: 'extras' },
+    { id: 'box',        emoji: '', label: 'Premium Box',          price: 80,  category: 'extras' },
+    { id: 'fondant',    emoji: '', label: 'Fondant Coating',      price: 200, category: 'decoration' },
+    { id: 'theme_a',    emoji: '', label: 'Artificial Theme',     price: 300, category: 'theme' },
+    { id: 'knife',      emoji: '', label: 'Knife & Server Set',   price: 150, category: 'extras' },
+    { id: 'choco_drip', emoji: '', label: 'Chocolate Drip',       price: 130, category: 'decoration' },
   ],
   defaultPriceUnit: 'pound' as const,
 };
