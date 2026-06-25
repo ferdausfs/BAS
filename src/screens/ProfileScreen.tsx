@@ -8,7 +8,8 @@ import {
 import { useUI, useUser, useOrders, useCart, useAuthStore, useWallet, getReferralCode, WALLET_MAX_REDEEM, claimReferralRewards, WALLET_REFERRAL_BONUS } from '../lib/store';
 import { useProducts } from '../hooks/useProducts';
 import { useAuth } from '../hooks/useAuth';
-import { ls } from '../lib/utils';
+import { supabase } from '../lib/supabase';
+import { isSupabaseConfigured, ls } from '../lib/utils';
 import BrandLogo from '../components/BrandLogo';
 import WalletHistoryModal from '../components/WalletHistoryModal';
 import { ChatBot } from '../components/ChatBot';
@@ -137,6 +138,8 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
 
   const [contactOpen, setContactOpen] = useState(false);
   const [customerOpen, setCustomerOpen] = useState(false);
+  const [showAdmin, setShowAdmin] = useState(false);
+  const [logoTapCount, setLogoTapCount] = useState(0);
 
   const [savedProfile, setSavedProfile] = useState<CustomerProfile>(() =>
     loadCustomerProfile(user?.id, user?.name ?? '')
@@ -176,9 +179,16 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
 
   useEffect(() => {
     const next = loadCustomerProfile(user?.id, user?.name ?? '');
-    setSavedProfile(next);
-    setDraftProfile(next);
-  }, [user?.id, user?.name]);
+    const merged = {
+      ...next,
+      name: next.name || user?.name || '',
+      phone: next.phone || user?.contact || '',
+      address: next.address || user?.locationAddress || '',
+      district: next.district || user?.district || 'Comilla',
+    };
+    setSavedProfile(merged);
+    setDraftProfile(merged);
+  }, [user?.id, user?.name, user?.contact, user?.district, user?.locationAddress]);
 
   useEffect(() => {
     setChatOpen(contactOpen || customerOpen);
@@ -239,7 +249,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
     setCustomerOpen(true);
   };
 
-  const handleSaveCustomer = useCallback(() => {
+  const handleSaveCustomer = useCallback(async () => {
     const next: CustomerProfile = {
       name: draftProfile.name.trim(),
       phone: draftProfile.phone.trim(),
@@ -250,8 +260,51 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
 
     saveCustomerProfile(user?.id, next);
     setSavedProfile(next);
+
+    if (user) {
+      useAuthStore.getState().login({
+        ...user,
+        name: next.name || user.name,
+        contact: next.phone,
+        district: next.district,
+        locationAddress: next.address,
+      });
+    }
+
+    if (isSupabaseConfigured() && user?.id) {
+      try {
+        const { error } = await supabase.from('profiles').upsert({
+          id: user.id,
+          name: next.name,
+          contact: next.phone,
+          email: user.email,
+          district: next.district,
+          location_address: next.address,
+        }, { onConflict: 'id' });
+        if (error) throw error;
+      } catch (error) {
+        console.warn('Profile save failed:', error);
+      }
+    }
+
     setCustomerOpen(false);
-  }, [draftProfile, user?.id]);
+  }, [draftProfile, user]);
+
+
+  const handleLogoTap = () => {
+    setLogoTapCount((count) => {
+      const next = count + 1;
+      if (next >= 5) {
+        setShowAdmin(true);
+        useUI.getState().addNotification(
+          isAdmin ? 'Admin shortcut unlocked' : 'Admin access required',
+          isAdmin ? 'Admin dashboard is now visible below.' : 'This account is not marked as admin.'
+        );
+        return 0;
+      }
+      return next;
+    });
+  };
 
   const menu = [
     {
@@ -572,7 +625,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
         </div>
 
         {/* Admin Dashboard — only visible to admin users */}
-        {isAdmin && user && (
+        {showAdmin && isAdmin && user && (
           <div className="px-4 pb-6 anim-up">
             <div className="flex items-center gap-2 mb-3 mt-4">
               <Settings className="h-5 w-5 text-ink" strokeWidth={2} />
@@ -585,12 +638,12 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
           </div>
         )}
 
-        <div className="mt-6 flex items-center justify-center gap-2 text-ink-200">
+        <button type="button" onClick={handleLogoTap} className="mt-6 flex w-full items-center justify-center gap-2 text-ink-200 active:scale-[.99]">
           <BrandLogo size={18} />
           <span className="text-[11px] font-medium tracking-wider uppercase">
             Bake Art Style · v2.0
           </span>
-        </div>
+        </button>
       </div>
 
       {customerOpen && (
@@ -693,7 +746,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
               </div>
 
               <button
-                onClick={handleSaveCustomer}
+                onClick={() => void handleSaveCustomer()}
                 className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-coral text-[13px] font-bold text-white"
               >
                 <Save className="h-4 w-4" />

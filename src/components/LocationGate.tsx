@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { MapPin, CheckCircle2, AlertCircle, Loader2, Navigation, MessageCircle, X, Cake } from 'lucide-react';
-import { useLocation, useSettingsStore } from '../lib/store';
-import { waLink } from '../lib/utils';
+import { supabase } from '../lib/supabase';
+import { useAuthStore, useLocation, useSettingsStore } from '../lib/store';
+import { isSupabaseConfigured, waLink } from '../lib/utils';
 import { matchZone } from '../lib/zones';
+import { useModalDepth } from '../hooks/useModalDepth';
 
 type Status = 'idle' | 'requesting' | 'detecting' | 'allowed' | 'out_of_zone' | 'error';
 
@@ -16,6 +18,9 @@ export function LocationGate({ onDismiss }: Props) {
   const [errorMsg, setErrorMsg] = useState('');
   const { settings } = useSettingsStore();
   const { setLocation } = useLocation();
+  const user = useAuthStore((s) => s.user);
+
+  useModalDepth(true);
 
   const requestLocation = async () => {
     setStatus('requesting');
@@ -40,7 +45,27 @@ export function LocationGate({ onDismiss }: Props) {
 
       setDistrict(matchedZone || city || 'আপনার এলাকা');
       if (matchedZone || settings.deliveryZonesEnabled === false) {
-        setLocation(matchedZone || city || 'Verified area', lat, lng);
+        const verifiedDistrict = matchedZone || city || 'Verified area';
+        setLocation(verifiedDistrict, lat, lng);
+
+        if (isSupabaseConfigured() && user?.id) {
+          const { error } = await supabase.from('profiles').upsert({
+            id: user.id,
+            name: user.name,
+            contact: user.contact || '',
+            email: user.email,
+            district: verifiedDistrict,
+            gps_lat: lat,
+            gps_lng: lng,
+            location_address: addressText,
+            location_verified: true,
+          }, { onConflict: 'id' });
+
+          if (error) {
+            console.warn('Profile location save failed:', error.message);
+          }
+        }
+
         setStatus('allowed');
         setTimeout(onDismiss, 1500);
       } else {

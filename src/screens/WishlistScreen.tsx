@@ -7,7 +7,7 @@ export default function WishlistScreen() {
   const { back, go } = useUI();
   const { wishlist, toggleWish } = useUser();
   const { products } = useProducts();
-  const list = products.filter((p) => wishlist.includes(p.id));
+  const list = products.filter((p) => (p.approved ?? true) && wishlist.includes(p.id));
 
   return (
     <div className="flex h-full flex-col bg-cream">

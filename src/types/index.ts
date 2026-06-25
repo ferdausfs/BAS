@@ -22,6 +22,7 @@ export type Product = {
   priceUnit?: 'kg' | 'pound';
   pricePerUnit?: number;
   inStock?: boolean;
+  approved?: boolean;
 };
 
 export type CartItem = {
@@ -56,6 +57,11 @@ export type Order = {
   discount?: number;
   promoCode?: string;
   loyaltyPointsRedeemed?: number;
+  paymentScreenshot?: string;
+  gpsLat?: number | null;
+  gpsLng?: number | null;
+  locationAddress?: string;
+  locationVerified?: boolean;
   status: 'placed' | 'confirmed' | 'baking' | 'ready' | 'out' | 'delivered' | 'cancelled';
   createdAt: number;
   gift?: {
@@ -75,9 +81,12 @@ export type Banner = {
   tag: string;
   color: string;
   type: 'discount' | 'new_item' | 'notice';
-  promoCode?: string;   // used when type === 'discount'
-  productId?: string;   // used when type === 'new_item'
-  noticeText?: string;  // used when type === 'notice'
+  promoCode?: string;
+  productId?: string;
+  noticeText?: string;
+  active?: boolean;
+  sortOrder?: number;
+  link?: string;
 };
 
 export type Category = {
@@ -87,7 +96,6 @@ export type Category = {
   color: string;
 };
 
-// ── Production Backend Types ──────────────────────────────
 export interface DbProduct {
   id: string;
   name: string;
@@ -101,6 +109,7 @@ export interface DbProduct {
   description: string;
   approved: boolean;
   badges: string[];
+  data?: Product | null;
   created_at?: string;
 }
 
@@ -109,6 +118,13 @@ export interface User {
   name: string;
   email: string;
   avatar?: string;
+  isAdmin?: boolean;
+  contact?: string;
+  district?: string | null;
+  gpsLat?: number | null;
+  gpsLng?: number | null;
+  locationAddress?: string | null;
+  locationVerified?: boolean;
 }
 
 export interface DbOrder {
@@ -128,6 +144,11 @@ export interface DbOrder {
   total: number;
   status: 'placed' | 'pending' | 'confirmed' | 'preparing' | 'delivering' | 'delivered';
   promo_code?: string;
+  district?: string;
+  gps_lat?: number | null;
+  gps_lng?: number | null;
+  location_address?: string | null;
+  location_verified?: boolean;
   created_at: string;
 }
 
@@ -213,6 +234,6 @@ export interface SpecialDate {
   id: string;
   type: 'birthday' | 'anniversary' | 'other';
   name: string;
-  date: string; // "MM-DD"
+  date: string;
   notifiedYear?: number;
 }

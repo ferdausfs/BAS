@@ -1,7 +1,92 @@
-import { useCallback, useState, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { useAuthStore } from '../lib/store';
-import { ls, isSupabaseConfigured } from '../lib/utils';
+import { useAuthStore, useLocation } from '../lib/store';
+import { isSupabaseConfigured, ls } from '../lib/utils';
+import type { User } from '../types';
+
+type ProfileRow = {
+  id: string;
+  name: string | null;
+  contact: string | null;
+  email: string | null;
+  is_admin: boolean | null;
+  district?: string | null;
+  gps_lat?: number | null;
+  gps_lng?: number | null;
+  location_address?: string | null;
+  location_verified?: boolean | null;
+};
+
+const mapSupabaseUser = async (authUser: any): Promise<User> => {
+  const fallbackName = authUser.user_metadata?.full_name || authUser.email?.split('@')[0] || 'User';
+  const fallbackAvatar = authUser.user_metadata?.avatar_url || '';
+
+  let profile: ProfileRow | null = null;
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id, name, contact, email, is_admin, district, gps_lat, gps_lng, location_address, location_verified')
+      .eq('id', authUser.id)
+      .maybeSingle();
+
+    if (error) throw error;
+    profile = data as ProfileRow | null;
+
+    if (!profile || profile.email !== (authUser.email || '')) {
+      await supabase.from('profiles').upsert({
+        id: authUser.id,
+        name: profile?.name || fallbackName,
+        contact: profile?.contact || '',
+        email: authUser.email || profile?.email || '',
+        is_admin: profile?.is_admin || false,
+        district: profile?.district || null,
+        gps_lat: profile?.gps_lat || null,
+        gps_lng: profile?.gps_lng || null,
+        location_address: profile?.location_address || null,
+        location_verified: profile?.location_verified || false,
+      }, { onConflict: 'id' });
+
+      profile = {
+        id: authUser.id,
+        name: profile?.name || fallbackName,
+        contact: profile?.contact || '',
+        email: authUser.email || profile?.email || '',
+        is_admin: profile?.is_admin || false,
+        district: profile?.district || null,
+        gps_lat: profile?.gps_lat || null,
+        gps_lng: profile?.gps_lng || null,
+        location_address: profile?.location_address || null,
+        location_verified: profile?.location_verified || false,
+      };
+    }
+  } catch (error) {
+    console.warn('Profile fetch failed during auth hydration:', error);
+  }
+
+  const nextUser: User = {
+    id: authUser.id,
+    name: profile?.name || fallbackName,
+    email: profile?.email || authUser.email || '',
+    avatar: fallbackAvatar,
+    isAdmin: !!profile?.is_admin,
+    contact: profile?.contact || '',
+    district: profile?.district ?? null,
+    gpsLat: profile?.gps_lat ?? null,
+    gpsLng: profile?.gps_lng ?? null,
+    locationAddress: profile?.location_address ?? null,
+    locationVerified: !!profile?.location_verified,
+  };
+
+  if (nextUser.locationVerified && nextUser.district) {
+    useLocation.getState().setLocation(
+      nextUser.district,
+      nextUser.gpsLat ?? 0,
+      nextUser.gpsLng ?? 0
+    );
+  }
+
+  return nextUser;
+};
 
 export function useAuth() {
   const { user, login, logout } = useAuthStore();
@@ -9,16 +94,30 @@ export function useAuth() {
 
   useEffect(() => {
     if (!isSupabaseConfigured()) return;
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' && session?.user) {
-        const u = session.user;
-        const name = u.user_metadata?.full_name || u.email?.split('@')[0] || 'User';
-        const avatar = u.user_metadata?.avatar_url || '';
-        login({ id: u.id, name, email: u.email || '', avatar });
-      }
+
+    let active = true;
+
+    void supabase.auth.getSession().then(async ({ data }) => {
+      if (!active || !data.session?.user) return;
+      const hydrated = await mapSupabaseUser(data.session.user);
+      if (active) login(hydrated);
     });
-    return () => subscription.unsubscribe();
-  }, [login]);
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session?.user) {
+        logout();
+        return;
+      }
+      void mapSupabaseUser(session.user).then((hydrated) => {
+        if (active) login(hydrated);
+      });
+    });
+
+    return () => {
+      active = false;
+      subscription.unsubscribe();
+    };
+  }, [login, logout]);
 
   const signUp = useCallback(async (email: string, password: string, name: string): Promise<{ needsEmailConfirmation: boolean }> => {
     setLoading(true);
@@ -31,27 +130,36 @@ export function useAuth() {
         });
         if (error) throw new Error(error.message);
         if (data.user) {
-          await supabase.from('profiles').upsert({ id: data.user.id, name, contact: email }, { onConflict: 'id' });
+          await supabase.from('profiles').upsert(
+            {
+              id: data.user.id,
+              name,
+              contact: '',
+              email,
+              is_admin: false,
+            },
+            { onConflict: 'id' }
+          );
           if (!data.session) {
             return { needsEmailConfirmation: true };
-          } else {
-            login({ id: data.user.id, name, email, avatar: '' });
-            return { needsEmailConfirmation: false };
           }
+          const hydrated = await mapSupabaseUser(data.user);
+          login(hydrated);
+          return { needsEmailConfirmation: false };
         }
         return { needsEmailConfirmation: true };
-      } else {
-        const accounts = ls.get<Array<any>>('bakeart-local-accounts', []);
-        const existing = accounts.find((a) => a.email.toLowerCase() === email.toLowerCase());
-        if (existing) {
-          throw new Error('An account with this email already exists. Please sign in instead.');
-        }
-        const id = `local-${Date.now()}`;
-        const newAcc = { id, name, email, password };
-        ls.set('bakeart-local-accounts', [...accounts, newAcc]);
-        login({ id, name, email, avatar: '' });
-        return { needsEmailConfirmation: false };
       }
+
+      const accounts = ls.get<Array<any>>('bakeart-local-accounts', []);
+      const existing = accounts.find((a) => a.email.toLowerCase() === email.toLowerCase());
+      if (existing) {
+        throw new Error('An account with this email already exists. Please sign in instead.');
+      }
+      const id = `local-${Date.now()}`;
+      const newAcc = { id, name, email, password };
+      ls.set('bakeart-local-accounts', [...accounts, newAcc]);
+      login({ id, name, email, avatar: '', isAdmin: false, contact: '' });
+      return { needsEmailConfirmation: false };
     } finally {
       setLoading(false);
     }
@@ -64,19 +172,20 @@ export function useAuth() {
         const { data, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw new Error('Wrong email or password.');
         if (data.user) {
-          const name = data.user.user_metadata?.full_name || email.split('@')[0] || 'User';
-          login({ id: data.user.id, name, email, avatar: '' });
+          const hydrated = await mapSupabaseUser(data.user);
+          login(hydrated);
         }
-      } else {
-        const accounts = ls.get<Array<any>>('bakeart-local-accounts', []);
-        const matched = accounts.find(
-          (a) => a.email.toLowerCase() === email.toLowerCase() && a.password === password
-        );
-        if (!matched) {
-          throw new Error('Wrong email or password.');
-        }
-        login({ id: matched.id, name: matched.name, email, avatar: '' });
+        return;
       }
+
+      const accounts = ls.get<Array<any>>('bakeart-local-accounts', []);
+      const matched = accounts.find(
+        (a) => a.email.toLowerCase() === email.toLowerCase() && a.password === password
+      );
+      if (!matched) {
+        throw new Error('Wrong email or password.');
+      }
+      login({ id: matched.id, name: matched.name, email, avatar: '', isAdmin: false, contact: '' });
     } finally {
       setLoading(false);
     }
@@ -100,4 +209,3 @@ export function useAuth() {
 
   return { user, loading, signUp, signIn, signOut, signInWithGoogle };
 }
-

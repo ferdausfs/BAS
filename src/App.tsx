@@ -23,7 +23,6 @@ import AdminScreen from './screens/AdminScreen';
 export default function App() {
   const { view, tab, modalDepth } = useUI();
   const { user } = useAuthStore();
-  const { settings } = useSettingsStore();
 
   const [authOpen, setAuthOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -60,13 +59,10 @@ export default function App() {
     };
   }, []);
 
-  const normalizeEmail = (email?: string) => email?.trim().toLowerCase() ?? '';
   const isAdminUser = useMemo(() => {
     if (settingsLoading) return false;
-    const userEmail = normalizeEmail(user?.email);
-    const allowedAdminEmails = [settings.adminEmail, 'umuhammadiswa@gmail.com'];
-    return !!userEmail && allowedAdminEmails.some((email) => normalizeEmail(email) === userEmail);
-  }, [user?.email, settings.adminEmail, settingsLoading]);
+    return !!user?.isAdmin;
+  }, [user?.isAdmin, settingsLoading]);
 
   const activeTab = view.name === 'tabs' ? view.tab : tab;
 
