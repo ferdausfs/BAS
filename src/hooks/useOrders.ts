@@ -86,6 +86,7 @@ const mapDbOrder = (o: DbOrderRow): Order => ({
   createdAt: o.created_at ? new Date(o.created_at).getTime() : Date.now(),
 });
 
+// NOTE: exported as useOrdersHook to avoid clash with store's useOrders.
 export function useOrdersHook() {
   const [loading, setLoading] = useState(false);
 

@@ -337,6 +337,8 @@ ${productList}
 
 উত্তর 2-6 লাইনের মধ্যে রাখো।`;
     const recentHistory = history.slice(-8).map((m) => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.text}`).join('\n');
+    
+    // NOTE: client-side key — restrict this key in Google Cloud Console to your Vercel domain only
     const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

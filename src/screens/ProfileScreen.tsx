@@ -14,6 +14,7 @@ import BrandLogo from '../components/BrandLogo';
 import WalletHistoryModal from '../components/WalletHistoryModal';
 import { ChatBot } from '../components/ChatBot';
 import { AdminPanel } from '../components/AdminPanel';
+import { BD_DISTRICTS } from '../lib/zones';
 import type { SavedAddress, SpecialDate } from '../types';
 import { useModalDepth } from '../hooks/useModalDepth';
 
@@ -46,11 +47,6 @@ type CustomerProfile = {
 };
 
 const CUSTOMER_PROFILE_KEY = 'bakeart-customer-profile';
-
-const DISTRICTS = [
-  'Comilla', 'Dhaka', 'Chittagong', 'Sylhet', 'Rajshahi',
-  'Khulna', 'Mymensingh', 'Barishal', 'Rangpur',
-];
 
 const PAYMENTS: { id: SavedPayment; label: string; sub: string }[] = [
   { id: 'bkash', label: 'bKash', sub: 'Mobile payment' },
@@ -709,7 +705,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
                   onChange={(e) => setDraftProfile({ ...draftProfile, district: e.target.value })}
                   className="h-11 w-full rounded-xl border border-ink-50 bg-white px-3 text-[13px] font-medium text-ink outline-none focus:border-coral focus:ring-2 focus:ring-coral/15"
                 >
-                  {DISTRICTS.map((d) => (
+                  {BD_DISTRICTS.map((d) => (
                     <option key={d} value={d}>{d}</option>
                   ))}
                 </select>

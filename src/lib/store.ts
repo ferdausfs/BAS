@@ -248,7 +248,7 @@ export const useOrders = create<OrderState>()(
 
         const o: Order = {
           ...data,
-          id: 'BAS' + Date.now().toString().slice(-6),
+          id: 'BAS' + Date.now().toString().slice(-6) + Math.random().toString(36).slice(2, 5).toUpperCase(),
           userId: isUuid ? user!.id : undefined,
           createdAt: Date.now(),
           status: 'placed',
@@ -647,6 +647,15 @@ export const useWallet = create<WalletState>()(
         const note = role === 'referrer'
           ? `Referral bonus — someone used your code`
           : `Welcome bonus — referral code used`;
+
+        if (role === 'buyer') {
+          const already = get().txns.some(t => t.type === 'referral_bonus');
+          if (already) {
+            console.warn('Buyer referral bonus already claimed');
+            return;
+          }
+        }
+
         set(s => ({
           balance: s.balance + amount,
           totalEarned: s.totalEarned + amount,
