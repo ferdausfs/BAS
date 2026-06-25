@@ -1,5 +1,6 @@
 import { X, Wallet, Users, Gift, ArrowDownLeft, RefreshCw } from 'lucide-react';
 import { useWallet, type WalletTx } from '../lib/store';
+import { useModalDepth } from '../hooks/useModalDepth';
 
 interface Props {
   open: boolean;
@@ -60,6 +61,8 @@ function formatDate(ts: number): string {
 
 export default function WalletHistoryModal({ open, onClose }: Props) {
   const { balance, totalEarned, txns } = useWallet();
+
+  useModalDepth(open);
 
   if (!open) return null;
 

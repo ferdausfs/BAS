@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { X, Eye, EyeOff, Loader2, User, Mail } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
+import { useModalDepth } from '../hooks/useModalDepth';
 
 interface Props {
   open: boolean;
@@ -22,6 +23,8 @@ export function AuthSheet({ open, onClose, onSuccess }: Props) {
   const [showPassword, setShowPassword] = useState(false);
   const [needsConfirmation, setNeedsConfirmation] = useState(false);
   const [toast, setToast] = useState<{ msg: string; type: 'ok' | 'err' } | null>(null);
+
+  useModalDepth(open);
 
   const showToast = (msg: string, type: 'ok' | 'err' = 'ok') => {
     setToast({ msg, type });

@@ -14,6 +14,7 @@ import WalletHistoryModal from '../components/WalletHistoryModal';
 import { ChatBot } from '../components/ChatBot';
 import { AdminPanel } from '../components/AdminPanel';
 import type { SavedAddress, SpecialDate } from '../types';
+import { useModalDepth } from '../hooks/useModalDepth';
 
 const loadAddresses = (userId?: string): SavedAddress[] => {
   if (!userId) return [];
@@ -31,7 +32,6 @@ const saveSpecialDates = (userId: string, dates: SpecialDate[]) =>
 interface Props {
   onAuthOpen?: () => void;
   isAdmin?: boolean;
-  onModalChange?: (open: boolean) => void;
 }
 
 type SavedPayment = 'bkash' | 'nagad' | 'cash';
@@ -118,7 +118,7 @@ class AdminErrorBoundary extends React.Component<{ children: React.ReactNode }, 
   }
 }
 
-export default function ProfileScreen({ onAuthOpen, isAdmin = false, onModalChange }: Props) {
+export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
   const { go, setChatOpen } = useUI();
   const { wishlist } = useUser();
   const { orders } = useOrders();
@@ -154,6 +154,11 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false, onModalChan
   const [showDatesModal, setShowDatesModal] = useState(false);
   const [dateForm, setDateForm] = useState({ type: 'birthday' as SpecialDate['type'], name: '', date: '' });
 
+  useModalDepth(showAddressModal);
+  useModalDepth(showDatesModal);
+  useModalDepth(inviteOpen);
+  useModalDepth(walletHistoryOpen);
+
   const wishlistItems = (products ?? []).filter((p) => p && wishlist.includes(p.id));
 
   const profileComplete = !!(
@@ -177,10 +182,6 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false, onModalChan
     setChatOpen(contactOpen || customerOpen);
     return () => setChatOpen(false);
   }, [contactOpen, customerOpen, setChatOpen]);
-
-  useEffect(() => {
-    onModalChange?.(showAddressModal || showDatesModal);
-  }, [showAddressModal, showDatesModal, onModalChange]);
 
   useEffect(() => {
     if (user?.id) saveAddresses(user.id, addresses);

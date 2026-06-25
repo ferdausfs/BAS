@@ -100,6 +100,10 @@ type UIState = {
   // Chat
   chatOpen: boolean;
   setChatOpen: (v: boolean) => void;
+  // Global modal depth counter for permanent navbar hide
+  modalDepth: number;
+  openModal: () => void;
+  closeModal: () => void;
 };
 
 export const useUI = create<UIState>((set, get) => ({
@@ -111,6 +115,7 @@ export const useUI = create<UIState>((set, get) => ({
   newOrderCount: 0,
   notifications: [],
   chatOpen: false,
+  modalDepth: 0,
   setView: (v) =>
     set({
       view: v,
@@ -170,6 +175,8 @@ export const useUI = create<UIState>((set, get) => ({
   })),
   clearNewOrders: () => set({ newOrderCount: 0 }),
   setChatOpen: (v) => set({ chatOpen: v }),
+  openModal: () => set((s) => ({ modalDepth: s.modalDepth + 1 })),
+  closeModal: () => set((s) => ({ modalDepth: Math.max(0, s.modalDepth - 1) })),
 }));
 
 // ===== Cart =====
