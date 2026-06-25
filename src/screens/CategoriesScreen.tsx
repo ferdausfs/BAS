@@ -3,6 +3,7 @@ import { SlidersHorizontal, Search } from 'lucide-react';
 import { useUI, useUser } from '../lib/store';
 import { categories } from '../lib/data';
 import { useProducts } from '../hooks/useProducts';
+import { safeArray } from '../lib/utils';
 import SearchBar from '../components/SearchBar';
 import ProductCard from '../components/ProductCard';
 import OccasionIcon from '../components/OccasionIcon';
@@ -16,7 +17,7 @@ export default function CategoriesScreen() {
   const [active, setActive] = useState<string>('all');
   const [search, setSearch] = useState('');
 
-  const filtered = products
+  const filtered = safeArray(products)
     .filter((p) => (p.approved ?? true) && (p.inStock ?? true))
     .filter((p) => (active === 'all' ? true : p.occasion === active))
     .filter((p) =>

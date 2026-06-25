@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { ArrowRight, Sparkles, ChevronLeft, ChevronRight, Megaphone, RefreshCw, Cake } from 'lucide-react';
 import { useUI, useUser, useOrders, useAuthStore } from '../lib/store';
-import { ls } from '../lib/utils';
+import { ls, safeArray } from '../lib/utils';
 import { categories } from '../lib/data';
 import { useProducts } from '../hooks/useProducts';
 import { useBanners } from '../hooks/useBanners';
@@ -42,7 +42,7 @@ export default function HomeScreen({
   const { user } = useAuthStore();
   const { products } = useProducts();
   const { banners } = useBanners();
-  const activeBanners = useMemo(() => (banners ?? []).filter((b) => b.active !== false), [banners]);
+  const activeBanners = useMemo(() => safeArray(banners).filter((b) => b.active !== false), [banners]);
   const upcoming = getUpcomingDate(user?.id);
 
   const [bannerIdx, setBannerIdx] = useState(0);
@@ -50,14 +50,14 @@ export default function HomeScreen({
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [activeNotice, setActiveNotice] = useState<Banner | null>(null);
 
-  const trending = useMemo(() => products
+  const trending = useMemo(() => safeArray(products)
     .filter((p) => (p.approved ?? true) && (p.inStock ?? true) && (p.bestseller || p.newArrival))
     .slice(0, 8), [products]);
 
   const searchResults = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return [];
-    return products
+    return safeArray(products)
       .filter((p) => (p.approved ?? true) && (p.inStock ?? true))
       .filter((p) => p.name.toLowerCase().includes(q) || p.tagline.toLowerCase().includes(q))
       .slice(0, 8);
@@ -147,7 +147,7 @@ export default function HomeScreen({
                             setActiveNotice(b);
                           } else {
                             // new_item
-                            go({ name: 'product', productId: b.productId || products[0]?.id || 'p1' });
+                            go({ name: 'product', productId: b.productId || safeArray(products)[0]?.id || 'p1' });
                           }
                         }}
                         className="mt-3.5 inline-flex h-10 w-fit items-center gap-1.5 rounded-full bg-white px-4 text-[12.5px] font-bold text-ink transition active:scale-95 shadow"
@@ -312,7 +312,7 @@ export default function HomeScreen({
                 </button>
               </div>
               <div className="relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-2xl shadow-lg">
-                <img src={products[3]?.image || '/cakes/logo-cake.png'} alt="" className="h-full w-full object-cover" />
+                <img src={safeArray(products)[3]?.image || '/cakes/logo-cake.png'} alt="" className="h-full w-full object-cover" />
               </div>
             </div>
           </div>

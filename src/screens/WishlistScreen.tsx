@@ -1,13 +1,14 @@
 import { ArrowLeft, Heart } from 'lucide-react';
 import { useUI, useUser } from '../lib/store';
 import { useProducts } from '../hooks/useProducts';
+import { safeArray } from '../lib/utils';
 import ProductCard from '../components/ProductCard';
 
 export default function WishlistScreen() {
   const { back, go } = useUI();
   const { wishlist, toggleWish } = useUser();
   const { products } = useProducts();
-  const list = products.filter((p) => (p.approved ?? true) && wishlist.includes(p.id));
+  const list = safeArray(products).filter((p) => (p.approved ?? true) && wishlist.includes(p.id));
 
   return (
     <div className="flex h-full flex-col bg-cream">

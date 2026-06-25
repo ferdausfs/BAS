@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { ArrowLeft, ArrowRight, Check, Droplet, Weight, Plus, Camera, X, CheckCircle2, Circle, Square, Heart, RectangleHorizontal, Package, Gift, Sparkles, Drama, Flower2, Cake } from 'lucide-react';
 import { useUI, useCart, useSettingsStore, formatINR } from '../lib/store';
 import { useProducts } from '../hooks/useProducts';
-import { fileToBase64 } from '../lib/utils';
+import { fileToBase64, safeArray } from '../lib/utils';
 import type { CustomAddon } from '../types';
 
 const STEPS = [
@@ -43,7 +43,7 @@ export default function CustomizeScreen() {
   if (view.name !== 'customize') return null;
 
   const product = view.productId ? products.find((p) => p.id === view.productId) : products[3];
-  const defaultProduct = product ?? products[3] ?? { id: 'p4', name: 'Custom Cake', image: '/cakes/logo-cake.png', flavors: FLAVOURS };
+  const defaultProduct = product ?? safeArray(products)[3] ?? { id: 'p4', name: 'Custom Cake', image: '/cakes/logo-cake.png', flavors: FLAVOURS };
 
   const flavorImages = {
     ...DEFAULT_FLAVOUR_IMAGES,
@@ -63,7 +63,7 @@ export default function CustomizeScreen() {
   const [refImagePreview, setRefImagePreview] = useState('');
 
   const selectedWeight = WEIGHTS.find((w) => w.size === `${config.weight} lb`) ?? WEIGHTS[1];
-  const allAddons: CustomAddon[] = settings.customAddons ?? [];
+  const allAddons: CustomAddon[] = safeArray(settings.customAddons);
   const selectedAddons = allAddons.filter((a) => config.addons.includes(a.id));
   const addonsTotal = selectedAddons.reduce((sum, a) => sum + a.price, 0);
   const boxExtra = config.boxType === 'custom' ? 50 : 0;

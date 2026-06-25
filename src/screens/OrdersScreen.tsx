@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { Check, Package, ChefHat, Truck, Receipt, Search, RefreshCw } from 'lucide-react';
 import { useUI, formatINR, useAuthStore, useCart } from '../lib/store';
 import { useOrdersHook } from '../hooks/useOrders';
-import { isSupabaseConfigured } from '../lib/utils';
+import { isSupabaseConfigured, safeArray } from '../lib/utils';
 
 const STATUSES: { key: string; label: string; icon: any }[] = [
   { key: 'placed',    label: 'Placed',    icon: Check },
@@ -70,7 +70,7 @@ export default function OrdersScreen() {
           </div>
         ) : (
           <div className="space-y-3">
-            {orders.filter(Boolean).map((o) => {
+              {safeArray(orders).filter(Boolean).map((o) => {
               const currentIdx = STATUSES.findIndex((s) => s.key === o.status);
               return (
                 <article
@@ -95,7 +95,7 @@ export default function OrdersScreen() {
 
                   {/* Items */}
                   <div className="space-y-2.5 px-4 py-3.5">
-                    {o.items.slice(0, 2).map((it, i) => (
+                    {safeArray(o.items).slice(0, 2).map((it, i) => (
                       <div key={i} className="flex items-center gap-3">
                         <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-xl bg-cream">
                           <img src={it.image} alt="" className="h-full w-full object-cover" />
@@ -110,7 +110,7 @@ export default function OrdersScreen() {
                         </div>
                       </div>
                     ))}
-                    {o.items.length > 2 && (
+                    {safeArray(o.items).length > 2 && (
                       <div className="text-center text-[11px] font-medium text-ink-200">
                         +{o.items.length - 2} more items
                       </div>
@@ -167,10 +167,11 @@ export default function OrdersScreen() {
                     </button>
                     <button
                       onClick={() => {
-                        o.items.forEach((item) => useCart.getState().add({ ...item }));
+                        const safeItems = safeArray(o.items);
+                        safeItems.forEach((item) => useCart.getState().add({ ...item }));
                         useUI.getState().addNotification(
                           'Added to cart!',
-                          `${o.items.length} item${o.items.length > 1 ? 's' : ''} from Order #${o.id} added to cart.`
+                          `${safeItems.length} item${safeItems.length > 1 ? 's' : ''} from Order #${o.id} added to cart.`
                         );
                         setTimeout(() => go({ name: 'cart' }), 600);
                       }}
