@@ -1,46 +1,43 @@
-import { Home, Search, Receipt, User } from 'lucide-react';
-import { useUI, type Tab } from '../lib/store';
+import React from 'react';
+import { Home, Search, ShoppingBag, User } from 'lucide-react';
+import { useUI } from '../lib/store';
 
-const tabs: { id: Tab; label: string; Icon: typeof Home }[] = [
-  { id: 'home', label: 'Shop', Icon: Home },
-  { id: 'categories', label: 'Browse', Icon: Search },
-  { id: 'orders', label: 'Orders', Icon: Receipt },
-  { id: 'profile', label: 'Profile', Icon: User },
-];
-
-export default function BottomTabBar() {
+export default React.memo(function BottomTabBar() {
   const { tab, setTab } = useUI();
 
+  const tabs = [
+    { id: 'home' as const, icon: Home, label: 'Shop' },
+    { id: 'categories' as const, icon: Search, label: 'Browse' },
+    { id: 'orders' as const, icon: ShoppingBag, label: 'Orders' },
+    { id: 'profile' as const, icon: User, label: 'Profile' },
+  ];
+
   return (
-    <div className="pointer-events-none absolute right-0 bottom-0 left-0 z-30 flex justify-center pb-3">
-      <div className="pointer-events-auto mx-3 flex max-w-[360px] flex-1 items-center justify-between rounded-full border border-ink-50/60 bg-white/95 px-2 py-2 shadow-[0_18px_50px_-20px_rgba(26,19,17,.35),0_1px_0_rgba(26,19,17,.04)] backdrop-blur-xl">
+    <nav 
+      className="fixed bottom-0 left-0 right-0 z-[100] bg-white/95 backdrop-blur-xl border-t border-ink-50/80"
+      style={{ 
+        paddingBottom: 'env(safe-area-inset-bottom)',
+        transform: 'translateZ(0)',
+        willChange: 'transform',
+      }}
+    >
+      <div className="flex items-center justify-around h-14 px-1">
         {tabs.map((t) => {
+          const Icon = t.icon;
           const active = tab === t.id;
           return (
             <button
               key={t.id}
               onClick={() => setTab(t.id)}
-              className={`relative flex flex-1 flex-col items-center justify-center gap-0.5 rounded-full py-2 transition-all duration-200 ${
-                active ? 'text-coral' : 'text-ink-200 hover:text-ink-300'
-              }`}
+              className={`flex flex-col items-center justify-center gap-0.5 flex-1 h-full transition-colors active:scale-95 ${active ? 'text-coral' : 'text-ink/40'}`}
             >
-              {active && (
-                <span className="absolute inset-0 rounded-full bg-coral-50" aria-hidden />
-              )}
-              <span className="relative">
-                <t.Icon
-                  className="h-[20px] w-[20px]"
-                  strokeWidth={active ? 2.5 : 1.8}
-                />
-              </span>
-              {active && <span className="tab-indicator" />}
-              <span className={`relative text-[10.5px] font-semibold tracking-wide ${active ? 'opacity-100' : 'opacity-80'}`}>
-                {t.label}
-              </span>
+              <Icon className="h-[22px] w-[22px]" strokeWidth={active ? 2.5 : 1.5} />
+              <span className="text-[10px] font-semibold leading-none">{t.label}</span>
+              {active && <span className="h-1 w-1 rounded-full bg-coral mt-0.5" />}
             </button>
           );
         })}
       </div>
-    </div>
+    </nav>
   );
-}
+});

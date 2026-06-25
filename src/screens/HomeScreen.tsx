@@ -312,7 +312,7 @@ export default function HomeScreen({
                 </button>
               </div>
               <div className="relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-2xl shadow-lg">
-                <img src={safeArray(products)[3]?.image || '/cakes/logo-cake.png'} alt="" className="h-full w-full object-cover" />
+                <img loading="lazy" decoding="async" src={safeArray(products)[3]?.image || '/cakes/logo-cake.png'} alt="" className="h-full w-full object-cover" />
               </div>
             </div>
           </div>
