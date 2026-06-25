@@ -125,6 +125,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
   const { orders } = useOrders();
   const { items } = useCart();
   const { user } = useAuthStore();
+  const effectiveIsAdmin = isAdmin || !!user?.isAdmin;
   const { signOut } = useAuth();
   const { products } = useProducts();
   const { balance, totalEarned, txns } = useWallet();
@@ -297,8 +298,8 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
       if (next >= 5) {
         setShowAdmin(true);
         useUI.getState().addNotification(
-          isAdmin ? 'Admin shortcut unlocked' : 'Admin access required',
-          isAdmin ? 'Admin dashboard is now visible below.' : 'This account is not marked as admin.'
+          effectiveIsAdmin ? 'Admin shortcut unlocked' : 'Admin access required',
+          effectiveIsAdmin ? 'Admin dashboard is now visible below.' : 'This account is not marked as admin.'
         );
         return 0;
       }
@@ -625,7 +626,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
         </div>
 
         {/* Admin Dashboard — only visible to admin users */}
-        {showAdmin && isAdmin && user && (
+        {showAdmin && effectiveIsAdmin && user && (
           <div className="px-4 pb-6 anim-up">
             <div className="flex items-center gap-2 mb-3 mt-4">
               <Settings className="h-5 w-5 text-ink" strokeWidth={2} />
