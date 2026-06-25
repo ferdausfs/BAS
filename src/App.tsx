@@ -21,13 +21,12 @@ import TrackingScreen from './screens/TrackingScreen';
 import AdminScreen from './screens/AdminScreen';
 
 export default function App() {
-  const { view, tab, chatOpen } = useUI();
+  const { view, tab, chatOpen, modalDepth } = useUI();
   const { user } = useAuthStore();
   const { settings } = useSettingsStore();
 
   const [authOpen, setAuthOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
-  const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [settingsLoading, setSettingsLoading] = useState(true);
 
   useEffect(() => {
@@ -81,7 +80,7 @@ export default function App() {
     view.name === 'admin' ? (view.tab ?? 'dashboard') : '',
   ].join('-');
 
-  const showTabBar = view.name === 'tabs' && !chatOpen && !authOpen && !notificationsOpen && !profileModalOpen;
+  const showTabBar = view.name === 'tabs' && modalDepth === 0;
 
   return (
     <PhoneFrame>
@@ -110,7 +109,6 @@ export default function App() {
             <ProfileScreen
               onAuthOpen={() => setAuthOpen(true)}
               isAdmin={isAdminUser}
-              onModalChange={setProfileModalOpen}
             />
           )}
           {view.name === 'product'   && <ProductScreen />}

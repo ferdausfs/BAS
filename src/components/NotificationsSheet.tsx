@@ -1,8 +1,11 @@
 import { X, Bell, CheckCheck } from 'lucide-react';
 import { useUI } from '../lib/store';
+import { useModalDepth } from '../hooks/useModalDepth';
 
 export default function NotificationsSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { notifications, markAllRead } = useUI();
+
+  useModalDepth(open);
 
   if (!open) return null;
 

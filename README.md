@@ -44,6 +44,45 @@ VERCEL_PROJECT_ID
 ## Admin Panel
 Logo-তে ৫ বার tap করুন → PIN দিন (default: `1234`)
 
+## Modal / Popup System
+
+Any modal, sheet, or popup that should hide the bottom navigation bar must use the `useModalDepth` hook.
+
+### How to use
+
+```tsx
+import { useModalDepth } from '../hooks/useModalDepth';
+
+export default function MyNewModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  useModalDepth(open); // ← this one line hides the navbar automatically
+
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 z-50">
+      {/* modal content */}
+    </div>
+  );
+}
+```
+
+### How it works
+
+- `useModalDepth(open)` increments a global counter (`modalDepth` in `useUI`) when `open` is true, and decrements it when `open` becomes false or the component unmounts.
+- The BottomTabBar is hidden whenever `modalDepth > 0`.
+- Counter-based (not boolean), so multiple simultaneous modals work correctly.
+- **You never need to touch `App.tsx` or pass callbacks through props** — just add `useModalDepth(open)` to any new modal component.
+
+### z-index conventions
+
+| Layer | z-index | Used for |
+|-------|---------|----------|
+| Bottom nav | z-30 | BottomTabBar |
+| Sheets | z-50 | WalletHistoryModal, InviteSheet |
+| Auth / overlay | z-[60], z-[61] | AuthSheet backdrop + panel |
+| Notifications | z-[65] | NotificationsSheet |
+
+New modals should use `z-50` minimum to appear above the navbar.
+
 ## Project Structure
 ```
 src/
