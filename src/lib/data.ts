@@ -152,7 +152,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   promoTitle: 'Special offer! Order today',
   deliveryEstimate: '2–4 ঘণ্টা',
   coupons: [],
-  allowedZones: ['Comilla', 'Dhaka', 'Chittagong', 'Sylhet', 'Rajshahi', 'Khulna', 'Mymensingh', 'Barishal'],
+  allowedZones: ['Comilla', 'Dhaka', 'Chittagong', 'Sylhet', 'Rajshahi', 'Khulna', 'Mymensingh', 'Barishal', 'Rangpur'],
   customAddons: [
     { id: 'candles',    emoji: '', label: 'Candles',              price: 50,  category: 'extras' },
     { id: 'topper',     emoji: '', label: 'Cake Topper',          price: 120, category: 'decoration' },
