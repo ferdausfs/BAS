@@ -310,7 +310,9 @@ export const useOrders = create<OrderState>()(
 
         useUI.getState().addNotification('📦 Order updated', `Order #${id} status changed to ${status}.`);
 
-        if (status === 'confirmed') {
+        // Confirm pending wallet earn on 'confirmed' OR 'delivered'
+        // (admin may skip confirmed → delivered directly; confirmOrderEarn is idempotent)
+        if (status === 'confirmed' || status === 'delivered') {
           useWallet.getState().confirmOrderEarn(id);
         }
         if (status === 'cancelled') {

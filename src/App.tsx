@@ -29,6 +29,17 @@ export default function App() {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [settingsLoading, setSettingsLoading] = useState(true);
 
+  // Capture ?ref= referral code from deep link and store for CheckoutScreen
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const ref = params.get('ref');
+      if (ref && /^[A-Z0-9]{8}$/i.test(ref.trim())) {
+        localStorage.setItem('bas-pending-ref', ref.trim().toUpperCase());
+      }
+    } catch { /* ignore */ }
+  }, []);
+
   useEffect(() => {
     if (isSupabaseConfigured()) {
       useSettingsStore.getState().loadRemoteSettings().finally(() => setSettingsLoading(false));
