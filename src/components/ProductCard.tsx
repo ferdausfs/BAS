@@ -37,59 +37,80 @@ export default function ProductCard({ product, wished, onOpen, onWish, variant =
     return (
       <article
         onClick={onOpen}
-        className="group relative cursor-pointer overflow-hidden rounded-3xl bg-white transition active:scale-[.98] product-card-shadow"
+        className="group relative cursor-pointer overflow-hidden rounded-3xl bg-white transition-all duration-200 active:scale-[.97]"
+        style={{
+          border: '1.5px solid rgba(0,0,0,0.055)',
+          boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 8px 24px -10px rgba(0,0,0,0.11)',
+        }}
       >
+        {/* Image */}
         <div className="relative aspect-square overflow-hidden">
           <img
             src={product.image}
             alt={product.name}
             loading="lazy"
-            className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.05]"
           />
+          {/* Subtle image bottom fade */}
+          <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-black/10 to-transparent" />
 
           {/* Wishlist */}
           <button
             onClick={handleWish}
-            className={`absolute top-3 right-3 flex h-9 w-9 items-center justify-center rounded-full backdrop-blur-md transition active:scale-90 ${
-              wished ? 'bg-white text-coral' : 'bg-white/90 text-ink-200'
-            }`}
-            style={{ boxShadow: '0 4px 14px -6px rgba(26,19,17,.25)' }}
+            className="absolute top-3 right-3 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 backdrop-blur-md transition-all active:scale-90"
+            style={{
+              boxShadow: '0 2px 10px rgba(0,0,0,0.12)',
+              color: wished ? '#E8526A' : 'rgba(28,17,18,0.4)',
+            }}
+            aria-label={wished ? 'Remove from wishlist' : 'Add to wishlist'}
           >
-            <Heart className={`h-[15px] w-[15px] ${wished ? 'fill-coral' : ''}`} strokeWidth={2} />
+            <Heart
+              className="h-[15px] w-[15px]"
+              style={{ fill: wished ? '#E8526A' : 'none' }}
+              strokeWidth={2}
+            />
           </button>
 
           {/* Badges */}
           <div className="absolute top-3 left-3 flex flex-col gap-1.5">
             {product.bestseller && (
-              <span className="badge-premium rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide">
+              <span className="badge-premium rounded-full px-2.5 py-1 text-[9.5px] font-bold uppercase tracking-wider">
                 Bestseller
               </span>
             )}
             {product.newArrival && (
-              <span className="rounded-full bg-coral px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-white">
+              <span
+                className="rounded-full px-2.5 py-1 text-[9.5px] font-bold uppercase tracking-wider text-white"
+                style={{ background: 'linear-gradient(135deg, #EE6279 0%, #DC3E58 100%)' }}
+              >
                 New
               </span>
             )}
           </div>
         </div>
 
-        <div className="p-3.5">
-          <div className="flex items-center gap-1 text-[11px]">
+        {/* Content */}
+        <div className="p-4">
+          <div className="flex items-center gap-1.5 text-[11px]">
             <Star className="h-3 w-3 fill-gold text-gold" />
             <span className="font-bold text-ink">{product.rating}</span>
             <span className="text-ink-200">({product.reviews.toLocaleString()})</span>
           </div>
-          <h3 className="mt-1 line-clamp-1 font-display text-[16px] font-bold tracking-tight text-ink">
+          <h3 className="mt-1.5 line-clamp-1 font-display text-[15.5px] font-bold tracking-tight text-ink">
             {product.name}
           </h3>
-          <div className="mt-2 flex items-center justify-between">
-            <span className="font-display text-[17px] font-bold tabular text-gradient-coral">
+          <div className="mt-2.5 flex items-center justify-between">
+            <span className="font-display text-[16.5px] font-bold tabular text-gradient-coral">
               {formatINR(product.price)}
             </span>
             {(product.inStock ?? true) && (
               <button
                 onClick={handleAdd}
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-coral text-white shadow-[0_8px_20px_-8px_rgba(242,94,115,.5)] transition active:scale-90 hover:brightness-105"
+                className="flex h-9 w-9 items-center justify-center rounded-full text-white transition-all active:scale-90 hover:brightness-105"
+                style={{
+                  background: 'linear-gradient(135deg, #EE6279 0%, #DC3E58 100%)',
+                  boxShadow: '0 6px 18px -6px rgba(232,82,106,0.5)',
+                }}
                 aria-label="Add to cart"
               >
                 <Plus className="h-4 w-4" strokeWidth={2.5} />
@@ -105,57 +126,76 @@ export default function ProductCard({ product, wished, onOpen, onWish, variant =
   return (
     <article
       onClick={onOpen}
-      className="group relative flex w-[170px] flex-shrink-0 cursor-pointer flex-col overflow-hidden rounded-3xl bg-white transition active:scale-[.98] product-card-shadow"
+      className="group relative flex w-[170px] flex-shrink-0 cursor-pointer flex-col overflow-hidden rounded-3xl bg-white transition-all duration-200 active:scale-[.97]"
+      style={{
+        border: '1.5px solid rgba(0,0,0,0.055)',
+        boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 8px 24px -10px rgba(0,0,0,0.11)',
+      }}
     >
+      {/* Image */}
       <div className="relative aspect-square overflow-hidden">
         <img
           src={product.image}
           alt={product.name}
           loading="lazy"
-          className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
+          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.05]"
         />
 
         <button
           onClick={handleWish}
-          className={`absolute top-3 right-3 flex h-8 w-8 items-center justify-center rounded-full backdrop-blur-md transition active:scale-90 ${
-            wished ? 'bg-white text-coral' : 'bg-white/90 text-ink-200'
-          }`}
-          style={{ boxShadow: '0 4px 12px -6px rgba(26,19,17,.25)' }}
+          className="absolute top-3 right-3 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 backdrop-blur-md transition-all active:scale-90"
+          style={{
+            boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
+            color: wished ? '#E8526A' : 'rgba(28,17,18,0.4)',
+          }}
+          aria-label={wished ? 'Remove from wishlist' : 'Add to wishlist'}
         >
-          <Heart className={`h-3.5 w-3.5 ${wished ? 'fill-coral' : ''}`} strokeWidth={2} />
+          <Heart
+            className="h-3.5 w-3.5"
+            style={{ fill: wished ? '#E8526A' : 'none' }}
+            strokeWidth={2}
+          />
         </button>
 
         <div className="absolute top-3 left-3 flex flex-col gap-1">
           {product.bestseller && (
-            <span className="badge-premium rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide">
+            <span className="badge-premium rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider">
               Best
             </span>
           )}
           {product.newArrival && (
-            <span className="rounded-full bg-coral px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white">
+            <span
+              className="rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white"
+              style={{ background: 'linear-gradient(135deg, #EE6279 0%, #DC3E58 100%)' }}
+            >
               New
             </span>
           )}
         </div>
       </div>
 
+      {/* Content */}
       <div className="flex flex-1 flex-col p-3">
         <div className="flex items-center gap-1 text-[10px]">
           <Star className="h-2.5 w-2.5 fill-gold text-gold" />
           <span className="font-bold text-ink">{product.rating}</span>
           <span className="text-ink-200">({product.reviews.toLocaleString()})</span>
         </div>
-        <h3 className="mt-1 line-clamp-1 font-display text-[15px] font-bold tracking-tight text-ink">
+        <h3 className="mt-1 line-clamp-1 font-display text-[14.5px] font-bold tracking-tight text-ink">
           {product.name}
         </h3>
         <div className="mt-auto flex items-center justify-between pt-2">
-          <span className="font-display text-[15px] font-bold tabular text-gradient-coral">
+          <span className="font-display text-[14.5px] font-bold tabular text-gradient-coral">
             {formatINR(product.price)}
           </span>
           {(product.inStock ?? true) && (
             <button
               onClick={handleAdd}
-              className="flex h-8 w-8 items-center justify-center rounded-full bg-coral text-white shadow-[0_6px_16px_-8px_rgba(242,94,115,.5)] transition active:scale-90"
+              className="flex h-8 w-8 items-center justify-center rounded-full text-white transition-all active:scale-90"
+              style={{
+                background: 'linear-gradient(135deg, #EE6279 0%, #DC3E58 100%)',
+                boxShadow: '0 5px 14px -5px rgba(232,82,106,0.5)',
+              }}
               aria-label="Add to cart"
             >
               <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
