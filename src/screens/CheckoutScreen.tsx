@@ -48,10 +48,39 @@ export default function CheckoutScreen({ onBack }: Props) {
   const [referralLoading, setReferralLoading] = useState(false);
   const userReferralCode = getReferralCode(user);
 
-  const applyReferralCode = async () => {
+  // Auto-fill referral code from URL ?ref= param (e.g. from shared link)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const refParam = params.get('ref');
+    if (refParam && !referralApplied) {
+      const code = refParam.trim().toUpperCase();
+      if (/^[A-Z0-9]{8}$/i.test(code) && code !== userReferralCode) {
+        setReferralInput(code);
+      }
+    }
+    // Also check localStorage (set by App.tsx on deep link open)
+    try {
+      const stored = localStorage.getItem('bas-pending-ref');
+      if (stored && !referralApplied) {
+        const code = stored.trim().toUpperCase();
+        if (/^[A-Z0-9]{8}$/i.test(code) && code !== userReferralCode) {
+          setReferralInput(code);
+        }
+        localStorage.removeItem('bas-pending-ref');
+      }
+    } catch { /* ignore */ }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const applyReferralCode = () => {
     const code = referralInput.trim().toUpperCase();
     if (!code) return;
 
+    // Must be exactly 8 alphanumeric characters (4 email + 4 uuid)
+    if (!/^[A-Z0-9]{8}$/i.test(code)) {
+      setReferralError("Code টি 8 অক্ষরের হতে হবে");
+      return;
+    }
     if (code === userReferralCode) {
       setReferralError("নিজের referral code ব্যবহার করা যাবে না");
       return;
@@ -60,40 +89,14 @@ export default function CheckoutScreen({ onBack }: Props) {
       setReferralError("Referral bonus পেতে আগে sign in করো");
       return;
     }
-    if (!isSupabaseConfigured()) {
-      setReferralError("Referral validation requires Supabase setup");
-      return;
-    }
 
-    setReferralLoading(true);
+    // NOTE: We no longer query profiles table here because Supabase RLS prevents
+    // a buyer from reading another user's profile row. Instead we accept the code
+    // format-check only, and pushReferralReward() writes the pending entry to
+    // app_settings so the actual referrer can claim it via claimReferralRewards().
+    // Double-spend is prevented by the consumed-list guard in claimReferralRewards().
     setReferralError('');
-
-    try {
-      // Derive the id suffix from the code (last 4 chars) and query only that subset
-      const idSuffix = code.slice(-4).toLowerCase();
-      const { data: profiles, error } = await supabase
-        .from('profiles')
-        .select('id, email')
-        .ilike('id', `%${idSuffix}`);  // ← only fetch profiles matching the id suffix
-
-      if (error) throw error;
-
-      const matched = (profiles ?? []).find(
-        (profile: { id: string; email: string }) =>
-          getReferralCode({ email: profile.email, id: profile.id }) === code
-      );
-
-      if (!matched) {
-        setReferralError("এই referral code টি valid নয়");
-        return;
-      }
-
-      setReferralApplied(true);
-    } catch {
-      setReferralError("Referral code যাচাই করা যায়নি, আবার চেষ্টা করো");
-    } finally {
-      setReferralLoading(false);
-    }
+    setReferralApplied(true);
   };
 
   const [showLocationGate, setShowLocationGate] = useState(false);
