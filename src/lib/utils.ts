@@ -53,12 +53,14 @@ export const genOrderId = (): string =>
 export const clamp = (n: number, min: number, max: number): number =>
   Math.min(Math.max(n, min), max);
 
-// Check if Supabase is configured
-export const isSupabaseConfigured = (): boolean =>
+// Check if Firebase is configured
+export const isFirebaseConfigured = (): boolean =>
   !!(
-    import.meta.env.VITE_SUPABASE_URL &&
-    import.meta.env.VITE_SUPABASE_URL !== 'https://placeholder.supabase.co'
+    import.meta.env.VITE_FIREBASE_API_KEY &&
+    import.meta.env.VITE_FIREBASE_PROJECT_ID &&
+    import.meta.env.VITE_FIREBASE_APP_ID
   );
+
 
 // File to base64
 export const fileToBase64 = (file: File): Promise<string> =>

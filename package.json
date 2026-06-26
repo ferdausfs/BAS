@@ -6,13 +6,13 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "npm run build && wrangler dev",
+    "preview": "npm run build && vite preview --host 0.0.0.0",
     "typecheck": "tsc --noEmit",
-    "deploy": "npm run build && wrangler deploy"
+    "deploy": "npm run build"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.45.4",
     "clsx": "2.1.1",
+    "firebase": "^12.15.0",
     "lucide-react": "^1.21.0",
     "react": "19.2.6",
     "react-dom": "19.2.6",
@@ -20,7 +20,6 @@
     "zustand": "^5.0.14"
   },
   "devDependencies": {
-    "@cloudflare/vite-plugin": "^1.42.3",
     "@tailwindcss/vite": "4.1.17",
     "@types/node": "22.19.17",
     "@types/react": "19.2.7",
@@ -29,7 +28,6 @@
     "tailwindcss": "4.1.17",
     "typescript": "5.9.3",
     "vite": "7.3.2",
-    "vite-plugin-singlefile": "2.3.0",
-    "wrangler": "^4.105.0"
+    "vite-plugin-singlefile": "2.3.0"
   }
 }

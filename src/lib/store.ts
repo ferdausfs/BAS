@@ -1,8 +1,9 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { CartItem, Order } from '../types';
-import { supabase } from './supabase';
-import { isSupabaseConfigured } from './utils';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { db, isFirebaseConfigured } from './firebase';
+import { orderToDoc, toDbOrderStatus } from './firestoreMappers';
 
 
 
@@ -18,16 +19,10 @@ export const pushBrowserRouteState = () => {
 };
 
 const readRemoteSetting = async <T,>(key: string): Promise<T | null> => {
-  if (!isSupabaseConfigured()) return null;
+  if (!isFirebaseConfigured()) return null;
   try {
-    const { data, error } = await supabase
-      .from('app_settings')
-      .select('value')
-      .eq('key', key)
-      .maybeSingle();
-
-    if (error) throw error;
-    return (data?.value as T) ?? null;
+    const snap = await getDoc(doc(db, 'app_settings', key));
+    return (snap.exists() ? (snap.data().value as T) : null) ?? null;
   } catch (e) {
     console.warn(`Remote setting read failed: ${key}`, e);
     return null;
@@ -35,16 +30,9 @@ const readRemoteSetting = async <T,>(key: string): Promise<T | null> => {
 };
 
 const writeRemoteSetting = async (key: string, value: unknown): Promise<void> => {
-  if (!isSupabaseConfigured()) return;
+  if (!isFirebaseConfigured()) return;
   try {
-    const { error } = await supabase
-      .from('app_settings')
-      .upsert(
-        { key, value, updated_at: new Date().toISOString() },
-        { onConflict: 'key' }
-      );
-
-    if (error) throw error;
+    await setDoc(doc(db, 'app_settings', key), { key, value, updated_at: new Date().toISOString() }, { merge: true });
   } catch (e) {
     console.warn(`Remote setting write failed: ${key}`, e);
   }
@@ -239,9 +227,7 @@ export const useOrders = create<OrderState>()(
 
       placeOrder: (data) => {
         const user = useAuthStore.getState().user;
-        const isUuid =
-          !!user?.id &&
-          /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(user.id);
+        const hasRemoteUser = !!user?.id && !user.id.startsWith('local-');
 
         const ui = useUI.getState();
         const pendingRedeem = ui.pendingLoyaltyRedeem;
@@ -249,7 +235,7 @@ export const useOrders = create<OrderState>()(
         const o: Order = {
           ...data,
           id: 'BAS' + Date.now().toString().slice(-6) + Math.random().toString(36).slice(2, 5).toUpperCase(),
-          userId: isUuid ? user!.id : undefined,
+          userId: hasRemoteUser ? user!.id : undefined,
           createdAt: Date.now(),
           status: 'placed',
           loyaltyPointsRedeemed: pendingRedeem > 0 ? pendingRedeem : undefined,
@@ -271,32 +257,9 @@ export const useOrders = create<OrderState>()(
         // clear both promo + loyalty after order
         useUI.getState().clearAllCheckoutDiscounts();
 
-        if (isSupabaseConfigured()) {
-          void supabase.from('orders').upsert({
-            id: o.id,
-            user_id: isUuid ? user!.id : null,
-            customer_name: o.customer.name,
-            customer_phone: o.customer.phone,
-            customer_address: o.customer.address,
-            district: o.customer.city,
-            delivery_date: o.delivery.date,
-            delivery_time: o.delivery.time,
-            payment_method: o.payment,
-            payment_screenshot: o.paymentScreenshot ?? null,
-            items: o.items,
-            subtotal: o.subtotal,
-            discount: Math.max(0, Math.round(o.discount ?? (o.subtotal + o.deliveryFee - o.total))),
-            delivery_fee: o.deliveryFee,
-            total: o.total,
-            status: toDbOrderStatus(o.status),
-            promo_code: o.promoCode ?? null,
-            gps_lat: o.gpsLat ?? null,
-            gps_lng: o.gpsLng ?? null,
-            location_address: o.locationAddress ?? o.customer.address,
-            location_verified: o.locationVerified ?? false,
-            created_at: new Date(o.createdAt).toISOString(),
-          }, { onConflict: 'id' }).then(({ error }) => {
-            if (error) console.warn('Remote order insert failed:', error.message);
+        if (isFirebaseConfigured()) {
+          void setDoc(doc(db, 'orders', o.id), orderToDoc(o), { merge: true }).catch((error) => {
+            console.warn('Remote order insert failed:', error?.message || error);
           });
         }
 
@@ -326,14 +289,10 @@ export const useOrders = create<OrderState>()(
           }
         }
 
-        if (isSupabaseConfigured()) {
-          void supabase
-            .from('orders')
-            .update({ status: toDbOrderStatus(status) })
-            .eq('id', id)
-            .then(({ error }) => {
-              if (error) console.warn('Remote order status update failed:', error.message);
-            });
+        if (isFirebaseConfigured()) {
+          void setDoc(doc(db, 'orders', id), { status: toDbOrderStatus(status), updated_at: new Date().toISOString() }, { merge: true }).catch((error) => {
+            console.warn('Remote order status update failed:', error?.message || error);
+          });
         }
       },
     }),
@@ -374,12 +333,6 @@ export const freeDeliveryThreshold = 999;
 export const standardDeliveryFee = 60;
 export const qualifiesForFreeDelivery = (sub: number) => sub >= freeDeliveryThreshold;
 
-function toDbOrderStatus(status: Order['status']): string {
-  if (status === 'placed') return 'pending';
-  if (status === 'baking') return 'preparing';
-  if (status === 'out') return 'delivering';
-  return status;
-}
 
 
 // ── Auth Store ─────────────────────────────────────────────
@@ -713,7 +666,7 @@ const referralConsumedKey = (code: string) => `referral_consumed_${code.trim().t
 /** Called from checkout when an order using a referral code is placed. */
 export const pushReferralReward = async (refCode: string, entry: ReferralPending): Promise<void> => {
   const code = refCode.trim().toUpperCase();
-  if (!code || !isSupabaseConfigured()) return;
+  if (!code || !isFirebaseConfigured()) return;
   try {
     const existing = (await readRemoteSetting<ReferralPending[]>(referralPendingKey(code))) ?? [];
     if (existing.some((e) => e.refereeId === entry.refereeId)) return; // dedupe
@@ -727,7 +680,7 @@ export const pushReferralReward = async (refCode: string, entry: ReferralPending
  *  unclaimed rewards tied to their code. Returns the number of rewards claimed. */
 export const claimReferralRewards = async (myCode: string): Promise<number> => {
   const code = (myCode ?? '').trim().toUpperCase();
-  if (!code || !isSupabaseConfigured()) return 0;
+  if (!code || !isFirebaseConfigured()) return 0;
   try {
     const pending = (await readRemoteSetting<ReferralPending[]>(referralPendingKey(code))) ?? [];
     const consumed = (await readRemoteSetting<string[]>(referralConsumedKey(code))) ?? [];

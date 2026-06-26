@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
-import { supabase } from '../lib/supabase';
-import { ls, isSupabaseConfigured, fileToBase64, safeArray } from '../lib/utils';
+import { addDoc, collection, deleteDoc, doc, onSnapshot, orderBy, query, setDoc, updateDoc, where } from 'firebase/firestore';
+import { db, isFirebaseConfigured, uploadToCloudinary } from '../lib/firebase';
+import { ls, safeArray } from '../lib/utils';
+import { mapReviewDoc } from '../lib/firestoreMappers';
 import type { Review } from '../types';
 
 const LS_KEY = 'bakeart-reviews-v2';
@@ -14,53 +16,47 @@ function sanitizeReviews(arr: unknown): Review[] {
   });
 }
 
-const visibleForProduct = (all: Review[], productId?: string) =>
-  productId ? all.filter((r) => r.product_id === productId && r.approved) : all;
+const visibleForProduct = (all: Review[], productId?: string) => productId ? all.filter((r) => r.product_id === productId && r.approved) : all;
 
 export function useReviews(productId?: string) {
-  const [reviews, setReviews] = useState<Review[]>(() => {
-    const all = sanitizeReviews(ls.get(LS_KEY, []));
-    return visibleForProduct(all, productId);
-  });
+  const [reviews, setReviews] = useState<Review[]>(() => visibleForProduct(sanitizeReviews(ls.get(LS_KEY, [])), productId));
   const [loading, setLoading] = useState(false);
 
-  const fetchReviews = useCallback(async (pid?: string) => {
-    if (!isSupabaseConfigured()) {
-      const all = sanitizeReviews(ls.get(LS_KEY, []));
-      setReviews(visibleForProduct(all, pid));
+  useEffect(() => {
+    if (!isFirebaseConfigured()) {
+      setReviews(visibleForProduct(sanitizeReviews(ls.get(LS_KEY, [])), productId));
       return;
     }
     setLoading(true);
-    try {
-      let query = supabase.from('reviews').select('*').order('created_at', { ascending: false });
-      if (pid) query = query.eq('product_id', pid).eq('approved', true);
-      const { data, error } = await query;
-      if (error) throw error;
-      if (data) {
-        const validated = sanitizeReviews(data);
-        if (!pid) ls.set(LS_KEY, validated);
-        setReviews(pid ? validated.filter((r) => r.approved) : validated);
-      }
-    } catch (e) {
-      console.warn('Reviews fetch failed:', e);
-      const all = sanitizeReviews(ls.get(LS_KEY, []));
-      setReviews(visibleForProduct(all, pid));
-    } finally {
+    const constraints: any[] = [orderBy('created_at', 'desc')];
+    if (productId) constraints.unshift(where('approved', '==', true), where('product_id', '==', productId));
+    const q = query(collection(db, 'reviews'), ...constraints);
+    const unsub = onSnapshot(q, (snap) => {
+      const validated = sanitizeReviews(snap.docs.map((d) => mapReviewDoc(d.id, d.data())));
+      if (!productId) ls.set(LS_KEY, validated);
+      setReviews(productId ? validated.filter((r) => r.approved) : validated);
       setLoading(false);
-    }
-  }, []);
+    }, (e) => {
+      console.warn('Reviews snapshot failed:', e);
+      const all = sanitizeReviews(ls.get(LS_KEY, []));
+      setReviews(visibleForProduct(all, productId));
+      setLoading(false);
+    });
+    return unsub;
+  }, [productId]);
 
-  useEffect(() => {
-    void fetchReviews(productId);
-  }, [fetchReviews, productId]);
+  const fetchReviews = useCallback(async (pid?: string) => {
+    const all = sanitizeReviews(ls.get(LS_KEY, []));
+    setReviews(visibleForProduct(all, pid ?? productId));
+  }, [productId]);
 
   const saveReview = useCallback(async (review: Review) => {
     const all = sanitizeReviews(ls.get(LS_KEY, []));
     const updated = sanitizeReviews([review, ...all]);
     ls.set(LS_KEY, updated);
     setReviews(visibleForProduct(updated, productId));
-    if (!isSupabaseConfigured()) return;
-    await supabase.from('reviews').insert(review);
+    if (!isFirebaseConfigured()) return;
+    await setDoc(doc(db, 'reviews', review.id), review, { merge: true }).catch(async () => { await addDoc(collection(db, 'reviews'), review); });
   }, [productId]);
 
   const approveReview = useCallback(async (id: string, approved: boolean) => {
@@ -68,8 +64,8 @@ export function useReviews(productId?: string) {
     const updated = sanitizeReviews(all.map((r) => (r.id === id ? { ...r, approved } : r)));
     ls.set(LS_KEY, updated);
     setReviews(visibleForProduct(updated, productId));
-    if (!isSupabaseConfigured()) return;
-    await supabase.from('reviews').update({ approved }).eq('id', id);
+    if (!isFirebaseConfigured()) return;
+    await updateDoc(doc(db, 'reviews', id), { approved });
   }, [productId]);
 
   const deleteReview = useCallback(async (id: string) => {
@@ -77,24 +73,14 @@ export function useReviews(productId?: string) {
     const updated = sanitizeReviews(all.filter((r) => r.id !== id));
     ls.set(LS_KEY, updated);
     setReviews(visibleForProduct(updated, productId));
-    if (!isSupabaseConfigured()) return;
-    await supabase.from('reviews').delete().eq('id', id);
+    if (!isFirebaseConfigured()) return;
+    await deleteDoc(doc(db, 'reviews', id));
   }, [productId]);
 
-  const uploadReviewImage = useCallback(async (file: File): Promise<string> => {
-    if (!isSupabaseConfigured()) return fileToBase64(file);
-    const ext = file.name.split('.').pop() ?? 'jpg';
-    const path = `reviews/${Date.now()}.${ext}`;
-    const { data, error } = await supabase.storage.from('review-images').upload(path, file, { upsert: false });
-    if (error || !data) return fileToBase64(file);
-    const { data: urlData } = supabase.storage.from('review-images').getPublicUrl(path);
-    return urlData.publicUrl;
-  }, []);
+  const uploadReviewImage = useCallback(async (file: File): Promise<string> => uploadToCloudinary(file, 'bake-art-style/reviews'), []);
 
   const validReviews = safeArray(reviews).filter((r) => r && typeof r.rating === 'number');
-  const avgRating = validReviews.length
-    ? validReviews.reduce((sum, review) => sum + review.rating, 0) / validReviews.length
-    : 0;
+  const avgRating = validReviews.length ? validReviews.reduce((sum, review) => sum + review.rating, 0) / validReviews.length : 0;
 
   return { reviews: safeArray(reviews), loading, fetchReviews, saveReview, approveReview, deleteReview, uploadReviewImage, avgRating };
 }

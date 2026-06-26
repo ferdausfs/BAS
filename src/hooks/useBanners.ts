@@ -1,95 +1,44 @@
 import { useEffect, useState, useCallback } from 'react';
-import { supabase } from '../lib/supabase';
+import { collection, deleteDoc, doc, onSnapshot, orderBy, query, setDoc } from 'firebase/firestore';
+import { db, isFirebaseConfigured, uploadToCloudinary } from '../lib/firebase';
 import { banners as DEFAULT_BANNERS } from '../lib/data';
-import { isSupabaseConfigured, fileToBase64, ls, safeArray } from '../lib/utils';
+import { ls, safeArray } from '../lib/utils';
+import { bannerToDoc, mapBannerDoc } from '../lib/firestoreMappers';
 import type { Banner } from '../types';
 
 const LS_KEY = 'bakeart-banners-v2';
-
-type BannerRow = {
-  id: string;
-  title: string;
-  subtitle: string;
-  image: string;
-  tag: string;
-  color: string;
-  type: Banner['type'];
-  promo_code?: string | null;
-  product_id?: string | null;
-  notice_text?: string | null;
-  active?: boolean | null;
-  sort_order?: number | null;
-  link?: string | null;
-};
-
-const mapBannerRow = (row: BannerRow): Banner => ({
-  id: row.id,
-  title: row.title || '',
-  subtitle: row.subtitle || '',
-  image: row.image || '',
-  tag: row.tag || 'Shop Now',
-  color: row.color || '#FFE2E7',
-  type: row.type || 'new_item',
-  promoCode: row.promo_code || undefined,
-  productId: row.product_id || undefined,
-  noticeText: row.notice_text || undefined,
-  active: row.active ?? true,
-  sortOrder: row.sort_order ?? 0,
-  link: row.link || undefined,
-});
 
 export function useBanners() {
   const [banners, setBanners] = useState<Banner[]>(() => safeArray<Banner>(ls.get(LS_KEY, DEFAULT_BANNERS), DEFAULT_BANNERS));
   const [loading, setLoading] = useState(false);
 
-  const fetchFromSupabase = useCallback(async () => {
-    if (!isSupabaseConfigured()) return;
+  useEffect(() => {
+    if (!isFirebaseConfigured()) return;
     setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('banners')
-        .select('id, title, subtitle, image, tag, color, type, promo_code, product_id, notice_text, active, sort_order, link')
-        .order('sort_order', { ascending: true });
-      if (error) throw error;
-      if (data && data.length > 0) {
-        const validated = safeArray<Banner>((data as BannerRow[]).map(mapBannerRow));
+    const q = query(collection(db, 'banners'), orderBy('sort_order', 'asc'));
+    const unsub = onSnapshot(q, (snap) => {
+      const validated = safeArray<Banner>(snap.docs.map((d) => mapBannerDoc(d.id, d.data())));
+      if (validated.length > 0) {
         setBanners(validated);
         ls.set(LS_KEY, validated);
       }
-    } catch (e) {
-      console.warn('Banners fetch failed, using local data:', e);
-    } finally {
       setLoading(false);
-    }
+    }, (e) => {
+      console.warn('Banners snapshot failed, using local data:', e);
+      setLoading(false);
+    });
+    return unsub;
   }, []);
 
-  useEffect(() => {
-    void fetchFromSupabase();
-  }, [fetchFromSupabase]);
+  const refetch = useCallback(async () => {}, []);
 
   const saveBanner = useCallback(async (banner: Banner) => {
-    const updated = banners.find((b) => b.id === banner.id)
-      ? banners.map((b) => (b.id === banner.id ? banner : b))
-      : [...banners, banner];
+    const updated = banners.find((b) => b.id === banner.id) ? banners.map((b) => (b.id === banner.id ? banner : b)) : [...banners, banner];
     const validated = safeArray<Banner>(updated);
     setBanners(validated);
     ls.set(LS_KEY, validated);
-    if (!isSupabaseConfigured()) return;
-    await supabase.from('banners').upsert({
-      id: banner.id,
-      title: banner.title,
-      subtitle: banner.subtitle,
-      image: banner.image,
-      tag: banner.tag,
-      color: banner.color,
-      type: banner.type,
-      promo_code: banner.promoCode ?? null,
-      product_id: banner.productId ?? null,
-      notice_text: banner.noticeText ?? null,
-      active: banner.active ?? true,
-      sort_order: banner.sortOrder ?? 0,
-      link: banner.link ?? null,
-    }, { onConflict: 'id' });
+    if (!isFirebaseConfigured()) return;
+    await setDoc(doc(db, 'banners', banner.id), bannerToDoc(banner), { merge: true });
   }, [banners]);
 
   const deleteBanner = useCallback(async (id: string) => {
@@ -97,19 +46,11 @@ export function useBanners() {
     const validated = safeArray<Banner>(updated);
     setBanners(validated);
     ls.set(LS_KEY, validated);
-    if (!isSupabaseConfigured()) return;
-    await supabase.from('banners').delete().eq('id', id);
+    if (!isFirebaseConfigured()) return;
+    await deleteDoc(doc(db, 'banners', id));
   }, [banners]);
 
-  const uploadBannerImage = useCallback(async (file: File): Promise<string> => {
-    if (!isSupabaseConfigured()) return fileToBase64(file);
-    const ext = file.name.split('.').pop() || 'jpg';
-    const path = `banners/${Date.now()}.${ext}`;
-    const { data, error } = await supabase.storage.from('banner-images').upload(path, file, { upsert: false });
-    if (error || !data) return fileToBase64(file);
-    const { data: urlData } = supabase.storage.from('banner-images').getPublicUrl(path);
-    return urlData.publicUrl;
-  }, []);
+  const uploadBannerImage = useCallback(async (file: File): Promise<string> => uploadToCloudinary(file, 'bake-art-style/banners'), []);
 
-  return { banners: Array.isArray(banners) ? banners : [], loading, saveBanner, deleteBanner, uploadBannerImage, refetch: fetchFromSupabase };
+  return { banners: Array.isArray(banners) ? banners : [], loading, saveBanner, deleteBanner, uploadBannerImage, refetch };
 }

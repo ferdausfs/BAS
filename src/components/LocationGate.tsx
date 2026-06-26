@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { MapPin, CheckCircle2, AlertCircle, Loader2, Navigation, MessageCircle, X, Cake } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { doc, setDoc } from 'firebase/firestore';
+import { db, isFirebaseConfigured } from '../lib/firebase';
 import { useAuthStore, useLocation, useSettingsStore } from '../lib/store';
-import { isSupabaseConfigured, waLink } from '../lib/utils';
+import { waLink } from '../lib/utils';
 import { matchZone } from '../lib/zones';
 import { useModalDepth } from '../hooks/useModalDepth';
 
@@ -48,8 +49,8 @@ export function LocationGate({ onDismiss }: Props) {
         const verifiedDistrict = matchedZone || city || 'Verified area';
         setLocation(verifiedDistrict, lat, lng);
 
-        if (isSupabaseConfigured() && user?.id) {
-          const { error } = await supabase.from('profiles').upsert({
+        if (isFirebaseConfigured() && user?.id) {
+          await setDoc(doc(db, 'profiles', user.id), {
             id: user.id,
             name: user.name,
             contact: user.contact || '',
@@ -59,11 +60,7 @@ export function LocationGate({ onDismiss }: Props) {
             gps_lng: lng,
             location_address: addressText,
             location_verified: true,
-          }, { onConflict: 'id' });
-
-          if (error) {
-            console.warn('Profile location save failed:', error.message);
-          }
+          }, { merge: true }).catch((error) => console.warn('Profile location save failed:', error?.message || error));
         }
 
         setStatus('allowed');

@@ -1,6 +1,4 @@
 import { useState, useEffect, useRef } from 'react';
-import { supabase } from '../lib/supabase';
-import { isSupabaseConfigured } from '../lib/utils';
 import { X, Plus, Trash2, Edit3, Check, Download, RefreshCw, Star, Image as ImageIcon, Users, MapPin, Clock, CheckCircle2, ChefHat, Package, Truck, PartyPopper, Cake, Lock } from 'lucide-react';
 import { useProducts } from '../hooks/useProducts';
 import { useOrdersHook } from '../hooks/useOrders';
@@ -157,13 +155,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
       window.open(pathOrUrl, '_blank');
       return;
     }
-    if (!isSupabaseConfigured()) return;
-    const { data, error } = await supabase.storage.from('payment-screenshots').createSignedUrl(pathOrUrl, 60);
-    if (error || !data?.signedUrl) {
-      console.warn('Payment screenshot open failed:', error?.message);
-      return;
-    }
-    window.open(data.signedUrl, '_blank');
+    window.open(pathOrUrl, '_blank');
   };
   const topProducts = Object.entries(
     safeOrders.filter(Boolean).reduce<Record<string, number>>((acc, o) => {

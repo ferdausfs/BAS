@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useUI, useAuthStore, useSettingsStore, pushBrowserRouteState } from './lib/store';
-import { isSupabaseConfigured } from './lib/utils';
+import { isFirebaseConfigured } from './lib/firebase';
 import PhoneFrame from './components/PhoneFrame';
 import BottomTabBar from './components/BottomTabBar';
 import SplashScreen from './screens/SplashScreen';
@@ -41,7 +41,7 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (isSupabaseConfigured()) {
+    if (isFirebaseConfigured()) {
       useSettingsStore.getState().loadRemoteSettings().finally(() => setSettingsLoading(false));
     } else {
       setSettingsLoading(false);

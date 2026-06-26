@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { supabase } from '../lib/supabase';
+import { collection, onSnapshot } from 'firebase/firestore';
+import { db, isFirebaseConfigured } from '../lib/firebase';
 import { useOrders } from '../lib/store';
-import { isSupabaseConfigured } from '../lib/utils';
 
 type Customer = {
   id: string;
@@ -18,31 +18,25 @@ type Customer = {
 export function useCustomers() {
   const { orders } = useOrders();
   const [customers, setCustomers] = useState<Customer[]>([]);
+  const [profiles, setProfiles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let alive = true;
-
-    async function load() {
-      setLoading(true);
-      if (isSupabaseConfigured()) {
-        try {
-          const { data } = await supabase.from('profiles').select('*');
-          if (alive) setCustomers(aggregateFromOrders(orders, data || []));
-        } catch {
-          if (alive) setCustomers(aggregateFromOrders(orders));
-        } finally {
-          if (alive) setLoading(false);
-        }
-      } else {
-        setCustomers(aggregateFromOrders(orders));
-        setLoading(false);
-      }
+    if (!isFirebaseConfigured()) {
+      setProfiles([]);
+      return;
     }
+    const unsub = onSnapshot(collection(db, 'profiles'), (snap) => {
+      setProfiles(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+    }, () => setProfiles([]));
+    return unsub;
+  }, []);
 
-    load();
-    return () => { alive = false; };
-  }, [orders]);
+  useEffect(() => {
+    setLoading(true);
+    setCustomers(aggregateFromOrders(orders, profiles));
+    setLoading(false);
+  }, [orders, profiles]);
 
   return { customers: Array.isArray(customers) ? customers : [], loading };
 }
@@ -67,11 +61,9 @@ function aggregateFromOrders(orders: any[] | null | undefined, profiles: any[] =
   });
 
   safeOrders.filter(Boolean).forEach((o) => {
-    if (!o) return;
     const key = o.userId || o.user_id || o.customer?.phone || `guest-${o.id}`;
     if (!key) return;
     const prev = map.get(key);
-
     if (prev) {
       prev.totalSpent += o.total || 0;
       prev.orderCount += 1;

@@ -11,8 +11,9 @@ import {
   WALLET_REFERRAL_BONUS,
   pushReferralReward,
 } from '../lib/store';
-import { supabase } from '../lib/supabase';
-import { isSupabaseConfigured, safeArray, isValidPhone } from '../lib/utils';
+import { doc, setDoc } from 'firebase/firestore';
+import { db, isFirebaseConfigured, uploadToCloudinary } from '../lib/firebase';
+import { safeArray, isValidPhone } from '../lib/utils';
 import { LocationGate } from '../components/LocationGate';
 import { BD_DISTRICTS } from '../lib/zones';
 
@@ -231,26 +232,7 @@ export default function CheckoutScreen({ onBack }: Props) {
 
   const uploadPaymentScreenshot = async (): Promise<string | undefined> => {
     if (!paymentScreenshotFile) return undefined;
-    if (!isSupabaseConfigured()) {
-      return await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(String(reader.result));
-        reader.onerror = () => reject(new Error('Failed to read screenshot'));
-        reader.readAsDataURL(paymentScreenshotFile);
-      });
-    }
-
-    const ext = paymentScreenshotFile.name.split('.').pop() || 'jpg';
-    const path = `orders/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-    const { data, error } = await supabase.storage
-      .from('payment-screenshots')
-      .upload(path, paymentScreenshotFile, { upsert: false });
-
-    if (error || !data) {
-      throw new Error(error?.message || 'Screenshot upload failed');
-    }
-
-    return path;
+    return uploadToCloudinary(paymentScreenshotFile, 'bake-art-style/payment-screenshots');
   };
 
   const handleSubmit = async () => {
@@ -306,15 +288,16 @@ export default function CheckoutScreen({ onBack }: Props) {
         gift: giftMode ? gift : undefined,
       });
 
-      if (isSupabaseConfigured() && user?.id) {
-        await supabase.from('profiles').upsert({
+      if (isFirebaseConfigured() && user?.id) {
+        await setDoc(doc(db, 'profiles', user.id), {
           id: user.id,
           name: form.name,
           contact: form.phone,
           email: user.email,
           district: form.district,
           location_address: form.address,
-        }, { onConflict: 'id' });
+          updated_at: new Date().toISOString(),
+        }, { merge: true });
       }
 
       if (referralApplied && referralInput.trim()) {

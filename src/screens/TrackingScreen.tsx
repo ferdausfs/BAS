@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { ArrowLeft, Package, Search, ShoppingCart, CheckCircle2, Flame, Cake, Truck, PartyPopper, RefreshCw } from 'lucide-react';
 import { useUI, formatINR, useAuthStore } from '../lib/store';
 import { useOrdersHook } from '../hooks/useOrders';
-import { isSupabaseConfigured, safeArray } from '../lib/utils';
+import { isFirebaseConfigured } from '../lib/firebase';
+import { safeArray } from '../lib/utils';
 import type { Order } from '../types';
 
 const TIMELINE_STEPS: { key: string; Icon: typeof ShoppingCart; label: string; sub: string }[] = [
@@ -25,7 +26,7 @@ export default function TrackingScreen() {
   const user = useAuthStore((s) => s.user);
 
   useEffect(() => {
-    if (isSupabaseConfigured() && user) {
+    if (isFirebaseConfigured() && user) {
       fetchMyOrders();
     }
   }, [fetchMyOrders, user]);
@@ -45,7 +46,7 @@ export default function TrackingScreen() {
   // reach the customer in near-realtime (no websocket needed on customer side).
   useEffect(() => {
     if (!match || match.status === 'delivered' || match.status === 'cancelled') return;
-    if (!isSupabaseConfigured()) return;
+    if (!isFirebaseConfigured()) return;
 
     const interval = setInterval(() => {
       fetchMyOrders();

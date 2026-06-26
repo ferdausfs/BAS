@@ -1,73 +1,71 @@
 import { useCallback, useEffect, useState } from 'react';
-import { supabase } from '../lib/supabase';
+import {
+  createUserWithEmailAndPassword,
+  GoogleAuthProvider,
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  signInWithPopup,
+  signOut as firebaseSignOut,
+  updateProfile,
+  type User as FirebaseUser,
+} from 'firebase/auth';
+import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
+import { auth, db, isFirebaseConfigured } from '../lib/firebase';
 import { useAuthStore, useLocation } from '../lib/store';
-import { isSupabaseConfigured, ls } from '../lib/utils';
+import { ls } from '../lib/utils';
 import type { User } from '../types';
 
-type ProfileRow = {
-  id: string;
-  name: string | null;
-  contact: string | null;
-  email: string | null;
-  is_admin: boolean | null;
+type ProfileDoc = {
+  id?: string;
+  name?: string | null;
+  contact?: string | null;
+  email?: string | null;
+  is_admin?: boolean | null;
   district?: string | null;
   gps_lat?: number | null;
   gps_lng?: number | null;
   location_address?: string | null;
   location_verified?: boolean | null;
+  avatar?: string | null;
 };
 
-const mapSupabaseUser = async (authUser: any): Promise<User> => {
-  const fallbackName = authUser.user_metadata?.full_name || authUser.email?.split('@')[0] || 'User';
-  const fallbackAvatar = authUser.user_metadata?.avatar_url || '';
+const profileRef = (id: string) => doc(db, 'profiles', id);
 
-  let profile: ProfileRow | null = null;
+const mapFirebaseUser = async (authUser: FirebaseUser): Promise<User> => {
+  const fallbackName = authUser.displayName || authUser.email?.split('@')[0] || 'User';
+  const fallbackAvatar = authUser.photoURL || '';
+
+  let profile: ProfileDoc | null = null;
   try {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('id, name, contact, email, is_admin, district, gps_lat, gps_lng, location_address, location_verified')
-      .eq('id', authUser.id)
-      .maybeSingle();
-
-    if (error) throw error;
-    profile = data as ProfileRow | null;
+    const snap = await getDoc(profileRef(authUser.uid));
+    profile = snap.exists() ? (snap.data() as ProfileDoc) : null;
 
     if (!profile || profile.email !== (authUser.email || '')) {
-      await supabase.from('profiles').upsert({
-        id: authUser.id,
+      const nextProfile: ProfileDoc = {
+        id: authUser.uid,
         name: profile?.name || fallbackName,
         contact: profile?.contact || '',
         email: authUser.email || profile?.email || '',
         is_admin: profile?.is_admin || false,
         district: profile?.district || null,
-        gps_lat: profile?.gps_lat || null,
-        gps_lng: profile?.gps_lng || null,
-        location_address: profile?.location_address || null,
+        gps_lat: profile?.gps_lat ?? null,
+        gps_lng: profile?.gps_lng ?? null,
+        location_address: profile?.location_address ?? null,
         location_verified: profile?.location_verified || false,
-      }, { onConflict: 'id' });
-
-      profile = {
-        id: authUser.id,
-        name: profile?.name || fallbackName,
-        contact: profile?.contact || '',
-        email: authUser.email || profile?.email || '',
-        is_admin: profile?.is_admin || false,
-        district: profile?.district || null,
-        gps_lat: profile?.gps_lat || null,
-        gps_lng: profile?.gps_lng || null,
-        location_address: profile?.location_address || null,
-        location_verified: profile?.location_verified || false,
+        avatar: profile?.avatar || fallbackAvatar,
       };
+      await setDoc(profileRef(authUser.uid), { ...nextProfile, updated_at: serverTimestamp() }, { merge: true });
+      profile = nextProfile;
     }
   } catch (error) {
     console.warn('Profile fetch failed during auth hydration:', error);
   }
 
   const nextUser: User = {
-    id: authUser.id,
+    id: authUser.uid,
     name: profile?.name || fallbackName,
     email: profile?.email || authUser.email || '',
-    avatar: fallbackAvatar,
+    avatar: profile?.avatar || fallbackAvatar,
     isAdmin: !!profile?.is_admin,
     contact: profile?.contact || '',
     district: profile?.district ?? null,
@@ -78,11 +76,7 @@ const mapSupabaseUser = async (authUser: any): Promise<User> => {
   };
 
   if (nextUser.locationVerified && nextUser.district) {
-    useLocation.getState().setLocation(
-      nextUser.district,
-      nextUser.gpsLat ?? 0,
-      nextUser.gpsLng ?? 0
-    );
+    useLocation.getState().setLocation(nextUser.district, nextUser.gpsLat ?? 0, nextUser.gpsLng ?? 0);
   }
 
   return nextUser;
@@ -93,71 +87,50 @@ export function useAuth() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!isSupabaseConfigured()) return;
-
+    if (!isFirebaseConfigured()) return;
     let active = true;
 
-    void supabase.auth.getSession().then(async ({ data }) => {
-      if (!active || !data.session?.user) return;
-      const hydrated = await mapSupabaseUser(data.session.user);
-      if (active) login(hydrated);
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!session?.user) {
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      if (!firebaseUser) {
         logout();
         return;
       }
-      void mapSupabaseUser(session.user).then((hydrated) => {
+      void mapFirebaseUser(firebaseUser).then((hydrated) => {
         if (active) login(hydrated);
       });
     });
 
     return () => {
       active = false;
-      subscription.unsubscribe();
+      unsubscribe();
     };
   }, [login, logout]);
 
   const signUp = useCallback(async (email: string, password: string, name: string): Promise<{ needsEmailConfirmation: boolean }> => {
     setLoading(true);
     try {
-      if (isSupabaseConfigured()) {
-        const { data, error } = await supabase.auth.signUp({
+      if (isFirebaseConfigured()) {
+        const cred = await createUserWithEmailAndPassword(auth, email, password);
+        await updateProfile(cred.user, { displayName: name });
+        await setDoc(profileRef(cred.user.uid), {
+          id: cred.user.uid,
+          name,
+          contact: '',
           email,
-          password,
-          options: { data: { full_name: name } },
-        });
-        if (error) throw new Error(error.message);
-        if (data.user) {
-          await supabase.from('profiles').upsert(
-            {
-              id: data.user.id,
-              name,
-              contact: '',
-              email,
-              is_admin: false,
-            },
-            { onConflict: 'id' }
-          );
-          if (!data.session) {
-            return { needsEmailConfirmation: true };
-          }
-          const hydrated = await mapSupabaseUser(data.user);
-          login(hydrated);
-          return { needsEmailConfirmation: false };
-        }
-        return { needsEmailConfirmation: true };
+          is_admin: false,
+          avatar: cred.user.photoURL || '',
+          created_at: serverTimestamp(),
+          updated_at: serverTimestamp(),
+        }, { merge: true });
+        login(await mapFirebaseUser(cred.user));
+        return { needsEmailConfirmation: false };
       }
 
       const accounts = ls.get<Array<any>>('bakeart-local-accounts', []);
       const existing = accounts.find((a) => a.email.toLowerCase() === email.toLowerCase());
-      if (existing) {
-        throw new Error('An account with this email already exists. Please sign in instead.');
-      }
+      if (existing) throw new Error('An account with this email already exists. Please sign in instead.');
       const id = `local-${Date.now()}`;
-      const newAcc = { id, name, email, password };
-      ls.set('bakeart-local-accounts', [...accounts, newAcc]);
+      ls.set('bakeart-local-accounts', [...accounts, { id, name, email, password }]);
       login({ id, name, email, avatar: '', isAdmin: false, contact: '' });
       return { needsEmailConfirmation: false };
     } finally {
@@ -168,42 +141,33 @@ export function useAuth() {
   const signIn = useCallback(async (email: string, password: string): Promise<void> => {
     setLoading(true);
     try {
-      if (isSupabaseConfigured()) {
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw new Error('Wrong email or password.');
-        if (data.user) {
-          const hydrated = await mapSupabaseUser(data.user);
-          login(hydrated);
-        }
+      if (isFirebaseConfigured()) {
+        const cred = await signInWithEmailAndPassword(auth, email, password);
+        login(await mapFirebaseUser(cred.user));
         return;
       }
 
       const accounts = ls.get<Array<any>>('bakeart-local-accounts', []);
-      const matched = accounts.find(
-        (a) => a.email.toLowerCase() === email.toLowerCase() && a.password === password
-      );
-      if (!matched) {
-        throw new Error('Wrong email or password.');
-      }
+      const matched = accounts.find((a) => a.email.toLowerCase() === email.toLowerCase() && a.password === password);
+      if (!matched) throw new Error('Wrong email or password.');
       login({ id: matched.id, name: matched.name, email, avatar: '', isAdmin: false, contact: '' });
+    } catch (error: any) {
+      if (String(error?.code || '').startsWith('auth/')) throw new Error('Wrong email or password.');
+      throw error;
     } finally {
       setLoading(false);
     }
   }, [login]);
 
   const signInWithGoogle = useCallback(async () => {
-    if (!isSupabaseConfigured()) {
-      throw new Error('Google login requires Supabase to be configured');
-    }
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: window.location.origin },
-    });
-    if (error) throw new Error(error.message);
-  }, []);
+    if (!isFirebaseConfigured()) throw new Error('Google login requires Firebase to be configured');
+    const provider = new GoogleAuthProvider();
+    const cred = await signInWithPopup(auth, provider);
+    login(await mapFirebaseUser(cred.user));
+  }, [login]);
 
   const signOut = useCallback(async () => {
-    if (isSupabaseConfigured()) await supabase.auth.signOut();
+    if (isFirebaseConfigured()) await firebaseSignOut(auth);
     logout();
   }, [logout]);
 

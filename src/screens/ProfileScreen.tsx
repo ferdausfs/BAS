@@ -8,8 +8,9 @@ import {
 import { useUI, useUser, useOrders, useCart, useAuthStore, useWallet, getReferralCode, WALLET_MAX_REDEEM, claimReferralRewards, WALLET_REFERRAL_BONUS } from '../lib/store';
 import { useProducts } from '../hooks/useProducts';
 import { useAuth } from '../hooks/useAuth';
-import { supabase } from '../lib/supabase';
-import { isSupabaseConfigured, ls } from '../lib/utils';
+import { doc, setDoc } from 'firebase/firestore';
+import { db, isFirebaseConfigured } from '../lib/firebase';
+import { ls } from '../lib/utils';
 import BrandLogo from '../components/BrandLogo';
 import WalletHistoryModal from '../components/WalletHistoryModal';
 import { ChatBot } from '../components/ChatBot';
@@ -268,17 +269,17 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
       });
     }
 
-    if (isSupabaseConfigured() && user?.id) {
+    if (isFirebaseConfigured() && user?.id) {
       try {
-        const { error } = await supabase.from('profiles').upsert({
+        await setDoc(doc(db, 'profiles', user.id), {
           id: user.id,
           name: next.name,
           contact: next.phone,
           email: user.email,
           district: next.district,
           location_address: next.address,
-        }, { onConflict: 'id' });
-        if (error) throw error;
+          updated_at: new Date().toISOString(),
+        }, { merge: true });
       } catch (error) {
         console.warn('Profile save failed:', error);
       }

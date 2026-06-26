@@ -2,7 +2,8 @@ import { useEffect } from 'react';
 import { Check, Package, ChefHat, Truck, Receipt, Search, RefreshCw } from 'lucide-react';
 import { useUI, formatINR, useAuthStore, useCart } from '../lib/store';
 import { useOrdersHook } from '../hooks/useOrders';
-import { isSupabaseConfigured, safeArray } from '../lib/utils';
+import { isFirebaseConfigured } from '../lib/firebase';
+import { safeArray } from '../lib/utils';
 
 const STATUSES: { key: string; label: string; icon: any }[] = [
   { key: 'placed',    label: 'Placed',    icon: Check },
@@ -19,7 +20,7 @@ export default function OrdersScreen() {
   const { setTab, go } = useUI();
 
   useEffect(() => {
-    if (isSupabaseConfigured() && user) {
+    if (isFirebaseConfigured() && user) {
       fetchMyOrders();
     }
   }, [fetchMyOrders, user]);
