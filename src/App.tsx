@@ -21,7 +21,7 @@ import AdminScreen from './screens/AdminScreen';
 import AppErrorBoundary from './components/AppErrorBoundary';
 
 export default function App() {
-  const { view, tab, chatOpen } = useUI();
+  const { view, tab, chatOpen, modalDepth } = useUI();
   const { user } = useAuthStore();
   const { settings } = useSettingsStore();
 
@@ -75,7 +75,7 @@ export default function App() {
     view.name === 'admin' ? (view.tab ?? 'dashboard') : '',
   ].join('-');
 
-  const showTabBar = view.name === 'tabs' && !chatOpen && !authOpen && !notificationsOpen;
+  const showTabBar = view.name === 'tabs' && !chatOpen && !authOpen && !notificationsOpen && modalDepth === 0;
 
   return (
     <AppErrorBoundary>
