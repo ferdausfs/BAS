@@ -85,7 +85,7 @@ export default function OrdersScreen() {
                         Order #{o.id}
                       </div>
                       <div className="mt-0.5 text-[12px] font-medium text-ink-200">
-                        {new Date(o.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        {new Date(o.createdAt).toLocaleDateString('en-BD', { day: 'numeric', month: 'short', year: 'numeric' })}
                       </div>
                     </div>
                     <div className="font-display text-[18px] font-bold tabular text-ink">
