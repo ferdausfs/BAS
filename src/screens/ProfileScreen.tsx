@@ -131,7 +131,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
   const [inviteOpen, setInviteOpen] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  const APP_URL = 'https://bake-art-style-2.vercel.app';
+  const APP_URL = 'https://bas.umuhammadiswa.workers.dev';
   const referralLink = referralCode ? `${APP_URL}?ref=${referralCode}` : APP_URL;
 
   const [contactOpen, setContactOpen] = useState(false);
