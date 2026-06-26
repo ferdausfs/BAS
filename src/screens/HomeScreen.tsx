@@ -10,6 +10,7 @@ import SearchBar from '../components/SearchBar';
 import ProductCard from '../components/ProductCard';
 import SectionHeader from '../components/SectionHeader';
 import BrandLogo from '../components/BrandLogo';
+import { useModalDepth } from '../hooks/useModalDepth';
 import OccasionIcon from '../components/OccasionIcon';
 import type { Banner, SpecialDate } from '../types';
 
@@ -49,6 +50,7 @@ export default function HomeScreen({
   const [search, setSearch] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [activeNotice, setActiveNotice] = useState<Banner | null>(null);
+  useModalDepth(!!activeNotice);
 
   const trending = useMemo(() => safeArray(products)
     .filter((p) => (p.approved ?? true) && (p.inStock ?? true) && (p.bestseller || p.newArrival))
