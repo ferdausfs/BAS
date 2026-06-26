@@ -4,22 +4,7 @@ export const BD_DISTRICTS = [
   'Khulna', 'Mymensingh', 'Barishal', 'Rangpur',
 ];
 
-export const DEFAULT_ZONES: string[] = [
-  'Dhaka',
-  'Gulshan',
-  'Banani',
-  'Dhanmondi',
-  'Mirpur',
-  'Uttara',
-  'Bashundhara',
-  'Mohammadpur',
-  'Chattogram',
-  'Sylhet',
-  'Cumilla',
-  'Comilla',
-  'Narayanganj',
-  'Gazipur',
-];
+
 
 /**
  * Lightweight delivery-zone match — case-insensitive, removes punctuation,

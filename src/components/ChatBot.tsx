@@ -29,7 +29,8 @@ interface Props {
 export function ChatBot({ embedded = false }: Props) {
   const [messages, setMessages] = useState<Message[]>(() => {
     try {
-      const raw = localStorage.getItem(chatHistoryKey());
+      const userId = useAuthStore.getState().user?.id;
+      const raw = localStorage.getItem(chatHistoryKey(userId));
       if (!raw) return [];
       const parsed = JSON.parse(raw) as Array<{ role: 'user' | 'bot'; text: string; time: string }>;
       return Array.isArray(parsed) ? parsed.map((m) => ({ ...m, time: new Date(m.time) })) : [];
@@ -339,7 +340,7 @@ ${productList}
     const recentHistory = history.slice(-8).map((m) => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.text}`).join('\n');
     
     // NOTE: client-side key — restrict this key in Google Cloud Console to your Vercel domain only
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`, {
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${geminiKey}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: `${systemPrompt}\n\nConversation so far:\n${recentHistory}\nUser: ${userMsg}` }] }] }),

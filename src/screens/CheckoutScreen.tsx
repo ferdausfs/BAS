@@ -60,7 +60,6 @@ export default function CheckoutScreen({ onBack }: Props) {
       setReferralError("Referral bonus পেতে আগে sign in করো");
       return;
     }
-
     if (!isSupabaseConfigured()) {
       setReferralError("Referral validation requires Supabase setup");
       return;
@@ -70,9 +69,12 @@ export default function CheckoutScreen({ onBack }: Props) {
     setReferralError('');
 
     try {
+      // Derive the id suffix from the code (last 4 chars) and query only that subset
+      const idSuffix = code.slice(-4).toLowerCase();
       const { data: profiles, error } = await supabase
         .from('profiles')
-        .select('id, email');
+        .select('id, email')
+        .ilike('id', `%${idSuffix}`);  // ← only fetch profiles matching the id suffix
 
       if (error) throw error;
 
@@ -331,15 +333,6 @@ export default function CheckoutScreen({ onBack }: Props) {
 
   const handleBack = onBack ?? back;
 
-  // Location gate before checkout (payment step) — must verify zone first
-  if (showLocationGate) {
-    return (
-      <LocationGate
-        onDismiss={() => setShowLocationGate(false)}
-      />
-    );
-  }
-
   if (items.length === 0) {
     return (
       <div className="flex h-full flex-col bg-cream">
@@ -355,6 +348,15 @@ export default function CheckoutScreen({ onBack }: Props) {
           </button>
         </div>
       </div>
+    );
+  }
+
+  // Location gate before checkout (payment step) — must verify zone first
+  if (showLocationGate) {
+    return (
+      <LocationGate
+        onDismiss={() => setShowLocationGate(false)}
+      />
     );
   }
 
@@ -616,7 +618,7 @@ export default function CheckoutScreen({ onBack }: Props) {
             </div>
             {referralApplied && (
               <div className="mt-2 text-[11px] text-emerald-600 font-semibold">
-                Referral code applied! ৳{WALLET_REFERRAL_BONUS} added to your wallet
+                Referral code applied! ৳{WALLET_REFERRAL_BONUS} wallet credit — পরের অর্ডারে ব্যবহার করুন
               </div>
             )}
             {referralError && (
