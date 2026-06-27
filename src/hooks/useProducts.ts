@@ -3,7 +3,7 @@ import { collection, deleteDoc, doc, onSnapshot, orderBy, query, setDoc } from '
 import { db, uploadToCloudinary } from '../lib/firebase';
 import { products as DEFAULT_PRODUCTS } from '../lib/data';
 import { safeArray } from '../lib/utils';
-import { mapProductDoc, productToDoc } from '../lib/firestoreMappers';
+import { mapProductDoc, productToDoc, sanitizeForFirestore } from '../lib/firestoreMappers';
 import type { Product } from '../types';
 
 export function useProducts() {
