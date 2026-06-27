@@ -3,7 +3,7 @@ import { collection, doc, getDocs, onSnapshot, query, updateDoc, where } from 'f
 import { db, isFirebaseConfigured } from '../lib/firebase';
 import { useAuthStore, useOrders as useOrdersStore, useUI } from '../lib/store';
 import { playBeep } from '../lib/utils';
-import { mapOrderDoc, toDbOrderStatus } from '../lib/firestoreMappers';
+import { mapOrderDoc } from '../lib/firestoreMappers';
 import type { Order } from '../types';
 
 const sortOrders = (orders: Order[]) => [...orders].sort((a, b) => b.createdAt - a.createdAt);
@@ -57,7 +57,9 @@ export function useOrdersHook() {
     const q = query(collection(db, 'orders'), where('userId', '==', user.id));
     const unsub = onSnapshot(q, (snap) => {
       const remoteOrders = sortOrders(snap.docs.map((d) => mapOrderDoc(d.id, d.data())));
-      const otherOrders = useOrdersStore.getState().orders.filter((o) => o.userId && o.userId !== user.id);
+      const otherOrders = useOrdersStore.getState().orders.filter(
+        (o) => !o.userId || o.userId.startsWith('guest-') || o.userId !== user.id
+      );
       setOrders(sortOrders([...remoteOrders, ...otherOrders]));
       setLoading(false);
     }, (e) => {
@@ -68,11 +70,21 @@ export function useOrdersHook() {
     return () => unsub();
   }, [setOrders, user?.id, user?.isAdmin]);
 
+  useEffect(() => {
+    if (!isFirebaseConfigured() || !user?.isAdmin) return;
+
+    const unsub = onSnapshot(collection(db, 'orders'), (snap) => {
+      setOrders(sortOrders(snap.docs.map((d) => mapOrderDoc(d.id, d.data()))).slice(0, 300));
+    }, (e) => console.warn('Admin orders snapshot failed:', e));
+
+    return () => unsub();
+  }, [user?.isAdmin, setOrders]);
+
   const updateStatus = useCallback(async (id: string, status: Order['status']) => {
     setOrderStatus(id, status);
     if (!isFirebaseConfigured()) return;
     try {
-      await updateDoc(doc(db, 'orders', id), { status: toDbOrderStatus(status), updated_at: new Date().toISOString() });
+      await updateDoc(doc(db, 'orders', id), { status, updated_at: new Date().toISOString() });
     } catch (error) {
       console.error('Status update error:', error);
     }

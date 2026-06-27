@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { collection, deleteDoc, doc, onSnapshot, orderBy, query, setDoc } from 'firebase/firestore';
+import { collection, deleteDoc, doc, onSnapshot, setDoc } from 'firebase/firestore';
 import { db, isFirebaseConfigured, uploadToCloudinary } from '../lib/firebase';
 import { products as DEFAULT_PRODUCTS } from '../lib/data';
 import { ls, safeArray } from '../lib/utils';
@@ -23,9 +23,9 @@ export function useProducts() {
   useEffect(() => {
     if (!isFirebaseConfigured()) return;
     setLoading(true);
-    const q = query(collection(db, 'products'), orderBy('created_at', 'desc'));
-    const unsub = onSnapshot(q, (snap) => {
-      applyProducts(snap.docs.map((d) => mapProductDoc(d.id, d.data())));
+    const unsub = onSnapshot(collection(db, 'products'), (snap) => {
+      const prods = snap.docs.map((d) => mapProductDoc(d.id, d.data()));
+      applyProducts(prods.sort((a, b) => b.price - a.price));
       setLoading(false);
     }, (e) => {
       console.warn('Products snapshot failed, using local:', e);

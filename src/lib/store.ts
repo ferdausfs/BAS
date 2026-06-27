@@ -1,10 +1,9 @@
-import { sanitizeForFirestore, orderToDoc } from "./firestoreMappers";
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { CartItem, Order } from '../types';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, onSnapshot, setDoc } from 'firebase/firestore';
 import { db, isFirebaseConfigured } from './firebase';
-import { orderToDoc, toDbOrderStatus } from './firestoreMappers';
+import { sanitizeForFirestore, orderToDoc, toDbOrderStatus } from './firestoreMappers';
 
 
 
@@ -236,7 +235,7 @@ export const useOrders = create<OrderState>()(
         const o: Order = {
           ...data,
           id: 'BAS' + Date.now().toString().slice(-6) + Math.random().toString(36).slice(2, 5).toUpperCase(),
-          userId: hasRemoteUser ? user!.id : undefined,
+          userId: user?.id ?? `guest-${Date.now()}`,
           createdAt: Date.now(),
           status: 'placed',
           loyaltyPointsRedeemed: pendingRedeem > 0 ? pendingRedeem : undefined,
@@ -291,7 +290,7 @@ export const useOrders = create<OrderState>()(
         }
 
         if (isFirebaseConfigured()) {
-          void setDoc(doc(db, 'orders', id), { status: toDbOrderStatus(status), updated_at: new Date().toISOString() }, { merge: true }).catch((error) => {
+          void setDoc(doc(db, 'orders', id), { status, updated_at: new Date().toISOString() }, { merge: true }).catch((error) => {
             console.warn('Remote order status update failed:', error?.message || error);
           });
         }
@@ -362,6 +361,8 @@ export const useAuthStore = create<AuthState>()(
 
 const ADMIN_ONLY_KEYS = ['adminPin', 'adminEmail', 'geminiApiKey'] as const;
 
+let siteSettingsUnsubscribe: (() => void) | null = null;
+
 // ── Settings Store ─────────────────────────────────────────
 type SettingsState = {
   settings: SiteSettings;
@@ -398,6 +399,36 @@ export const useSettingsStore = create<SettingsState>()(
               ...rowBasedSettings,
             },
           });
+        }
+
+        if (isFirebaseConfigured() && !siteSettingsUnsubscribe) {
+          siteSettingsUnsubscribe = onSnapshot(doc(db, 'app_settings', 'site_settings'), (snap) => {
+            if (!snap.exists()) return;
+            const data = snap.data();
+            const value = data?.value as (Partial<SiteSettings> & {
+              shopLocation?: string;
+              shopLat?: number;
+              shopLng?: number;
+            }) | undefined;
+
+            if (!value) return;
+
+            set({
+              settings: {
+                ...DEFAULT_SETTINGS,
+                ...get().settings,
+                ...value,
+              },
+            });
+
+            if (value.shopLocation) {
+              useLocation.getState().setLocation(
+                value.shopLocation,
+                value.shopLat ?? 0,
+                value.shopLng ?? 0
+              );
+            }
+          }, (e) => console.warn('Site settings snapshot failed:', e));
         }
       },
       updateSettings: (patch) =>
