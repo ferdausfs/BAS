@@ -35,7 +35,7 @@ export function useProducts() {
     const updated = all.find((p) => p.id === product.id) ? all.map((p) => (p.id === product.id ? product : p)) : [...all, product];
     const validated = safeArray<Product>(updated, DEFAULT_PRODUCTS);
     setProducts(validated.length > 0 ? validated : DEFAULT_PRODUCTS);
-    await setDoc(doc(db, 'products', product.id), productToDoc(product), { merge: true });
+    await setDoc(doc(db, 'products', product.id), sanitizeForFirestore(productToDoc(product)), { merge: true }).catch(e => console.error("Product save failed:", e));
   }, [products]);
 
   const deleteProduct = useCallback(async (id: string) => {
