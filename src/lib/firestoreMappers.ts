@@ -19,41 +19,32 @@ export const toOccasion = (category?: string): Product['occasion'] => {
 };
 
 export const mapProductDoc = (id: string, row: any): Product => {
-  if (row?.data && typeof row.data === 'object') {
-    return {
-      ...row.data,
-      id,
-      name: row.data.name || row.name || 'Cake',
-      occasion: toOccasion(row.data.occasion || row.category),
-      price: Number(row.data.price ?? row.price ?? 0),
-      rating: Number(row.data.rating ?? row.rating ?? 0),
-      reviews: Number(row.data.reviews ?? row.reviews ?? 0),
-      image: row.data.image || row.image || '',
-      description: row.data.description || row.description || '',
-      approved: row.approved ?? row.data.approved ?? true,
-      inStock: row.data.inStock ?? true,
-    };
-  }
+  // Support both old nested format (row.data) and new flat format
+  const d = (row?.data && typeof row.data === 'object') 
+    ? { ...row.data, ...row } 
+    : row;
 
   return {
     id,
-    name: row?.name || 'Cake',
-    tagline: row?.tag || row?.name || 'Freshly baked',
-    description: row?.description || '',
-    price: Number(row?.price ?? 0),
-    image: row?.image || '',
-    rating: Number(row?.rating ?? 4.5),
-    reviews: Number(row?.reviews ?? 0),
-    occasion: toOccasion(row?.category),
-    flavors: ['Chocolate'],
-    weights: [{ size: row?.weight || '1 lb', price: 0 }],
-    tags: row?.tag ? [row.tag] : [],
-    bestseller: !!row?.badges?.includes('bestseller'),
-    newArrival: !!row?.badges?.includes('new'),
-    tier: row?.badges?.includes('premium') ? 'premium' : 'normal',
-    priceUnit: 'pound',
-    inStock: true,
-    approved: row?.approved ?? true,
+    name: d?.name || 'Cake',
+    tagline: d?.tag || d?.tagline || d?.name || 'Freshly baked',
+    description: d?.description || '',
+    price: Number(d?.price ?? 0),
+    image: d?.image || '',
+    rating: Number(d?.rating ?? 4.5),
+    reviews: Number(d?.reviews ?? 0),
+    occasion: toOccasion(d?.occasion || d?.category),
+    flavors: d?.flavors || ['Chocolate'],
+    weights: d?.weights || [{ size: d?.weight || '1 lb', price: 0 }],
+    tags: d?.tags || (d?.tag ? [d.tag] : []),
+    bestseller: d?.bestseller ?? !!d?.badges?.includes('bestseller'),
+    newArrival: d?.newArrival ?? !!d?.badges?.includes('new'),
+    tier: d?.tier || (d?.badges?.includes('premium') ? 'premium' : 'normal'),
+    priceUnit: d?.priceUnit || 'pound',
+    inStock: d?.inStock ?? !(d?.badges?.includes('out_of_stock')),
+    approved: d?.approved ?? true,
+    sizes: d?.sizes,
+    addons: d?.addons,
   };
 };
 
