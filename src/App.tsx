@@ -40,7 +40,7 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    useSettingsStore.getState().subscribeSettings();
+    
     useSettingsStore.getState().loadRemoteSettings().finally(() => setSettingsLoading(false));
   }, []);
 
