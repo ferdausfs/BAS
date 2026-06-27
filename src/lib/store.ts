@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { CartItem, Order } from '../types';
-import { doc, getDoc, onSnapshot, setDoc } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, onSnapshot, query, setDoc, where } from 'firebase/firestore';
 import { db, isFirebaseConfigured } from './firebase';
 import { sanitizeForFirestore, orderToDoc, toDbOrderStatus } from './firestoreMappers';
 
@@ -245,11 +245,8 @@ export const useOrders = create<OrderState>((set) => ({
         set((s) => ({ orders: [o, ...s.orders] }));
         useUI.getState().addNotification('✅ Order placed', `Order #${o.id} has been placed successfully.`);
         
-        // BUG 2 FIX: Immediately confirm order reward (no pending state)
-        // Admin may skip 'confirmed' status and go directly to 'delivered'
-        // So we confirm immediately on 'placed' to ensure customer gets reward
+        // Keep order reward pending until admin confirms/delivers the order.
         useWallet.getState().earnFromOrder(o.id, o.total);
-        useWallet.getState().confirmOrderEarn(o.id);
 
         // If user redeemed wallet balance in cart, deduct them now (track per order)
         if (pendingRedeem > 0) {
@@ -274,8 +271,7 @@ export const useOrders = create<OrderState>((set) => ({
 
         useUI.getState().addNotification('📦 Order updated', `Order #${id} status changed to ${status}.`);
 
-        // Note: reward is already confirmed on 'placed' status in placeOrder()
-        // Leaving this for backward compatibility if admin manually updates
+        // Confirm pending order reward only when admin confirms/delivers the order.
         if (status === 'confirmed' || status === 'delivered') {
           useWallet.getState().confirmOrderEarn(id);
         }
@@ -617,10 +613,32 @@ export const useWallet = create<WalletState>()(
       },
 
       cancelOrderEarn: (orderId) => {
-        set(s => ({
-          pendingEarn: s.pendingEarn.filter(p => p.orderId !== orderId),
-          txns: s.txns.filter(t => !(t.orderId === orderId && t.type === 'order_earn' && t.pending)),
-        }));
+        const s = get();
+        const confirmedTxn = s.txns.find(
+          t => t.orderId === orderId && t.type === 'order_earn' && !t.pending
+        );
+
+        if (confirmedTxn) {
+          // Reverse an already-confirmed order reward.
+          set(cur => ({
+            balance: Math.max(0, cur.balance - confirmedTxn.amount),
+            totalEarned: Math.max(0, cur.totalEarned - confirmedTxn.amount),
+            pendingEarn: cur.pendingEarn.filter(p => p.orderId !== orderId),
+            txns: cur.txns.filter(t => !(t.orderId === orderId && t.type === 'order_earn')),
+          }));
+
+          const uid = useAuthStore.getState().user?.id;
+          if (uid) {
+            const next = get();
+            void syncWalletToFirestore(uid, next.balance, next.totalEarned);
+          }
+        } else {
+          // Remove pending order reward only.
+          set(s => ({
+            pendingEarn: s.pendingEarn.filter(p => p.orderId !== orderId),
+            txns: s.txns.filter(t => !(t.orderId === orderId && t.type === 'order_earn' && t.pending)),
+          }));
+        }
       },
 
       refundRedeem: (orderId, amount) => {
@@ -779,56 +797,64 @@ export interface ReferralUseRecord {
 export const applyReferralCode = async (
   code: string,
   buyerUserId: string,
+  buyerEmail: string,
   orderId: string
 ): Promise<{ success: boolean; message: string }> => {
-  // Validation
   if (!code || !buyerUserId || !isFirebaseConfigured()) {
-    return { success: false, message: 'Invalid referral code or user' };
+    return { success: false, message: 'Invalid' };
   }
 
   const normalizedCode = code.trim().toUpperCase();
 
-  // Validate code format (8 alphanumeric characters)
-  if (!/^[A-Z0-9]{8}$/i.test(normalizedCode)) {
-    return { success: false, message: 'Code টি ৮ অক্ষরের হতে হবে' };
+  // Format check: 8 alphanumeric characters.
+  if (!/^[A-Z0-9]{8}$/.test(normalizedCode)) {
+    return { success: false, message: 'Invalid code format' };
+  }
+
+  // Own code check.
+  const buyerCode = getReferralCode({ email: buyerEmail, id: buyerUserId });
+  if (buyerCode && buyerCode.toUpperCase() === normalizedCode) {
+    return { success: false, message: 'নিজের code ব্যবহার করা যাবে না' };
+  }
+
+  // Check whether a profile owns this referral code.
+  try {
+    const profilesSnap = await getDocs(
+      query(collection(db, 'profiles'), where('referral_code', '==', normalizedCode))
+    );
+
+    if (profilesSnap.empty) {
+      // Fallback: derived code check (existing users may not have referral_code field).
+      // Accept if format valid and not own code, but log for diagnostics.
+      console.warn('Referral code owner not found in profiles:', normalizedCode);
+    }
+  } catch (e) {
+    console.warn('Referral owner lookup failed:', e);
   }
 
   try {
-    // 1. Check buyer's referral use history from Firestore
+    // Buyer max 3 uses check.
     const buyerKey = `referral_uses_${buyerUserId}`;
     const existing = await readRemoteSetting<ReferralUseRecord>(buyerKey);
     const uses = existing?.codes ?? [];
 
-    // 2. Max 3 uses check
     if (uses.length >= 3) {
       return { success: false, message: 'আপনি সর্বোচ্চ ৩ বার referral code ব্যবহার করতে পারবেন' };
     }
 
-    // 3. Same order duplicate check
     if (uses.some(u => u.orderId === orderId)) {
       return { success: false, message: 'এই order-এ আগেই code ব্যবহার হয়েছে' };
     }
 
-    // 4. Check if buyer is trying to use their own code
-    const buyerCurrentCode = getReferralCode({ id: buyerUserId });
-    if (buyerCurrentCode && normalizedCode === buyerCurrentCode) {
-      return { success: false, message: 'নিজের referral code ব্যবহার করা যাবে না' };
-    }
-
-    // 5. Give buyer ৳100 wallet credit immediately
+    // Buyer gets ৳100.
     useWallet.getState().earnReferral(normalizedCode, 'buyer');
 
-    // 6. Save referral use to Firestore (for tracking max 3 uses)
-    const newUse: ReferralUseEntry = {
-      code: normalizedCode,
-      usedAt: Date.now(),
-      orderId,
-    };
+    // Save buyer usage.
     await writeRemoteSetting(buyerKey, {
-      codes: [...uses, newUse],
+      codes: [...uses, { code: normalizedCode, usedAt: Date.now(), orderId }],
     });
 
-    // 7. Push pending reward to referrer (will be claimed when referrer opens app)
+    // Push referrer reward for auto-claim.
     await pushReferralReward(normalizedCode, {
       refereeId: buyerUserId,
       refereeName: 'Customer',

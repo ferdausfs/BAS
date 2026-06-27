@@ -11,7 +11,7 @@ import {
 } from 'firebase/auth';
 import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
-import { useAuthStore, useLocation } from '../lib/store';
+import { claimReferralRewards, getReferralCode, useAuthStore, useLocation, useUI } from '../lib/store';
 import type { User } from '../types';
 
 type ProfileDoc = {
@@ -26,6 +26,7 @@ type ProfileDoc = {
   location_address?: string | null;
   location_verified?: boolean | null;
   avatar?: string | null;
+  referral_code?: string | null;
 };
 
 const profileRef = (id: string) => doc(db, 'profiles', id);
@@ -39,12 +40,15 @@ const mapFirebaseUser = async (authUser: FirebaseUser): Promise<User> => {
     const snap = await getDoc(profileRef(authUser.uid));
     profile = snap.exists() ? (snap.data() as ProfileDoc) : null;
 
+    const profileEmail = authUser.email || profile?.email || '';
+    const refCode = getReferralCode({ email: profileEmail, id: authUser.uid });
+
     if (!profile || profile.email !== (authUser.email || '')) {
       const nextProfile: ProfileDoc = {
         id: authUser.uid,
         name: profile?.name || fallbackName,
         contact: profile?.contact || '',
-        email: authUser.email || profile?.email || '',
+        email: profileEmail,
         is_admin: profile?.is_admin || false,
         district: profile?.district || null,
         gps_lat: profile?.gps_lat ?? null,
@@ -52,9 +56,15 @@ const mapFirebaseUser = async (authUser: FirebaseUser): Promise<User> => {
         location_address: profile?.location_address ?? null,
         location_verified: profile?.location_verified || false,
         avatar: profile?.avatar || fallbackAvatar,
+        referral_code: profile?.referral_code || refCode || null,
       };
       await setDoc(profileRef(authUser.uid), { ...nextProfile, updated_at: serverTimestamp() }, { merge: true });
       profile = nextProfile;
+    }
+
+    if (!profile?.referral_code && refCode) {
+      await setDoc(profileRef(authUser.uid), { referral_code: refCode }, { merge: true });
+      profile = { ...(profile ?? {}), referral_code: refCode };
     }
   } catch (error) {
     console.warn('Profile fetch failed during auth hydration:', error);
@@ -93,8 +103,22 @@ export function useAuth() {
         logout();
         return;
       }
-      void mapFirebaseUser(firebaseUser).then((hydrated) => {
-        if (active) login(hydrated);
+      void mapFirebaseUser(firebaseUser).then(async (hydrated) => {
+        if (active) {
+          login(hydrated);
+
+          // Auto-claim referral rewards after login, even if ProfileScreen is not opened.
+          const myCode = getReferralCode(hydrated);
+          if (myCode) {
+            const claimed = await claimReferralRewards(myCode);
+            if (claimed > 0) {
+              useUI.getState().addNotification(
+                '🎉 Referral reward!',
+                `৳${claimed * 100} wallet-এ যোগ হয়েছে`
+              );
+            }
+          }
+        }
       });
     });
 
@@ -109,6 +133,7 @@ export function useAuth() {
     try {
       const cred = await createUserWithEmailAndPassword(auth, email, password);
       await updateProfile(cred.user, { displayName: name });
+      const refCode = getReferralCode({ email, id: cred.user.uid });
       await setDoc(profileRef(cred.user.uid), {
         id: cred.user.uid,
         name,
@@ -116,6 +141,7 @@ export function useAuth() {
         email,
         is_admin: false,
         avatar: cred.user.photoURL || '',
+        referral_code: refCode ?? null,
         created_at: serverTimestamp(),
         updated_at: serverTimestamp(),
       }, { merge: true });

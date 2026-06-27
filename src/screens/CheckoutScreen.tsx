@@ -6,13 +6,11 @@ import {
   useLocation,
   useSettingsStore,
   useAuthStore,
-  useWallet,
   getReferralCode,
   WALLET_REFERRAL_BONUS,
-  pushReferralReward,
   applyReferralCode,
 } from '../lib/store';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, setDoc } from 'firebase/firestore';
 import { db, isFirebaseConfigured, uploadToCloudinary } from '../lib/firebase';
 import { safeArray, isValidPhone } from '../lib/utils';
 import { LocationGate } from '../components/LocationGate';
@@ -43,7 +41,6 @@ export default function CheckoutScreen({ onBack }: Props) {
   const user = useAuthStore((s) => s.user);
 
   // Referral
-  const { earnReferral } = useWallet();
   const [referralInput, setReferralInput] = useState('');
   const [referralApplied, setReferralApplied] = useState(false);
   const [referralError, setReferralError] = useState('');
@@ -75,41 +72,30 @@ export default function CheckoutScreen({ onBack }: Props) {
   }, []);
 
   const applyReferralCodeHandler = async () => {
+    if (!user) {
+      setReferralError('Login করুন');
+      return;
+    }
+
     const code = referralInput.trim().toUpperCase();
-    if (!code) return;
 
-    // BUG 3 FIX: Use new applyReferralCode function with validation
-    // Must be logged in to use referral code
-    if (!user?.id) {
-      setReferralError("Referral bonus পেতে আগে sign in করো");
+    if (!/^[A-Z0-9]{8}$/.test(code)) {
+      setReferralError('Invalid code format');
       return;
     }
 
-    // Can't use own code
-    if (code === userReferralCode) {
-      setReferralError("নিজের referral code ব্যবহার করা যাবে না");
+    const myCode = getReferralCode(user);
+    if (myCode && myCode.toUpperCase() === code) {
+      setReferralError('নিজের code ব্যবহার করা যাবে না');
       return;
     }
 
+    // Buyer max 3 uses is enforced when the order is submitted with an order ID.
+    // Show the existing loading state while marking this code for checkout.
     setReferralLoading(true);
     try {
-      // For validation during apply (before order is placed), we need to do a pre-check
-      // The actual application happens in handleSubmit with the orderId
-      
-      // Simple format check at UI level
-      if (!/^[A-Z0-9]{8}$/i.test(code)) {
-        setReferralError("Code টি 8 অক্ষরের হতে হবে");
-        setReferralLoading(false);
-        return;
-      }
-
-      // Store the code for later application during order submission
-      setReferralError('');
       setReferralApplied(true);
-    } catch (e) {
-      console.warn('Referral check failed:', e);
-      setReferralError('Referral code check করা যায়নি। আবার চেষ্টা করুন।');
-      setReferralApplied(false);
+      setReferralError('');
     } finally {
       setReferralLoading(false);
     }
@@ -325,7 +311,7 @@ export default function CheckoutScreen({ onBack }: Props) {
         const code = referralInput.trim().toUpperCase();
         
         // Use the new applyReferralCode function with orderId
-        const result = await applyReferralCode(code, user.id, o.id);
+        const result = await applyReferralCode(code, user.id, user.email || '', o.id);
         
         if (!result.success) {
           // Referral failed but order succeeded - show warning
