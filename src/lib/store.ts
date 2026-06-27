@@ -258,7 +258,7 @@ export const useOrders = create<OrderState>()(
         useUI.getState().clearAllCheckoutDiscounts();
 
         if (isFirebaseConfigured()) {
-          void setDoc(doc(db, 'orders', o.id), orderToDoc(o), { merge: true }).catch((error) => {
+          void setDoc(doc(db, 'orders', o.id), sanitizeForFirestore(orderToDoc(o)), { merge: true }).catch((error) => {
             console.warn('Remote order insert failed:', error?.message || error);
           });
         }

@@ -214,3 +214,16 @@ export const mapReviewDoc = (id: string, row: any): Review => ({
   approved: row.approved ?? false,
   created_at: row.created_at ? toIso(row.created_at) : new Date().toISOString(),
 });
+
+// Deep-clean undefined values for Firestore
+export const sanitizeForFirestore = (obj: any): any => {
+  if (Array.isArray(obj)) return obj.map(sanitizeForFirestore);
+  if (obj !== null && typeof obj === 'object') {
+    return Object.fromEntries(
+      Object.entries(obj)
+        .filter(([, v]) => v !== undefined)
+        .map(([k, v]) => [k, sanitizeForFirestore(v)])
+    );
+  }
+  return obj;
+};
