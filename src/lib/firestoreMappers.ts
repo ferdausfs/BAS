@@ -105,7 +105,7 @@ const normalizePayment = (payment: string): Order['payment'] => {
 
 export const mapOrderDoc = (id: string, o: any): Order => ({
   id,
-  userId: o.user_id || o.userId || undefined,
+  userId: o.userId || o.user_id || undefined,
   items: Array.isArray(o.items) ? o.items : [],
   customer: {
     name: o.customer_name ?? o.customer?.name ?? '',
@@ -135,6 +135,7 @@ export const mapOrderDoc = (id: string, o: any): Order => ({
 
 export const orderToDoc = (o: Order) => ({
   id: o.id,
+  userId: o.userId ?? null,
   user_id: o.userId ?? null,
   customer_name: o.customer.name,
   customer_phone: o.customer.phone,

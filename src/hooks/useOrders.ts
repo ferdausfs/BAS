@@ -1,10 +1,12 @@
-import { useCallback, useState } from 'react';
-import { collection, doc, getDocs, onSnapshot, orderBy, query, updateDoc, where } from 'firebase/firestore';
+import { useCallback, useEffect, useState } from 'react';
+import { collection, doc, getDocs, onSnapshot, query, updateDoc, where } from 'firebase/firestore';
 import { db, isFirebaseConfigured } from '../lib/firebase';
 import { useAuthStore, useOrders as useOrdersStore, useUI } from '../lib/store';
 import { playBeep } from '../lib/utils';
 import { mapOrderDoc, toDbOrderStatus } from '../lib/firestoreMappers';
 import type { Order } from '../types';
+
+const sortOrders = (orders: Order[]) => [...orders].sort((a, b) => b.createdAt - a.createdAt);
 
 // NOTE: exported as useOrdersHook to avoid clash with store's useOrders.
 export function useOrdersHook() {
@@ -17,8 +19,9 @@ export function useOrdersHook() {
     if (!isFirebaseConfigured()) return;
     setLoading(true);
     try {
-      const snap = await getDocs(query(collection(db, 'orders'), orderBy('created_at', 'desc')));
-      setOrders(snap.docs.slice(0, 300).map((d) => mapOrderDoc(d.id, d.data())));
+      // Admin query: read every order from the top-level `orders` collection.
+      const snap = await getDocs(collection(db, 'orders'));
+      setOrders(sortOrders(snap.docs.map((d) => mapOrderDoc(d.id, d.data()))).slice(0, 300));
     } catch (e) {
       console.warn('Orders fetch failed, using local:', e);
     } finally {
@@ -30,22 +33,40 @@ export function useOrdersHook() {
     if (!isFirebaseConfigured() || !user?.id) return;
     setLoading(true);
     try {
-      const snap = await getDocs(query(collection(db, 'orders'), where('user_id', '==', user.id), orderBy('created_at', 'desc')));
-      const fetchedOrders = snap.docs.map((d) => mapOrderDoc(d.id, d.data()));
+      // Customer query: only orders that belong to the signed-in user.
+      const snap = await getDocs(query(collection(db, 'orders'), where('userId', '==', user.id)));
+      const fetchedOrders = sortOrders(snap.docs.map((d) => mapOrderDoc(d.id, d.data())));
       const merged = [...useOrdersStore.getState().orders];
       fetchedOrders.forEach((fo) => {
         const idx = merged.findIndex((o) => o.id === fo.id);
         if (idx > -1) merged[idx] = fo;
         else merged.push(fo);
       });
-      merged.sort((a, b) => b.createdAt - a.createdAt);
-      setOrders(merged);
+      setOrders(sortOrders(merged));
     } catch (e) {
       console.warn('My orders fetch failed, using local orders:', e);
     } finally {
       setLoading(false);
     }
   }, [setOrders, user?.id]);
+
+  useEffect(() => {
+    if (!isFirebaseConfigured() || !user?.id || user.isAdmin) return;
+
+    setLoading(true);
+    const q = query(collection(db, 'orders'), where('userId', '==', user.id));
+    const unsub = onSnapshot(q, (snap) => {
+      const remoteOrders = sortOrders(snap.docs.map((d) => mapOrderDoc(d.id, d.data())));
+      const otherOrders = useOrdersStore.getState().orders.filter((o) => o.userId && o.userId !== user.id);
+      setOrders(sortOrders([...remoteOrders, ...otherOrders]));
+      setLoading(false);
+    }, (e) => {
+      console.warn('Customer orders snapshot failed, using local orders:', e);
+      setLoading(false);
+    });
+
+    return () => unsub();
+  }, [setOrders, user?.id, user?.isAdmin]);
 
   const updateStatus = useCallback(async (id: string, status: Order['status']) => {
     setOrderStatus(id, status);
@@ -62,9 +83,8 @@ export function useOrdersHook() {
     if ('Notification' in window && Notification.permission === 'default') void Notification.requestPermission();
 
     let initialized = false;
-    const q = query(collection(db, 'orders'), orderBy('created_at', 'desc'));
-    const unsub = onSnapshot(q, (snap) => {
-      const nextOrders = snap.docs.slice(0, 300).map((d) => mapOrderDoc(d.id, d.data()));
+    const unsub = onSnapshot(collection(db, 'orders'), (snap) => {
+      const nextOrders = sortOrders(snap.docs.map((d) => mapOrderDoc(d.id, d.data()))).slice(0, 300);
       setOrders(nextOrders);
       if (!initialized) {
         initialized = true;

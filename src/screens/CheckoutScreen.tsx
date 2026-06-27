@@ -11,7 +11,7 @@ import {
   WALLET_REFERRAL_BONUS,
   pushReferralReward,
 } from '../lib/store';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db, isFirebaseConfigured, uploadToCloudinary } from '../lib/firebase';
 import { safeArray, isValidPhone } from '../lib/utils';
 import { LocationGate } from '../components/LocationGate';
@@ -73,7 +73,7 @@ export default function CheckoutScreen({ onBack }: Props) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const applyReferralCode = () => {
+  const applyReferralCode = async () => {
     const code = referralInput.trim().toUpperCase();
     if (!code) return;
 
@@ -86,18 +86,32 @@ export default function CheckoutScreen({ onBack }: Props) {
       setReferralError("নিজের referral code ব্যবহার করা যাবে না");
       return;
     }
-    if (!user) {
+    if (!user?.id) {
       setReferralError("Referral bonus পেতে আগে sign in করো");
       return;
     }
 
-    // NOTE: We no longer query profiles table here because Supabase RLS prevents
-    // a buyer from reading another user's profile row. Instead we accept the code
-    // format-check only, and pushReferralReward() writes the pending entry to
-    // app_settings so the actual referrer can claim it via claimReferralRewards().
-    // Double-spend is prevented by the consumed-list guard in claimReferralRewards().
-    setReferralError('');
-    setReferralApplied(true);
+    setReferralLoading(true);
+    try {
+      if (isFirebaseConfigured()) {
+        const useId = `${code}_${user.id}`;
+        const useSnap = await getDoc(doc(db, 'referral_uses', useId));
+        if (useSnap.exists()) {
+          setReferralApplied(false);
+          setReferralError('এই referral code আপনি আগে ব্যবহার করেছেন');
+          return;
+        }
+      }
+
+      setReferralError('');
+      setReferralApplied(true);
+    } catch (e) {
+      console.warn('Referral check failed:', e);
+      setReferralError('Referral code check করা যায়নি। আবার চেষ্টা করুন।');
+      setReferralApplied(false);
+    } finally {
+      setReferralLoading(false);
+    }
   };
 
   const [showLocationGate, setShowLocationGate] = useState(false);
@@ -300,13 +314,38 @@ export default function CheckoutScreen({ onBack }: Props) {
         }, { merge: true });
       }
 
-      if (referralApplied && referralInput.trim()) {
-        useWallet.getState().earnReferral(referralInput.trim().toUpperCase(), 'buyer');
-        void pushReferralReward(referralInput.trim(), {
-          refereeId: user?.id || `guest-${o.id}`,
-          refereeName: form.name || 'Customer',
-          usedAt: Date.now(),
-        });
+      if (referralApplied && referralInput.trim() && user?.id) {
+        const code = referralInput.trim().toUpperCase();
+        let shouldApplyReferral = true;
+
+        if (isFirebaseConfigured()) {
+          const useId = `${code}_${user.id}`;
+          const useRef = doc(db, 'referral_uses', useId);
+          const useSnap = await getDoc(useRef);
+          shouldApplyReferral = !useSnap.exists();
+
+          if (shouldApplyReferral) {
+            await setDoc(useRef, {
+              referralCode: code,
+              userId: user.id,
+              orderId: o.id,
+              usedAt: new Date().toISOString(),
+              created_at: new Date().toISOString(),
+            });
+          } else {
+            setReferralApplied(false);
+            setReferralError('এই referral code আপনি আগে ব্যবহার করেছেন');
+          }
+        }
+
+        if (shouldApplyReferral) {
+          useWallet.getState().earnReferral(code, 'buyer');
+          void pushReferralReward(code, {
+            refereeId: user.id,
+            refereeName: form.name || 'Customer',
+            usedAt: Date.now(),
+          });
+        }
       }
       clear();
       go({ name: 'success', orderId: o.id });
@@ -595,7 +634,7 @@ export default function CheckoutScreen({ onBack }: Props) {
                 className="flex-1 h-10 rounded-xl border border-ink-50 bg-white px-3 text-[13px] font-medium text-ink outline-none focus:border-coral focus:ring-2 focus:ring-coral/15 disabled:opacity-50"
               />
               <button
-                onClick={applyReferralCode}
+                onClick={() => void applyReferralCode()}
                 disabled={referralApplied || !referralInput || referralLoading}
                 className="rounded-xl bg-coral px-3.5 py-2 text-[11px] font-bold text-white active:scale-95 transition disabled:opacity-40 disabled:cursor-not-allowed"
               >
