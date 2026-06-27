@@ -7,7 +7,6 @@ import { sanitizeForFirestore, orderToDoc, toDbOrderStatus } from './firestoreMa
 
 
 
-
 export const pushBrowserRouteState = () => {
   try {
     if (typeof window !== 'undefined') {
@@ -245,7 +244,12 @@ export const useOrders = create<OrderState>((set) => ({
 
         set((s) => ({ orders: [o, ...s.orders] }));
         useUI.getState().addNotification('✅ Order placed', `Order #${o.id} has been placed successfully.`);
+        
+        // BUG 2 FIX: Immediately confirm order reward (no pending state)
+        // Admin may skip 'confirmed' status and go directly to 'delivered'
+        // So we confirm immediately on 'placed' to ensure customer gets reward
         useWallet.getState().earnFromOrder(o.id, o.total);
+        useWallet.getState().confirmOrderEarn(o.id);
 
         // If user redeemed wallet balance in cart, deduct them now (track per order)
         if (pendingRedeem > 0) {
@@ -270,8 +274,8 @@ export const useOrders = create<OrderState>((set) => ({
 
         useUI.getState().addNotification('📦 Order updated', `Order #${id} status changed to ${status}.`);
 
-        // Confirm pending wallet earn on 'confirmed' OR 'delivered'
-        // (admin may skip confirmed → delivered directly; confirmOrderEarn is idempotent)
+        // Note: reward is already confirmed on 'placed' status in placeOrder()
+        // Leaving this for backward compatibility if admin manually updates
         if (status === 'confirmed' || status === 'delivered') {
           useWallet.getState().confirmOrderEarn(id);
         }
@@ -650,12 +654,10 @@ export const useWallet = create<WalletState>()(
           ? `Referral bonus — someone used your code`
           : `Welcome bonus — referral code used`;
 
+        // BUG 3 FIX: Remove the buyer single-use restriction
+        // Buyer can now use referral code up to 3 times (enforced in applyReferralCode)
         if (role === 'buyer') {
-          const already = get().txns.some(t => t.type === 'referral_bonus');
-          if (already) {
-            console.warn('Buyer referral bonus already claimed');
-            return;
-          }
+          // Allow multiple uses (max 3 enforced at applyReferralCode level)
         }
 
         set(s => {
@@ -744,7 +746,7 @@ export const claimReferralRewards = async (myCode: string): Promise<number> => {
     const toClaim = pending.filter((e) => !consumed.includes(e.refereeId));
     if (toClaim.length === 0) return 0;
 
-    // Credit the referrer once per pending referral
+    // Credit the referrer once per pending referral (unlimited times)
     toClaim.forEach(() => useWallet.getState().earnReferral(code, 'referrer'));
 
     // Mark consumed (cross-device persistent guard) and clear the pending queue
@@ -754,5 +756,93 @@ export const claimReferralRewards = async (myCode: string): Promise<number> => {
   } catch (e) {
     console.warn('claimReferralRewards failed:', e);
     return 0;
+  }
+};
+
+// ─── BUG 3 FIX: New applyReferralCode with max 3 uses per buyer ───────────────
+// Buyer can use any referral code up to 3 times (on different orders)
+// Referrer gets ৳100 for each valid use (unlimited)
+
+export type ReferralUseEntry = {
+  code: string;
+  usedAt: number;
+  orderId: string;
+};
+
+export interface ReferralUseRecord {
+  codes: ReferralUseEntry[];
+}
+
+/**
+ * Apply a referral code for a buyer.
+ * - Max 3 uses per buyer (tracked in Firestore)
+ * - Buyer gets ৳100 immediately
+ * - Referrer gets ৳100 (pending claim in ProfileScreen)
+ * 
+ * @returns success status and user-friendly message
+ */
+export const applyReferralCode = async (
+  code: string,
+  buyerUserId: string,
+  orderId: string
+): Promise<{ success: boolean; message: string }> => {
+  // Validation
+  if (!code || !buyerUserId || !isFirebaseConfigured()) {
+    return { success: false, message: 'Invalid referral code or user' };
+  }
+
+  const normalizedCode = code.trim().toUpperCase();
+
+  // Validate code format (8 alphanumeric characters)
+  if (!/^[A-Z0-9]{8}$/i.test(normalizedCode)) {
+    return { success: false, message: 'Code টি ৮ অক্ষরের হতে হবে' };
+  }
+
+  try {
+    // 1. Check buyer's referral use history from Firestore
+    const buyerKey = `referral_uses_${buyerUserId}`;
+    const existing = await readRemoteSetting<ReferralUseRecord>(buyerKey);
+    const uses = existing?.codes ?? [];
+
+    // 2. Max 3 uses check
+    if (uses.length >= 3) {
+      return { success: false, message: 'আপনি সর্বোচ্চ ৩ বার referral code ব্যবহার করতে পারবেন' };
+    }
+
+    // 3. Same order duplicate check
+    if (uses.some(u => u.orderId === orderId)) {
+      return { success: false, message: 'এই order-এ আগেই code ব্যবহার হয়েছে' };
+    }
+
+    // 4. Check if buyer is trying to use their own code
+    const buyerCurrentCode = getReferralCode({ id: buyerUserId });
+    if (buyerCurrentCode && normalizedCode === buyerCurrentCode) {
+      return { success: false, message: 'নিজের referral code ব্যবহার করা যাবে না' };
+    }
+
+    // 5. Give buyer ৳100 wallet credit immediately
+    useWallet.getState().earnReferral(normalizedCode, 'buyer');
+
+    // 6. Save referral use to Firestore (for tracking max 3 uses)
+    const newUse: ReferralUseEntry = {
+      code: normalizedCode,
+      usedAt: Date.now(),
+      orderId,
+    };
+    await writeRemoteSetting(buyerKey, {
+      codes: [...uses, newUse],
+    });
+
+    // 7. Push pending reward to referrer (will be claimed when referrer opens app)
+    await pushReferralReward(normalizedCode, {
+      refereeId: buyerUserId,
+      refereeName: 'Customer',
+      usedAt: Date.now(),
+    });
+
+    return { success: true, message: '৳100 wallet-এ যোগ হয়েছে!' };
+  } catch (e) {
+    console.warn('applyReferralCode failed:', e);
+    return { success: false, message: 'Referral code apply করা যায়নি। আবার চেষ্টা করুন।' };
   }
 };

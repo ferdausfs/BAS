@@ -2,7 +2,6 @@ import { useEffect } from 'react';
 import { Check, Package, ChefHat, Truck, Receipt, Search, RefreshCw } from 'lucide-react';
 import { useUI, formatINR, useAuthStore, useCart } from '../lib/store';
 import { useOrdersHook } from '../hooks/useOrders';
-import { isFirebaseConfigured } from '../lib/firebase';
 import { safeArray } from '../lib/utils';
 
 const STATUSES: { key: string; label: string; icon: any }[] = [
@@ -20,7 +19,7 @@ export default function OrdersScreen() {
   const { setTab, go } = useUI();
 
   useEffect(() => {
-    if (isFirebaseConfigured() && user) {
+    if (user) {
       fetchMyOrders();
     }
   }, [fetchMyOrders, user]);

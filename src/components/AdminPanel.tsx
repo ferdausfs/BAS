@@ -140,7 +140,8 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
     { id: 'products', label: 'Products' },
     { id: 'gallery', label: 'Gallery' },
     { id: 'banners', label: 'Banners' },
-    { id: 'reviews', label: 'Reviews', badge: safeReviews.filter((r) => r && !r.approved).length },
+    // BUG 1 FIX: Reviews are auto-approved, no pending count badge needed
+    { id: 'reviews', label: 'Reviews', badge: undefined },
     { id: 'customers', label: 'Customers', badge: safeCustomers.length },
     { id: 'zones', label: 'Zones' },
     { id: 'settings', label: 'Settings' },
@@ -953,11 +954,11 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
           </div>
         )}
 
-        {/* Reviews */}
+        {/* Reviews - BUG 1 FIX: Reviews are auto-approved, only delete option */}
         {tab === 'reviews' && (
           <div className="space-y-3">
             {safeReviews.filter(Boolean).map((r) => (
-              <div key={r.id} className={`bg-white rounded-2xl p-4 ${!r.approved ? 'border-2 border-orange-200' : ''}`}>
+              <div key={r.id} className="bg-white rounded-2xl p-4">
                 <div className="flex justify-between items-start mb-1">
                   <p className="font-bold text-sm text-ink">{r.user_name || 'Anonymous'}</p>
                   <div className="flex gap-0.5">
@@ -975,14 +976,9 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                     onClick={() => window.open(r.image, '_blank')}
                   />
                 )}
-                {!r.approved && <span className="text-[10px] bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full font-bold">Pending</span>}
+                {/* All reviews are auto-approved now, no pending badge */}
                 <div className="flex gap-2 mt-2">
-                  {!r.approved && (
-                    <button onClick={() => approveReview(r.id, true)}
-                      className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-green-500 text-white text-[10px] font-bold">
-                      <Check className="w-3 h-3" /> Approve
-                    </button>
-                  )}
+                  {/* Only delete button - no approve needed since reviews are auto-approved */}
                   <button onClick={() => deleteReview(r.id)}
                     className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-red-50 text-red-400 text-[10px] font-bold">
                     <Trash2 className="w-3 h-3" /> Delete

@@ -10,6 +10,7 @@ import {
   getReferralCode,
   WALLET_REFERRAL_BONUS,
   pushReferralReward,
+  applyReferralCode,
 } from '../lib/store';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db, isFirebaseConfigured, uploadToCloudinary } from '../lib/firebase';
@@ -73,36 +74,36 @@ export default function CheckoutScreen({ onBack }: Props) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const applyReferralCode = async () => {
+  const applyReferralCodeHandler = async () => {
     const code = referralInput.trim().toUpperCase();
     if (!code) return;
 
-    // Must be exactly 8 alphanumeric characters (4 email + 4 uuid)
-    if (!/^[A-Z0-9]{8}$/i.test(code)) {
-      setReferralError("Code টি 8 অক্ষরের হতে হবে");
-      return;
-    }
-    if (code === userReferralCode) {
-      setReferralError("নিজের referral code ব্যবহার করা যাবে না");
-      return;
-    }
+    // BUG 3 FIX: Use new applyReferralCode function with validation
+    // Must be logged in to use referral code
     if (!user?.id) {
       setReferralError("Referral bonus পেতে আগে sign in করো");
       return;
     }
 
+    // Can't use own code
+    if (code === userReferralCode) {
+      setReferralError("নিজের referral code ব্যবহার করা যাবে না");
+      return;
+    }
+
     setReferralLoading(true);
     try {
-      if (isFirebaseConfigured()) {
-        const useId = `${code}_${user.id}`;
-        const useSnap = await getDoc(doc(db, 'referral_uses', useId));
-        if (useSnap.exists()) {
-          setReferralApplied(false);
-          setReferralError('এই referral code আপনি আগে ব্যবহার করেছেন');
-          return;
-        }
+      // For validation during apply (before order is placed), we need to do a pre-check
+      // The actual application happens in handleSubmit with the orderId
+      
+      // Simple format check at UI level
+      if (!/^[A-Z0-9]{8}$/i.test(code)) {
+        setReferralError("Code টি 8 অক্ষরের হতে হবে");
+        setReferralLoading(false);
+        return;
       }
 
+      // Store the code for later application during order submission
       setReferralError('');
       setReferralApplied(true);
     } catch (e) {
@@ -314,39 +315,26 @@ export default function CheckoutScreen({ onBack }: Props) {
         }, { merge: true });
       }
 
+      // BUG 3 FIX: Apply referral code using new applyReferralCode function
+      // This handles:
+      // - Max 3 uses per buyer check
+      // - Same order duplicate check
+      // - Buyer gets ৳100 immediately
+      // - Referrer gets ৳100 (pending claim)
       if (referralApplied && referralInput.trim() && user?.id) {
         const code = referralInput.trim().toUpperCase();
-        let shouldApplyReferral = true;
-
-        if (isFirebaseConfigured()) {
-          const useId = `${code}_${user.id}`;
-          const useRef = doc(db, 'referral_uses', useId);
-          const useSnap = await getDoc(useRef);
-          shouldApplyReferral = !useSnap.exists();
-
-          if (shouldApplyReferral) {
-            await setDoc(useRef, {
-              referralCode: code,
-              userId: user.id,
-              orderId: o.id,
-              usedAt: new Date().toISOString(),
-              created_at: new Date().toISOString(),
-            });
-          } else {
-            setReferralApplied(false);
-            setReferralError('এই referral code আপনি আগে ব্যবহার করেছেন');
-          }
+        
+        // Use the new applyReferralCode function with orderId
+        const result = await applyReferralCode(code, user.id, o.id);
+        
+        if (!result.success) {
+          // Referral failed but order succeeded - show warning
+          setReferralError(result.message);
+          setReferralApplied(false);
         }
-
-        if (shouldApplyReferral) {
-          useWallet.getState().earnReferral(code, 'buyer');
-          void pushReferralReward(code, {
-            refereeId: user.id,
-            refereeName: form.name || 'Customer',
-            usedAt: Date.now(),
-          });
-        }
+        // Success message will be shown in the UI via the apply state
       }
+      
       clear();
       go({ name: 'success', orderId: o.id });
     } catch (error) {
@@ -619,11 +607,12 @@ export default function CheckoutScreen({ onBack }: Props) {
             </div>
           )}
 
-          {/* Referral Code */}
+          {/* Referral Code - BUG 3 FIX */}
           <div className="mt-4 pt-4 border-t border-ink/5">
             <div className="flex items-center gap-2 mb-2.5">
               <Users className="h-4 w-4 text-ink-200" />
               <span className="text-[12px] font-bold text-ink">রেফারেল কোড</span>
+              <span className="text-[10px] text-ink/40">(সর্বোচ্চ ৩ বার ব্যবহার করা যাবে)</span>
             </div>
             <div className="flex items-center gap-2">
               <input
@@ -634,7 +623,7 @@ export default function CheckoutScreen({ onBack }: Props) {
                 className="flex-1 h-10 rounded-xl border border-ink-50 bg-white px-3 text-[13px] font-medium text-ink outline-none focus:border-coral focus:ring-2 focus:ring-coral/15 disabled:opacity-50"
               />
               <button
-                onClick={() => void applyReferralCode()}
+                onClick={() => void applyReferralCodeHandler()}
                 disabled={referralApplied || !referralInput || referralLoading}
                 className="rounded-xl bg-coral px-3.5 py-2 text-[11px] font-bold text-white active:scale-95 transition disabled:opacity-40 disabled:cursor-not-allowed"
               >

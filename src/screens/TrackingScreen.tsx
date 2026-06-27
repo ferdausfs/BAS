@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { ArrowLeft, Package, Search, ShoppingCart, CheckCircle2, Flame, Cake, Truck, PartyPopper, RefreshCw } from 'lucide-react';
 import { useUI, formatINR, useAuthStore } from '../lib/store';
 import { useOrdersHook } from '../hooks/useOrders';
-import { isFirebaseConfigured } from '../lib/firebase';
 import { safeArray } from '../lib/utils';
 import type { Order } from '../types';
 
@@ -26,7 +25,7 @@ export default function TrackingScreen() {
   const user = useAuthStore((s) => s.user);
 
   useEffect(() => {
-    if (isFirebaseConfigured() && user) {
+    if (user) {
       fetchMyOrders();
     }
   }, [fetchMyOrders, user]);
@@ -46,7 +45,6 @@ export default function TrackingScreen() {
   // reach the customer in near-realtime (no websocket needed on customer side).
   useEffect(() => {
     if (!match || match.status === 'delivered' || match.status === 'cancelled') return;
-    if (!isFirebaseConfigured()) return;
 
     const interval = setInterval(() => {
       fetchMyOrders();

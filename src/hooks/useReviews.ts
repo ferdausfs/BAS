@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { addDoc, collection, deleteDoc, doc, onSnapshot, orderBy, query, setDoc, updateDoc, where } from 'firebase/firestore';
+import { addDoc, collection, deleteDoc, doc, onSnapshot, orderBy, query, setDoc, where } from 'firebase/firestore';
 import { db, isFirebaseConfigured, uploadToCloudinary } from '../lib/firebase';
 import { ls, safeArray } from '../lib/utils';
 import { mapReviewDoc } from '../lib/firestoreMappers';
@@ -53,22 +53,27 @@ export function useReviews(productId?: string) {
     setReviews(visibleForProduct(all, pid ?? productId));
   }, [productId]);
 
+  // Reviews are now auto-approved - set approved: true by default
   const saveReview = useCallback(async (review: Review) => {
+    // Ensure review is auto-approved
+    const approvedReview: Review = { ...review, approved: true };
     const all = sanitizeReviews(ls.get(LS_KEY, []));
-    const updated = sanitizeReviews([review, ...all]);
+    const updated = sanitizeReviews([approvedReview, ...all]);
     ls.set(LS_KEY, updated);
     setReviews(visibleForProduct(updated, productId));
     if (!isFirebaseConfigured()) return;
-    await setDoc(doc(db, 'reviews', review.id), review, { merge: true }).catch(async () => { await addDoc(collection(db, 'reviews'), review); });
+    await setDoc(doc(db, 'reviews', review.id), { ...review, approved: true }, { merge: true }).catch(async () => { await addDoc(collection(db, 'reviews'), { ...review, approved: true }); });
   }, [productId]);
 
+  // Approve function kept for compatibility but reviews are auto-approved now
+  // Admin can still use this for manual override if needed
   const approveReview = useCallback(async (id: string, approved: boolean) => {
     const all = sanitizeReviews(ls.get(LS_KEY, []));
     const updated = sanitizeReviews(all.map((r) => (r.id === id ? { ...r, approved } : r)));
     ls.set(LS_KEY, updated);
     setReviews(visibleForProduct(updated, productId));
     if (!isFirebaseConfigured()) return;
-    await updateDoc(doc(db, 'reviews', id), { approved });
+    await setDoc(doc(db, 'reviews', id), { approved }, { merge: true });
   }, [productId]);
 
   const deleteReview = useCallback(async (id: string) => {

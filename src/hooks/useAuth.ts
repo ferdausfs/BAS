@@ -10,9 +10,8 @@ import {
   type User as FirebaseUser,
 } from 'firebase/auth';
 import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
-import { auth, db, isFirebaseConfigured } from '../lib/firebase';
-import { useAuthStore, useLocation, useWallet } from '../lib/store';
-import { ls } from '../lib/utils';
+import { auth, db } from '../lib/firebase';
+import { useAuthStore, useLocation } from '../lib/store';
 import type { User } from '../types';
 
 type ProfileDoc = {
@@ -39,16 +38,6 @@ const mapFirebaseUser = async (authUser: FirebaseUser): Promise<User> => {
   try {
     const snap = await getDoc(profileRef(authUser.uid));
     profile = snap.exists() ? (snap.data() as ProfileDoc) : null;
-
-    // Load wallet balance
-    const walletSnap = await getDoc(doc(db, 'profiles', authUser.uid, 'wallet', 'balance'));
-    if (walletSnap.exists()) {
-      const w = walletSnap.data();
-      useWallet.getState().setWallet({
-        balance: Number(w.balance ?? 0),
-        totalEarned: Number(w.totalEarned ?? 0),
-      });
-    }
 
     if (!profile || profile.email !== (authUser.email || '')) {
       const nextProfile: ProfileDoc = {
@@ -97,7 +86,6 @@ export function useAuth() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!isFirebaseConfigured()) return;
     let active = true;
 
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
@@ -119,29 +107,19 @@ export function useAuth() {
   const signUp = useCallback(async (email: string, password: string, name: string): Promise<{ needsEmailConfirmation: boolean }> => {
     setLoading(true);
     try {
-      if (isFirebaseConfigured()) {
-        const cred = await createUserWithEmailAndPassword(auth, email, password);
-        await updateProfile(cred.user, { displayName: name });
-        await setDoc(profileRef(cred.user.uid), {
-          id: cred.user.uid,
-          name,
-          contact: '',
-          email,
-          is_admin: false,
-          avatar: cred.user.photoURL || '',
-          created_at: serverTimestamp(),
-          updated_at: serverTimestamp(),
-        }, { merge: true });
-        login(await mapFirebaseUser(cred.user));
-        return { needsEmailConfirmation: false };
-      }
-
-      const accounts = ls.get<Array<any>>('bakeart-local-accounts', []);
-      const existing = accounts.find((a) => a.email.toLowerCase() === email.toLowerCase());
-      if (existing) throw new Error('An account with this email already exists. Please sign in instead.');
-      const id = `local-${Date.now()}`;
-      ls.set('bakeart-local-accounts', [...accounts, { id, name, email, password }]);
-      login({ id, name, email, avatar: '', isAdmin: false, contact: '' });
+      const cred = await createUserWithEmailAndPassword(auth, email, password);
+      await updateProfile(cred.user, { displayName: name });
+      await setDoc(profileRef(cred.user.uid), {
+        id: cred.user.uid,
+        name,
+        contact: '',
+        email,
+        is_admin: false,
+        avatar: cred.user.photoURL || '',
+        created_at: serverTimestamp(),
+        updated_at: serverTimestamp(),
+      }, { merge: true });
+      login(await mapFirebaseUser(cred.user));
       return { needsEmailConfirmation: false };
     } finally {
       setLoading(false);
@@ -151,16 +129,9 @@ export function useAuth() {
   const signIn = useCallback(async (email: string, password: string): Promise<void> => {
     setLoading(true);
     try {
-      if (isFirebaseConfigured()) {
-        const cred = await signInWithEmailAndPassword(auth, email, password);
-        login(await mapFirebaseUser(cred.user));
-        return;
-      }
-
-      const accounts = ls.get<Array<any>>('bakeart-local-accounts', []);
-      const matched = accounts.find((a) => a.email.toLowerCase() === email.toLowerCase() && a.password === password);
-      if (!matched) throw new Error('Wrong email or password.');
-      login({ id: matched.id, name: matched.name, email, avatar: '', isAdmin: false, contact: '' });
+      const cred = await signInWithEmailAndPassword(auth, email, password);
+      login(await mapFirebaseUser(cred.user));
+      return;
     } catch (error: any) {
       if (String(error?.code || '').startsWith('auth/')) throw new Error('Wrong email or password.');
       throw error;
@@ -170,14 +141,13 @@ export function useAuth() {
   }, [login]);
 
   const signInWithGoogle = useCallback(async () => {
-    if (!isFirebaseConfigured()) throw new Error('Google login requires Firebase to be configured');
     const provider = new GoogleAuthProvider();
     const cred = await signInWithPopup(auth, provider);
     login(await mapFirebaseUser(cred.user));
   }, [login]);
 
   const signOut = useCallback(async () => {
-    if (isFirebaseConfigured()) await firebaseSignOut(auth);
+    await firebaseSignOut(auth);
     logout();
   }, [logout]);
 

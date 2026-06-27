@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { MapPin, CheckCircle2, AlertCircle, Loader2, Navigation, MessageCircle, X, Cake } from 'lucide-react';
 import { doc, setDoc } from 'firebase/firestore';
-import { db, isFirebaseConfigured } from '../lib/firebase';
+import { db } from '../lib/firebase';
 import { useAuthStore, useLocation, useSettingsStore } from '../lib/store';
 import { waLink } from '../lib/utils';
 import { matchZone } from '../lib/zones';
@@ -49,7 +49,7 @@ export function LocationGate({ onDismiss }: Props) {
         const verifiedDistrict = matchedZone || city || 'Verified area';
         setLocation(verifiedDistrict, lat, lng);
 
-        if (isFirebaseConfigured() && user?.id) {
+        if (user?.id) {
           await setDoc(doc(db, 'profiles', user.id), {
             id: user.id,
             name: user.name,

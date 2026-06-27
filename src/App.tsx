@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useUI, useAuthStore, useSettingsStore, pushBrowserRouteState } from './lib/store';
-import { isFirebaseConfigured } from './lib/firebase';
 import PhoneFrame from './components/PhoneFrame';
 import BottomTabBar from './components/BottomTabBar';
 import SplashScreen from './screens/SplashScreen';
@@ -41,11 +40,8 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (isFirebaseConfigured()) {
-      useSettingsStore.getState().loadRemoteSettings().finally(() => setSettingsLoading(false));
-    } else {
-      setSettingsLoading(false);
-    }
+    useSettingsStore.getState().subscribeSettings();
+    useSettingsStore.getState().loadRemoteSettings().finally(() => setSettingsLoading(false));
   }, []);
 
   useEffect(() => {
