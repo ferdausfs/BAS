@@ -36,7 +36,11 @@ export function useGallery() {
     const updated = gallery.filter((g) => g.id !== id);
     const validated = safeArray<GalleryItem>(updated, []);
     setGallery(validated);
-    await deleteDoc(doc(db, 'gallery_items', id));
+    try {
+      await deleteDoc(doc(db, 'gallery_items', id));
+    } catch (e) {
+      console.error('Gallery delete failed:', e);
+    }
   }, [gallery]);
 
   const uploadGalleryImage = useCallback(async (file: File): Promise<string> => uploadToCloudinary(file, 'bake-art-style/gallery'), []);

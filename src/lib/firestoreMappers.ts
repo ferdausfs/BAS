@@ -20,8 +20,8 @@ export const toOccasion = (category?: string): Product['occasion'] => {
 
 export const mapProductDoc = (id: string, row: any): Product => {
   // Support both old nested format (row.data) and new flat format
-  const d = (row?.data && typeof row.data === 'object') 
-    ? { ...row.data, ...row } 
+  const d = (row?.data && typeof row.data === 'object')
+    ? { ...row.data, ...row }
     : row;
 
   return {
@@ -55,20 +55,37 @@ export const productToDoc = (product: Product) => {
     product.tier === 'premium' ? 'premium' : null,
     product.inStock === false ? 'out_of_stock' : null,
   ].filter(Boolean);
+
   return {
     id: product.id,
     name: product.name,
+    tagline: product.tagline ?? null,
     category: product.occasion || 'birthday',
+    occasion: product.occasion || 'birthday',
     price: Math.round(product.price),
+    oldPrice: product.oldPrice ?? null,
+    pricePerUnit: product.pricePerUnit ?? null,
+    priceUnit: product.priceUnit ?? 'pound',
     rating: product.rating ?? 4.5,
     reviews: product.reviews ?? 0,
     tag: product.tags?.[0] ?? product.tagline ?? null,
+    tags: product.tags ?? [],
     weight: product.weights?.[0]?.size ?? '1 lb',
+    weights: product.weights ?? [],
+    flavors: product.flavors ?? [],
+    toppings: product.toppings ?? [],
+    sizes: product.sizes ?? [],
+    addons: product.addons ?? [],
+    gallery: product.gallery ?? [],
     image: product.image ?? null,
     description: product.description ?? null,
     approved: product.approved ?? true,
+    inStock: product.inStock ?? true,
+    tier: product.tier ?? 'normal',
+    bestseller: product.bestseller ?? false,
+    newArrival: product.newArrival ?? false,
     badges,
-
+    created_at: product.createdAt ?? new Date().toISOString(),
     updated_at: new Date().toISOString(),
   };
 };

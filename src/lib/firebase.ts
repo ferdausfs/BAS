@@ -2,7 +2,6 @@ import { initializeApp, getApps } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
-import { fileToBase64 } from './utils';
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY || 'placeholder-api-key',
@@ -30,7 +29,7 @@ export async function uploadToCloudinary(file: File, folder = 'bake-art-style'):
   const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
 
   if (!cloudName || !uploadPreset) {
-    return fileToBase64(file);
+    throw new Error('Cloudinary not configured');
   }
 
   const form = new FormData();
@@ -45,9 +44,13 @@ export async function uploadToCloudinary(file: File, folder = 'bake-art-style'):
 
   if (!response.ok) {
     console.warn('Cloudinary upload failed:', await response.text());
-    return fileToBase64(file);
+    throw new Error('Cloudinary upload failed');
   }
 
   const data = await response.json();
-  return data.secure_url || data.url || fileToBase64(file);
+  if (!data.secure_url && !data.url) {
+    throw new Error('Cloudinary upload returned no URL');
+  }
+
+  return data.secure_url || data.url;
 }

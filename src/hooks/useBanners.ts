@@ -3,7 +3,7 @@ import { collection, deleteDoc, doc, onSnapshot, orderBy, query, setDoc } from '
 import { db, uploadToCloudinary } from '../lib/firebase';
 import { banners as DEFAULT_BANNERS } from '../lib/data';
 import { safeArray } from '../lib/utils';
-import { bannerToDoc, mapBannerDoc } from '../lib/firestoreMappers';
+import { bannerToDoc, mapBannerDoc, sanitizeForFirestore } from '../lib/firestoreMappers';
 import type { Banner } from '../types';
 
 export function useBanners() {
@@ -30,14 +30,22 @@ export function useBanners() {
     const updated = banners.find((b) => b.id === banner.id) ? banners.map((b) => (b.id === banner.id ? banner : b)) : [...banners, banner];
     const validated = safeArray<Banner>(updated, DEFAULT_BANNERS);
     setBanners(validated.length > 0 ? validated : DEFAULT_BANNERS);
-    await setDoc(doc(db, 'banners', banner.id), bannerToDoc(banner), { merge: true });
+    try {
+      await setDoc(doc(db, 'banners', banner.id), sanitizeForFirestore(bannerToDoc(banner)), { merge: true });
+    } catch (e) {
+      console.error('Banner save/delete failed:', e);
+    }
   }, [banners]);
 
   const deleteBanner = useCallback(async (id: string) => {
     const updated = banners.filter((b) => b.id !== id);
     const validated = safeArray<Banner>(updated, DEFAULT_BANNERS);
     setBanners(validated.length > 0 ? validated : DEFAULT_BANNERS);
-    await deleteDoc(doc(db, 'banners', id));
+    try {
+      await deleteDoc(doc(db, 'banners', id));
+    } catch (e) {
+      console.error('Banner save/delete failed:', e);
+    }
   }, [banners]);
 
   const uploadBannerImage = useCallback(async (file: File): Promise<string> => uploadToCloudinary(file, 'bake-art-style/banners'), []);

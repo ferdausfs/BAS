@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
-import { addDoc, collection, deleteDoc, doc, onSnapshot, orderBy, query, setDoc, where } from 'firebase/firestore';
-import { db, isFirebaseConfigured, uploadToCloudinary } from '../lib/firebase';
+import { addDoc, collection, deleteDoc, doc, onSnapshot, query, setDoc, where } from 'firebase/firestore';
+import { db, uploadToCloudinary } from '../lib/firebase';
 import { ls, safeArray } from '../lib/utils';
-import { mapReviewDoc } from '../lib/firestoreMappers';
+import { mapReviewDoc, sanitizeForFirestore } from '../lib/firestoreMappers';
 import type { Review } from '../types';
 
 const LS_KEY = 'bakeart-reviews-v2';
@@ -23,10 +23,6 @@ export function useReviews(productId?: string) {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!isFirebaseConfigured()) {
-      setReviews(visibleForProduct(sanitizeReviews(ls.get(LS_KEY, [])), productId));
-      return;
-    }
     setLoading(true);
     const constraints: any[] = [];
     if (productId) constraints.push(where('approved', '==', true), where('product_id', '==', productId));
@@ -61,8 +57,9 @@ export function useReviews(productId?: string) {
     const updated = sanitizeReviews([approvedReview, ...all]);
     ls.set(LS_KEY, updated);
     setReviews(visibleForProduct(updated, productId));
-    if (!isFirebaseConfigured()) return;
-    await setDoc(doc(db, 'reviews', review.id), { ...review, approved: true }, { merge: true }).catch(async () => { await addDoc(collection(db, 'reviews'), { ...review, approved: true }); });
+    await setDoc(doc(db, 'reviews', review.id), sanitizeForFirestore({ ...review, approved: true }), { merge: true }).catch(async () => {
+      await addDoc(collection(db, 'reviews'), sanitizeForFirestore({ ...review, approved: true }));
+    });
   }, [productId]);
 
   // Approve function kept for compatibility but reviews are auto-approved now
@@ -72,8 +69,11 @@ export function useReviews(productId?: string) {
     const updated = sanitizeReviews(all.map((r) => (r.id === id ? { ...r, approved } : r)));
     ls.set(LS_KEY, updated);
     setReviews(visibleForProduct(updated, productId));
-    if (!isFirebaseConfigured()) return;
-    await setDoc(doc(db, 'reviews', id), { approved }, { merge: true });
+    try {
+      await setDoc(doc(db, 'reviews', id), { approved }, { merge: true });
+    } catch (e) {
+      console.error('Review action failed:', e);
+    }
   }, [productId]);
 
   const deleteReview = useCallback(async (id: string) => {
@@ -81,8 +81,11 @@ export function useReviews(productId?: string) {
     const updated = sanitizeReviews(all.filter((r) => r.id !== id));
     ls.set(LS_KEY, updated);
     setReviews(visibleForProduct(updated, productId));
-    if (!isFirebaseConfigured()) return;
-    await deleteDoc(doc(db, 'reviews', id));
+    try {
+      await deleteDoc(doc(db, 'reviews', id));
+    } catch (e) {
+      console.error('Review action failed:', e);
+    }
   }, [productId]);
 
   const uploadReviewImage = useCallback(async (file: File): Promise<string> => uploadToCloudinary(file, 'bake-art-style/reviews'), []);

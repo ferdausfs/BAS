@@ -290,11 +290,6 @@ export const useOrders = create<OrderState>((set) => ({
           }
         }
 
-        if (isFirebaseConfigured()) {
-          void setDoc(doc(db, 'orders', id), { status, updated_at: new Date().toISOString() }, { merge: true }).catch((error) => {
-            console.warn('Remote order status update failed:', error?.message || error);
-          });
-        }
       },
     }));
 

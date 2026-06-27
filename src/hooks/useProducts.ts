@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { collection, deleteDoc, doc, onSnapshot, orderBy, query, setDoc } from 'firebase/firestore';
+import { collection, deleteDoc, doc, onSnapshot, setDoc } from 'firebase/firestore';
 import { db, uploadToCloudinary } from '../lib/firebase';
 import { products as DEFAULT_PRODUCTS } from '../lib/data';
 import { safeArray } from '../lib/utils';
@@ -17,9 +17,11 @@ export function useProducts() {
 
   useEffect(() => {
     setLoading(true);
-    const q = query(collection(db, 'products'), orderBy('created_at', 'desc'));
-    const unsub = onSnapshot(q, (snap) => {
-      applyProducts(snap.docs.map((d) => mapProductDoc(d.id, d.data())));
+    const unsub = onSnapshot(collection(db, 'products'), (snap) => {
+      const prods = snap.docs
+        .map((d) => mapProductDoc(d.id, d.data()))
+        .sort((a, b) => b.price - a.price);
+      applyProducts(prods);
       setLoading(false);
     }, (e) => {
       console.warn('Products snapshot failed:', e);
@@ -35,14 +37,18 @@ export function useProducts() {
     const updated = all.find((p) => p.id === product.id) ? all.map((p) => (p.id === product.id ? product : p)) : [...all, product];
     const validated = safeArray<Product>(updated, DEFAULT_PRODUCTS);
     setProducts(validated.length > 0 ? validated : DEFAULT_PRODUCTS);
-    await setDoc(doc(db, 'products', product.id), sanitizeForFirestore(productToDoc(product)), { merge: true }).catch(e => console.error("Product save failed:", e));
+    await setDoc(doc(db, 'products', product.id), sanitizeForFirestore(productToDoc(product)), { merge: true }).catch(e => console.error('Product save failed:', e));
   }, [products]);
 
   const deleteProduct = useCallback(async (id: string) => {
     const updated = products.filter((p) => p.id !== id);
     const validated = safeArray<Product>(updated, DEFAULT_PRODUCTS);
     setProducts(validated.length > 0 ? validated : DEFAULT_PRODUCTS);
-    await deleteDoc(doc(db, 'products', id));
+    try {
+      await deleteDoc(doc(db, 'products', id));
+    } catch (e) {
+      console.error('Product delete failed:', e);
+    }
   }, [products]);
 
   const uploadProductImage = useCallback(async (file: File): Promise<string> => uploadToCloudinary(file, 'bake-art-style/products'), []);
