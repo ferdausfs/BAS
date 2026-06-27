@@ -77,7 +77,7 @@ export const productToDoc = (product: Product) => {
     description: product.description ?? null,
     approved: product.approved ?? true,
     badges,
-    data: product,
+
     updated_at: new Date().toISOString(),
   };
 };
