@@ -1,6 +1,5 @@
 node_modules
 dist
-.env
 .env.local
 *.local
 
@@ -11,3 +10,4 @@ dist
 !.env.example
 .env.production
 .env.production
+
