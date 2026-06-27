@@ -1,0 +1,13 @@
+{
+  "name": "Bake Art Style",
+  "short_name": "BakeArt",
+  "description": "Premium custom cakes for every occasion",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FBF7F5",
+  "theme_color": "#F25E73",
+  "icons": [
+    { "src": "/logo-bunny.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/logo-bunny.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
