@@ -15,9 +15,11 @@ export function useBanners() {
   useEffect(() => {
     if (!isFirebaseConfigured()) return;
     setLoading(true);
-    const q = query(collection(db, 'banners'), orderBy('sort_order', 'asc'));
-    const unsub = onSnapshot(q, (snap) => {
-      const validated = safeArray<Banner>(snap.docs.map((d) => mapBannerDoc(d.id, d.data())));
+    const unsub = onSnapshot(collection(db, 'banners'), (snap) => {
+      const validated = safeArray<Banner>(
+        snap.docs.map((d) => mapBannerDoc(d.id, d.data()))
+          .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
+      );
       if (validated.length > 0) {
         setBanners(validated);
         ls.set(LS_KEY, validated);

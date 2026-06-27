@@ -11,7 +11,7 @@ import {
 } from 'firebase/auth';
 import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
 import { auth, db, isFirebaseConfigured } from '../lib/firebase';
-import { useAuthStore, useLocation } from '../lib/store';
+import { useAuthStore, useLocation, useWallet } from '../lib/store';
 import { ls } from '../lib/utils';
 import type { User } from '../types';
 
@@ -39,6 +39,16 @@ const mapFirebaseUser = async (authUser: FirebaseUser): Promise<User> => {
   try {
     const snap = await getDoc(profileRef(authUser.uid));
     profile = snap.exists() ? (snap.data() as ProfileDoc) : null;
+
+    // Load wallet balance
+    const walletSnap = await getDoc(doc(db, 'profiles', authUser.uid, 'wallet', 'balance'));
+    if (walletSnap.exists()) {
+      const w = walletSnap.data();
+      useWallet.getState().setWallet({
+        balance: Number(w.balance ?? 0),
+        totalEarned: Number(w.totalEarned ?? 0),
+      });
+    }
 
     if (!profile || profile.email !== (authUser.email || '')) {
       const nextProfile: ProfileDoc = {

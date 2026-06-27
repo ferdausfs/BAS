@@ -57,10 +57,8 @@ export function useOrdersHook() {
     const q = query(collection(db, 'orders'), where('userId', '==', user.id));
     const unsub = onSnapshot(q, (snap) => {
       const remoteOrders = sortOrders(snap.docs.map((d) => mapOrderDoc(d.id, d.data())));
-      const otherOrders = useOrdersStore.getState().orders.filter(
-        (o) => !o.userId || o.userId.startsWith('guest-') || o.userId !== user.id
-      );
-      setOrders(sortOrders([...remoteOrders, ...otherOrders]));
+      const localGuestOrders = useOrdersStore.getState().orders.filter(o => !o.userId);
+      setOrders(sortOrders([...remoteOrders, ...localGuestOrders]));
       setLoading(false);
     }, (e) => {
       console.warn('Customer orders snapshot failed, using local orders:', e);

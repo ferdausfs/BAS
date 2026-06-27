@@ -28,11 +28,14 @@ export function useReviews(productId?: string) {
       return;
     }
     setLoading(true);
-    const constraints: any[] = [orderBy('created_at', 'desc')];
-    if (productId) constraints.unshift(where('approved', '==', true), where('product_id', '==', productId));
+    const constraints: any[] = [];
+    if (productId) constraints.push(where('approved', '==', true), where('product_id', '==', productId));
     const q = query(collection(db, 'reviews'), ...constraints);
     const unsub = onSnapshot(q, (snap) => {
-      const validated = sanitizeReviews(snap.docs.map((d) => mapReviewDoc(d.id, d.data())));
+      const validated = sanitizeReviews(
+        snap.docs.map((d) => mapReviewDoc(d.id, d.data()))
+          .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      );
       if (!productId) ls.set(LS_KEY, validated);
       setReviews(productId ? validated.filter((r) => r.approved) : validated);
       setLoading(false);

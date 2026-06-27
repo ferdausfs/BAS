@@ -218,16 +218,13 @@ type OrderState = {
   setOrderStatus: (id: string, status: Order['status']) => void;
 };
 
-export const useOrders = create<OrderState>()(
-  persist(
-    (set) => ({
+export const useOrders = create<OrderState>((set) => ({
       orders: [],
 
       setOrders: (orders) => set((s) => ({ orders: Array.isArray(orders) ? orders : s.orders })),
 
       placeOrder: (data) => {
         const user = useAuthStore.getState().user;
-        const hasRemoteUser = !!user?.id && !user.id.startsWith('local-');
 
         const ui = useUI.getState();
         const pendingRedeem = ui.pendingLoyaltyRedeem;
@@ -235,7 +232,7 @@ export const useOrders = create<OrderState>()(
         const o: Order = {
           ...data,
           id: 'BAS' + Date.now().toString().slice(-6) + Math.random().toString(36).slice(2, 5).toUpperCase(),
-          userId: user?.id ?? `guest-${Date.now()}`,
+          userId: user?.id && !user.id.startsWith('local-') ? user.id : null,
           createdAt: Date.now(),
           status: 'placed',
           loyaltyPointsRedeemed: pendingRedeem > 0 ? pendingRedeem : undefined,
@@ -295,10 +292,7 @@ export const useOrders = create<OrderState>()(
           });
         }
       },
-    }),
-    { name: 'bakeart-orders' }
-  )
-);
+    }));
 
 // ===== Wishlist =====
 type UserState = {
@@ -546,6 +540,14 @@ export type WalletTx = {
   pending?: boolean;       // true = waiting for order confirmation
 };
 
+const syncWalletToFirestore = async (uid: string, balance: number, totalEarned: number) => {
+  if (!isFirebaseConfigured() || !uid) return;
+  await setDoc(doc(db, 'profiles', uid, 'wallet', 'balance'),
+    { balance, totalEarned, updated_at: new Date().toISOString() },
+    { merge: true }
+  ).catch(e => console.warn('Wallet sync failed:', e));
+};
+
 type WalletState = {
   balance: number;                                    // ৳ balance (confirmed only)
   totalEarned: number;                                // lifetime ৳ earned
@@ -553,6 +555,7 @@ type WalletState = {
   pendingEarn: { orderId: string; amount: number }[]; // unconfirmed order earnings
 
   // Actions
+  setWallet: (data: { balance: number; totalEarned: number }) => void;
   earnFromOrder: (orderId: string, orderTotal: number) => void;      // add pending earn
   confirmOrderEarn: (orderId: string) => void;                       // pending → balance
   cancelOrderEarn: (orderId: string) => void;                        // discard pending
@@ -568,6 +571,8 @@ export const useWallet = create<WalletState>()(
       totalEarned: 0,
       txns: [],
       pendingEarn: [],
+
+      setWallet: (data) => set({ balance: data.balance, totalEarned: data.totalEarned }),
 
       earnFromOrder: (orderId, orderTotal) => {
         const amount = calcOrderWalletEarn(orderTotal);
@@ -595,16 +600,21 @@ export const useWallet = create<WalletState>()(
         const pending = s.pendingEarn.find(p => p.orderId === orderId);
         const amount = pending?.amount ?? 0;
         if (amount <= 0) return;
-        set(cur => ({
-          balance: cur.balance + amount,
-          totalEarned: cur.totalEarned + amount,
-          pendingEarn: cur.pendingEarn.filter(p => p.orderId !== orderId),
-          txns: cur.txns.map(t =>
-            t.orderId === orderId && t.type === 'order_earn' && t.pending
-              ? { ...t, pending: false, note: `Order #${orderId} reward` }
-              : t
-          ),
-        }));
+        set(cur => {
+          const next = {
+            balance: cur.balance + amount,
+            totalEarned: cur.totalEarned + amount,
+            pendingEarn: cur.pendingEarn.filter(p => p.orderId !== orderId),
+            txns: cur.txns.map(t =>
+              t.orderId === orderId && t.type === 'order_earn' && t.pending
+                ? { ...t, pending: false, note: `Order #${orderId} reward` }
+                : t
+            ),
+          };
+          const uid = useAuthStore.getState().user?.id;
+          if (uid) void syncWalletToFirestore(uid, next.balance, next.totalEarned);
+          return next;
+        });
       },
 
       cancelOrderEarn: (orderId) => {
@@ -616,17 +626,22 @@ export const useWallet = create<WalletState>()(
 
       refundRedeem: (orderId, amount) => {
         if (amount <= 0) return;
-        set(s => ({
-          balance: s.balance + amount,
-          txns: [{
-            id: `wtx-${Date.now()}`,
-            type: 'refund',
-            amount,
-            orderId,
-            date: Date.now(),
-            note: `Refund for cancelled order #${orderId}`,
-          }, ...s.txns],
-        }));
+        set(s => {
+          const next = {
+            balance: s.balance + amount,
+            txns: [{
+              id: `wtx-${Date.now()}`,
+              type: 'refund',
+              amount,
+              orderId,
+              date: Date.now(),
+              note: `Refund for cancelled order #${orderId}`,
+            }, ...s.txns],
+          };
+          const uid = useAuthStore.getState().user?.id;
+          if (uid) void syncWalletToFirestore(uid, next.balance, s.totalEarned);
+          return next;
+        });
       },
 
       earnReferral: (refCode, role) => {
@@ -643,34 +658,44 @@ export const useWallet = create<WalletState>()(
           }
         }
 
-        set(s => ({
-          balance: s.balance + amount,
-          totalEarned: s.totalEarned + amount,
-          txns: [{
-            id: `wtx-${Date.now()}`,
-            type: role === 'referrer' ? 'referral_earn' : 'referral_bonus',
-            amount,
-            refCode,
-            date: Date.now(),
-            note,
-          }, ...s.txns],
-        }));
+        set(s => {
+          const next = {
+            balance: s.balance + amount,
+            totalEarned: s.totalEarned + amount,
+            txns: [{
+              id: `wtx-${Date.now()}`,
+              type: role === 'referrer' ? 'referral_earn' : 'referral_bonus',
+              amount,
+              refCode,
+              date: Date.now(),
+              note,
+            }, ...s.txns],
+          };
+          const uid = useAuthStore.getState().user?.id;
+          if (uid) void syncWalletToFirestore(uid, next.balance, next.totalEarned);
+          return next;
+        });
       },
 
       redeemBalance: (amount, orderId) => {
         const capped = Math.min(amount, WALLET_MAX_REDEEM);
         if (capped <= 0) return;
-        set(s => ({
-          balance: Math.max(0, s.balance - capped),
-          txns: [{
-            id: `wtx-${Date.now()}`,
-            type: 'redeem',
-            amount: -capped,
-            orderId,
-            date: Date.now(),
-            note: `Redeemed for order #${orderId}`,
-          }, ...s.txns],
-        }));
+        set(s => {
+          const next = {
+            balance: Math.max(0, s.balance - capped),
+            txns: [{
+              id: `wtx-${Date.now()}`,
+              type: 'redeem',
+              amount: -capped,
+              orderId,
+              date: Date.now(),
+              note: `Redeemed for order #${orderId}`,
+            }, ...s.txns],
+          };
+          const uid = useAuthStore.getState().user?.id;
+          if (uid) void syncWalletToFirestore(uid, next.balance, s.totalEarned);
+          return next;
+        });
       },
     }),
     { name: 'bakeart-wallet' }
