@@ -9,13 +9,35 @@ import ProductCard from '../components/ProductCard';
 import OccasionIcon from '../components/OccasionIcon';
 import { useDebounce } from '../hooks/useDebounce';
 
+function SkeletonCard() {
+  return (
+    <div
+      className="overflow-hidden rounded-3xl bg-white animate-pulse"
+      style={{ boxShadow: '0 1px 2px rgba(26,19,17,.03), 0 8px 24px -16px rgba(26,19,17,.12)' }}
+    >
+      <div className="aspect-square bg-ink-50" />
+      <div className="p-4 space-y-2">
+        <div className="h-2.5 w-16 rounded-full bg-ink-50" />
+        <div className="h-3.5 w-full rounded-full bg-ink-50" />
+        <div className="h-3.5 w-3/4 rounded-full bg-ink-50" />
+        <div className="mt-3 flex items-center justify-between">
+          <div className="h-4 w-14 rounded-full bg-ink-50" />
+          <div className="h-8 w-8 rounded-2xl bg-ink-50" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const ALL_CAT = { id: 'all' as const, name: 'All' };
 
 export default function CategoriesScreen() {
-  const { go } = useUI();
+  const { go, view } = useUI();
   const { wishlist, toggleWish } = useUser();
-  const { products } = useProducts();
-  const [active, setActive] = useState<string>('all');
+  const { products, loading } = useProducts();
+
+  const initialCat = (view as any).categoryId ?? 'all';
+  const [active, setActive] = useState<string>(initialCat);
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebounce(search, 300);
   const [filterOpen, setFilterOpen] = useState(false);
@@ -23,8 +45,11 @@ export default function CategoriesScreen() {
   const [priceMax, setPriceMax] = useState<number>(5000);
 
   const [recentSearches, setRecentSearches] = useState<string[]>(() => {
-    try { return JSON.parse(localStorage.getItem('bas-recent-searches') || '[]'); }
-    catch { return []; }
+    try {
+      return JSON.parse(localStorage.getItem('bas-recent-searches') || '[]');
+    } catch {
+      return [];
+    }
   });
 
   const saveSearch = (q: string) => {
@@ -77,7 +102,7 @@ export default function CategoriesScreen() {
           </div>
           <button
             onClick={() => setFilterOpen(true)}
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-ink-200 transition active:scale-90 relative"
+            className="relative flex h-10 w-10 items-center justify-center rounded-full bg-white text-ink-200 transition active:scale-90"
             style={{ boxShadow: '0 1px 2px rgba(26,19,17,.03), 0 8px 24px -16px rgba(26,19,17,.16)' }}
           >
             <SlidersHorizontal className="h-[18px] w-[18px]" />
@@ -124,15 +149,17 @@ export default function CategoriesScreen() {
             <span className="font-bold text-ink">{filtered.length}</span> cakes
           </p>
           <p className="text-[12px] font-medium text-ink-200">
-            Sorted by {
-              sortBy === 'popular' ? 'Popular' :
-              sortBy === 'newest' ? 'Newest' :
-              sortBy === 'price-asc' ? 'Price ↑' : 'Price ↓'
-            }
+            Sorted by {sortBy === 'popular' ? 'Popular' : sortBy === 'newest' ? 'Newest' : sortBy === 'price-asc' ? 'Price ↑' : 'Price ↓'}
           </p>
         </div>
 
-        {filtered.length === 0 ? (
+        {loading ? (
+          <div className="grid grid-cols-2 gap-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <SkeletonCard key={i} />
+            ))}
+          </div>
+        ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <div className="flex justify-center text-ink-200 opacity-60">
               <Search size={44} strokeWidth={1.5} />
@@ -164,19 +191,22 @@ export default function CategoriesScreen() {
             onClick={() => setFilterOpen(false)}
           />
           {/* Sheet */}
-          <div className="fixed bottom-0 left-0 right-0 z-50 rounded-t-[28px] bg-white px-5 pt-5 pb-10"
-            style={{ boxShadow: '0 -8px 40px -8px rgba(26,19,17,.18)' }}>
-            
+          <div
+            className="fixed bottom-0 left-0 right-0 z-50 rounded-t-[28px] bg-white px-5 pt-5 pb-10"
+            style={{ boxShadow: '0 -8px 40px -8px rgba(26,19,17,.18)' }}
+          >
             <div className="mb-4 flex items-center justify-between">
               <h2 className="font-display text-[18px] font-bold text-ink">Filter & Sort</h2>
-              <button onClick={() => setFilterOpen(false)}
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-ink-50">
+              <button
+                onClick={() => setFilterOpen(false)}
+                className="flex h-8 w-8 items-center justify-center rounded-full bg-ink-50"
+              >
                 <X className="h-4 w-4 text-ink" />
               </button>
             </div>
 
             {/* Sort options */}
-            <p className="mb-2 text-[11px] font-bold tracking-wider text-ink-200 uppercase">Sort by</p>
+            <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-ink-200">Sort by</p>
             <div className="mb-4 flex flex-wrap gap-2">
               {([
                 { v: 'popular', label: 'Popular' },
@@ -188,9 +218,7 @@ export default function CategoriesScreen() {
                   key={opt.v}
                   onClick={() => setSortBy(opt.v)}
                   className={`rounded-xl px-3 py-1.5 text-[12px] font-semibold transition ${
-                    sortBy === opt.v
-                      ? 'bg-coral text-white'
-                      : 'bg-ink-50 text-ink'
+                    sortBy === opt.v ? 'bg-coral text-white' : 'bg-ink-50 text-ink'
                   }`}
                 >
                   {opt.label}
@@ -199,7 +227,7 @@ export default function CategoriesScreen() {
             </div>
 
             {/* Price range */}
-            <p className="mb-2 text-[11px] font-bold tracking-wider text-ink-200 uppercase">
+            <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-ink-200">
               Max price — ৳{priceMax.toLocaleString()}
             </p>
             <input
@@ -212,7 +240,8 @@ export default function CategoriesScreen() {
               className="w-full accent-coral"
             />
             <div className="mt-1 flex justify-between text-[11px] text-ink-200">
-              <span>৳500</span><span>৳5,000</span>
+              <span>৳500</span>
+              <span>৳5,000</span>
             </div>
 
             {/* Apply button */}
@@ -226,7 +255,10 @@ export default function CategoriesScreen() {
             {/* Reset */}
             {(sortBy !== 'popular' || priceMax < 5000) && (
               <button
-                onClick={() => { setSortBy('popular'); setPriceMax(5000); }}
+                onClick={() => {
+                  setSortBy('popular');
+                  setPriceMax(5000);
+                }}
                 className="mt-2 w-full text-center text-[12px] font-medium text-ink-200"
               >
                 Reset filters

@@ -49,6 +49,10 @@ export default function ProductCard({ product, wished, onOpen, onWish, variant =
             src={product.image}
             alt={product.name}
             loading="lazy"
+            decoding="async"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = '/cakes/logo-cake.png';
+            }}
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.05]"
           />
           {/* Subtle image bottom fade */}
@@ -122,7 +126,6 @@ export default function ProductCard({ product, wished, onOpen, onWish, variant =
     );
   }
 
-  // Horizontal scroll variant
   return (
     <article
       onClick={onOpen}
@@ -138,6 +141,10 @@ export default function ProductCard({ product, wished, onOpen, onWish, variant =
           src={product.image}
           alt={product.name}
           loading="lazy"
+          decoding="async"
+          onError={(e) => {
+            (e.target as HTMLImageElement).src = '/cakes/logo-cake.png';
+          }}
           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.05]"
         />
 

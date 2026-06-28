@@ -57,8 +57,11 @@ export default function HomeScreen({
   useModalDepth(!!activeNotice);
 
   const [recentSearches, setRecentSearches] = useState<string[]>(() => {
-    try { return JSON.parse(localStorage.getItem('bas-recent-searches') || '[]'); }
-    catch { return []; }
+    try {
+      return JSON.parse(localStorage.getItem('bas-recent-searches') || '[]');
+    } catch {
+      return [];
+    }
   });
 
   const saveSearch = (q: string) => {
@@ -73,35 +76,36 @@ export default function HomeScreen({
     localStorage.removeItem('bas-recent-searches');
   };
 
-  const trending = useMemo(() => safeArray(products)
-    .filter((p) => (p.approved ?? true) && (p.inStock ?? true) && (p.bestseller || p.newArrival))
-    .slice(0, 8), [products]);
+  const trending = useMemo(
+    () =>
+      safeArray(products)
+        .filter((p) => (p.approved ?? true) && (p.inStock ?? true) && (p.bestseller || p.newArrival))
+        .slice(0, 8),
+    [products]
+  );
 
-  // ── Fix 1c: "For You" derived product ────────────────────────────────────
   const forYouProduct = useMemo(() => {
     const allProducts = safeArray(products).filter((p) => (p.approved ?? true) && (p.inStock ?? true));
 
-    // Priority 1: last ordered product
     const lastOrderItems = safeArray(orders[0]?.items);
     if (lastOrderItems.length > 0) {
       const found = allProducts.find((p) => p.id === lastOrderItems[0]?.id);
       if (found) return found;
     }
-    // Priority 2: first wishlisted product
+
     if (wishlist.length > 0) {
       const found = allProducts.find((p) => p.id === wishlist[0]);
       if (found) return found;
     }
-    // Priority 3: fallback to index 3
+
     return allProducts[3] ?? allProducts[0] ?? null;
   }, [products, orders, wishlist]);
 
-  // ── Fix 1c: dynamic "For You" label ──────────────────────────────────────
   const forYouLabel = orders.length > 0
     ? 'Based on your last order'
     : wishlist.length > 0
-    ? 'From your wishlist'
-    : 'Trending this week';
+      ? 'From your wishlist'
+      : 'Trending this week';
 
   const searchResults = useMemo(() => {
     const q = debouncedSearch.trim().toLowerCase();
@@ -133,14 +137,11 @@ export default function HomeScreen({
       <Header onLogoTap={onLogoTap} onNotificationsOpen={onNotificationsOpen} />
 
       <div className="no-scrollbar flex-1 overflow-y-auto pb-32">
-        {/* Greeting + search */}
-        <div className="px-5 pt-1 anim-up relative overflow-hidden">
-          {/* Decorative background glow */}
+        <div className="relative overflow-hidden px-5 pt-1 anim-up">
           <div className="pointer-events-none absolute -right-10 -top-8 h-40 w-40 rounded-full bg-blush-200/60 blur-3xl" />
           <div className="pointer-events-none absolute -left-4 top-4 h-24 w-24 rounded-full bg-blush-100/80 blur-2xl" />
 
-          {/* Fix 1b: Dynamic greeting */}
-          <div className="text-[12px] font-medium tracking-[0.2em] text-ink-200 uppercase">
+          <div className="text-[12px] font-medium uppercase tracking-[0.2em] text-ink-200">
             {user ? `Welcome back, ${user.name?.split(' ')[0] || 'friend'}` : 'Welcome to Bake Art Style'}
           </div>
 
@@ -161,16 +162,15 @@ export default function HomeScreen({
           </div>
         </div>
 
-        {/* Fix 1a: Guest CTA Banner — shown before upcoming date block */}
         {!user && (
           <div
-            className="mx-5 mb-3 flex items-center gap-3 rounded-2xl bg-white border border-ink-50 px-4 py-3 anim-up"
+            className="mx-5 mb-3 flex items-center gap-3 rounded-2xl border border-ink-50 bg-white px-4 py-3 anim-up"
             style={{ boxShadow: '0 2px 8px -4px rgba(26,19,17,.1)' }}
           >
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blush-100 flex-shrink-0">
+            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-blush-100">
               <Cake size={20} className="text-coral" />
             </div>
-            <div className="flex-1 min-w-0">
+            <div className="min-w-0 flex-1">
               <div className="text-[12px] font-bold text-ink">Save wishlist &amp; track orders</div>
               <div className="text-[11px] text-ink/60">Sign in for personalized picks</div>
             </div>
@@ -184,19 +184,26 @@ export default function HomeScreen({
         )}
 
         {upcoming && (
-          <div className="mx-5 mb-3 flex items-center gap-3 rounded-2xl bg-gradient-to-r from-coral/10 to-blush-100 px-4 py-3 anim-up"
-            style={{ boxShadow: '0 2px 8px -4px rgba(242,94,115,.2)' }}>
+          <div
+            className="mx-5 mb-3 flex items-center gap-3 rounded-2xl bg-gradient-to-r from-coral/10 to-blush-100 px-4 py-3 anim-up"
+            style={{ boxShadow: '0 2px 8px -4px rgba(242,94,115,.2)' }}
+          >
             <Cake size={22} className="flex-shrink-0 text-coral" />
-            <div className="flex-1 min-w-0">
-              <div className="text-[12px] font-bold text-ink truncate">{upcoming.name} {upcoming.daysLeft === 0 ? 'is today!' : `in ${upcoming.daysLeft} day${upcoming.daysLeft > 1 ? 's' : ''}!`}</div>
+            <div className="min-w-0 flex-1">
+              <div className="truncate text-[12px] font-bold text-ink">
+                {upcoming.name} {upcoming.daysLeft === 0 ? 'is today!' : `in ${upcoming.daysLeft} day${upcoming.daysLeft > 1 ? 's' : ''}!`}
+              </div>
               <div className="text-[11px] text-ink/60">Order a special cake now</div>
             </div>
-            <button onClick={() => go({ name: 'tabs', tab: 'categories' })}
-              className="flex-shrink-0 rounded-xl bg-coral px-3 py-1.5 text-[11px] font-bold text-white">Order</button>
+            <button
+              onClick={() => go({ name: 'tabs', tab: 'categories' })}
+              className="flex-shrink-0 rounded-xl bg-coral px-3 py-1.5 text-[11px] font-bold text-white"
+            >
+              Order
+            </button>
           </div>
         )}
 
-        {/* Hero carousel */}
         {activeBanners.length > 0 && (
           <div className="mt-5 px-5 anim-up delay-1">
             <div
@@ -208,7 +215,7 @@ export default function HomeScreen({
                   <div
                     key={b.id}
                     className={`absolute inset-0 transition-opacity duration-700 ${
-                      i === bannerIdx ? 'opacity-100 z-10' : 'opacity-0 z-0'
+                      i === bannerIdx ? 'z-10 opacity-100' : 'z-0 opacity-0'
                     }`}
                   >
                     <img
@@ -218,7 +225,7 @@ export default function HomeScreen({
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/10" />
                     <div className="absolute inset-0 flex flex-col justify-end p-5">
-                      <span className="mb-2 inline-flex w-fit items-center gap-1 rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-bold tracking-wider text-white uppercase backdrop-blur-md">
+                      <span className="mb-2 inline-flex w-fit items-center gap-1 rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white backdrop-blur-md">
                         <Sparkles className="h-2.5 w-2.5" /> {b.tag}
                       </span>
                       <h3 className="font-display text-[24px] font-bold leading-tight tracking-tight text-white">
@@ -236,11 +243,10 @@ export default function HomeScreen({
                           } else if (b.type === 'notice') {
                             setActiveNotice(b);
                           } else {
-                            // new_item
                             go({ name: 'product', productId: b.productId || safeArray(products)[0]?.id || 'p1' });
                           }
                         }}
-                        className="mt-3.5 inline-flex h-10 w-fit items-center gap-1.5 rounded-full bg-white px-4 text-[12.5px] font-bold text-ink transition active:scale-95 shadow"
+                        className="mt-3.5 inline-flex h-10 w-fit items-center gap-1.5 rounded-full bg-white px-4 text-[12.5px] font-bold text-ink shadow transition active:scale-95"
                       >
                         {b.type === 'discount' ? (
                           copiedId === b.id ? 'Copied!' : `Copy: ${b.promoCode || 'CODE'}`
@@ -308,13 +314,18 @@ export default function HomeScreen({
         )}
 
         {debouncedSearch.trim() && searchResults.length === 0 && (
-          <div className="mx-5 mt-4 flex flex-col items-center rounded-2xl bg-white py-8 text-center anim-up"
-            style={{ boxShadow: '0 1px 2px rgba(26,19,17,.02), 0 8px 24px -16px rgba(26,19,17,.14)' }}>
+          <div
+            className="mx-5 mt-4 flex flex-col items-center rounded-2xl bg-white py-8 text-center anim-up"
+            style={{ boxShadow: '0 1px 2px rgba(26,19,17,.02), 0 8px 24px -16px rgba(26,19,17,.14)' }}
+          >
             <Search className="h-8 w-8 text-ink-200 opacity-50" strokeWidth={1.5} />
             <p className="mt-2 text-[14px] font-medium text-ink">No results for "{debouncedSearch.trim()}"</p>
             <p className="text-[12px] text-ink-200">Try a different name or browse by occasion</p>
             <button
-              onClick={() => { setSearch(''); go({ name: 'tabs', tab: 'categories' }); }}
+              onClick={() => {
+                setSearch('');
+                go({ name: 'tabs', tab: 'categories' });
+              }}
               className="mt-3 rounded-xl bg-coral px-4 py-1.5 text-[12px] font-bold text-white"
             >
               Browse all cakes
@@ -322,53 +333,46 @@ export default function HomeScreen({
           </div>
         )}
 
-        {/* Fix 1d: Order again — shows last order's first item with image & name */}
-        {orders.length > 0 && (() => {
-          const lastOrder = orders[0];
-          const firstItem = safeArray(lastOrder?.items)[0];
-          return (
-            <div className="mt-5 px-5 anim-up delay-2">
-              <button
-                onClick={() => {
-                  safeArray(lastOrder.items).forEach((item) =>
-                    useCart.getState().add({ ...item })
-                  );
-                  go({ name: 'cart' });
-                }}
-                className="group flex w-full items-center gap-3 rounded-2xl border border-ink-50 bg-white p-3.5 text-left transition active:scale-[.98]"
-                style={{ boxShadow: '0 1px 2px rgba(26,19,17,.02), 0 8px 24px -18px rgba(26,19,17,.18)' }}
-              >
-                {firstItem?.image ? (
-                  <img src={firstItem.image} alt="" className="h-11 w-11 rounded-xl object-cover flex-shrink-0" />
-                ) : (
-                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-ink-50 flex-shrink-0">
-                    <RefreshCw className="h-5 w-5 text-ink" strokeWidth={1.75} />
+        {orders.length > 0 &&
+          (() => {
+            const lastOrder = orders[0];
+            const firstItem = safeArray(lastOrder?.items)[0];
+            return (
+              <div className="mt-5 px-5 anim-up delay-2">
+                <button
+                  onClick={() => {
+                    safeArray(lastOrder.items).forEach((item) => useCart.getState().add({ ...item }));
+                    go({ name: 'cart' });
+                  }}
+                  className="group flex w-full items-center gap-3 rounded-2xl border border-ink-50 bg-white p-3.5 text-left transition active:scale-[.98]"
+                  style={{ boxShadow: '0 1px 2px rgba(26,19,17,.02), 0 8px 24px -18px rgba(26,19,17,.18)' }}
+                >
+                  {firstItem?.image ? (
+                    <img src={firstItem.image} alt="" className="h-11 w-11 flex-shrink-0 rounded-xl object-cover" />
+                  ) : (
+                    <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-ink-50">
+                      <RefreshCw className="h-5 w-5 text-ink" strokeWidth={1.75} />
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-[13px] font-bold text-ink">{firstItem?.name ?? 'Order again'}</div>
+                    <div className="text-[11.5px] text-ink-200">
+                      {lastOrder.items.length > 1 ? `+ ${lastOrder.items.length - 1} more · Tap to reorder` : 'Tap to reorder'}
+                    </div>
                   </div>
-                )}
-                <div className="flex-1 min-w-0">
-                  <div className="text-[13px] font-bold text-ink truncate">
-                    {firstItem?.name ?? 'Order again'}
-                  </div>
-                  <div className="text-[11.5px] text-ink-200">
-                    {lastOrder.items.length > 1
-                      ? `+ ${lastOrder.items.length - 1} more · Tap to reorder`
-                      : 'Tap to reorder'}
-                  </div>
-                </div>
-                <ArrowRight className="h-4 w-4 text-ink-200 transition group-hover:translate-x-0.5 flex-shrink-0" />
-              </button>
-            </div>
-          );
-        })()}
+                  <ArrowRight className="h-4 w-4 flex-shrink-0 text-ink-200 transition group-hover:translate-x-0.5" />
+                </button>
+              </div>
+            );
+          })()}
 
-        {/* Categories */}
         <div className="mt-7 anim-up delay-2">
           <SectionHeader title="Browse by occasion" />
           <div className="no-scrollbar mt-3 flex gap-3 overflow-x-auto px-5 pb-1">
             {[ALL_CAT, ...categories].map((c) => (
               <button
                 key={c.id}
-                onClick={() => go({ name: 'tabs', tab: 'categories' })}
+                onClick={() => go({ name: 'tabs', tab: 'categories', categoryId: c.id } as any)}
                 className="group flex w-[78px] flex-shrink-0 flex-col items-center gap-2 transition active:scale-95"
               >
                 <div
@@ -386,7 +390,6 @@ export default function HomeScreen({
           </div>
         </div>
 
-        {/* Trending */}
         <div className="mt-7 anim-up delay-3">
           <SectionHeader
             eyebrow="Trending now"
@@ -406,7 +409,6 @@ export default function HomeScreen({
           </div>
         </div>
 
-        {/* Fix 1c: Personalized "For You" section */}
         <div className="mt-7 px-5 anim-up delay-4">
           <div
             className="relative overflow-hidden rounded-[28px] p-5"
@@ -417,26 +419,22 @@ export default function HomeScreen({
 
             <div className="relative flex items-center gap-4">
               <div className="flex-1">
-                <div className="inline-flex items-center gap-1 rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-bold tracking-wider text-blush-200 uppercase backdrop-blur">
+                <div className="inline-flex items-center gap-1 rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-blush-200 backdrop-blur">
                   <Sparkles className="h-2.5 w-2.5" /> For you
                 </div>
-                <h3 className="mt-2 font-display text-[20px] leading-tight font-bold tracking-tight text-white">
+                <h3 className="mt-2 font-display text-[20px] font-bold leading-tight tracking-tight text-white">
                   Picked for your taste
                 </h3>
-                {/* Fix 1c: dynamic label */}
                 <p className="mt-1 text-[12px] text-white/70">{forYouLabel}</p>
-                {/* Fix 1c: navigate to product if found */}
                 <button
-                  onClick={() => forYouProduct
-                    ? go({ name: 'product', productId: forYouProduct.id })
-                    : go({ name: 'customize' })
+                  onClick={() =>
+                    forYouProduct ? go({ name: 'product', productId: forYouProduct.id }) : go({ name: 'customize' })
                   }
                   className="mt-3.5 inline-flex h-9 items-center gap-1.5 rounded-full bg-coral px-3.5 text-[12px] font-bold text-white shadow-[0_8px_18px_-8px_rgba(242,94,115,.55)] transition active:scale-95"
                 >
                   {forYouProduct ? 'View cake' : 'Customize yours'} <ArrowRight className="h-3 w-3" strokeWidth={2.5} />
                 </button>
               </div>
-              {/* Fix 1c: real product image */}
               <div className="relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-2xl shadow-lg">
                 <img
                   loading="lazy"
@@ -450,18 +448,16 @@ export default function HomeScreen({
           </div>
         </div>
 
-        {/* Brand strip */}
         <div className="mt-6 px-5 pb-3">
           <div className="flex items-center justify-center gap-2 rounded-2xl bg-white/60 py-3 text-ink-200">
             <BrandLogo size={20} />
-            <span className="text-[11.5px] font-medium tracking-wider uppercase">
+            <span className="text-[11.5px] font-medium uppercase tracking-wider">
               Handcrafted since 2018
             </span>
           </div>
         </div>
       </div>
 
-      {/* Notice Modal */}
       {activeNotice && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-5 backdrop-blur-sm anim-fade">
           <div
@@ -474,9 +470,7 @@ export default function HomeScreen({
             <h3 className="mt-4 font-display text-[20px] font-bold tracking-tight text-ink">
               {activeNotice.title}
             </h3>
-            <p className="mt-2 text-[13.5px] leading-relaxed text-ink-200">
-              {activeNotice.noticeText}
-            </p>
+            <p className="mt-2 text-[13.5px] leading-relaxed text-ink-200">{activeNotice.noticeText}</p>
             <button
               onClick={() => setActiveNotice(null)}
               className="btn-primary mt-6 flex h-11 w-full items-center justify-center rounded-2xl text-[13px] font-bold"
