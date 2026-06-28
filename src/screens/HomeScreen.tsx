@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo } from 'react';
-import { ArrowRight, Sparkles, ChevronLeft, ChevronRight, Megaphone, RefreshCw, Cake } from 'lucide-react';
+import { ArrowRight, Sparkles, ChevronLeft, ChevronRight, Megaphone, RefreshCw, Cake, Search } from 'lucide-react';
+import { useDebounce } from '../hooks/useDebounce';
 import { useUI, useUser, useOrders, useAuthStore, useCart } from '../lib/store';
 import { ls, safeArray } from '../lib/utils';
 import { categories } from '../lib/data';
@@ -50,9 +51,27 @@ export default function HomeScreen({
 
   const [bannerIdx, setBannerIdx] = useState(0);
   const [search, setSearch] = useState('');
+  const debouncedSearch = useDebounce(search, 300);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [activeNotice, setActiveNotice] = useState<Banner | null>(null);
   useModalDepth(!!activeNotice);
+
+  const [recentSearches, setRecentSearches] = useState<string[]>(() => {
+    try { return JSON.parse(localStorage.getItem('bas-recent-searches') || '[]'); }
+    catch { return []; }
+  });
+
+  const saveSearch = (q: string) => {
+    if (!q.trim()) return;
+    const updated = [q, ...recentSearches.filter((s) => s !== q)].slice(0, 6);
+    setRecentSearches(updated);
+    localStorage.setItem('bas-recent-searches', JSON.stringify(updated));
+  };
+
+  const clearRecent = () => {
+    setRecentSearches([]);
+    localStorage.removeItem('bas-recent-searches');
+  };
 
   const trending = useMemo(() => safeArray(products)
     .filter((p) => (p.approved ?? true) && (p.inStock ?? true) && (p.bestseller || p.newArrival))
@@ -85,12 +104,21 @@ export default function HomeScreen({
     : 'Trending this week';
 
   const searchResults = useMemo(() => {
-    const q = search.trim().toLowerCase();
+    const q = debouncedSearch.trim().toLowerCase();
     if (!q) return [];
     return safeArray(products)
       .filter((p) => (p.approved ?? true) && (p.inStock ?? true))
       .filter((p) => p.name.toLowerCase().includes(q) || p.tagline.toLowerCase().includes(q))
       .slice(0, 8);
+  }, [products, debouncedSearch]);
+
+  const suggestions = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q || q.length < 2) return [];
+    return safeArray(products)
+      .filter((p) => (p.approved ?? true) && p.name.toLowerCase().includes(q))
+      .map((p) => p.name)
+      .slice(0, 5);
   }, [products, search]);
 
   useEffect(() => {
@@ -122,7 +150,14 @@ export default function HomeScreen({
             <span className="text-gradient-coral">celebrating today?</span>
           </h1>
           <div className="mt-4">
-            <SearchBar value={search} onChange={setSearch} />
+            <SearchBar
+              value={search}
+              onChange={setSearch}
+              onSearch={saveSearch}
+              suggestions={suggestions}
+              recentSearches={recentSearches}
+              onClearRecent={clearRecent}
+            />
           </div>
         </div>
 
@@ -269,6 +304,21 @@ export default function HomeScreen({
                 />
               ))}
             </div>
+          </div>
+        )}
+
+        {debouncedSearch.trim() && searchResults.length === 0 && (
+          <div className="mx-5 mt-4 flex flex-col items-center rounded-2xl bg-white py-8 text-center anim-up"
+            style={{ boxShadow: '0 1px 2px rgba(26,19,17,.02), 0 8px 24px -16px rgba(26,19,17,.14)' }}>
+            <Search className="h-8 w-8 text-ink-200 opacity-50" strokeWidth={1.5} />
+            <p className="mt-2 text-[14px] font-medium text-ink">No results for "{debouncedSearch.trim()}"</p>
+            <p className="text-[12px] text-ink-200">Try a different name or browse by occasion</p>
+            <button
+              onClick={() => { setSearch(''); go({ name: 'tabs', tab: 'categories' }); }}
+              className="mt-3 rounded-xl bg-coral px-4 py-1.5 text-[12px] font-bold text-white"
+            >
+              Browse all cakes
+            </button>
           </div>
         )}
 

@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { SlidersHorizontal, Search } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { SlidersHorizontal, Search, X } from 'lucide-react';
 import { useUI, useUser } from '../lib/store';
 import { categories } from '../lib/data';
 import { useProducts } from '../hooks/useProducts';
@@ -7,6 +7,7 @@ import { safeArray } from '../lib/utils';
 import SearchBar from '../components/SearchBar';
 import ProductCard from '../components/ProductCard';
 import OccasionIcon from '../components/OccasionIcon';
+import { useDebounce } from '../hooks/useDebounce';
 
 const ALL_CAT = { id: 'all' as const, name: 'All' };
 
@@ -16,13 +17,52 @@ export default function CategoriesScreen() {
   const { products } = useProducts();
   const [active, setActive] = useState<string>('all');
   const [search, setSearch] = useState('');
+  const debouncedSearch = useDebounce(search, 300);
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [sortBy, setSortBy] = useState<'popular' | 'newest' | 'price-asc' | 'price-desc'>('popular');
+  const [priceMax, setPriceMax] = useState<number>(5000);
 
-  const filtered = safeArray(products)
-    .filter((p) => (p.approved ?? true) && (p.inStock ?? true))
-    .filter((p) => (active === 'all' ? true : p.occasion === active))
-    .filter((p) =>
-      search.trim() ? p.name.toLowerCase().includes(search.toLowerCase()) : true
-    );
+  const [recentSearches, setRecentSearches] = useState<string[]>(() => {
+    try { return JSON.parse(localStorage.getItem('bas-recent-searches') || '[]'); }
+    catch { return []; }
+  });
+
+  const saveSearch = (q: string) => {
+    if (!q.trim()) return;
+    const updated = [q, ...recentSearches.filter((s) => s !== q)].slice(0, 6);
+    setRecentSearches(updated);
+    localStorage.setItem('bas-recent-searches', JSON.stringify(updated));
+  };
+
+  const clearRecent = () => {
+    setRecentSearches([]);
+    localStorage.removeItem('bas-recent-searches');
+  };
+
+  const suggestions = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q || q.length < 2) return [];
+    return safeArray(products)
+      .filter((p) => (p.approved ?? true) && p.name.toLowerCase().includes(q))
+      .map((p) => p.name)
+      .slice(0, 5);
+  }, [products, search]);
+
+  const filtered = useMemo(() => {
+    let list = safeArray(products)
+      .filter((p) => (p.approved ?? true) && (p.inStock ?? true))
+      .filter((p) => (active === 'all' ? true : p.occasion === active))
+      .filter((p) =>
+        debouncedSearch.trim() ? p.name.toLowerCase().includes(debouncedSearch.toLowerCase()) : true
+      )
+      .filter((p) => (p.price ?? 0) <= priceMax);
+
+    if (sortBy === 'newest') list = list.filter((p) => p.newArrival);
+    if (sortBy === 'price-asc') list = [...list].sort((a, b) => (a.price ?? 0) - (b.price ?? 0));
+    if (sortBy === 'price-desc') list = [...list].sort((a, b) => (b.price ?? 0) - (a.price ?? 0));
+
+    return list;
+  }, [products, active, debouncedSearch, sortBy, priceMax]);
 
   return (
     <div className="flex h-full flex-col bg-cream">
@@ -35,13 +75,28 @@ export default function CategoriesScreen() {
               All cakes
             </h1>
           </div>
-          <button className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-ink-200 transition active:scale-90" style={{ boxShadow: '0 1px 2px rgba(26,19,17,.03), 0 8px 24px -16px rgba(26,19,17,.16)' }}>
+          <button
+            onClick={() => setFilterOpen(true)}
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-ink-200 transition active:scale-90 relative"
+            style={{ boxShadow: '0 1px 2px rgba(26,19,17,.03), 0 8px 24px -16px rgba(26,19,17,.16)' }}
+          >
             <SlidersHorizontal className="h-[18px] w-[18px]" />
+            {(sortBy !== 'popular' || priceMax < 5000) && (
+              <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-coral" />
+            )}
           </button>
         </div>
 
         <div className="mt-3">
-          <SearchBar value={search} onChange={setSearch} placeholder="Search cakes…" />
+          <SearchBar
+            value={search}
+            onChange={setSearch}
+            onSearch={saveSearch}
+            placeholder="Search cakes…"
+            suggestions={suggestions}
+            recentSearches={recentSearches}
+            onClearRecent={clearRecent}
+          />
         </div>
       </header>
 
@@ -68,7 +123,13 @@ export default function CategoriesScreen() {
           <p className="text-[12px] font-medium text-ink-200">
             <span className="font-bold text-ink">{filtered.length}</span> cakes
           </p>
-          <p className="text-[12px] font-medium text-ink-200">Sorted by Popular</p>
+          <p className="text-[12px] font-medium text-ink-200">
+            Sorted by {
+              sortBy === 'popular' ? 'Popular' :
+              sortBy === 'newest' ? 'Newest' :
+              sortBy === 'price-asc' ? 'Price ↑' : 'Price ↓'
+            }
+          </p>
         </div>
 
         {filtered.length === 0 ? (
@@ -94,6 +155,86 @@ export default function CategoriesScreen() {
           </div>
         )}
       </div>
+
+      {filterOpen && (
+        <>
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm"
+            onClick={() => setFilterOpen(false)}
+          />
+          {/* Sheet */}
+          <div className="fixed bottom-0 left-0 right-0 z-50 rounded-t-[28px] bg-white px-5 pt-5 pb-10"
+            style={{ boxShadow: '0 -8px 40px -8px rgba(26,19,17,.18)' }}>
+            
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="font-display text-[18px] font-bold text-ink">Filter & Sort</h2>
+              <button onClick={() => setFilterOpen(false)}
+                className="flex h-8 w-8 items-center justify-center rounded-full bg-ink-50">
+                <X className="h-4 w-4 text-ink" />
+              </button>
+            </div>
+
+            {/* Sort options */}
+            <p className="mb-2 text-[11px] font-bold tracking-wider text-ink-200 uppercase">Sort by</p>
+            <div className="mb-4 flex flex-wrap gap-2">
+              {([
+                { v: 'popular', label: 'Popular' },
+                { v: 'newest', label: 'New arrivals' },
+                { v: 'price-asc', label: 'Price: low–high' },
+                { v: 'price-desc', label: 'Price: high–low' },
+              ] as const).map((opt) => (
+                <button
+                  key={opt.v}
+                  onClick={() => setSortBy(opt.v)}
+                  className={`rounded-xl px-3 py-1.5 text-[12px] font-semibold transition ${
+                    sortBy === opt.v
+                      ? 'bg-coral text-white'
+                      : 'bg-ink-50 text-ink'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Price range */}
+            <p className="mb-2 text-[11px] font-bold tracking-wider text-ink-200 uppercase">
+              Max price — ৳{priceMax.toLocaleString()}
+            </p>
+            <input
+              type="range"
+              min={500}
+              max={5000}
+              step={100}
+              value={priceMax}
+              onChange={(e) => setPriceMax(Number(e.target.value))}
+              className="w-full accent-coral"
+            />
+            <div className="mt-1 flex justify-between text-[11px] text-ink-200">
+              <span>৳500</span><span>৳5,000</span>
+            </div>
+
+            {/* Apply button */}
+            <button
+              onClick={() => setFilterOpen(false)}
+              className="mt-5 flex h-12 w-full items-center justify-center rounded-2xl bg-coral text-[13px] font-bold text-white"
+            >
+              Show {filtered.length} cakes
+            </button>
+
+            {/* Reset */}
+            {(sortBy !== 'popular' || priceMax < 5000) && (
+              <button
+                onClick={() => { setSortBy('popular'); setPriceMax(5000); }}
+                className="mt-2 w-full text-center text-[12px] font-medium text-ink-200"
+              >
+                Reset filters
+              </button>
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 }
