@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from 'react';
 import { ArrowRight, Sparkles, ChevronLeft, ChevronRight, Megaphone, RefreshCw, Cake } from 'lucide-react';
-import { useUI, useUser, useOrders, useAuthStore } from '../lib/store';
+import { useUI, useUser, useOrders, useAuthStore, useCart } from '../lib/store';
 import { ls, safeArray } from '../lib/utils';
 import { categories } from '../lib/data';
 import { useProducts } from '../hooks/useProducts';
@@ -33,9 +33,11 @@ const getUpcomingDate = (userId?: string): { name: string; daysLeft: number } | 
 export default function HomeScreen({
   onLogoTap,
   onNotificationsOpen,
+  onAuthOpen,
 }: {
   onLogoTap?: () => void;
   onNotificationsOpen?: () => void;
+  onAuthOpen?: () => void;
 }) {
   const { go } = useUI();
   const { wishlist, toggleWish } = useUser();
@@ -55,6 +57,32 @@ export default function HomeScreen({
   const trending = useMemo(() => safeArray(products)
     .filter((p) => (p.approved ?? true) && (p.inStock ?? true) && (p.bestseller || p.newArrival))
     .slice(0, 8), [products]);
+
+  // ── Fix 1c: "For You" derived product ────────────────────────────────────
+  const forYouProduct = useMemo(() => {
+    const allProducts = safeArray(products).filter((p) => (p.approved ?? true) && (p.inStock ?? true));
+
+    // Priority 1: last ordered product
+    const lastOrderItems = safeArray(orders[0]?.items);
+    if (lastOrderItems.length > 0) {
+      const found = allProducts.find((p) => p.id === lastOrderItems[0]?.id);
+      if (found) return found;
+    }
+    // Priority 2: first wishlisted product
+    if (wishlist.length > 0) {
+      const found = allProducts.find((p) => p.id === wishlist[0]);
+      if (found) return found;
+    }
+    // Priority 3: fallback to index 3
+    return allProducts[3] ?? allProducts[0] ?? null;
+  }, [products, orders, wishlist]);
+
+  // ── Fix 1c: dynamic "For You" label ──────────────────────────────────────
+  const forYouLabel = orders.length > 0
+    ? 'Based on your last order'
+    : wishlist.length > 0
+    ? 'From your wishlist'
+    : 'Trending this week';
 
   const searchResults = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -82,9 +110,12 @@ export default function HomeScreen({
           {/* Decorative background glow */}
           <div className="pointer-events-none absolute -right-10 -top-8 h-40 w-40 rounded-full bg-blush-200/60 blur-3xl" />
           <div className="pointer-events-none absolute -left-4 top-4 h-24 w-24 rounded-full bg-blush-100/80 blur-2xl" />
+
+          {/* Fix 1b: Dynamic greeting */}
           <div className="text-[12px] font-medium tracking-[0.2em] text-ink-200 uppercase">
-            Welcome back
+            {user ? `Welcome back, ${user.name?.split(' ')[0] || 'friend'}` : 'Welcome to Bake Art Style'}
           </div>
+
           <h1 className="mt-1 font-display text-[28px] font-bold leading-[1.1] tracking-tight text-ink">
             What cake are we
             <br />
@@ -94,6 +125,28 @@ export default function HomeScreen({
             <SearchBar value={search} onChange={setSearch} />
           </div>
         </div>
+
+        {/* Fix 1a: Guest CTA Banner — shown before upcoming date block */}
+        {!user && (
+          <div
+            className="mx-5 mb-3 flex items-center gap-3 rounded-2xl bg-white border border-ink-50 px-4 py-3 anim-up"
+            style={{ boxShadow: '0 2px 8px -4px rgba(26,19,17,.1)' }}
+          >
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blush-100 flex-shrink-0">
+              <Cake size={20} className="text-coral" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-[12px] font-bold text-ink">Save wishlist &amp; track orders</div>
+              <div className="text-[11px] text-ink/60">Sign in for personalized picks</div>
+            </div>
+            <button
+              onClick={onAuthOpen}
+              className="flex-shrink-0 rounded-xl bg-coral px-3 py-1.5 text-[11px] font-bold text-white"
+            >
+              Sign in
+            </button>
+          </div>
+        )}
 
         {upcoming && (
           <div className="mx-5 mb-3 flex items-center gap-3 rounded-2xl bg-gradient-to-r from-coral/10 to-blush-100 px-4 py-3 anim-up"
@@ -219,27 +272,44 @@ export default function HomeScreen({
           </div>
         )}
 
-        {/* Quick action: order again */}
-        {orders.length > 0 && (
-          <div className="mt-5 px-5 anim-up delay-2">
-            <button
-              onClick={() => go({ name: 'tabs', tab: 'orders' })}
-              className="group flex w-full items-center gap-3 rounded-2xl border border-ink-50 bg-white p-3.5 text-left transition active:scale-[.98]"
-              style={{ boxShadow: '0 1px 2px rgba(26,19,17,.02), 0 8px 24px -18px rgba(26,19,17,.18)' }}
-            >
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-ink-50">
-                <RefreshCw className="h-5 w-5 text-ink" strokeWidth={1.75} />
-              </div>
-              <div className="flex-1">
-                <div className="text-[13px] font-bold text-ink">Order again</div>
-                <div className="text-[11.5px] text-ink-200">
-                  Your previous favourites, one tap away
+        {/* Fix 1d: Order again — shows last order's first item with image & name */}
+        {orders.length > 0 && (() => {
+          const lastOrder = orders[0];
+          const firstItem = safeArray(lastOrder?.items)[0];
+          return (
+            <div className="mt-5 px-5 anim-up delay-2">
+              <button
+                onClick={() => {
+                  safeArray(lastOrder.items).forEach((item) =>
+                    useCart.getState().add({ ...item })
+                  );
+                  go({ name: 'cart' });
+                }}
+                className="group flex w-full items-center gap-3 rounded-2xl border border-ink-50 bg-white p-3.5 text-left transition active:scale-[.98]"
+                style={{ boxShadow: '0 1px 2px rgba(26,19,17,.02), 0 8px 24px -18px rgba(26,19,17,.18)' }}
+              >
+                {firstItem?.image ? (
+                  <img src={firstItem.image} alt="" className="h-11 w-11 rounded-xl object-cover flex-shrink-0" />
+                ) : (
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-ink-50 flex-shrink-0">
+                    <RefreshCw className="h-5 w-5 text-ink" strokeWidth={1.75} />
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <div className="text-[13px] font-bold text-ink truncate">
+                    {firstItem?.name ?? 'Order again'}
+                  </div>
+                  <div className="text-[11.5px] text-ink-200">
+                    {lastOrder.items.length > 1
+                      ? `+ ${lastOrder.items.length - 1} more · Tap to reorder`
+                      : 'Tap to reorder'}
+                  </div>
                 </div>
-              </div>
-              <ArrowRight className="h-4 w-4 text-ink-200 transition group-hover:translate-x-0.5" />
-            </button>
-          </div>
-        )}
+                <ArrowRight className="h-4 w-4 text-ink-200 transition group-hover:translate-x-0.5 flex-shrink-0" />
+              </button>
+            </div>
+          );
+        })()}
 
         {/* Categories */}
         <div className="mt-7 anim-up delay-2">
@@ -286,7 +356,7 @@ export default function HomeScreen({
           </div>
         </div>
 
-        {/* Personalized */}
+        {/* Fix 1c: Personalized "For You" section */}
         <div className="mt-7 px-5 anim-up delay-4">
           <div
             className="relative overflow-hidden rounded-[28px] p-5"
@@ -303,18 +373,28 @@ export default function HomeScreen({
                 <h3 className="mt-2 font-display text-[20px] leading-tight font-bold tracking-tight text-white">
                   Picked for your taste
                 </h3>
-                <p className="mt-1 text-[12px] text-white/70">
-                  Hand-picked selections based on trending bakes.
-                </p>
+                {/* Fix 1c: dynamic label */}
+                <p className="mt-1 text-[12px] text-white/70">{forYouLabel}</p>
+                {/* Fix 1c: navigate to product if found */}
                 <button
-                  onClick={() => go({ name: 'customize' })}
+                  onClick={() => forYouProduct
+                    ? go({ name: 'product', productId: forYouProduct.id })
+                    : go({ name: 'customize' })
+                  }
                   className="mt-3.5 inline-flex h-9 items-center gap-1.5 rounded-full bg-coral px-3.5 text-[12px] font-bold text-white shadow-[0_8px_18px_-8px_rgba(242,94,115,.55)] transition active:scale-95"
                 >
-                  Customize yours <ArrowRight className="h-3 w-3" strokeWidth={2.5} />
+                  {forYouProduct ? 'View cake' : 'Customize yours'} <ArrowRight className="h-3 w-3" strokeWidth={2.5} />
                 </button>
               </div>
+              {/* Fix 1c: real product image */}
               <div className="relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-2xl shadow-lg">
-                <img loading="lazy" decoding="async" src={safeArray(products)[3]?.image || '/cakes/logo-cake.png'} alt="" className="h-full w-full object-cover" />
+                <img
+                  loading="lazy"
+                  decoding="async"
+                  src={forYouProduct?.image || '/cakes/logo-cake.png'}
+                  alt={forYouProduct?.name || ''}
+                  className="h-full w-full object-cover"
+                />
               </div>
             </div>
           </div>

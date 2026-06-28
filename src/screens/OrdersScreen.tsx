@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
-import { Check, Package, ChefHat, Truck, Receipt, Search, RefreshCw } from 'lucide-react';
-import { useUI, formatINR, useAuthStore, useCart } from '../lib/store';
+import { Check, Package, ChefHat, Truck, Receipt, Search, RefreshCw, ShoppingCart } from 'lucide-react';
+import { useUI, formatINR, useAuthStore, useCart, useUser } from '../lib/store';
 import { useOrdersHook } from '../hooks/useOrders';
 import { safeArray } from '../lib/utils';
 
@@ -17,6 +17,7 @@ export default function OrdersScreen() {
   const { orders, loading, fetchMyOrders } = useOrdersHook();
   const user = useAuthStore((s) => s.user);
   const { setTab, go } = useUI();
+  const { wishlist } = useUser();
 
   useEffect(() => {
     if (user) {
@@ -47,30 +48,33 @@ export default function OrdersScreen() {
             <p className="text-[12px] text-ink-200">Loading your orders...</p>
           </div>
         ) : orders.length === 0 ? (
+          // Fix 3: Personalized empty state
           <div className="flex flex-col items-center justify-center pt-16 text-center anim-fade">
             <div
-              className="flex h-24 w-24 items-center justify-center rounded-3xl bg-white"
+              className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-white"
               style={{ boxShadow: '0 1px 2px rgba(26,19,17,.03), 0 12px 30px -18px rgba(26,19,17,.14)' }}
             >
-              <Package size={48} strokeWidth={1.5} className="text-ink-200" />
+              <ShoppingCart className="h-10 w-10 text-ink-200" strokeWidth={1.8} />
             </div>
             <h2 className="mt-5 font-display text-[22px] font-bold tracking-tight text-ink">
               No orders yet
             </h2>
             <p className="mt-1.5 max-w-xs text-[13px] text-ink-200">
-              When you place your first order, it'll show up here with live tracking.
+              {wishlist.length > 0
+                ? 'You have saved cakes — ready to order?'
+                : 'Place your first order and track it live here.'}
             </p>
             <button
-              onClick={() => setTab('home')}
+              onClick={() => wishlist.length > 0 ? go({ name: 'wishlist' }) : setTab('home')}
               className="btn-primary mt-6 flex h-12 items-center gap-2 rounded-2xl px-7 text-[13px] font-bold"
             >
               <Receipt className="h-4 w-4" />
-              Browse cakes
+              {wishlist.length > 0 ? 'View my wishlist' : 'Browse cakes'}
             </button>
           </div>
         ) : (
           <div className="space-y-3">
-              {safeArray(orders).filter(Boolean).map((o) => {
+            {safeArray(orders).filter(Boolean).map((o) => {
               const currentIdx = STATUSES.findIndex((s) => s.key === o.status);
               return (
                 <article

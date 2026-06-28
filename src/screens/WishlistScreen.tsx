@@ -1,12 +1,17 @@
 import { ArrowLeft, Heart } from 'lucide-react';
-import { useUI, useUser } from '../lib/store';
+import { useUI, useUser, useAuthStore } from '../lib/store';
 import { useProducts } from '../hooks/useProducts';
 import { safeArray } from '../lib/utils';
 import ProductCard from '../components/ProductCard';
 
-export default function WishlistScreen() {
+export default function WishlistScreen({
+  onAuthOpen,
+}: {
+  onAuthOpen?: () => void;
+}) {
   const { back, go } = useUI();
   const { wishlist, toggleWish } = useUser();
+  const { user } = useAuthStore();
   const { products } = useProducts();
   const list = safeArray(products).filter((p) => (p.approved ?? true) && wishlist.includes(p.id));
 
@@ -28,20 +33,40 @@ export default function WishlistScreen() {
         {list.length === 0 ? (
           <div className="flex flex-col items-center justify-center pt-16 text-center">
             <div
-              className="flex h-24 w-24 items-center justify-center rounded-3xl bg-white"
+              className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-white"
               style={{ boxShadow: '0 1px 2px rgba(26,19,17,.03), 0 12px 30px -18px rgba(26,19,17,.14)' }}
             >
-              <Heart className="h-12 w-12 text-ink-200" strokeWidth={1.8} />
+              <Heart className="h-10 w-10 text-ink-200" strokeWidth={1.8} />
             </div>
-            <h2 className="mt-5 font-display text-[22px] font-bold tracking-tight text-ink">
-              Your wishlist is empty
-            </h2>
-            <p className="mt-1.5 max-w-xs text-[13px] text-ink-200">
-              Tap the heart on any cake to save it for later.
-            </p>
-            <button onClick={back} className="btn-primary mt-6 h-12 rounded-2xl px-7 text-[13px] font-bold">
-              Browse cakes
-            </button>
+
+            {!user ? (
+              <>
+                <h2 className="mt-5 font-display text-[22px] font-bold tracking-tight text-ink">
+                  Sign in to save favourites
+                </h2>
+                <p className="mt-1.5 max-w-xs text-[13px] text-ink-200">
+                  Create an account to keep your favourite cakes in one place.
+                </p>
+                <button
+                  onClick={onAuthOpen}
+                  className="btn-primary mt-6 h-12 rounded-2xl px-7 text-[13px] font-bold"
+                >
+                  Sign in / Sign up
+                </button>
+              </>
+            ) : (
+              <>
+                <h2 className="mt-5 font-display text-[22px] font-bold tracking-tight text-ink">
+                  Your wishlist is empty
+                </h2>
+                <p className="mt-1.5 max-w-xs text-[13px] text-ink-200">
+                  Tap the heart on any cake to save it here.
+                </p>
+                <button onClick={back} className="btn-primary mt-6 h-12 rounded-2xl px-7 text-[13px] font-bold">
+                  Browse cakes
+                </button>
+              </>
+            )}
           </div>
         ) : (
           <>
