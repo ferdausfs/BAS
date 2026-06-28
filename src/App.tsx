@@ -90,7 +90,7 @@ export default function App() {
         <main className="flex-1 min-h-0 relative overflow-hidden">
           {view.name === 'splash' && <SplashScreen />}
           {view.name === 'tabs' && activeTab === 'home' && (
-            <HomeScreen onLogoTap={() => {}} onNotificationsOpen={() => setNotificationsOpen(true)} />
+            <HomeScreen onLogoTap={() => {}} onNotificationsOpen={() => setNotificationsOpen(true)} onAuthOpen={() => setAuthOpen(true)} />
           )}
           {view.name === 'tabs' && activeTab === 'categories' && <CategoriesScreen />}
           {view.name === 'tabs' && activeTab === 'orders' && (
@@ -112,7 +112,7 @@ export default function App() {
           {view.name === 'cart' && <CartScreen />}
           {view.name === 'checkout' && <CheckoutScreen />}
           {view.name === 'success' && <SuccessScreen />}
-          {view.name === 'wishlist' && <WishlistScreen />}
+          {view.name === 'wishlist' && <WishlistScreen onAuthOpen={() => setAuthOpen(true)} />}
           {view.name === 'tracking' && <TrackingScreen />}
           {view.name === 'admin' && <AdminScreen />}
         </main>
