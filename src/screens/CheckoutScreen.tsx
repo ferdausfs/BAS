@@ -15,6 +15,7 @@ import { db, isFirebaseConfigured, uploadToCloudinary } from '../lib/firebase';
 import { safeArray, isValidPhone } from '../lib/utils';
 import { LocationGate } from '../components/LocationGate';
 import { BD_DISTRICTS } from '../lib/zones';
+import type { CartItem, Order } from '../types';
 
 const PAYMENTS = [
   { id: 'bkash', label: 'bKash', sub: 'Send money / Payment', Icon: Phone },
@@ -139,7 +140,7 @@ export default function CheckoutScreen({ onBack }: Props) {
           next.district = user.district;
         }
 
-        const recentOrder = safeArray(orders).find(
+        const recentOrder = safeArray<Order>(orders).find(
           (o) =>
             o.userId === user.id ||
             (user.email && o.customer?.email?.toLowerCase() === user.email.toLowerCase())
@@ -367,7 +368,7 @@ export default function CheckoutScreen({ onBack }: Props) {
         {/* Items */}
         <Section icon={MapPin} title="অর্ডারের আইটেম">
           <div className="space-y-2.5">
-            {safeArray(items).slice(0, 3).map((it, i) => (
+            {safeArray<CartItem>(items).slice(0, 3).map((it, i) => (
               <div key={i} className="flex items-center gap-3">
                 <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-xl bg-cream">
                   <img src={it.image} alt="" className="h-full w-full object-cover" />
@@ -392,18 +393,32 @@ export default function CheckoutScreen({ onBack }: Props) {
         {/* Delivery address */}
         <Section icon={MapPin} title="ডেলিভারি ঠিকানা">
           <div className="space-y-2.5">
-            <input
-              placeholder="আপনার নাম"
-              value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
-              className="h-11 w-full rounded-xl border border-ink-50 bg-white px-3 text-[13px] font-medium text-ink outline-none focus:border-coral focus:ring-2 focus:ring-coral/15"
-            />
-            <input
-              placeholder="মোবাইল নম্বর (01XXXXXXXXX)"
-              value={form.phone}
-              onChange={(e) => setForm({ ...form, phone: e.target.value })}
-              className="h-11 w-full rounded-xl border border-ink-50 bg-white px-3 text-[13px] font-medium text-ink outline-none focus:border-coral focus:ring-2 focus:ring-coral/15"
-            />
+            <div className="space-y-1.5">
+              <label htmlFor="checkout-name" className="text-[11px] font-bold tracking-wider text-ink-200 uppercase">
+                নাম
+              </label>
+              <input
+                id="checkout-name"
+                placeholder="আপনার নাম"
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                className="h-11 w-full rounded-xl border border-ink-50 bg-white px-3 text-[13px] font-medium text-ink outline-none focus:border-coral focus:ring-2 focus:ring-coral/15"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label htmlFor="checkout-phone" className="text-[11px] font-bold tracking-wider text-ink-200 uppercase">
+                মোবাইল নম্বর
+              </label>
+              <input
+                id="checkout-phone"
+                type="tel"
+                inputMode="numeric"
+                placeholder="মোবাইল নম্বর (01XXXXXXXXX)"
+                value={form.phone}
+                onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                className="h-11 w-full rounded-xl border border-ink-50 bg-white px-3 text-[13px] font-medium text-ink outline-none focus:border-coral focus:ring-2 focus:ring-coral/15"
+              />
+            </div>
 
             {/* GPS Button */}
             <div className="flex flex-col gap-1.5 pt-0.5">
@@ -425,33 +440,51 @@ export default function CheckoutScreen({ onBack }: Props) {
               )}
             </div>
 
-            <textarea
-              placeholder="সম্পূর্ণ ঠিকানা (বাসা/রোড/এলাকা)"
-              value={form.address}
-              onChange={(e) => setForm({ ...form, address: e.target.value })}
-              rows={2}
-              className="w-full rounded-xl border border-ink-50 bg-white px-3 py-2.5 text-[13px] font-medium text-ink outline-none focus:border-coral focus:ring-2 focus:ring-coral/15 resize-none"
-            />
-            <select
-              value={form.district}
-              onChange={(e) => setForm({ ...form, district: e.target.value })}
-              className="h-11 w-full rounded-xl border border-ink-50 bg-white px-3 text-[13px] font-medium text-ink outline-none focus:border-coral focus:ring-2 focus:ring-coral/15"
-            >
-              {BD_DISTRICTS.map((d) => (
-                <option key={d} value={d}>{d}</option>
-              ))}
-            </select>
+            <div className="space-y-1.5">
+              <label htmlFor="checkout-address" className="text-[11px] font-bold tracking-wider text-ink-200 uppercase">
+                ডেলিভারি ঠিকানা
+              </label>
+              <textarea
+                id="checkout-address"
+                placeholder="সম্পূর্ণ ঠিকানা (বাসা/রোড/এলাকা)"
+                value={form.address}
+                onChange={(e) => setForm({ ...form, address: e.target.value })}
+                rows={2}
+                className="w-full rounded-xl border border-ink-50 bg-white px-3 py-2.5 text-[13px] font-medium text-ink outline-none focus:border-coral focus:ring-2 focus:ring-coral/15 resize-none"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label htmlFor="checkout-district" className="text-[11px] font-bold tracking-wider text-ink-200 uppercase">
+                জেলা
+              </label>
+              <select
+                id="checkout-district"
+                value={form.district}
+                onChange={(e) => setForm({ ...form, district: e.target.value })}
+                className="h-11 w-full rounded-xl border border-ink-50 bg-white px-3 text-[13px] font-medium text-ink outline-none focus:border-coral focus:ring-2 focus:ring-coral/15"
+              >
+                {BD_DISTRICTS.map((d) => (
+                  <option key={d} value={d}>{d}</option>
+                ))}
+              </select>
+            </div>
           </div>
         </Section>
 
         {/* Date & time */}
         <Section icon={Clock} title="ডেলিভারি সময়">
-          <input
-            type="date"
-            value={form.date}
-            onChange={(e) => setForm({ ...form, date: e.target.value })}
-            className="h-11 w-full rounded-xl border border-ink-50 bg-white px-3 text-[13px] font-medium text-ink outline-none transition focus:border-coral focus:ring-2 focus:ring-coral/15"
-          />
+          <div className="space-y-1.5">
+            <label htmlFor="checkout-date" className="text-[11px] font-bold tracking-wider text-ink-200 uppercase">
+              ডেলিভারি তারিখ
+            </label>
+            <input
+              id="checkout-date"
+              type="date"
+              value={form.date}
+              onChange={(e) => setForm({ ...form, date: e.target.value })}
+              className="h-11 w-full rounded-xl border border-ink-50 bg-white px-3 text-[13px] font-medium text-ink outline-none transition focus:border-coral focus:ring-2 focus:ring-coral/15"
+            />
+          </div>
           <div className="mt-2.5 grid grid-cols-2 gap-2">
             {SLOTS.map((s) => (
               <button
@@ -496,14 +529,20 @@ export default function CheckoutScreen({ onBack }: Props) {
           {giftMode && (
             <div className="space-y-3 rounded-2xl bg-white px-4 py-4"
               style={{ boxShadow: '0 1px 2px rgba(26,19,17,.02), 0 4px 12px -8px rgba(26,19,17,.12)' }}>
-              <textarea
-                maxLength={200}
-                placeholder="Write a heartfelt message..."
-                className="w-full resize-none rounded-xl border border-ink/10 bg-cream px-3 py-2.5 text-[13px] text-ink placeholder:text-ink/30 focus:border-coral focus:outline-none"
-                rows={3}
-                value={gift.message}
-                onChange={(e) => setGift(g => ({ ...g, message: e.target.value }))}
-              />
+              <div className="space-y-1.5">
+                <label htmlFor="gift-message" className="text-[11px] font-bold tracking-wider text-ink-200 uppercase">
+                  গিফট মেসেজ (ঐচ্ছিক)
+                </label>
+                <textarea
+                  id="gift-message"
+                  maxLength={200}
+                  placeholder="Write a heartfelt message..."
+                  className="w-full resize-none rounded-xl border border-ink/10 bg-cream px-3 py-2.5 text-[13px] text-ink placeholder:text-ink/30 focus:border-coral focus:outline-none"
+                  rows={3}
+                  value={gift.message}
+                  onChange={(e) => setGift(g => ({ ...g, message: e.target.value }))}
+                />
+              </div>
               <div className="text-right text-[10px] text-ink/30">{gift.message.length}/200</div>
               <label className="flex items-center gap-3 cursor-pointer">
                 <input type="checkbox" checked={gift.wrap} onChange={(e) => setGift(g => ({ ...g, wrap: e.target.checked }))}
@@ -515,14 +554,32 @@ export default function CheckoutScreen({ onBack }: Props) {
                   className="h-4 w-4 rounded accent-coral" />
                 <span className="text-[13px] text-ink">Hide price from recipient</span>
               </label>
-              <input placeholder="Recipient name (optional)"
-                className="w-full rounded-xl border border-ink/10 bg-cream px-3 py-2.5 text-[13px] text-ink placeholder:text-ink/30 focus:border-coral focus:outline-none"
-                value={gift.recipientName}
-                onChange={(e) => setGift(g => ({ ...g, recipientName: e.target.value }))} />
-              <input placeholder="Recipient phone (optional)"
-                className="w-full rounded-xl border border-ink/10 bg-cream px-3 py-2.5 text-[13px] text-ink placeholder:text-ink/30 focus:border-coral focus:outline-none"
-                value={gift.recipientPhone}
-                onChange={(e) => setGift(g => ({ ...g, recipientPhone: e.target.value }))} />
+              <div className="space-y-1.5">
+                <label htmlFor="gift-recipient-name" className="text-[11px] font-bold tracking-wider text-ink-200 uppercase">
+                  প্রাপকের নাম
+                </label>
+                <input
+                  id="gift-recipient-name"
+                  placeholder="Recipient name (optional)"
+                  className="w-full rounded-xl border border-ink/10 bg-cream px-3 py-2.5 text-[13px] text-ink placeholder:text-ink/30 focus:border-coral focus:outline-none"
+                  value={gift.recipientName}
+                  onChange={(e) => setGift(g => ({ ...g, recipientName: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label htmlFor="gift-recipient-phone" className="text-[11px] font-bold tracking-wider text-ink-200 uppercase">
+                  প্রাপকের নম্বর
+                </label>
+                <input
+                  id="gift-recipient-phone"
+                  type="tel"
+                  inputMode="numeric"
+                  placeholder="Recipient phone (optional)"
+                  className="w-full rounded-xl border border-ink/10 bg-cream px-3 py-2.5 text-[13px] text-ink placeholder:text-ink/30 focus:border-coral focus:outline-none"
+                  value={gift.recipientPhone}
+                  onChange={(e) => setGift(g => ({ ...g, recipientPhone: e.target.value }))}
+                />
+              </div>
             </div>
           )}
         </section>
@@ -595,26 +652,31 @@ export default function CheckoutScreen({ onBack }: Props) {
 
           {/* Referral Code - BUG 3 FIX */}
           <div className="mt-4 pt-4 border-t border-ink/5">
-            <div className="flex items-center gap-2 mb-2.5">
-              <Users className="h-4 w-4 text-ink-200" />
-              <span className="text-[12px] font-bold text-ink">রেফারেল কোড</span>
-              <span className="text-[10px] text-ink/40">(সর্বোচ্চ ৩ বার ব্যবহার করা যাবে)</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <input
-                value={referralInput}
-                onChange={(e) => { setReferralInput(e.target.value); setReferralError(''); }}
-                placeholder="কারো রেফারেল কোড আছে?"
-                disabled={referralApplied}
-                className="flex-1 h-10 rounded-xl border border-ink-50 bg-white px-3 text-[13px] font-medium text-ink outline-none focus:border-coral focus:ring-2 focus:ring-coral/15 disabled:opacity-50"
-              />
-              <button
-                onClick={() => void applyReferralCodeHandler()}
-                disabled={referralApplied || !referralInput || referralLoading}
-                className="rounded-xl bg-coral px-3.5 py-2 text-[11px] font-bold text-white active:scale-95 transition disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                {referralLoading ? 'Checking...' : 'Apply'}
-              </button>
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-2">
+                <Users className="h-4 w-4 text-ink-200" />
+                <label htmlFor="referral-code" className="text-[11px] font-bold tracking-wider text-ink-200 uppercase">
+                  রেফারেল কোড (ঐচ্ছিক)
+                </label>
+                <span className="text-[10px] text-ink/40">(সর্বোচ্চ ৩ বার ব্যবহার করা যাবে)</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  id="referral-code"
+                  value={referralInput}
+                  onChange={(e) => { setReferralInput(e.target.value); setReferralError(''); }}
+                  placeholder="কারো রেফারেল কোড আছে?"
+                  disabled={referralApplied}
+                  className="flex-1 h-10 rounded-xl border border-ink-50 bg-white px-3 text-[13px] font-medium text-ink outline-none focus:border-coral focus:ring-2 focus:ring-coral/15 disabled:opacity-50"
+                />
+                <button
+                  onClick={() => void applyReferralCodeHandler()}
+                  disabled={referralApplied || !referralInput || referralLoading}
+                  className="rounded-xl bg-coral px-3.5 py-2 text-[11px] font-bold text-white active:scale-95 transition disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  {referralLoading ? 'Checking...' : 'Apply'}
+                </button>
+              </div>
             </div>
             {referralApplied && (
               <div className="mt-2 text-[11px] text-emerald-600 font-semibold">

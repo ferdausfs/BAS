@@ -12,6 +12,7 @@ import {
   useSettingsStore,
 } from '../lib/store';
 import { safeArray } from '../lib/utils';
+import type { CartItem } from '../types';
 
 export default function CartScreen() {
   const { items, setQty, remove } = useCart();
@@ -129,7 +130,7 @@ export default function CartScreen() {
 
         {/* Items */}
         <div className="space-y-3">
-          {safeArray(items).map((item, idx) => (
+          {safeArray<CartItem>(items).map((item, idx) => (
             <article
               key={idx}
               className="flex gap-3 rounded-2xl bg-white p-3 anim-up"
@@ -153,7 +154,7 @@ export default function CartScreen() {
                   </div>
                   <button
                     onClick={() => remove(idx)}
-                    className="flex h-7 w-7 items-center justify-center rounded-full text-ink-200 transition active:bg-rose-50 active:text-rose-600"
+                    className="flex h-11 w-11 items-center justify-center rounded-full text-ink-200 transition active:bg-rose-50 active:text-rose-600"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                   </button>
@@ -162,18 +163,18 @@ export default function CartScreen() {
                   <div className="flex items-center rounded-full border border-ink-50 bg-white p-0.5">
                     <button
                       onClick={() => setQty(idx, item.quantity - 1)}
-                      className="flex h-7 w-7 items-center justify-center rounded-full text-ink-200 transition hover:bg-cream"
+                      className="flex h-11 w-11 items-center justify-center rounded-full text-ink-200 transition hover:bg-cream"
                     >
-                      <Minus className="h-3 w-3" />
+                      <Minus className="h-3.5 w-3.5" />
                     </button>
                     <span className="w-7 text-center text-[12.5px] font-bold tabular text-ink">
                       {item.quantity}
                     </span>
                     <button
                       onClick={() => setQty(idx, item.quantity + 1)}
-                      className="flex h-7 w-7 items-center justify-center rounded-full text-ink-200 transition hover:bg-cream"
+                      className="flex h-11 w-11 items-center justify-center rounded-full text-ink-200 transition hover:bg-cream"
                     >
-                      <Plus className="h-3 w-3" />
+                      <Plus className="h-3.5 w-3.5" />
                     </button>
                   </div>
                   <span className="font-display text-[15px] font-bold tabular text-ink">
