@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { ArrowLeft, Package, Search, ShoppingCart, CheckCircle2, Flame, Cake, Truck, PartyPopper, RefreshCw } from 'lucide-react';
-import { useUI, formatINR, useAuthStore } from '../lib/store';
+import { ArrowLeft, Package, Search, ShoppingCart, CheckCircle2, Flame, Cake, Truck, PartyPopper, RefreshCw, XCircle, MessageCircle, Clock } from 'lucide-react';
+import { useUI, formatINR, useAuthStore, useCart, useSettingsStore } from '../lib/store';
 import { useOrdersHook } from '../hooks/useOrders';
 import { safeArray } from '../lib/utils';
 import type { Order } from '../types';
@@ -17,18 +17,31 @@ const TIMELINE_STEPS: { key: string; Icon: typeof ShoppingCart; label: string; s
 const STATUS_ORDER = TIMELINE_STEPS.map((s) => s.key);
 
 export default function TrackingScreen() {
-  const { view, back, setTab } = useUI();
+  const { view, back, setTab, go, setChatOpen } = useUI();
   const initial = view.name === 'tracking' ? view.orderId ?? '' : '';
   const [query, setQuery] = useState(initial);
   const [match, setMatch] = useState<Order | null>(null);
   const { orders, loading, fetchMyOrders } = useOrdersHook();
   const user = useAuthStore((s) => s.user);
+  const [lastUpdated, setLastUpdated] = useState<number>(Date.now());
+  const { settings } = useSettingsStore();
 
   useEffect(() => {
     if (user) {
       fetchMyOrders();
+      setLastUpdated(Date.now());
     }
   }, [fetchMyOrders, user]);
+
+  // যদি orderId না আসে, latest active order auto-load করো
+  useEffect(() => {
+    if (!query && orders.length > 0) {
+      const latest = orders.find(o =>
+        o.status !== 'delivered' && o.status !== 'cancelled'
+      ) ?? orders[0];
+      if (latest) setQuery(latest.id);
+    }
+  }, [orders, query]);
 
   useEffect(() => {
     if (!query.trim()) {
@@ -41,14 +54,15 @@ export default function TrackingScreen() {
     setMatch(found ?? null);
   }, [query, orders]);
 
-  // Poll every 15s while the tracked order is active, so admin status changes
+  // Poll every 30s while the tracked order is active, so admin status changes
   // reach the customer in near-realtime (no websocket needed on customer side).
   useEffect(() => {
     if (!match || match.status === 'delivered' || match.status === 'cancelled') return;
 
     const interval = setInterval(() => {
       fetchMyOrders();
-    }, 15000);
+      setLastUpdated(Date.now());
+    }, 30000);
 
     return () => clearInterval(interval);
   }, [match?.id, match?.status, fetchMyOrders]);
@@ -102,12 +116,10 @@ export default function TrackingScreen() {
                 </div>
               </div>
               <div className="flex flex-col items-end gap-1.5">
-                <button
-                  onClick={() => fetchMyOrders()}
-                  className="flex items-center gap-1 rounded-xl bg-ink/5 px-2.5 py-1 text-[11px] font-semibold text-ink/60 active:scale-95"
-                >
-                  <RefreshCw className="h-3 w-3" /> Refresh
-                </button>
+                <div className="flex items-center gap-1 text-[10px] text-ink/40">
+                  <div className="h-1.5 w-1.5 rounded-full bg-green-400 animate-pulse" />
+                  Live
+                </div>
                 <div className="font-display text-[18px] font-bold tabular text-ink">
                   {formatINR(match.total)}
                 </div>
@@ -128,6 +140,42 @@ export default function TrackingScreen() {
               ))}
             </div>
 
+            {match.status === 'cancelled' && (
+              <div className="mx-5 mb-4 overflow-hidden rounded-2xl border border-red-100 bg-red-50">
+                <div className="flex items-center gap-3 px-4 py-3 border-b border-red-100">
+                  <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-red-100">
+                    <XCircle className="h-5 w-5 text-red-500" strokeWidth={2} />
+                  </div>
+                  <div>
+                    <p className="text-[13px] font-bold text-red-800">অর্ডার বাতিল হয়েছে</p>
+                    <p className="text-[11px] text-red-500">Order #{match.id} cancelled</p>
+                  </div>
+                </div>
+                <div className="px-4 py-3 space-y-2">
+                  <p className="text-[12px] text-red-700">
+                    আপনার পেমেন্ট ওয়ালেটে ফেরত দেওয়া হয়েছে বা দেওয়া হবে।
+                  </p>
+                  <div className="flex gap-2 mt-2">
+                    <button
+                      onClick={() => {
+                        safeArray(match.items).forEach((item) => useCart.getState().add({ ...item }));
+                        go({ name: 'cart' });
+                      }}
+                      className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-xl bg-red-500 text-[12px] font-bold text-white"
+                    >
+                      <RefreshCw className="h-3.5 w-3.5" /> পুনরায় অর্ডার করুন
+                    </button>
+                    <button
+                      onClick={() => setChatOpen(true)}
+                      className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-xl bg-white border border-red-200 text-[12px] font-bold text-red-600"
+                    >
+                      <MessageCircle className="h-3.5 w-3.5" /> সাপোর্ট
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="border-t border-ink-50 px-4 py-3.5">
               <div className="mb-2 flex items-center justify-between">
                 <span className="text-[10px] font-bold tracking-wider text-ink-200 uppercase">Live status</span>
@@ -138,7 +186,7 @@ export default function TrackingScreen() {
                 {TIMELINE_STEPS.map((step, i, arr) => {
                   const currentIdx = STATUS_ORDER.indexOf(match.status);
                   const stepIdx = STATUS_ORDER.indexOf(step.key);
-                  const done = stepIdx <= currentIdx;
+                  const done = stepIdx <= currentIdx && currentIdx !== -1;
                   const active = stepIdx === currentIdx;
                   const isLast = i === arr.length - 1;
                   const StepIcon = step.Icon;
@@ -164,25 +212,6 @@ export default function TrackingScreen() {
                       <div className={`pb-4 flex-1 ${active ? '' : 'opacity-60'}`}>
                         <div className={`text-[13px] font-bold ${done ? 'text-ink' : 'text-ink/40'}`}>{step.label}</div>
                         <div className="text-[11px] text-ink/50">{step.sub}</div>
-                        {active && match.status === 'out' && (
-                          <div className="mt-2 overflow-hidden rounded-xl bg-coral/8 px-3 py-2">
-                            <div className="flex items-center justify-between mb-1">
-                              <span className="text-[11px] font-bold text-coral flex items-center gap-1.5">
-                                <Truck className="h-3 w-3" /> On the way
-                              </span>
-                              <span className="text-[11px] text-ink/50">~15-20 mins</span>
-                            </div>
-                            {/* Truck progress animation */}
-                            <div className="relative h-2 rounded-full bg-ink/10">
-                              <div className="absolute inset-y-0 left-0 w-3/4 rounded-full bg-coral" />
-                              <Truck
-                                className="absolute -top-1 h-4 w-4 text-coral"
-                                style={{ left: 'calc(75% - 8px)', animation: 'bounce 1s infinite' }}
-                                strokeWidth={2}
-                              />
-                            </div>
-                          </div>
-                        )}
                         {active && match.status === 'delivered' && (
                           <div className="mt-1 text-[11px] font-bold text-green-600">Delivered successfully!</div>
                         )}
@@ -191,6 +220,30 @@ export default function TrackingScreen() {
                   );
                 })}
               </div>
+              {match.status !== 'delivered' && match.status !== 'cancelled' && (
+                <div className="mt-3 mx-1 flex items-center justify-between rounded-xl bg-coral/8 px-3 py-2.5">
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-4 w-4 text-coral" />
+                    <div>
+                      <p className="text-[11px] font-bold text-coral">
+                        {match.status === 'out' ? 'প্রায় পৌঁছে গেছে!' : 'আনুমানিক ডেলিভারি সময়'}
+                      </p>
+                      <p className="text-[11px] text-ink/50">
+                        {match.status === 'out'
+                          ? '~15-20 মিনিট'
+                          : settings?.deliveryEstimate ?? '45-60 মিনিট'}
+                      </p>
+                    </div>
+                  </div>
+                  {match.status === 'out' && (
+                    <div className="flex gap-px">
+                      {[0,1,2,3,4].map((i) => (
+                        <div key={i} className={`h-1.5 w-4 rounded-full ${i < 4 ? 'bg-coral' : 'bg-coral/20'}`} />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </article>
         ) : query.trim() ? (
@@ -209,12 +262,36 @@ export default function TrackingScreen() {
             <p className="mt-3 text-[13px] text-ink-200">
               Enter an order ID to see live status. You can also open tracking from your Orders page.
             </p>
+            {orders.length > 0 && (
+              <button
+                onClick={() => {
+                  const latest = orders.find(o =>
+                    o.status !== 'delivered' && o.status !== 'cancelled'
+                  ) ?? orders[0];
+                  if (latest) setQuery(latest.id);
+                }}
+                className="mb-3 flex h-11 w-full items-center justify-center gap-2 rounded-2xl bg-coral text-[13px] font-bold text-white"
+              >
+                <Truck className="h-4 w-4" /> সর্বশেষ অর্ডার ট্র্যাক করুন
+              </button>
+            )}
             <button onClick={() => setTab('orders')} className="btn-primary mt-5 h-11 rounded-2xl px-5 text-[13px] font-bold">
               My orders
             </button>
           </div>
         )}
       </div>
+      {match && match.status !== 'delivered' && (
+        <button
+          onClick={() => setChatOpen(true)}
+          className="fixed bottom-24 right-5 z-40 flex items-center gap-2 rounded-2xl bg-ink px-4 py-2.5 shadow-lg transition active:scale-95"
+          style={{ boxShadow: '0 4px 20px -4px rgba(26,19,19,.35)' }}
+          // lastUpdated is tracked for battery-friendly polling: {lastUpdated}
+        >
+          <MessageCircle className="h-4 w-4 text-white" strokeWidth={2} />
+          <span className="text-[12px] font-bold text-white">সাহায্য দরকার?</span>
+        </button>
+      )}
     </div>
   );
 }
