@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Heart, Star, ShoppingBag, Check, Share2, Truck, Sparkles, Shield, Cake, Pencil, CheckCircle2, Camera, X, AlertTriangle, Bell } from 'lucide-react';
+import { ArrowLeft, Heart, Star, ShoppingBag, Check, Share2, Truck, Sparkles, Shield, Cake, Pencil, CheckCircle2, Camera, X, AlertTriangle, Bell, Eye } from 'lucide-react';
 import { useUI, useCart, useUser, useAuthStore, formatINR } from '../lib/store';
 import { useProducts } from '../hooks/useProducts';
 import { useReviews } from '../hooks/useReviews';
@@ -235,6 +235,38 @@ export default function ProductScreen() {
             <span className="font-bold text-ink">{Number(product.rating ?? 0)}</span>
             <span className="text-ink-200">({Number(product.reviews ?? 0).toLocaleString()} reviews)</span>
           </div>
+
+          {/* Social proof strip */}
+          {(product.soldCount || product.viewCount || product.lowStock || product.stockCount) && (
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              {product.soldCount && product.soldCount > 0 && (
+                <div className="flex items-center gap-1 rounded-full bg-ink-50 px-2.5 py-1">
+                  <ShoppingBag className="h-3 w-3 text-ink-200" strokeWidth={2} />
+                  <span className="text-[11px] font-semibold text-ink-200">
+                    {product.soldCount >= 1000
+                      ? `${(product.soldCount / 1000).toFixed(1)}k+`
+                      : `${product.soldCount}+`} বিক্রি
+                  </span>
+                </div>
+              )}
+              {product.viewCount && product.viewCount > 0 && (
+                <div className="flex items-center gap-1 rounded-full bg-ink-50 px-2.5 py-1">
+                  <Eye className="h-3 w-3 text-ink-200" strokeWidth={2} />
+                  <span className="text-[11px] font-semibold text-ink-200">
+                    {product.viewCount} জন দেখছে
+                  </span>
+                </div>
+              )}
+              {product.inStock !== false && (product.lowStock || (product.stockCount !== undefined && product.stockCount <= 5)) && (
+                <div className="flex items-center gap-1 rounded-full bg-red-50 px-2.5 py-1">
+                  <span className="h-1.5 w-1.5 rounded-full bg-red-400 animate-pulse inline-block" />
+                  <span className="text-[11px] font-bold text-red-500">
+                    {product.stockCount ? `মাত্র ${product.stockCount}টি বাকি!` : 'মাত্র কয়েকটি বাকি!'}
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Price */}
           <div className="mt-4 flex items-baseline gap-2">

@@ -104,11 +104,30 @@ export default function ProductCard({ product, wished, onOpen, onWish, variant =
                 New
               </span>
             )}
+            {/* Sold count badge */}
+            {product.soldCount && product.soldCount > 0 && (
+              <span className="rounded-full bg-black/50 backdrop-blur-sm px-2 py-0.5 text-[9px] font-bold text-white/90 uppercase tracking-wide">
+                {product.soldCount >= 1000
+                  ? `${(product.soldCount / 1000).toFixed(1)}k+ বিক্রি`
+                  : `${product.soldCount}+ বিক্রি`}
+              </span>
+            )}
           </div>
         </div>
 
         {/* Content */}
         <div className="p-4">
+          {/* Low stock urgency */}
+          {product.inStock !== false && (product.lowStock || (product.stockCount !== undefined && product.stockCount <= 5)) && (
+            <div className="mb-1.5 flex items-center gap-1">
+              <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-[9.5px] font-bold text-red-500">
+                <span className="h-1.5 w-1.5 rounded-full bg-red-400 animate-pulse inline-block" />
+                {product.stockCount !== undefined && product.stockCount <= 5
+                  ? `মাত্র ${product.stockCount}টি বাকি!`
+                  : 'মাত্র কয়েকটি বাকি!'}
+              </span>
+            </div>
+          )}
           <div className="flex items-center gap-1.5 text-[11px]">
             <Star className="h-3 w-3 fill-gold text-gold" />
             <span className="font-bold text-ink">{product.rating}</span>
@@ -209,6 +228,15 @@ export default function ProductCard({ product, wished, onOpen, onWish, variant =
 
       {/* Content */}
       <div className="flex flex-1 flex-col p-3">
+        {/* Low stock urgency */}
+        {product.inStock !== false && (product.lowStock || (product.stockCount !== undefined && product.stockCount <= 5)) && (
+          <div className="mb-1 flex items-center gap-1">
+            <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-1.5 py-0.5 text-[9px] font-bold text-red-500">
+              <span className="h-1.5 w-1.5 rounded-full bg-red-400 animate-pulse inline-block" />
+              {product.stockCount ? `মাত্র ${product.stockCount}টি!` : 'কম বাকি!'}
+            </span>
+          </div>
+        )}
         <div className="flex items-center gap-1 text-[10px]">
           <Star className="h-2.5 w-2.5 fill-gold text-gold" />
           <span className="font-bold text-ink">{product.rating}</span>

@@ -23,6 +23,10 @@ export type Product = {
   pricePerUnit?: number;
   inStock?: boolean;
   approved?: boolean;
+  soldCount?: number;
+  lowStock?: boolean;
+  stockCount?: number;
+  viewCount?: number;
 };
 
 export type CartItem = {
