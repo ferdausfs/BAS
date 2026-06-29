@@ -21,6 +21,12 @@ export default function ProductScreen() {
 
   const product = view.name === 'product' ? products.find((p) => p.id === view.productId) : null;
   const [activeImg, setActiveImg] = useState<string | null>(null);
+  const [heartKey, setHeartKey] = useState(0);
+
+  const handleWish = () => {
+    setHeartKey(k => k + 1);
+    if (product) toggleWish(product.id);
+  };
 
   // Reviews state
   const { reviews, saveReview, uploadReviewImage } = useReviews(product?.id);
@@ -508,13 +514,15 @@ export default function ProductScreen() {
             <Share2 className="h-[18px] w-[18px]" strokeWidth={2} />
           </button>
           <button
-            onClick={() => toggleWish(product.id)}
+            onClick={handleWish}
             className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-ink transition active:scale-90"
             style={{ boxShadow: '0 8px 22px -10px rgba(26,19,17,.35)' }}
             aria-label="Wishlist"
           >
             <Heart
-              className={`h-[19px] w-[19px] ${wished ? 'fill-coral text-coral' : ''}`}
+              key={heartKey}
+              className={`h-[19px] w-[19px] ${wished ? 'fill-coral text-coral anim-pop' : ''}`}
+              style={{ transition: 'fill 0.2s ease, color 0.2s ease' }}
               strokeWidth={2}
             />
           </button>

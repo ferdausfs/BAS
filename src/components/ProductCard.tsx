@@ -1,4 +1,5 @@
-import { Heart, Plus, Star } from 'lucide-react';
+import { useState } from 'react';
+import { Heart, Plus, Star, Check } from 'lucide-react';
 import { useCart, formatINR } from '../lib/store';
 import type { Product } from '../types';
 
@@ -12,6 +13,18 @@ type Props = {
 
 export default function ProductCard({ product, wished, onOpen, onWish, variant = 'horizontal' }: Props) {
   const { add } = useCart();
+  const [heartKey, setHeartKey] = useState(0);
+  const [added, setAdded] = useState(false);
+
+  const safeWeights = product.weights?.length ? product.weights : [{ size: '1 kg', price: product.price }];
+  const safeFlavors = product.flavors?.length ? product.flavors : ['Chocolate'];
+
+  const handleWish = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    setHeartKey(k => k + 1);
+    onWish(product.id);
+  };
 
   const handleAdd = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -20,17 +33,14 @@ export default function ProductCard({ product, wished, onOpen, onWish, variant =
       productId: product.id,
       name: product.name,
       image: product.image,
-      size: product.weights?.[0]?.size ?? '1 kg',
-      flavor: product.flavors?.[0] ?? 'Chocolate',
+      size: safeWeights[0]?.size ?? '1 kg',
+      flavor: safeFlavors[0] ?? 'Chocolate',
       price: product.price,
       quantity: 1,
     });
-  };
-
-  const handleWish = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    e.preventDefault();
-    onWish(product.id);
+    // confirmation state
+    setAdded(true);
+    setTimeout(() => setAdded(false), 1200);
   };
 
   if (variant === 'grid') {
@@ -69,8 +79,12 @@ export default function ProductCard({ product, wished, onOpen, onWish, variant =
             aria-label={wished ? 'Remove from wishlist' : 'Add to wishlist'}
           >
             <Heart
-              className="h-[15px] w-[15px]"
-              style={{ fill: wished ? '#E8526A' : 'none' }}
+              key={heartKey}
+              className={`h-[15px] w-[15px] ${wished ? 'anim-pop' : ''}`}
+              style={{
+                fill: wished ? '#E8526A' : 'none',
+                transition: 'fill 0.2s ease, color 0.2s ease',
+              }}
               strokeWidth={2}
             />
           </button>
@@ -112,12 +126,20 @@ export default function ProductCard({ product, wished, onOpen, onWish, variant =
                 onClick={handleAdd}
                 className="flex h-9 w-9 items-center justify-center rounded-full text-white transition-all active:scale-90 hover:brightness-105"
                 style={{
-                  background: 'linear-gradient(135deg, #EE6279 0%, #DC3E58 100%)',
-                  boxShadow: '0 6px 18px -6px rgba(232,82,106,0.5)',
+                  background: added
+                    ? 'linear-gradient(135deg, #1baf7a 0%, #0e8f63 100%)'
+                    : 'linear-gradient(135deg, #EE6279 0%, #DC3E58 100%)',
+                  boxShadow: added
+                    ? '0 6px 18px -6px rgba(27,175,122,0.5)'
+                    : '0 6px 18px -6px rgba(232,82,106,0.5)',
+                  transition: 'background 0.3s ease, box-shadow 0.3s ease',
                 }}
                 aria-label="Add to cart"
               >
-                <Plus className="h-4 w-4" strokeWidth={2.5} />
+                {added
+                  ? <Check key="check" className="h-4 w-4 anim-pop" strokeWidth={2.5} />
+                  : <Plus className="h-4 w-4" strokeWidth={2.5} />
+                }
               </button>
             )}
           </div>
@@ -158,8 +180,12 @@ export default function ProductCard({ product, wished, onOpen, onWish, variant =
           aria-label={wished ? 'Remove from wishlist' : 'Add to wishlist'}
         >
           <Heart
-            className="h-3.5 w-3.5"
-            style={{ fill: wished ? '#E8526A' : 'none' }}
+            key={heartKey}
+            className={`h-3.5 w-3.5 ${wished ? 'anim-pop' : ''}`}
+            style={{
+              fill: wished ? '#E8526A' : 'none',
+              transition: 'fill 0.2s ease, color 0.2s ease',
+            }}
             strokeWidth={2}
           />
         </button>
@@ -200,12 +226,20 @@ export default function ProductCard({ product, wished, onOpen, onWish, variant =
               onClick={handleAdd}
               className="flex h-8 w-8 items-center justify-center rounded-full text-white transition-all active:scale-90"
               style={{
-                background: 'linear-gradient(135deg, #EE6279 0%, #DC3E58 100%)',
-                boxShadow: '0 5px 14px -5px rgba(232,82,106,0.5)',
+                background: added
+                  ? 'linear-gradient(135deg, #1baf7a 0%, #0e8f63 100%)'
+                  : 'linear-gradient(135deg, #EE6279 0%, #DC3E58 100%)',
+                boxShadow: added
+                  ? '0 6px 18px -6px rgba(27,175,122,0.5)'
+                  : '0 5px 14px -5px rgba(232,82,106,0.5)',
+                transition: 'background 0.3s ease, box-shadow 0.3s ease',
               }}
               aria-label="Add to cart"
             >
-              <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
+              {added
+                ? <Check key="check" className="h-3.5 w-3.5 anim-pop" strokeWidth={2.5} />
+                : <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
+              }
             </button>
           )}
         </div>

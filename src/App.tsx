@@ -88,33 +88,39 @@ export default function App() {
     <AppErrorBoundary>
       <div className="h-[100dvh] w-full flex flex-col bg-cream overflow-hidden">
         <main className="flex-1 min-h-0 relative overflow-hidden">
-          {view.name === 'splash' && <SplashScreen />}
-          {view.name === 'tabs' && activeTab === 'home' && (
-            <HomeScreen onLogoTap={() => {}} onNotificationsOpen={() => setNotificationsOpen(true)} onAuthOpen={() => setAuthOpen(true)} />
-          )}
-          {view.name === 'tabs' && activeTab === 'categories' && <CategoriesScreen />}
-          {view.name === 'tabs' && activeTab === 'orders' && (
-            user ? <OrdersScreen /> : (
-              <div className="flex h-full flex-col items-center justify-center px-8 text-center">
-                <div className="text-5xl mb-4">📋</div>
-                <h2 className="font-bold text-lg mb-2">Sign in to view orders</h2>
-                <button onClick={() => setAuthOpen(true)} className="px-6 py-3 rounded-2xl bg-coral text-white font-bold text-sm">
-                  Sign In
-                </button>
+          {view.name === 'splash'
+            ? <SplashScreen />
+            : (
+              <div key={screenKey} className="h-full w-full anim-fade">
+                {view.name === 'tabs' && activeTab === 'home' && (
+                  <HomeScreen onLogoTap={() => {}} onNotificationsOpen={() => setNotificationsOpen(true)} onAuthOpen={() => setAuthOpen(true)} />
+                )}
+                {view.name === 'tabs' && activeTab === 'categories' && <CategoriesScreen />}
+                {view.name === 'tabs' && activeTab === 'orders' && (
+                  user ? <OrdersScreen /> : (
+                    <div className="flex h-full flex-col items-center justify-center px-8 text-center">
+                      <div className="text-5xl mb-4">📋</div>
+                      <h2 className="font-bold text-lg mb-2">Sign in to view orders</h2>
+                      <button onClick={() => setAuthOpen(true)} className="px-6 py-3 rounded-2xl bg-coral text-white font-bold text-sm">
+                        Sign In
+                      </button>
+                    </div>
+                  )
+                )}
+                {view.name === 'tabs' && activeTab === 'profile' && (
+                  <ProfileScreen onAuthOpen={() => setAuthOpen(true)} isAdmin={isAdminUser} />
+                )}
+                {view.name === 'product' && <ProductScreen />}
+                {view.name === 'customize' && <CustomizeScreen />}
+                {view.name === 'cart' && <CartScreen />}
+                {view.name === 'checkout' && <CheckoutScreen />}
+                {view.name === 'success' && <SuccessScreen />}
+                {view.name === 'wishlist' && <WishlistScreen onAuthOpen={() => setAuthOpen(true)} />}
+                {view.name === 'tracking' && <TrackingScreen />}
+                {view.name === 'admin' && <AdminScreen />}
               </div>
             )
-          )}
-          {view.name === 'tabs' && activeTab === 'profile' && (
-            <ProfileScreen onAuthOpen={() => setAuthOpen(true)} isAdmin={isAdminUser} />
-          )}
-          {view.name === 'product' && <ProductScreen />}
-          {view.name === 'customize' && <CustomizeScreen />}
-          {view.name === 'cart' && <CartScreen />}
-          {view.name === 'checkout' && <CheckoutScreen />}
-          {view.name === 'success' && <SuccessScreen />}
-          {view.name === 'wishlist' && <WishlistScreen onAuthOpen={() => setAuthOpen(true)} />}
-          {view.name === 'tracking' && <TrackingScreen />}
-          {view.name === 'admin' && <AdminScreen />}
+          }
         </main>
 
         {showTabBar && <BottomTabBar />}

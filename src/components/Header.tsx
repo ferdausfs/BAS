@@ -1,4 +1,5 @@
 import { Heart, ShoppingBag, Bell } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
 import { useUI, useCart, useUser } from '../lib/store';
 import BrandLogo from './BrandLogo';
 
@@ -14,6 +15,16 @@ export default function Header({ onLogoTap, onNotificationsOpen }: Props) {
   const cartCount = items.reduce((s, i) => s + i.quantity, 0);
   const wishCount = wishlist.length;
   const unreadCount = notifications.filter((n) => !n.read).length;
+
+  const [badgeKey, setBadgeKey] = useState(0);
+  const prevCountRef = useRef(cartCount);
+
+  useEffect(() => {
+    if (cartCount > prevCountRef.current) {
+      setBadgeKey(k => k + 1);
+    }
+    prevCountRef.current = cartCount;
+  }, [cartCount]);
 
   return (
     <header className="flex flex-shrink-0 items-center justify-between px-5 pb-3 pt-4">
@@ -66,9 +77,21 @@ export default function Header({ onLogoTap, onNotificationsOpen }: Props) {
           className="relative flex h-10 w-10 items-center justify-center rounded-full bg-ink text-white transition active:scale-90"
           aria-label="Cart"
         >
-          <ShoppingBag className="h-[18px] w-[18px]" strokeWidth={2} />
+          <div className="relative">
+            <ShoppingBag className="h-[18px] w-[18px]" strokeWidth={2} />
+            {badgeKey > 0 && (
+              <span
+                key={`ring-${badgeKey}`}
+                className="absolute inset-0 rounded-full anim-ring pointer-events-none"
+                style={{ margin: '-4px' }}
+              />
+            )}
+          </div>
           {cartCount > 0 && (
-            <span className="absolute -top-1 -right-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-coral px-1 text-[10px] font-bold text-white ring-2 ring-cream">
+            <span
+              key={badgeKey}
+              className="absolute -top-1 -right-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-coral px-1 text-[10px] font-bold text-white ring-2 ring-cream anim-pop"
+            >
               {cartCount}
             </span>
           )}
