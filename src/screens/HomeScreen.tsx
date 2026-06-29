@@ -215,7 +215,16 @@ export default function HomeScreen({
                 {activeBanners.map((b, i) => (
                   <div
                     key={b.id}
-                    className={`absolute inset-0 transition-opacity duration-700 ${
+                    onClick={() => {
+                      if (b.productId) {
+                        go({ name: 'product', productId: b.productId });
+                      } else if (b.link === 'customize') {
+                        go({ name: 'customize' });
+                      } else if (b.link === 'categories') {
+                        go({ name: 'tabs', tab: 'categories' });
+                      }
+                    }}
+                    className={`absolute inset-0 cursor-pointer transition-opacity duration-700 ${
                       i === bannerIdx ? 'z-10 opacity-100' : 'z-0 opacity-0'
                     }`}
                   >
@@ -225,6 +234,13 @@ export default function HomeScreen({
                       className="absolute inset-0 h-full w-full object-cover"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/10" />
+                    {b.ctaText && (
+                      <div className="absolute bottom-4 left-4 z-20">
+                        <span className="rounded-full bg-white/90 px-3 py-1.5 text-[12px] font-bold text-ink backdrop-blur-sm">
+                          {b.ctaText} →
+                        </span>
+                      </div>
+                    )}
                     <div className="absolute inset-0 flex flex-col justify-end p-5">
                       <span className="mb-2 inline-flex w-fit items-center gap-1 rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white backdrop-blur-md">
                         <Sparkles className="h-2.5 w-2.5" /> {b.tag}
@@ -234,7 +250,8 @@ export default function HomeScreen({
                       </h3>
                       <p className="mt-1 text-[12.5px] leading-snug text-white/85">{b.subtitle}</p>
                       <button
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.stopPropagation();
                           if (b.type === 'discount') {
                             if (b.promoCode) {
                               navigator.clipboard?.writeText(b.promoCode);

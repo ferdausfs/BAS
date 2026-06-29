@@ -185,6 +185,7 @@ export const mapBannerDoc = (id: string, row: any): Banner => ({
   active: row.active ?? true,
   sortOrder: row.sort_order ?? row.sortOrder ?? 0,
   link: row.link || undefined,
+  ctaText: row.cta_text ?? row.ctaText ?? undefined,
 });
 
 export const bannerToDoc = (b: Banner) => ({
@@ -201,6 +202,7 @@ export const bannerToDoc = (b: Banner) => ({
   active: b.active ?? true,
   sort_order: b.sortOrder ?? 0,
   link: b.link ?? null,
+  cta_text: b.ctaText ?? null,
   updated_at: new Date().toISOString(),
 });
 

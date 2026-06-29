@@ -90,7 +90,8 @@ export type Banner = {
   noticeText?: string;
   active?: boolean;
   sortOrder?: number;
-  link?: string;
+  link?: string;        // e.g. 'categories', 'product', 'customize'
+  ctaText?: string;     // button text, e.g. "এখনই অর্ডার করুন"
 };
 
 export type Category = {
