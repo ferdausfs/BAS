@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from 'react';
-import { ArrowRight, Sparkles, ChevronLeft, ChevronRight, Megaphone, RefreshCw, Cake, Search } from 'lucide-react';
+import { ArrowRight, Sparkles, ChevronLeft, ChevronRight, Megaphone, RefreshCw, Cake, Search, Wallet } from 'lucide-react';
 import { useDebounce } from '../hooks/useDebounce';
-import { useUI, useUser, useOrders, useAuthStore, useCart } from '../lib/store';
+import { useUI, useUser, useOrders, useAuthStore, useCart, useWallet } from '../lib/store';
 import { ls, safeArray } from '../lib/utils';
 import { categories } from '../lib/data';
 import { useProducts } from '../hooks/useProducts';
@@ -44,6 +44,7 @@ export default function HomeScreen({
   const { wishlist, toggleWish } = useUser();
   const { orders } = useOrders();
   const { user } = useAuthStore();
+  const walletBalance = useWallet((s) => s.balance);
   const { products } = useProducts();
   const { banners } = useBanners();
   const activeBanners = useMemo(() => safeArray(banners).filter((b) => b.active !== false), [banners]);
@@ -329,6 +330,32 @@ export default function HomeScreen({
               className="mt-3 rounded-xl bg-coral px-4 py-1.5 text-[12px] font-bold text-white"
             >
               Browse all cakes
+            </button>
+          </div>
+        )}
+
+        {user && walletBalance >= 50 && (
+          <div className="mx-5 mb-3 anim-up">
+            <button
+              onClick={() => go({ name: 'tabs', tab: 'categories' })}
+              className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left transition active:scale-[.98]"
+              style={{
+                background: 'linear-gradient(135deg, #C8944A15 0%, #C8944A08 100%)',
+                border: '1px solid rgba(200,148,74,0.25)',
+              }}
+            >
+              <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-gold/15">
+                <Wallet className="h-4 w-4 text-gold" strokeWidth={2} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-[12px] font-bold text-ink">
+                  আপনার ৳{walletBalance.toLocaleString()} wallet এ আছে
+                </div>
+                <div className="text-[11px] text-ink/50">
+                  পরের order এ use করুন — এখনই দেখুন
+                </div>
+              </div>
+              <ArrowRight className="h-4 w-4 flex-shrink-0 text-ink/30" />
             </button>
           </div>
         )}

@@ -1,6 +1,6 @@
-import { Heart, ShoppingBag, Bell } from 'lucide-react';
+import { Heart, ShoppingBag, Bell, Wallet } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
-import { useUI, useCart, useUser } from '../lib/store';
+import { useUI, useCart, useUser, useAuthStore, useWallet } from '../lib/store';
 import BrandLogo from './BrandLogo';
 
 interface Props {
@@ -12,6 +12,8 @@ export default function Header({ onLogoTap, onNotificationsOpen }: Props) {
   const { go, setTab, notifications } = useUI();
   const { items } = useCart();
   const { wishlist } = useUser();
+  const { user } = useAuthStore();
+  const walletBalance = useWallet((s) => s.balance);
   const cartCount = items.reduce((s, i) => s + i.quantity, 0);
   const wishCount = wishlist.length;
   const unreadCount = notifications.filter((n) => !n.read).length;
@@ -72,6 +74,18 @@ export default function Header({ onLogoTap, onNotificationsOpen }: Props) {
             </span>
           )}
         </button>
+        {user && walletBalance > 0 && (
+          <button
+            onClick={() => go({ name: 'tabs', tab: 'profile' })}
+            className="flex items-center gap-1 rounded-full border border-gold/30 bg-gold/10 px-2.5 py-1 transition active:scale-95"
+            aria-label="Wallet balance"
+          >
+            <Wallet className="h-3 w-3 text-gold" strokeWidth={2} />
+            <span className="text-[11px] font-bold text-gold">
+              ৳{walletBalance.toLocaleString()}
+            </span>
+          </button>
+        )}
         <button
           onClick={() => go({ name: 'cart' })}
           className="relative flex h-10 w-10 items-center justify-center rounded-full bg-ink text-white transition active:scale-90"

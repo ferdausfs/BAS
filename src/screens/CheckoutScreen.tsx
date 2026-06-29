@@ -6,6 +6,7 @@ import {
   useLocation,
   useSettingsStore,
   useAuthStore,
+  useWallet,
   getReferralCode,
   WALLET_REFERRAL_BONUS,
   applyReferralCode,
@@ -40,6 +41,8 @@ export default function CheckoutScreen({ onBack }: Props) {
   const { back, go, promoDiscount, pendingLoyaltyRedeem } = useUI();
   const { verified: locationVerified, district: detectedDistrict, lat: locationLat, lng: locationLng } = useLocation();
   const user = useAuthStore((s) => s.user);
+  const walletBalance = useWallet((s) => s.balance);
+  const walletApplied = pendingLoyaltyRedeem > 0;
 
   // Referral
   const [referralInput, setReferralInput] = useState('');
@@ -586,6 +589,36 @@ export default function CheckoutScreen({ onBack }: Props) {
 
         {/* Payment */}
         <Section icon={Wallet} title="পেমেন্ট পদ্ধতি">
+          {user && (
+            <div className="mb-3 rounded-2xl border border-gold/20 bg-gold/5 p-3">
+              {/* Wallet balance header */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gold/15">
+                    <Wallet className="h-4 w-4 text-gold" strokeWidth={2} />
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-bold tracking-wider text-ink-200 uppercase">
+                      আপনার Wallet
+                    </p>
+                    <p className="text-[16px] font-bold text-gold">
+                      ৳{walletBalance.toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+                {walletBalance > 0 && !walletApplied && (
+                  <span className="rounded-full bg-gold/10 px-2.5 py-1 text-[10px] font-bold text-gold">
+                    Use করুন →
+                  </span>
+                )}
+              </div>
+              {walletApplied && (
+                <div className="mt-2 rounded-xl bg-emerald-50 px-3 py-2 text-[11px] font-bold text-emerald-600">
+                  ৳{pendingLoyaltyRedeem.toLocaleString()} wallet discount applied
+                </div>
+              )}
+            </div>
+          )}
           <div className="space-y-2">
             {PAYMENTS.map((p) => (
               <button
