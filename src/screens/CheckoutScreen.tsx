@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { ArrowLeft, MapPin, Clock, Wallet, Check, Shield, Navigation, Loader2, Phone, Banknote, ShoppingCart, Gift, Users, Image as ImageIcon, X } from 'lucide-react';
+import { ArrowLeft, MapPin, Clock, Wallet, Check, Shield, Navigation, Loader2, Phone, Banknote, ShoppingCart, Gift, Users, Image as ImageIcon, X, Calendar } from 'lucide-react';
 import {
   useCart, useOrders, useUI, formatINR,
   cartSubtotal, standardDeliveryFee,
@@ -18,10 +18,10 @@ import { LocationGate } from '../components/LocationGate';
 import { BD_DISTRICTS } from '../lib/zones';
 import type { CartItem, Order } from '../types';
 
-const PAYMENTS = [
-  { id: 'bkash', label: 'bKash', sub: 'Send money / Payment', Icon: Phone },
-  { id: 'nagad', label: 'Nagad', sub: 'Send money / Payment', Icon: Phone },
-  { id: 'cash',  label: 'Cash on Delivery', sub: 'ডেলিভারির সময় পেমেন্ট', Icon: Banknote },
+const PAYMENT_METHODS = [
+  { id: 'bkash', name: 'bKash', desc: 'Send money / Payment', color: '#E2136E', bg: '#FCE8F1' },
+  { id: 'nagad', name: 'Nagad', desc: 'Send money / Payment', color: '#EC6608', bg: '#FEF0E6' },
+  { id: 'cash', name: 'Cash on Delivery', desc: 'Pay when you receive', color: '#1c1110', bg: '#F4F2EE' },
 ] as const;
 
 const SLOTS = [
@@ -30,6 +30,15 @@ const SLOTS = [
   { v: '4pm - 6pm',   hot: true },
   { v: '6pm - 8pm',   hot: false },
 ];
+
+const getMinDeliveryDate = () => {
+  const now = new Date();
+  const cutoffHour = 16; // 4pm
+  const daysToAdd = now.getHours() < cutoffHour ? 1 : 2;
+  const minDate = new Date(now);
+  minDate.setDate(now.getDate() + daysToAdd);
+  return minDate.toISOString().split('T')[0];
+};
 
 interface Props {
   onBack?: () => void;
@@ -120,9 +129,9 @@ export default function CheckoutScreen({ onBack }: Props) {
     phone: '',
     address: '',
     district: detectedDistrict || 'Comilla',
-    date: new Date().toISOString().slice(0, 10),
+    date: getMinDeliveryDate(),
     time: '4pm - 6pm',
-    payment: 'cash' as typeof PAYMENTS[number]['id'],
+    payment: 'cash' as typeof PAYMENT_METHODS[number]['id'],
   });
 
   // Autofill name, phone and address for logged in users
@@ -480,13 +489,22 @@ export default function CheckoutScreen({ onBack }: Props) {
             <label htmlFor="checkout-date" className="text-[11px] font-bold tracking-wider text-ink-200 uppercase">
               ডেলিভারি তারিখ
             </label>
-            <input
-              id="checkout-date"
-              type="date"
-              value={form.date}
-              onChange={(e) => setForm({ ...form, date: e.target.value })}
-              className="h-11 w-full rounded-xl border border-ink-50 bg-white px-3 text-[13px] font-medium text-ink outline-none transition focus:border-coral focus:ring-2 focus:ring-coral/15"
-            />
+            <div className="relative">
+              <div className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 flex h-7 w-7 items-center justify-center rounded-lg bg-coral/10">
+                <Calendar className="h-4 w-4 text-coral" strokeWidth={2} />
+              </div>
+              <input
+                id="checkout-date"
+                type="date"
+                min={getMinDeliveryDate()}
+                value={form.date}
+                onChange={(e) => setForm({ ...form, date: e.target.value })}
+                className="w-full rounded-2xl border border-ink-50 bg-white py-3.5 pl-12 pr-4 text-[14px] font-semibold text-ink outline-none focus:border-coral"
+              />
+            </div>
+            <p className="mt-1.5 text-[10.5px] text-ink-200">
+              আজ বিকেল ৪টার আগে অর্ডার করলে আগামীকাল পাবেন
+            </p>
           </div>
           <div className="mt-2.5 grid grid-cols-2 gap-2">
             {SLOTS.map((s) => (
@@ -620,32 +638,36 @@ export default function CheckoutScreen({ onBack }: Props) {
             </div>
           )}
           <div className="space-y-2">
-            {PAYMENTS.map((p) => (
-              <button
-                key={p.id}
-                onClick={() => setForm({ ...form, payment: p.id })}
-                className={`flex w-full items-center gap-3 rounded-xl border-2 p-3 text-left transition active:scale-[.99] ${
-                  form.payment === p.id
-                    ? 'border-coral bg-coral-50/50'
-                    : 'border-ink-50 bg-white'
-                }`}
-              >
-                <div className="flex h-10 w-12 items-center justify-center rounded-lg bg-ink text-white">
-                  <p.Icon className="h-5 w-5" strokeWidth={1.75} />
-                </div>
-                <div className="flex-1">
-                  <div className="text-[13px] font-bold text-ink">{p.label}</div>
-                  <div className="text-[10.5px] text-ink-200">{p.sub}</div>
-                </div>
-                <div
-                  className={`flex h-5 w-5 items-center justify-center rounded-full transition ${
-                    form.payment === p.id ? 'bg-coral text-white' : 'border border-ink-50 bg-white'
+            {PAYMENT_METHODS.map((method) => {
+              const isSelected = form.payment === method.id;
+              return (
+                <button
+                  key={method.id}
+                  onClick={() => setForm({ ...form, payment: method.id })}
+                  className={`flex w-full items-center gap-3 rounded-2xl border-2 p-3.5 transition ${
+                    isSelected ? 'border-coral bg-coral-50' : 'border-ink-50 bg-white'
                   }`}
                 >
-                  {form.payment === p.id && <Check className="h-3 w-3" strokeWidth={3} />}
-                </div>
-              </button>
-            ))}
+                  <div
+                    className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl text-[13px] font-bold text-white"
+                    style={{ background: method.color }}
+                  >
+                    {method.name.slice(0, 2)}
+                  </div>
+                  <div className="flex-1 text-left">
+                    <p className="text-[13px] font-bold text-ink">{method.name}</p>
+                    <p className="text-[11px] text-ink-200">{method.desc}</p>
+                  </div>
+                  <div
+                    className={`flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full border-2 ${
+                      isSelected ? 'border-coral' : 'border-ink-100'
+                    }`}
+                  >
+                    {isSelected && <div className="h-2.5 w-2.5 rounded-full bg-coral" />}
+                  </div>
+                </button>
+              );
+            })}
           </div>
 
           {form.payment !== 'cash' && (
