@@ -1,3 +1,5 @@
+type OccasionId = 'all' | 'birthday' | 'anniversary' | 'wedding' | 'cupcakes' | 'gift' | 'premium';
+
 type OccasionIconProps = {
   id: string;
   size?: number;
@@ -5,68 +7,89 @@ type OccasionIconProps = {
 };
 
 export default function OccasionIcon({ id, size = 24, className = '' }: OccasionIconProps) {
+  const iconId = id as OccasionId;
+
   const common = {
     width: size,
     height: size,
     viewBox: '0 0 24 24',
     fill: 'none',
     stroke: 'currentColor',
-    strokeWidth: 1.9,
+    strokeWidth: 2.15,
     strokeLinecap: 'round' as const,
     strokeLinejoin: 'round' as const,
     className,
+    'aria-hidden': true,
+    shapeRendering: 'geometricPrecision' as const,
   };
 
-  if (id === 'birthday') {
-    return (
-      <svg {...common}>
-        <path d="M12 4v3" />
-        <path d="M10.5 5.2 12 3.7l1.5 1.5" />
-        <path d="M5 12.5h14" />
-        <path d="M6.5 9.5h11A1.5 1.5 0 0 1 19 11v7.5A1.5 1.5 0 0 1 17.5 20h-11A1.5 1.5 0 0 1 5 18.5V11a1.5 1.5 0 0 1 1.5-1.5Z" />
-        <path d="M5 14.5c1.4 0 1.4 1 2.8 1s1.4-1 2.8-1 1.4 1 2.8 1 1.4-1 2.8-1 1.4 1 2.8 1" />
-      </svg>
-    );
-  }
+  switch (iconId) {
+    case 'all':
+      return (
+        <svg {...common}>
+          <rect x="4.5" y="4.5" width="6.25" height="6.25" rx="1.4" />
+          <rect x="13.25" y="4.5" width="6.25" height="6.25" rx="1.4" />
+          <rect x="4.5" y="13.25" width="6.25" height="6.25" rx="1.4" />
+          <rect x="13.25" y="13.25" width="6.25" height="6.25" rx="1.4" />
+        </svg>
+      );
 
-  if (id === 'anniversary') {
-    return (
-      <svg {...common}>
-        <path d="M12 20s-7-4.35-7-10a3.9 3.9 0 0 1 7-2.35A3.9 3.9 0 0 1 19 10c0 5.65-7 10-7 10Z" />
-        <path d="M9.2 10.2h.01" />
-        <path d="M14.8 10.2h.01" />
-      </svg>
-    );
-  }
+    case 'birthday':
+      return (
+        <svg {...common}>
+          <path d="M12 3.5v3.25" />
+          <path d="M10.75 5 12 3.5 13.25 5" />
+          <path d="M6 10.5h12" />
+          <path d="M6.75 10.5h10.5A1.75 1.75 0 0 1 19 12.25v5.5a1.75 1.75 0 0 1-1.75 1.75H6.75A1.75 1.75 0 0 1 5 17.75v-5.5a1.75 1.75 0 0 1 1.75-1.75Z" />
+          <path d="M7.25 14.8c.95 0 .95-.75 1.9-.75s.95.75 1.9.75.95-.75 1.9-.75.95.75 1.9.75.95-.75 1.9-.75.95.75 1.9.75" />
+        </svg>
+      );
 
-  if (id === 'cupcakes') {
-    return (
-      <svg {...common}>
-        <path d="M8 12.2c-.9-.6-1.3-1.4-1.3-2.3 0-2 2.2-3.6 5.3-3.6s5.3 1.6 5.3 3.6c0 .9-.4 1.7-1.3 2.3" />
-        <path d="M7 12h10l-1.2 8H8.2L7 12Z" />
-        <path d="M9 15h6" />
-        <path d="M10 18h4" />
-        <path d="M12 4.5v1.3" />
-      </svg>
-    );
-  }
+    case 'anniversary':
+      return (
+        <svg {...common}>
+          <path d="M12 19.75s-6.75-4.2-6.75-9.55a3.75 3.75 0 0 1 6.75-2.25 3.75 3.75 0 0 1 6.75 2.25c0 5.35-6.75 9.55-6.75 9.55Z" />
+        </svg>
+      );
 
-  if (id === 'gift') {
-    return (
-      <svg {...common}>
-        <path d="M4.5 11h15v8.5A1.5 1.5 0 0 1 18 21H6a1.5 1.5 0 0 1-1.5-1.5V11Z" />
-        <path d="M3.8 7.5h16.4V11H3.8z" />
-        <path d="M12 7.5V21" />
-        <path d="M12 7.5c-2.7 0-4.5-.8-4.5-2.2C7.5 4.2 8.4 3.5 9.4 4c1.2.5 2 1.8 2.6 3.5Z" />
-        <path d="M12 7.5c2.7 0 4.5-.8 4.5-2.2 0-1.1-.9-1.8-1.9-1.3-1.2.5-2 1.8-2.6 3.5Z" />
-      </svg>
-    );
-  }
+    case 'wedding':
+      return (
+        <svg {...common}>
+          <circle cx="9" cy="13" r="4.25" />
+          <circle cx="15" cy="13" r="4.25" />
+          <path d="M15 4.5v2.25" />
+          <path d="M13.9 5.65h2.2" />
+        </svg>
+      );
 
-  return (
-    <svg {...common}>
-      <path d="M12 3.5 13.8 8l4.7 1.7-4.7 1.8L12 16l-1.8-4.5-4.7-1.8L10.2 8 12 3.5Z" />
-      <path d="M18 14.5 18.8 17l2.2.8-2.2.9L18 21l-.8-2.3-2.2-.9 2.2-.8.8-2.5Z" />
-    </svg>
-  );
+    case 'cupcakes':
+      return (
+        <svg {...common}>
+          <path d="M7 11.5c-1.2-.65-1.9-1.8-1.9-3.1 0-2.15 1.95-3.9 4.3-3.9.95 0 1.8.28 2.6.8.8-.52 1.65-.8 2.6-.8 2.35 0 4.3 1.75 4.3 3.9 0 1.3-.7 2.45-1.9 3.1" />
+          <path d="M6.4 11.5h11.2l-1.15 7.35a1.45 1.45 0 0 1-1.45 1.15H8.99a1.45 1.45 0 0 1-1.44-1.15L6.4 11.5Z" />
+          <path d="M9.15 14.6h5.7" />
+          <path d="M10.15 17.25h3.7" />
+        </svg>
+      );
+
+    case 'gift':
+      return (
+        <svg {...common}>
+          <path d="M4.75 11h14.5v8A1.75 1.75 0 0 1 17.5 20.75h-11A1.75 1.75 0 0 1 4.75 19v-8Z" />
+          <path d="M3.75 7.5h16.5V11H3.75z" />
+          <path d="M12 7.5v13.25" />
+          <path d="M12 7.5c-2.55 0-4.25-.75-4.25-2.1 0-1 .78-1.7 1.7-1.3 1.12.5 1.9 1.68 2.55 3.4Z" />
+          <path d="M12 7.5c2.55 0 4.25-.75 4.25-2.1 0-1-.78-1.7-1.7-1.3-1.12.5-1.9 1.68-2.55 3.4Z" />
+        </svg>
+      );
+
+    case 'premium':
+    default:
+      return (
+        <svg {...common}>
+          <path d="M12 4.25 13.6 8.4 17.75 10 13.6 11.6 12 15.75 10.4 11.6 6.25 10 10.4 8.4 12 4.25Z" />
+          <path d="M18.1 14.6 18.8 16.45 20.65 17.15 18.8 17.85 18.1 19.7 17.4 17.85 15.55 17.15 17.4 16.45 18.1 14.6Z" />
+        </svg>
+      );
+  }
 }

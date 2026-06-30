@@ -49,6 +49,8 @@ export default function HomeScreen({
   const { banners } = useBanners();
   const activeBanners = useMemo(() => safeArray(banners).filter((b) => b.active !== false), [banners]);
   const upcoming = getUpcomingDate(user?.id);
+  const firstName = user?.name?.split(' ')[0] || 'friend';
+  const isNonLatin = /[^\u0000-\u007F]/.test(firstName);
 
   const [bannerIdx, setBannerIdx] = useState(0);
   const [search, setSearch] = useState('');
@@ -143,7 +145,7 @@ export default function HomeScreen({
           <div className="pointer-events-none absolute -left-4 top-4 h-24 w-24 rounded-full bg-blush-100/80 blur-2xl" />
 
           <div className="text-[12px] font-medium uppercase tracking-[0.2em] text-ink-200">
-            {user ? `Welcome back, ${user.name?.split(' ')[0] || 'friend'}` : 'Welcome to Bake Art Style'}
+            {user ? (isNonLatin ? 'Welcome back!' : `Welcome back, ${firstName}`) : 'Welcome to Bake Art Style'}
           </div>
 
           <h1 className="mt-1 font-display text-[28px] font-bold leading-[1.1] tracking-tight text-ink">
