@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Heart, Star, ShoppingBag, Check, Share2, Truck, Sparkles, Shield, Cake, Pencil, CheckCircle2, Camera, X, AlertTriangle, Bell, Eye } from 'lucide-react';
-import { useUI, useCart, useUser, useAuthStore, formatINR } from '../lib/store';
+import { ArrowLeft, Heart, Star, ShoppingBag, Check, Share2, Truck, Sparkles, Shield, Cake, Pencil, CheckCircle2, Camera, X, AlertTriangle, Bell, Eye, Clock } from 'lucide-react';
+import { useUI, formatINR, useCart, useUser, useAuthStore, useSettingsStore } from '../lib/store';
 import { useProducts } from '../hooks/useProducts';
 import { useReviews } from '../hooks/useReviews';
 import { ls, safeArray } from '../lib/utils';
-import type { Review } from '../types';
+import type { Product, Review } from '../types';
 
 const ADDONS = [
   { id: 'candles', name: 'Birthday candles', price: 20 },
@@ -18,8 +18,10 @@ export default function ProductScreen() {
   const { add } = useCart();
   const { wishlist, toggleWish } = useUser();
   const { products } = useProducts();
+  const { settings } = useSettingsStore();
 
-  const product = view.name === 'product' ? products.find((p) => p.id === view.productId) : null;
+  const typedProducts = products as Product[];
+  const product = view.name === 'product' ? typedProducts.find((p) => p.id === view.productId) : null;
   const [activeImg, setActiveImg] = useState<string | null>(null);
   const [heartKey, setHeartKey] = useState(0);
 
@@ -29,7 +31,8 @@ export default function ProductScreen() {
   };
 
   // Reviews state
-  const { reviews, saveReview, uploadReviewImage } = useReviews(product?.id);
+  const { reviews: rawReviews, saveReview, uploadReviewImage } = useReviews(product?.id);
+  const reviews = rawReviews as Review[];
   const { user } = useAuthStore();
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [reviewRating, setReviewRating] = useState(5);
@@ -94,10 +97,16 @@ export default function ProductScreen() {
   }
 
   const currentImg = activeImg || product.image;
-  const safeWeights = safeArray(product.weights).length ? safeArray(product.weights) : [{ size: '1 kg', price: product.price }];
-  const safeFlavors = safeArray(product.flavors).length ? safeArray(product.flavors) : ['Chocolate'];
+  const galleryImages = [product.image, ...safeArray<string>(product.gallery)];
+  const activeIndex = galleryImages.indexOf(currentImg);
+  const productWeights = safeArray<{ size: string; price: number }>(product.weights);
+  const productFlavors = safeArray<string>(product.flavors);
+  const safeWeights = productWeights.length ? productWeights : [{ size: '1 kg', price: product.price }];
+  const safeFlavors = productFlavors.length ? productFlavors : ['Chocolate'];
   const [size, setSize] = useState(safeWeights[1]?.size ?? safeWeights[0]?.size);
+  const [selectedFlavor, setSelectedFlavor] = useState(safeFlavors[0]);
   const [addons, setAddons] = useState<Record<string, boolean>>({});
+  const [cakeMessage, setCakeMessage] = useState('');
   const [customWeight, setCustomWeight] = useState('1');
   const [weightError, setWeightError] = useState('');
   const wished = wishlist.includes(product.id);
@@ -128,8 +137,9 @@ export default function ProductScreen() {
         name: product.name,
         image: product.image,
         size: `${customWeight} ${product.priceUnit ?? 'kg'}`,
-        flavor: safeFlavors[0],
+        flavor: selectedFlavor,
         topping: selectedAddons.length ? selectedAddons.join(', ') : undefined,
+        message: cakeMessage || undefined,
         price: total,
         quantity: 1,
       });
@@ -139,8 +149,9 @@ export default function ProductScreen() {
         name: product.name,
         image: product.image,
         size,
-        flavor: safeFlavors[0],
+        flavor: selectedFlavor,
         topping: selectedAddons.length ? selectedAddons.join(', ') : undefined,
+        message: cakeMessage || undefined,
         price: total,
         quantity: 1,
       });
@@ -166,24 +177,26 @@ export default function ProductScreen() {
           )}
 
           {/* Pagination dots */}
-          <div className="absolute right-0 bottom-5 left-0 flex justify-center gap-1.5 pointer-events-none">
-            {[0, 1, 2].map((i) => (
-              <span
-                key={i}
-                className={`h-1.5 rounded-full transition-all ${
-                  i === 0 ? 'w-5 bg-coral' : 'w-1.5 bg-white/60'
-                }`}
-              />
-            ))}
-          </div>
+          {galleryImages.length > 1 && (
+            <div className="absolute right-0 bottom-5 left-0 flex justify-center gap-1.5 pointer-events-none">
+              {galleryImages.map((_, i) => (
+                <span
+                  key={i}
+                  className={`h-1.5 rounded-full transition-all ${
+                    i === activeIndex ? 'w-5 bg-coral' : 'w-1.5 bg-white/60'
+                  }`}
+                />
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Content sheet below image — flows naturally as user scrolls */}
         <div className="bg-white rounded-t-[28px] -mt-5 relative z-10 px-5 pt-6">
           {/* Gallery Thumbnail Strip */}
-          {safeArray(product.gallery).length > 0 && (
+          {galleryImages.length > 1 && (
             <div className="flex gap-2 overflow-x-auto pb-4 scrollbar-hide">
-              {[product.image, ...safeArray(product.gallery)].map((url, i) => (
+              {galleryImages.map((url, i) => (
                 <button
                   key={i}
                   onClick={() => setActiveImg(url)}
@@ -292,6 +305,41 @@ export default function ProductScreen() {
             <Trust icon={Shield} label="Secure pay" />
           </div>
 
+          {settings?.deliveryEstimate && (
+            <div className="mt-3 flex items-center gap-3 rounded-2xl bg-green-50 px-4 py-3">
+              <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-green-100">
+                <Clock className="h-[18px] w-[18px] text-green-700" strokeWidth={2} />
+              </div>
+              <div>
+                <p className="text-[12px] font-bold text-green-800">আজ অর্ডার করলে</p>
+                <p className="text-[11.5px] text-green-600">{settings.deliveryEstimate} এর মধ্যে পৌঁছাবে</p>
+              </div>
+            </div>
+          )}
+
+          {/* Flavor selector */}
+          {safeFlavors.length > 1 && (
+            <section className="mt-7">
+              <h3 className="font-display text-[15px] font-bold tracking-tight text-ink">Flavor</h3>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {safeFlavors.map((f) => {
+                  const active = selectedFlavor === f;
+                  return (
+                    <button
+                      key={f}
+                      onClick={() => setSelectedFlavor(f)}
+                      className={`rounded-full border-2 px-4 py-2 text-[12.5px] font-bold transition active:scale-95 ${
+                        active ? 'border-coral bg-coral-50 text-coral' : 'border-ink-50 bg-white text-ink'
+                      }`}
+                    >
+                      {f}
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+          )}
+
           {/* Size selector */}
           <section className="mt-7">
             <div className="flex items-center justify-between">
@@ -380,6 +428,22 @@ export default function ProductScreen() {
                 );
               })}
             </div>
+            {addons['message'] && (
+              <div className="mt-3 overflow-hidden rounded-2xl border-2 border-dashed border-ink-100 bg-cream p-3.5">
+                <textarea
+                  maxLength={40}
+                  rows={2}
+                  value={cakeMessage}
+                  onChange={(e) => setCakeMessage(e.target.value)}
+                  placeholder="যেমন: শুভ জন্মদিন আম্মু"
+                  className="w-full resize-none rounded-xl bg-white px-3 py-2.5 text-[13px] outline-none placeholder:text-ink-100 focus:border-coral"
+                />
+                <div className="mt-1.5 flex items-center justify-between text-[10.5px] text-ink-200">
+                  <span>কেকের উপরে লেখা হবে</span>
+                  <span className="tabular">{cakeMessage.length}/40</span>
+                </div>
+              </div>
+            )}
           </section>
 
           {/* Customise CTA */}
@@ -570,6 +634,9 @@ export default function ProductScreen() {
             </div>
             <div className="font-display text-[22px] font-bold text-coral tabular">
               {formatINR(total)}
+            </div>
+            <div className="text-[10.5px] text-ink-200 mt-0.5">
+              {product.pricePerUnit ? `${customWeight} ${product.priceUnit ?? 'kg'}` : size} · {selectedFlavor}
             </div>
           </div>
           {(product.inStock ?? true) ? (
