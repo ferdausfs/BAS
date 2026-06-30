@@ -116,35 +116,6 @@ class AdminErrorBoundary extends React.Component<{ children: React.ReactNode }, 
   }
 }
 
-function MenuRow({
-  icon: Icon,
-  label,
-  onClick,
-  danger = false,
-}: {
-  icon: React.ElementType;
-  label: string;
-  onClick: () => void;
-  danger?: boolean;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition active:bg-cream"
-    >
-      <div className={`flex h-9 w-9 items-center justify-center rounded-xl flex-shrink-0 ${
-        danger ? 'bg-red-50' : 'bg-ink-50'
-      }`}>
-        <Icon className={`h-[18px] w-[18px] ${danger ? 'text-red-500' : 'text-ink-300'}`} strokeWidth={1.8} />
-      </div>
-      <span className={`flex-1 text-[13.5px] font-medium ${danger ? 'text-red-500' : 'text-ink'}`}>
-        {label}
-      </span>
-      {!danger && <ChevronRight className="h-4 w-4 text-ink-200 flex-shrink-0" strokeWidth={2} />}
-    </button>
-  );
-}
-
 export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
   const { go, setChatOpen } = useUI();
   const { wishlist } = useUser();
@@ -166,7 +137,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
   const [contactOpen, setContactOpen] = useState(false);
   const [customerOpen, setCustomerOpen] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
-  const [_logoTapCount, setLogoTapCount] = useState(0);
+  const [logoTapCount, setLogoTapCount] = useState(0);
 
   const [savedProfile, setSavedProfile] = useState<CustomerProfile>(() =>
     loadCustomerProfile(user?.id, user?.name ?? '')
@@ -333,7 +304,44 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
     });
   };
 
-
+  const menu = [
+    {
+      Icon: Heart,
+      label: 'Wishlist',
+      sub: `${(wishlist ?? []).length} saved items`,
+      action: () => go({ name: 'wishlist' }),
+    },
+    {
+      Icon: MapPin,
+      label: 'Addresses',
+      sub: savedProfile.address ? `${savedProfile.district} · saved` : 'Save delivery address',
+      action: openCustomerEditor,
+    },
+    {
+      Icon: CreditCard,
+      label: 'Payment methods',
+      sub: paymentLabel,
+      action: openCustomerEditor,
+    },
+    {
+      Icon: Bell,
+      label: 'Notifications',
+      sub: 'Order & promo updates',
+      action: () => {},
+    },
+    {
+      Icon: HelpCircle,
+      label: 'Contact & Support',
+      sub: 'কোনো সমস্যা? আমাদের জানান',
+      action: () => setContactOpen(true),
+    },
+    {
+      Icon: Settings,
+      label: 'Settings',
+      sub: 'Customer info & preferences',
+      action: openCustomerEditor,
+    },
+  ];
 
   if (!user) {
     return (
@@ -560,21 +568,30 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
           </div>
         )}
 
-        <div className="mt-5 mx-5 overflow-hidden rounded-3xl bg-white anim-up delay-3"
-          style={{ boxShadow: '0 1px 2px rgba(26,19,17,.02), 0 8px 24px -18px rgba(26,19,17,.18)' }}>
-          <MenuRow icon={Heart} label="Wishlist" onClick={() => go({ name: 'wishlist' })} />
-          <div className="h-px bg-ink-50 mx-4" />
-          <MenuRow icon={MapPin} label="Addresses" onClick={openCustomerEditor} />
-          <div className="h-px bg-ink-50 mx-4" />
-          <MenuRow icon={CreditCard} label="Payment methods" onClick={openCustomerEditor} />
-          <div className="h-px bg-ink-50 mx-4" />
-          <MenuRow icon={Bell} label="Notifications" onClick={() => {}} />
-          <div className="h-px bg-ink-50 mx-4" />
-          <MenuRow icon={HelpCircle} label="Contact & Support" onClick={() => setContactOpen(true)} />
-          <div className="h-px bg-ink-50 mx-4" />
-          <MenuRow icon={Settings} label="Settings" onClick={openCustomerEditor} />
-          <div className="h-px bg-ink-50 mx-4" />
-          <MenuRow icon={LogOut} label="Sign out" onClick={signOut} danger />
+        <div className="mt-5 px-5 anim-up delay-3">
+          <div
+            className="overflow-hidden rounded-2xl bg-white"
+            style={{ boxShadow: '0 1px 2px rgba(26,19,17,.02), 0 8px 24px -16px rgba(26,19,17,.16)' }}
+          >
+            {menu.map((m, i) => (
+              <button
+                key={m.label}
+                onClick={m.action}
+                className={`flex w-full items-center gap-3 px-4 py-3.5 text-left transition active:bg-cream ${
+                  i !== menu.length - 1 ? 'border-b border-ink-50' : ''
+                }`}
+              >
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-ink-50 text-ink-200">
+                  <m.Icon className="h-[17px] w-[17px]" strokeWidth={2} />
+                </div>
+                <div className="flex-1">
+                  <div className="text-[13.5px] font-bold text-ink">{m.label}</div>
+                  <div className="text-[11px] text-ink-200">{m.sub}</div>
+                </div>
+                <ChevronRight className="h-4 w-4 text-ink-200" />
+              </button>
+            ))}
+          </div>
         </div>
 
         <div className="mt-4 px-5 anim-up delay-4">
@@ -593,6 +610,17 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
               Invite
             </button>
           </div>
+        </div>
+
+        <div className="mt-4 px-5 anim-up delay-4">
+          <button
+            onClick={signOut}
+            className="flex w-full items-center justify-center gap-2 rounded-2xl border border-ink-50 bg-white py-3.5 text-[13px] font-bold text-ink transition active:scale-[.98]"
+          >
+            <LogOut className="h-4 w-4" />
+
+            Sign out
+          </button>
         </div>
 
         {/* Admin Dashboard — only visible to admin users */}

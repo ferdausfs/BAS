@@ -67,28 +67,15 @@ export default function SuccessScreen() {
       </svg>
 
       <div className="relative z-10 flex flex-1 flex-col items-center justify-center text-center">
-        {/* Success checkmark — circular with soft rings */}
-        <div className="relative mx-auto flex h-24 w-24 items-center justify-center">
-          {/* Outer pulse rings */}
-          <div className="absolute inset-0 rounded-full bg-coral/10 anim-ring-soft" />
-          <div className="absolute inset-2 rounded-full bg-coral/15" />
-          {/* Main circle */}
-          <div className="relative flex h-16 w-16 items-center justify-center rounded-full bg-coral shadow-[0_8px_24px_-8px_rgba(232,82,106,0.5)]">
-            <Check className="h-8 w-8 text-white anim-pop" strokeWidth={3} />
+        <div className="relative mb-6">
+          <span className="absolute inset-0 rounded-full bg-coral/30 blur-2xl anim-heartbeat" />
+          <span className="absolute inset-0 rounded-full anim-ring" />
+          <div
+            className="relative flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-coral-400 to-coral-600 text-white anim-pop"
+            style={{ boxShadow: '0 18px 40px -12px rgba(242,94,115,.5)' }}
+          >
+            <Check className="h-12 w-12" strokeWidth={2.5} />
           </div>
-          {/* Decorative dots — orbit style */}
-          {[0, 60, 120, 180, 240, 300].map((deg, i) => (
-            <span
-              key={deg}
-              className="absolute h-1.5 w-1.5 rounded-full bg-gold/60"
-              style={{
-                top: '50%',
-                left: '50%',
-                transform: `rotate(${deg}deg) translate(46px) rotate(-${deg}deg)`,
-                animationDelay: `${i * 0.1}s`,
-              }}
-            />
-          ))}
         </div>
 
         <h1 className="font-display text-[36px] font-bold leading-tight tracking-tight text-ink anim-rise delay-1">
