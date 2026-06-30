@@ -212,7 +212,7 @@ export default function ProductScreen() {
 
           {/* Title row */}
           <div className="flex items-start justify-between gap-3">
-            <h1 className="flex-1 font-display text-[26px] font-bold leading-[1.1] tracking-tight text-ink">
+            <h1 className="flex-1 font-display text-[20px] font-bold leading-[1.1] tracking-tight text-ink">
               {product.name}
             </h1>
             {product.tier && product.tier !== 'normal' && (
@@ -283,7 +283,7 @@ export default function ProductScreen() {
 
           {/* Price */}
           <div className="mt-4 flex items-baseline gap-2">
-            <span className="font-display text-[34px] font-bold leading-none text-coral tabular">
+            <span className="font-display text-[26px] font-bold leading-none text-coral tabular">
               {formatINR(base)}
             </span>
             {product.oldPrice && (

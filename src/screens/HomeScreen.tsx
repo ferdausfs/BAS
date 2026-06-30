@@ -148,7 +148,7 @@ export default function HomeScreen({
             {user ? (isNonLatin ? 'Welcome back!' : `Welcome back, ${firstName}`) : 'Welcome to Bake Art Style'}
           </div>
 
-          <h1 className="mt-1 font-display text-[28px] font-bold leading-[1.1] tracking-tight text-ink">
+          <h1 className="mt-1 font-display text-[23px] font-bold leading-[1.1] tracking-tight text-ink">
             What cake are we
             <br />
             <span className="text-gradient-coral">celebrating today?</span>
@@ -247,7 +247,7 @@ export default function HomeScreen({
                       <span className="mb-2 inline-flex w-fit items-center gap-1 rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white backdrop-blur-md">
                         <Sparkles className="h-2.5 w-2.5" /> {b.tag}
                       </span>
-                      <h3 className="font-display text-[24px] font-bold leading-tight tracking-tight text-white">
+                      <h3 className="font-display text-[19px] font-bold leading-tight tracking-tight text-white">
                         {b.title}
                       </h3>
                       <p className="mt-1 text-[12.5px] leading-snug text-white/85">{b.subtitle}</p>

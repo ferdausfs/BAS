@@ -12,7 +12,7 @@ export default function SectionHeader({ eyebrow, title, subtitle, action }: Prop
     <div className="flex items-end justify-between px-5">
       <div>
         {eyebrow && <div className="section-eyebrow">{eyebrow}</div>}
-        <h2 className="mt-1 font-display text-[22px] font-bold tracking-tight text-ink">
+        <h2 className="mt-1 font-display text-[17px] font-bold tracking-tight text-ink">
           {title}
         </h2>
         {subtitle && <p className="mt-0.5 text-[13px] text-ink-200">{subtitle}</p>}
