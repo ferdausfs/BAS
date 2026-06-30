@@ -1,5 +1,14 @@
 import { useState, useMemo } from 'react';
-import { SlidersHorizontal, Search, X } from 'lucide-react';
+import {
+  SlidersHorizontal,
+  Search,
+  X,
+  Flame,
+  Sparkles,
+  ArrowUpNarrowWide,
+  ArrowDownNarrowWide,
+  Cake,
+} from 'lucide-react';
 import { useUI, useUser } from '../lib/store';
 import { categories } from '../lib/data';
 import { useProducts } from '../hooks/useProducts';
@@ -195,6 +204,7 @@ export default function CategoriesScreen() {
             className="fixed bottom-0 left-0 right-0 z-50 rounded-t-[28px] bg-white px-5 pt-5 pb-10"
             style={{ boxShadow: '0 -8px 40px -8px rgba(26,19,17,.18)' }}
           >
+            <div className="mx-auto mb-3 h-1 w-9 rounded-full bg-ink-100" />
             <div className="mb-4 flex items-center justify-between">
               <h2 className="font-display text-[18px] font-bold text-ink">Filter & Sort</h2>
               <button
@@ -207,38 +217,50 @@ export default function CategoriesScreen() {
 
             {/* Sort options */}
             <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-ink-200">Sort by</p>
-            <div className="mb-4 flex flex-wrap gap-2">
+            <div className="mb-4 grid grid-cols-2 gap-2">
               {([
-                { v: 'popular', label: 'Popular' },
-                { v: 'newest', label: 'New arrivals' },
-                { v: 'price-asc', label: 'Price: low–high' },
-                { v: 'price-desc', label: 'Price: high–low' },
-              ] as const).map((opt) => (
-                <button
-                  key={opt.v}
-                  onClick={() => setSortBy(opt.v)}
-                  className={`rounded-xl px-3 py-1.5 text-[12px] font-semibold transition ${
-                    sortBy === opt.v ? 'bg-coral text-white' : 'bg-ink-50 text-ink'
-                  }`}
-                >
-                  {opt.label}
-                </button>
-              ))}
+                { v: 'popular', label: 'Popular', icon: Flame },
+                { v: 'newest', label: 'New arrivals', icon: Sparkles },
+                { v: 'price-asc', label: 'Price: low–high', icon: ArrowUpNarrowWide },
+                { v: 'price-desc', label: 'Price: high–low', icon: ArrowDownNarrowWide },
+              ] as const).map((opt) => {
+                const Icon = opt.icon;
+                return (
+                  <button
+                    key={opt.v}
+                    onClick={() => setSortBy(opt.v)}
+                    className={`flex items-center gap-2 rounded-2xl px-3 py-2.5 text-[12px] font-semibold transition ${
+                      sortBy === opt.v ? 'bg-coral text-white' : 'bg-ink-50 text-ink-300'
+                    }`}
+                  >
+                    <Icon className="h-[14px] w-[14px]" strokeWidth={2} />
+                    {opt.label}
+                  </button>
+                );
+              })}
             </div>
 
             {/* Price range */}
             <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-ink-200">
               Max price — ৳{priceMax.toLocaleString()}
             </p>
-            <input
-              type="range"
-              min={500}
-              max={5000}
-              step={100}
-              value={priceMax}
-              onChange={(e) => setPriceMax(Number(e.target.value))}
-              className="w-full accent-coral"
-            />
+            <div className="relative mt-1">
+              <div className="h-[5px] rounded-full bg-ink-50">
+                <div
+                  className="h-[5px] rounded-full bg-coral"
+                  style={{ width: `${((priceMax - 500) / (5000 - 500)) * 100}%` }}
+                />
+              </div>
+              <input
+                type="range"
+                min={500}
+                max={5000}
+                step={100}
+                value={priceMax}
+                onChange={(e) => setPriceMax(Number(e.target.value))}
+                className="absolute inset-x-0 top-1/2 h-[5px] w-full -translate-y-1/2 appearance-none bg-transparent accent-coral"
+              />
+            </div>
             <div className="mt-1 flex justify-between text-[11px] text-ink-200">
               <span>৳500</span>
               <span>৳5,000</span>
@@ -247,8 +269,9 @@ export default function CategoriesScreen() {
             {/* Apply button */}
             <button
               onClick={() => setFilterOpen(false)}
-              className="mt-5 flex h-12 w-full items-center justify-center rounded-2xl bg-coral text-[13px] font-bold text-white"
+              className="mt-5 flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-coral text-[13px] font-bold text-white"
             >
+              <Cake className="h-4 w-4" strokeWidth={2} />
               Show {filtered.length} cakes
             </button>
 

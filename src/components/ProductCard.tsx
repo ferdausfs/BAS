@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Heart, Plus, Star, Check } from 'lucide-react';
+import { Heart, Plus, Star, Check, Award, Sparkles } from 'lucide-react';
 import { useCart, formatINR } from '../lib/store';
 import type { Product } from '../types';
 
@@ -71,7 +71,7 @@ export default function ProductCard({ product, wished, onOpen, onWish, variant =
           {/* Wishlist */}
           <button
             onClick={handleWish}
-            className="absolute top-3 right-3 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 backdrop-blur-md transition-all active:scale-90"
+            className="absolute top-2.5 right-2.5 flex h-7 w-7 items-center justify-center rounded-full bg-white/90 backdrop-blur-md transition-all active:scale-90"
             style={{
               boxShadow: '0 2px 10px rgba(0,0,0,0.12)',
               color: wished ? '#E8526A' : 'rgba(28,17,18,0.4)',
@@ -80,7 +80,7 @@ export default function ProductCard({ product, wished, onOpen, onWish, variant =
           >
             <Heart
               key={heartKey}
-              className={`h-[15px] w-[15px] ${wished ? 'anim-pop' : ''}`}
+              className={`h-3 w-3 ${wished ? 'anim-pop' : ''}`}
               style={{
                 fill: wished ? '#E8526A' : 'none',
                 transition: 'fill 0.2s ease, color 0.2s ease',
@@ -92,15 +92,17 @@ export default function ProductCard({ product, wished, onOpen, onWish, variant =
           {/* Badges */}
           <div className="absolute top-3 left-3 flex flex-col gap-1.5">
             {product.bestseller && (
-              <span className="badge-premium rounded-full px-2.5 py-1 text-[9.5px] font-bold uppercase tracking-wider">
+              <span className="badge-premium flex items-center gap-1 rounded-full px-2 py-1 text-[9px] font-bold uppercase tracking-wide">
+                <Award className="h-2.5 w-2.5" strokeWidth={2.5} />
                 Bestseller
               </span>
             )}
             {product.newArrival && (
               <span
-                className="rounded-full px-2.5 py-1 text-[9.5px] font-bold uppercase tracking-wider text-white"
+                className="flex items-center gap-1 rounded-full px-2 py-1 text-[9px] font-bold uppercase tracking-wide text-white"
                 style={{ background: 'linear-gradient(135deg, #EE6279 0%, #DC3E58 100%)' }}
               >
+                <Sparkles className="h-2.5 w-2.5" strokeWidth={2.5} />
                 New
               </span>
             )}
@@ -143,7 +145,7 @@ export default function ProductCard({ product, wished, onOpen, onWish, variant =
             {(product.inStock ?? true) && (
               <button
                 onClick={handleAdd}
-                className="flex h-9 w-9 items-center justify-center rounded-full text-white transition-all active:scale-90 hover:brightness-105"
+                className="flex h-8 w-8 items-center justify-center rounded-full text-white transition-all active:scale-90 hover:brightness-105"
                 style={{
                   background: added
                     ? 'linear-gradient(135deg, #1baf7a 0%, #0e8f63 100%)'
@@ -156,8 +158,8 @@ export default function ProductCard({ product, wished, onOpen, onWish, variant =
                 aria-label="Add to cart"
               >
                 {added
-                  ? <Check key="check" className="h-4 w-4 anim-pop" strokeWidth={2.5} />
-                  : <Plus className="h-4 w-4" strokeWidth={2.5} />
+                  ? <Check key="check" className="h-3.5 w-3.5 anim-pop" strokeWidth={2.5} />
+                  : <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
                 }
               </button>
             )}
