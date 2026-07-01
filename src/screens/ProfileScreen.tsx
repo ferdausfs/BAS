@@ -5,7 +5,7 @@ import {
   Cake, Gift, Wallet as WalletIcon,
   Copy, Share2
 } from 'lucide-react';
-import { useUI, useUser, useOrders, useCart, useAuthStore, useWallet, getReferralCode, WALLET_MAX_REDEEM, claimReferralRewards, WALLET_REFERRAL_BONUS } from '../lib/store';
+import { useUI, useUser, useOrders, useCart, useAuthStore, useWallet, getReferralCode, claimReferralRewards, WALLET_REFERRAL_BONUS } from '../lib/store';
 import { useProducts } from '../hooks/useProducts';
 import { useAuth } from '../hooks/useAuth';
 import { doc, setDoc } from 'firebase/firestore';
@@ -125,7 +125,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
   const effectiveIsAdmin = isAdmin || !!user?.isAdmin;
   const { signOut } = useAuth();
   const { products } = useProducts();
-  const { balance, totalEarned, txns } = useWallet();
+  const { balance, totalEarned } = useWallet();
   const referralCode = getReferralCode(user);
   const [walletHistoryOpen, setWalletHistoryOpen] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
@@ -137,7 +137,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
   const [contactOpen, setContactOpen] = useState(false);
   const [customerOpen, setCustomerOpen] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
-  const [logoTapCount, setLogoTapCount] = useState(0);
+  const [, setLogoTapCount] = useState(0);
 
   const [savedProfile, setSavedProfile] = useState<CustomerProfile>(() =>
     loadCustomerProfile(user?.id, user?.name ?? '')
@@ -163,12 +163,6 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
   useModalDepth(customerOpen);
 
   const wishlistItems = (products ?? []).filter((p) => p && wishlist.includes(p.id));
-
-  const profileComplete = !!(
-    savedProfile.name &&
-    savedProfile.phone &&
-    savedProfile.address
-  );
 
   const paymentLabel = useMemo(
     () => PAYMENTS.find((p) => p.id === savedProfile.payment)?.label ?? 'Cash on Delivery',
@@ -413,87 +407,35 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
         {/* Wallet Card */}
         {user && (
           <section className="px-4 pt-2 pb-1">
-            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-coral to-rose-500 px-5 py-4 text-white"
+            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-coral to-rose-500 px-4 py-3.5 text-white"
               style={{ boxShadow: '0 8px 24px -8px rgba(242,94,115,.5)' }}>
-              {/* Background decoration */}
-              <div className="pointer-events-none absolute -right-4 -top-4 h-24 w-24 rounded-full bg-white/10" />
-              <div className="pointer-events-none absolute -right-1 top-8 h-16 w-16 rounded-full bg-white/8" />
-              {/* Top row */}
+              <div className="pointer-events-none absolute -right-4 -top-4 h-20 w-20 rounded-full bg-white/10" />
               <div className="flex items-center justify-between">
-                <div className="text-[11px] font-bold uppercase tracking-wider text-white/70">My Wallet</div>
-                <WalletIcon className="h-5 w-5 text-white/80" />
+                <div className="text-[10px] font-bold uppercase tracking-wider text-white/70">My Wallet</div>
+                <WalletIcon className="h-4 w-4 text-white/80" />
               </div>
-              {/* Big balance */}
-              <div className="mt-2 font-display text-[40px] font-bold leading-none">
+              <div className="mt-1.5 font-display text-[26px] font-bold leading-none">
                 ৳{balance.toLocaleString()}
               </div>
-              <div className="text-[11px] text-white/60 mt-0.5">wallet balance</div>
-              {/* Divider */}
-              <div className="my-3 h-px bg-white/20" />
-              {/* Stats row */}
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="font-display text-[16px] font-bold">৳{totalEarned.toLocaleString()}</div>
-                  <div className="text-[10px] text-white/50">total earned</div>
-                </div>
-                <div className="text-right">
-                  <div className="font-mono text-[16px] font-bold">{referralCode ?? '—'}</div>
-                  <div className="text-[10px] text-white/50">referral code</div>
-                </div>
-              </div>
-              {/* View history button */}
               <button
                 onClick={() => setWalletHistoryOpen(true)}
-                className="mt-3 w-full rounded-2xl bg-white/10 py-2.5 text-[12px] text-white/90 font-medium transition active:scale-[.98]"
+                className="mt-2.5 flex w-full items-center justify-between rounded-xl bg-white/10 px-3 py-2 text-[11px] font-medium text-white/90 transition active:scale-[.98]"
               >
-                View full history ({txns.length} transactions)
+                <span>৳{totalEarned.toLocaleString()} earned · {referralCode ?? '—'}</span>
+                <span>History →</span>
               </button>
-            </div>
-            <div className="text-[10.5px] text-ink-200 text-center mt-2">
-              Earn ৳20 per ৳1000 spent · Referral bonus ৳100 · Max redeem ৳{WALLET_MAX_REDEEM}/order
             </div>
           </section>
         )}
 
 
         <div className="mt-4 grid grid-cols-3 gap-2.5 px-5 anim-up delay-1">
-          <Stat label="Orders" value={(orders ?? []).length} />
-          <Stat label="Wishlist" value={(wishlist ?? []).length} />
-          <Stat label="In cart" value={(items ?? []).length} />
+          <Stat label="Orders" value={(orders ?? []).length} onClick={() => go({ name: 'tabs', tab: 'orders' })} />
+          <Stat label="Wishlist" value={(wishlist ?? []).length} onClick={() => go({ name: 'wishlist' })} />
+          <Stat label="In cart" value={(items ?? []).length} onClick={() => go({ name: 'cart' })} />
         </div>
 
         <div className="mt-4 px-5 anim-up delay-2">
-          <button
-            onClick={openCustomerEditor}
-            className="w-full rounded-2xl bg-white p-4 text-left transition active:scale-[.98]"
-            style={{ boxShadow: '0 1px 2px rgba(26,19,17,.02), 0 8px 24px -16px rgba(26,19,17,.16)' }}
-          >
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <div className="text-[10px] font-bold tracking-wider text-ink-200 uppercase">
-                  Quick checkout profile
-                </div>
-                <div className="mt-1 text-[14px] font-bold text-ink">
-                  {profileComplete ? 'Saved for faster checkout' : 'Add info once, checkout faster'}
-                </div>
-              </div>
-              <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold ${
-                profileComplete ? 'bg-green-50 text-green-700' : 'bg-ink-50 text-ink-200'
-              }`}>
-                {profileComplete ? 'Ready' : 'Setup'}
-              </span>
-            </div>
-
-            <div className="mt-3 grid grid-cols-1 gap-1.5 text-[11.5px] text-ink-200">
-              <div><span className="font-bold text-ink">Name:</span> {savedProfile.name || user.name || 'Not set'}</div>
-              <div><span className="font-bold text-ink">Phone:</span> {savedProfile.phone || 'Not set'}</div>
-              <div className="line-clamp-2">
-                <span className="font-bold text-ink">Address:</span> {savedProfile.address || 'Not set'}
-              </div>
-              <div><span className="font-bold text-ink">Payment:</span> {paymentLabel}</div>
-            </div>
-          </button>
-
           {/* Saved Addresses */}
           {user && (
             <button
@@ -1070,15 +1012,16 @@ function Field({
   );
 }
 
-function Stat({ label, value }: { label: string; value: number }) {
+function Stat({ label, value, onClick }: { label: string; value: number; onClick?: () => void }) {
   return (
-    <div
-      className="rounded-2xl bg-white p-3 text-center"
+    <button
+      onClick={onClick}
+      className="rounded-2xl bg-white p-3 text-center transition active:scale-95"
       style={{ boxShadow: '0 1px 2px rgba(26,19,17,.02), 0 6px 18px -14px rgba(26,19,17,.16)' }}
     >
-      <div className="font-display text-[20px] font-bold tabular text-ink">{value}</div>
-      <div className="mt-0.5 text-[10.5px] font-semibold text-ink-200">{label}</div>
-    </div>
+      <div className="font-display text-[18px] font-bold tabular text-ink">{value}</div>
+      <div className="mt-0.5 text-[10px] font-semibold text-ink-200">{label} →</div>
+    </button>
   );
 }
 
