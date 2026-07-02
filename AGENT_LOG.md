@@ -1,5 +1,48 @@
 # Agent Log — BAS (Bake Art Style 2)
 
+## Session: 2026-07-02 (ProductScreen hero swipe + glass tint + dominant color)
+**Agent/Tool:** Arena.ai Agent Mode
+**Feature worked on:** FIX pass — 3 approved review findings on ProductScreen
+
+### কী হয়েছে:
+
+1. **Check 1 — Hero swipe gesture** (`src/screens/ProductScreen.tsx`):
+   - Added `useRef` import; created `touchStartX` and `touchStartY` refs (not state — avoids re-renders).
+   - Added `onTouchStart` and `onTouchEnd` handlers on the hero wrapper div (not on `<img>`) so Out-of-Stock overlay doesn't block swipes.
+   - Threshold: |deltaX| > 48px and |deltaX| > |deltaY|.
+   - Swipe left → next image (`min(activeIndex+1, len-1)`), swipe right → previous (`max(activeIndex-1, 0)`).
+   - Guarded with `galleryImages.length <= 1` — no handlers fire on single-image products.
+   - No `onTouchMove`/`preventDefault` — vertical scroll is untouched.
+
+2. **Check 2 — Text-side glass panel** (`src/index.css` + `src/screens/ProductScreen.tsx`):
+   - Added `.glass-tint` class in `index.css`: `background: var(--tint, rgba(255,244,246,0.72))` + `backdrop-filter: saturate(180%) blur(20px)`.
+   - Existing `.glass` and `.glass-strong` classes untouched.
+   - Content sheet div: removed `bg-white`, added `glass-tint` class + `style={{ '--tint': dominantColor }}` via `React.CSSProperties` cast.
+
+3. **Check 3 — Dynamic color extraction** (`src/hooks/useDominantColor.ts` — new file):
+   - Canvas downscale approach: 16×16 draw → pixel average → pastel lightening.
+   - `img.crossOrigin = 'anonymous'` mandatory (Cloudinary).
+   - `getImageData` wrapped in try/catch — fallback `rgba(255,244,246,0.72)` (neutral blush).
+   - Raw average is pastel-lightened (72% white mix) to avoid muddy brown.
+   - Results cached in module-level `Map<string, string>` — no re-extraction for same URL.
+   - Hook re-runs when `currentImg` changes; `useDominantColor(currentImg)` in ProductScreen.
+   - No new npm dependency — pure canvas API.
+
+### Touched files:
+- `src/screens/ProductScreen.tsx` (swipe refs, swipe handlers on hero div, dominantColor hook call, glass-tint class + --tint style)
+- `src/index.css` (added `.glass-tint` class after `.glass-strong`)
+- `src/hooks/useDominantColor.ts` (new file)
+
+### Build:
+- `npm run build` → ✓ built in 5.40s (verified before ZIP)
+
+### Deviations/Assumptions:
+- None — all three fixes follow the approved review spec exactly.
+
+---
+
+---
+
 ## Session: 2026-07-02 (ProductCard — photo becomes the hero)
 **Agent/Tool:** Claude (Sonnet 5, in-chat, direct repo access via git clone)
 **Feature worked on:** Premium-feel review → Direction D (card-language differentiation), customer-attraction priority — picked over Direction C for this pass since product photos drive purchase decisions directly.

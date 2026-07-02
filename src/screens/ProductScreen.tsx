@@ -1,8 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import type { CSSProperties } from 'react';
 import { ArrowLeft, Heart, Star, ShoppingBag, Check, Share2, Truck, Sparkles, Shield, Cake, Pencil, CheckCircle2, Camera, X, AlertTriangle, Bell, Eye, Clock } from 'lucide-react';
 import { useUI, formatINR, useCart, useUser, useAuthStore, useSettingsStore } from '../lib/store';
 import { useProducts } from '../hooks/useProducts';
 import { useReviews } from '../hooks/useReviews';
+import { useDominantColor } from '../hooks/useDominantColor';
 import { ls, safeArray } from '../lib/utils';
 import type { Product, Review } from '../types';
 
@@ -24,6 +26,10 @@ export default function ProductScreen() {
   const product = view.name === 'product' ? typedProducts.find((p) => p.id === view.productId) : null;
   const [activeImg, setActiveImg] = useState<string | null>(null);
   const [heartKey, setHeartKey] = useState(0);
+
+  // Swipe gesture refs (not state — avoids re-renders)
+  const touchStartX = useRef(0);
+  const touchStartY = useRef(0);
 
   const handleWish = () => {
     setHeartKey(k => k + 1);
@@ -99,6 +105,9 @@ export default function ProductScreen() {
   const currentImg = activeImg || product.image;
   const galleryImages = [product.image, ...safeArray<string>(product.gallery)];
   const activeIndex = galleryImages.indexOf(currentImg);
+
+  // Dominant color extraction for glass-tint (Check 3)
+  const dominantColor = useDominantColor(currentImg);
   const productWeights = safeArray<{ size: string; price: number }>(product.weights);
   const productFlavors = safeArray<string>(product.flavors);
   const safeWeights = productWeights.length ? productWeights : [{ size: '1 kg', price: product.price }];
@@ -164,7 +173,28 @@ export default function ProductScreen() {
       {/* ONE scrollable area: image + all content (parallax scroll) */}
       <div className="no-scrollbar relative flex-1 overflow-y-auto bg-blush-50 pb-28">
         {/* Hero image — scrolls up naturally as user scrolls down */}
-        <div className="relative w-full aspect-[4/3] bg-blush-100">
+        <div
+          className="relative w-full aspect-[4/3] bg-blush-100"
+          onTouchStart={(e) => {
+            if (galleryImages.length <= 1) return;
+            touchStartX.current = e.touches[0].clientX;
+            touchStartY.current = e.touches[0].clientY;
+          }}
+          onTouchEnd={(e) => {
+            if (galleryImages.length <= 1) return;
+            const deltaX = e.changedTouches[0].clientX - touchStartX.current;
+            const deltaY = e.changedTouches[0].clientY - touchStartY.current;
+            if (Math.abs(deltaX) > 48 && Math.abs(deltaX) > Math.abs(deltaY)) {
+              if (deltaX < 0) {
+                // swipe left → next image
+                setActiveImg(galleryImages[Math.min(activeIndex + 1, galleryImages.length - 1)]);
+              } else {
+                // swipe right → previous image
+                setActiveImg(galleryImages[Math.max(activeIndex - 1, 0)]);
+              }
+            }
+          }}
+        >
           <img loading="lazy" decoding="async" src={currentImg} alt={product.name} className="absolute inset-0 h-full w-full object-cover" />
 
           {/* Soft top fade for control legibility */}
@@ -192,7 +222,7 @@ export default function ProductScreen() {
         </div>
 
         {/* Content sheet below image — flows naturally as user scrolls */}
-        <div className="bg-white rounded-t-[28px] -mt-5 relative z-10 px-5 pt-6">
+        <div className="glass-tint rounded-t-[28px] -mt-5 relative z-10 px-5 pt-6" style={{ '--tint': dominantColor } as CSSProperties}>
           {/* Gallery Thumbnail Strip */}
           {galleryImages.length > 1 && (
             <div className="flex gap-2 overflow-x-auto pb-4 scrollbar-hide">
