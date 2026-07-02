@@ -31,21 +31,26 @@ export default function WishlistScreen({
 
       <div className="no-scrollbar flex-1 overflow-y-auto px-5 pb-32 pt-1">
         {list.length === 0 ? (
-          <div className="flex flex-col items-center justify-center pt-16 text-center">
+          <div className="flex flex-col items-center justify-center pt-16 text-center anim-fade">
             <div
-              className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-white"
-              style={{ boxShadow: '0 1px 2px rgba(26,19,17,.03), 0 12px 30px -18px rgba(26,19,17,.14)' }}
+              className="mx-auto flex h-24 w-24 items-center justify-center rounded-3xl"
+              style={{
+                background: 'linear-gradient(135deg, #FFF4F6 0%, #FFE4E9 100%)',
+                boxShadow: '0 1px 2px rgba(26,19,17,.03), 0 12px 30px -18px rgba(232,82,106,.18)',
+                border: '1px solid rgba(232,82,106,0.1)',
+              }}
             >
-              <Heart className="h-10 w-10 text-ink-200" strokeWidth={1.8} />
+              <Heart className="h-11 w-11 fill-coral text-coral" strokeWidth={1.6} />
             </div>
 
             {!user ? (
               <>
-                <h2 className="mt-5 font-display text-[22px] font-bold tracking-tight text-ink">
+                <div className="mt-4 font-brand text-[22px] text-coral/70">save what you love</div>
+                <h2 className="mt-1 font-display text-[22px] font-bold tracking-tight text-ink">
                   Sign in to save favourites
                 </h2>
                 <p className="mt-1.5 max-w-xs text-[13px] text-ink-200">
-                  Create an account to keep your favourite cakes in one place.
+                  আপনার পছন্দের cake গুলো এক জায়গায় রাখুন।
                 </p>
                 <button
                   onClick={onAuthOpen}
@@ -56,11 +61,12 @@ export default function WishlistScreen({
               </>
             ) : (
               <>
-                <h2 className="mt-5 font-display text-[22px] font-bold tracking-tight text-ink">
+                <div className="mt-4 font-brand text-[22px] text-coral/70">nothing saved yet</div>
+                <h2 className="mt-1 font-display text-[22px] font-bold tracking-tight text-ink">
                   Your wishlist is empty
                 </h2>
                 <p className="mt-1.5 max-w-xs text-[13px] text-ink-200">
-                  Tap the heart on any cake to save it here.
+                  যেকোনো cake এ ❤️ tap করে এখানে save করুন।
                 </p>
                 <button onClick={back} className="btn-primary mt-6 h-12 rounded-2xl px-7 text-[13px] font-bold">
                   Browse cakes

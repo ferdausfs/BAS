@@ -19,10 +19,10 @@ export default React.memo(function BottomTabBar() {
         paddingBottom: 'env(safe-area-inset-bottom)',
         transform: 'translateZ(0)',
         willChange: 'transform',
-        background: 'rgba(20,18,19,0.55)',
+        background: 'rgba(249,249,247,0.92)',
         backdropFilter: 'saturate(180%) blur(24px)',
         WebkitBackdropFilter: 'saturate(180%) blur(24px)',
-        borderTop: '1px solid rgba(255,255,255,0.14)',
+        borderTop: '1px solid rgba(28,17,18,0.08)',
       }}
     >
       <div className="flex items-center justify-around h-[56px] px-2">
@@ -39,17 +39,17 @@ export default React.memo(function BottomTabBar() {
               <div
                 className="flex flex-col items-center gap-[3px] px-5 py-[6px] rounded-2xl transition-all duration-200"
                 style={active ? {
-                  background: 'rgba(232,82,106,0.16)',
+                  background: 'rgba(232,82,106,0.10)',
                 } : {}}
               >
                 <Icon
                   className="h-[21px] w-[21px] transition-colors duration-200"
-                  style={{ color: active ? '#E8526A' : 'rgba(255,255,255,0.45)' }}
+                  style={{ color: active ? '#E8526A' : '#9A8E8E' }}
                   strokeWidth={active ? 2.4 : 1.6}
                 />
                 <span
                   className="text-[10px] font-semibold leading-none transition-colors duration-200"
-                  style={{ color: active ? '#E8526A' : 'rgba(255,255,255,0.45)' }}
+                  style={{ color: active ? '#E8526A' : '#9A8E8E' }}
                 >
                   {t.label}
                 </span>

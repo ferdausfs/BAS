@@ -48,21 +48,25 @@ export default function OrdersScreen() {
             <p className="text-[12px] text-ink-200">Loading your orders...</p>
           </div>
         ) : orders.length === 0 ? (
-          // Fix 3: Personalized empty state
           <div className="flex flex-col items-center justify-center pt-16 text-center anim-fade">
             <div
-              className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-white"
-              style={{ boxShadow: '0 1px 2px rgba(26,19,17,.03), 0 12px 30px -18px rgba(26,19,17,.14)' }}
+              className="mx-auto flex h-24 w-24 items-center justify-center rounded-3xl"
+              style={{
+                background: 'linear-gradient(135deg, #FFF4F6 0%, #FFE4E9 100%)',
+                boxShadow: '0 1px 2px rgba(26,19,17,.03), 0 12px 30px -18px rgba(232,82,106,.18)',
+                border: '1px solid rgba(232,82,106,0.1)',
+              }}
             >
-              <ShoppingCart className="h-10 w-10 text-ink-200" strokeWidth={1.8} />
+              <ShoppingCart className="h-11 w-11 text-coral" strokeWidth={1.6} />
             </div>
-            <h2 className="mt-5 font-display text-[22px] font-bold tracking-tight text-ink">
+            <div className="mt-4 font-brand text-[22px] text-coral/70">your story starts here</div>
+            <h2 className="mt-1 font-display text-[22px] font-bold tracking-tight text-ink">
               No orders yet
             </h2>
             <p className="mt-1.5 max-w-xs text-[13px] text-ink-200">
               {wishlist.length > 0
-                ? 'You have saved cakes — ready to order?'
-                : 'Place your first order and track it live here.'}
+                ? 'আপনার saved cakes গুলো দেখুন — এখনই order করুন!'
+                : 'প্রথম order দিন, real-time এ track করুন।'}
             </p>
             <button
               onClick={() => wishlist.length > 0 ? go({ name: 'wishlist' }) : setTab('home')}

@@ -462,20 +462,24 @@ export default function HomeScreen({
         <div className="mt-7 px-5 anim-up delay-4">
           <div
             className="relative overflow-hidden rounded-[28px] p-5"
-            style={{ background: 'linear-gradient(135deg, #2A1F1E 0%, #3D2D2C 100%)' }}
+            style={{
+              background: 'linear-gradient(135deg, #FFF4F6 0%, #FFE4E9 60%, #FFF9EC 100%)',
+              boxShadow: '0 1px 2px rgba(26,19,17,.03), 0 18px 50px -28px rgba(232,82,106,.22)',
+              border: '1px solid rgba(232,82,106,0.12)',
+            }}
           >
-            <div className="absolute -top-12 -right-12 h-40 w-40 rounded-full bg-coral/30 blur-2xl" />
-            <div className="absolute bottom-0 -left-12 h-32 w-32 rounded-full bg-gold/15 blur-2xl" />
+            <div className="absolute -top-8 -right-8 h-36 w-36 rounded-full bg-coral/10 blur-2xl" />
+            <div className="absolute bottom-0 -left-8 h-28 w-28 rounded-full bg-gold/12 blur-2xl" />
 
             <div className="relative flex items-center gap-4">
               <div className="flex-1">
-                <div className="inline-flex items-center gap-1 rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-blush-200 backdrop-blur">
+                <div className="inline-flex items-center gap-1 rounded-full bg-coral/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-coral">
                   <Sparkles className="h-2.5 w-2.5" /> For you
                 </div>
-                <h3 className="mt-2 font-display text-[20px] font-bold leading-tight tracking-tight text-white">
+                <h3 className="mt-2 font-display text-[20px] font-bold leading-tight tracking-tight text-ink">
                   Picked for your taste
                 </h3>
-                <p className="mt-1 text-[12px] text-white/70">{forYouLabel}</p>
+                <p className="mt-1 text-[12px] text-ink-200">{forYouLabel}</p>
                 <button
                   onClick={() =>
                     forYouProduct ? go({ name: 'product', productId: forYouProduct.id }) : go({ name: 'customize' })

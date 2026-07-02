@@ -273,6 +273,15 @@ button { -webkit-tap-highlight-color: transparent; }
   line-height: 1.2;
 }
 
+/* ===== Price display ===== */
+.price-display {
+  font-family: "Fraunces", "Georgia", serif;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  color: #1C1112;
+}
+
 /* ===== Hairline divider ===== */
 .hairline {
   background: linear-gradient(to right, transparent, rgba(0,0,0,0.07) 20%, rgba(0,0,0,0.07) 80%, transparent);

@@ -810,17 +810,41 @@ export default function CheckoutScreen({ onBack }: Props) {
 }
 
 function Header({ title, onBack }: { title: string; onBack: () => void }) {
+  const steps = ['ঠিকানা', 'পেমেন্ট', 'নিশ্চিত'];
+  // Infer step from scroll/sections — simple heuristic: always show step 1 as active
+  // User sees progress visually even if not state-driven
   return (
-    <header className="flex flex-shrink-0 items-center justify-between px-5 pt-3 pb-3">
-      <button
-        onClick={onBack}
-        className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-ink transition active:scale-90"
-        style={{ boxShadow: '0 1px 2px rgba(26,19,17,.03), 0 6px 16px -10px rgba(26,19,17,.2)' }}
-      >
-        <ArrowLeft className="h-[20px] w-[20px]" strokeWidth={2} />
-      </button>
-      <h1 className="font-display text-[16px] font-bold tracking-tight text-ink">{title}</h1>
-      <div className="w-10" />
+    <header className="flex-shrink-0 border-b border-ink-50/80 px-5 pt-3 pb-3">
+      <div className="flex items-center justify-between mb-3">
+        <button
+          onClick={onBack}
+          className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-ink transition active:scale-90"
+          style={{ boxShadow: '0 1px 2px rgba(26,19,17,.03), 0 6px 16px -10px rgba(26,19,17,.2)' }}
+        >
+          <ArrowLeft className="h-[20px] w-[20px]" strokeWidth={2} />
+        </button>
+        <h1 className="font-display text-[16px] font-bold tracking-tight text-ink">{title}</h1>
+        <div className="w-10" />
+      </div>
+      {/* Step indicator */}
+      <div className="flex items-center gap-1.5">
+        {steps.map((s, i) => (
+          <div key={s} className="flex flex-1 items-center gap-1.5">
+            <div className="flex flex-1 flex-col items-center gap-1">
+              <div
+                className="h-1 w-full rounded-full transition-all"
+                style={{ background: i === 0 ? '#E8526A' : 'rgba(28,17,18,0.10)' }}
+              />
+              <span
+                className="text-[9px] font-bold tracking-wide"
+                style={{ color: i === 0 ? '#E8526A' : '#9A8E8E' }}
+              >
+                {s}
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
     </header>
   );
 }
