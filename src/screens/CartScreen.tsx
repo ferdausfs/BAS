@@ -15,7 +15,7 @@ import { safeArray } from '../lib/utils';
 import type { CartItem } from '../types';
 
 export default function CartScreen() {
-  const { items, setQty, remove } = useCart();
+  const { items, add, setQty, remove } = useCart();
   const {
     back,
     go,
@@ -137,7 +137,16 @@ export default function CartScreen() {
               style={{ boxShadow: '0 1px 2px rgba(26,19,17,.02), 0 8px 24px -16px rgba(26,19,17,.16)' }}
             >
               <div className="h-24 w-24 flex-shrink-0 overflow-hidden rounded-2xl bg-cream">
-                <img loading="lazy" decoding="async" src={item.image} alt="" className="h-full w-full object-cover" />
+                <img
+                  loading="lazy"
+                  decoding="async"
+                  src={item.image || '/cakes/logo-cake.png'}
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = '/cakes/logo-cake.png';
+                  }}
+                  alt=""
+                  className="h-full w-full object-cover"
+                />
               </div>
               <div className="flex flex-1 flex-col">
                 <div className="flex items-start justify-between gap-2">
@@ -186,9 +195,50 @@ export default function CartScreen() {
           ))}
         </div>
 
+        {/* Suggested add-ons */}
+        {settings?.customAddons && settings.customAddons.length > 0 && (
+          <div className="mt-5">
+            <div className="mb-2.5 text-[10px] font-bold tracking-wider text-ink-200 uppercase">
+              Add something extra
+            </div>
+            <div className="no-scrollbar flex gap-2.5 overflow-x-auto pb-1">
+              {settings.customAddons.slice(0, 6).map((addon) => (
+                <button
+                  key={addon.id}
+                  onClick={() => {
+                    add({
+                      productId: `addon-${addon.id}`,
+                      name: addon.label,
+                      image: '/cakes/logo-cake.png',
+                      size: '—',
+                      flavor: '—',
+                      price: addon.price,
+                      quantity: 1,
+                    });
+                  }}
+                  className="flex w-[104px] flex-shrink-0 flex-col items-start gap-1.5 rounded-2xl bg-white p-3 text-left transition active:scale-95"
+                  style={{ boxShadow: '0 1px 2px rgba(26,19,17,.02), 0 8px 24px -16px rgba(26,19,17,.16)' }}
+                >
+                  <span className="text-[20px]">{addon.emoji}</span>
+                  <span className="text-[11px] font-bold leading-tight text-ink line-clamp-2">{addon.label}</span>
+                  <div className="flex w-full items-center justify-between">
+                    <span className="text-[11px] font-bold text-coral">৳{addon.price}</span>
+                    <div className="flex h-5 w-5 items-center justify-center rounded-full bg-coral">
+                      <Plus className="h-3 w-3 text-white" strokeWidth={2.5} />
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Wallet Redemption */}
         {balance > 0 && (
-          <div className="mt-4 rounded-2xl overflow-hidden border border-coral/20 bg-coral-50">
+          <div
+            className="mt-4 rounded-2xl overflow-hidden border border-coral/20 bg-coral-50"
+            style={{ boxShadow: '0 1px 2px rgba(26,19,17,.02), 0 8px 24px -16px rgba(26,19,17,.16)' }}
+          >
             <div className="flex items-center justify-between px-4 py-3">
               <div className="flex items-center gap-2">
                 <Wallet className="h-[18px] w-[18px] text-coral" strokeWidth={2} />
@@ -248,7 +298,10 @@ export default function CartScreen() {
 
         {/* Promo */}
         <div className="mt-4">
-          <div className="flex items-center gap-2.5 rounded-2xl border border-dashed border-ink-100 bg-white px-3.5 py-3">
+          <div
+            className="flex items-center gap-2.5 rounded-2xl border border-dashed border-ink-100 bg-white px-3.5 py-3"
+            style={{ boxShadow: '0 1px 2px rgba(26,19,17,.02), 0 8px 24px -16px rgba(26,19,17,.16)' }}
+          >
             <Tag className="h-4 w-4 text-ink-200" />
             <input
               value={code}
