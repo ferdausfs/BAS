@@ -1,5 +1,34 @@
 # Agent Log — BAS (Bake Art Style 2)
 
+## Session: 2026-07-02 (ProductCard — photo becomes the hero)
+**Agent/Tool:** Claude (Sonnet 5, in-chat, direct repo access via git clone)
+**Feature worked on:** Premium-feel review → Direction D (card-language differentiation), customer-attraction priority — picked over Direction C for this pass since product photos drive purchase decisions directly.
+
+### কী হয়েছে:
+- `ProductCard.tsx` (both `grid` and `horizontal` variants) — image aspect ratio changed `aspect-square` → `aspect-[4/5]` for a more immersive/editorial photo.
+- Price and the "Add to cart" button moved off the flat white content area and onto the photo itself, as a floating `glass-strong` frosted pill (price) + coral gradient circle (add button), sitting on a bottom gradient scrim for legibility. Thumb-reachable, visible while browsing, no extra tap needed to see price.
+- Content area below the photo simplified to just: low-stock urgency chip, rating, product name — price is no longer duplicated there.
+- Extracted a small internal `AddButton` helper inside the component (avoids repeating the button's inline style block 2x now that it appears in both variants at different sizes).
+- Reused the existing `.glass-strong` class from `index.css` (previously only used in the notice modal) — no CSS changes needed.
+
+### Touched files:
+- `src/components/ProductCard.tsx` (only file touched this pass)
+
+### Commit:
+- Not yet pushed — ZIP delivered for local apply/build/push (`bas-productcard-photo-hero-070226.zip`)
+
+### এখনো Pending:
+- Direction C (cinematic banner hero) still deferred — next candidate if another attraction-focused pass is wanted.
+- Check 2 (repetitive white-card grammar) partially addressed by this fix (photo now differs materially from other white cards); other card types (banners, wallet card, order-again card) untouched.
+
+### পরবর্তী Agent এর জন্য নোট:
+- Build verified locally (`npm run build` → `✓ built in 7.36s`) before ZIP was created; only `ProductCard.tsx` in the diff.
+- Pre-existing, unrelated `tsc` typecheck errors exist in `OrdersScreen.tsx`, `TrackingScreen.tsx`, `WishlistScreen.tsx`, and one spot in `HomeScreen.tsx` (unknown/`{}` types from untyped state) — these are NOT caused by this fix and were present before it. Worth a dedicated typecheck-cleanup pass later if the user wants; not touched here since it's out of this session's single-concept scope.
+- Do not re-duplicate price/add-button back into the white content area below the photo — that was intentionally removed to avoid redundancy now that it lives on the image.
+
+---
+
+
 ## Session: 2026-07-02 (Home hero signature moment)
 **Agent/Tool:** Claude (Sonnet 5, in-chat, direct repo access via git clone — not Arena.ai this time)
 **Feature worked on:** Premium-feel / signature-identity review → Fix (Code Master protocol, single concept)

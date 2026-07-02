@@ -43,6 +43,32 @@ export default function ProductCard({ product, wished, onOpen, onWish, variant =
     setTimeout(() => setAdded(false), 1200);
   };
 
+  const AddButton = ({ size = 32 }: { size?: number }) => (
+    (product.inStock ?? true) ? (
+      <button
+        onClick={handleAdd}
+        className="flex items-center justify-center rounded-full text-white transition-all active:scale-90 hover:brightness-105"
+        style={{
+          width: size,
+          height: size,
+          background: added
+            ? 'linear-gradient(135deg, #1baf7a 0%, #0e8f63 100%)'
+            : 'linear-gradient(135deg, #EE6279 0%, #DC3E58 100%)',
+          boxShadow: added
+            ? '0 6px 16px -4px rgba(27,175,122,0.55)'
+            : '0 6px 16px -4px rgba(232,82,106,0.55)',
+          transition: 'background 0.3s ease, box-shadow 0.3s ease',
+        }}
+        aria-label="Add to cart"
+      >
+        {added
+          ? <Check key="check" className="h-3.5 w-3.5 anim-pop" strokeWidth={2.5} />
+          : <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
+        }
+      </button>
+    ) : null
+  );
+
   if (variant === 'grid') {
     return (
       <article
@@ -53,8 +79,8 @@ export default function ProductCard({ product, wished, onOpen, onWish, variant =
           boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 8px 24px -10px rgba(0,0,0,0.11)',
         }}
       >
-        {/* Image */}
-        <div className="relative aspect-square overflow-hidden">
+        {/* Image — taller, more immersive photo */}
+        <div className="relative aspect-[4/5] overflow-hidden">
           <img
             src={product.image}
             alt={product.name}
@@ -65,8 +91,8 @@ export default function ProductCard({ product, wished, onOpen, onWish, variant =
             }}
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.05]"
           />
-          {/* Subtle image bottom fade */}
-          <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-black/10 to-transparent" />
+          {/* Scrim for floating price/add legibility */}
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
 
           {/* Wishlist */}
           <button
@@ -115,10 +141,20 @@ export default function ProductCard({ product, wished, onOpen, onWish, variant =
               </span>
             )}
           </div>
+
+          {/* Floating price + add — sits directly on the photo, thumb-reachable */}
+          <div className="absolute inset-x-3 bottom-3 flex items-center justify-between">
+            <span
+              className="glass-strong rounded-full px-3 py-1.5 font-display text-[15px] font-bold tabular text-ink"
+            >
+              {formatINR(product.price)}
+            </span>
+            <AddButton size={34} />
+          </div>
         </div>
 
-        {/* Content */}
-        <div className="p-4">
+        {/* Content — name + rating only, photo now carries price */}
+        <div className="p-4 pt-3">
           {/* Low stock urgency */}
           {product.inStock !== false && (product.lowStock || (product.stockCount !== undefined && product.stockCount <= 5)) && (
             <div className="mb-1.5 flex items-center gap-1">
@@ -138,32 +174,6 @@ export default function ProductCard({ product, wished, onOpen, onWish, variant =
           <h3 className="mt-1.5 line-clamp-1 font-display text-[15.5px] font-bold tracking-tight text-ink">
             {product.name}
           </h3>
-          <div className="mt-2.5 flex items-center justify-between">
-            <span className="font-display text-[16.5px] font-bold tabular text-gradient-coral">
-              {formatINR(product.price)}
-            </span>
-            {(product.inStock ?? true) && (
-              <button
-                onClick={handleAdd}
-                className="flex h-8 w-8 items-center justify-center rounded-full text-white transition-all active:scale-90 hover:brightness-105"
-                style={{
-                  background: added
-                    ? 'linear-gradient(135deg, #1baf7a 0%, #0e8f63 100%)'
-                    : 'linear-gradient(135deg, #EE6279 0%, #DC3E58 100%)',
-                  boxShadow: added
-                    ? '0 6px 18px -6px rgba(27,175,122,0.5)'
-                    : '0 6px 18px -6px rgba(232,82,106,0.5)',
-                  transition: 'background 0.3s ease, box-shadow 0.3s ease',
-                }}
-                aria-label="Add to cart"
-              >
-                {added
-                  ? <Check key="check" className="h-3.5 w-3.5 anim-pop" strokeWidth={2.5} />
-                  : <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
-                }
-              </button>
-            )}
-          </div>
         </div>
       </article>
     );
@@ -178,8 +188,8 @@ export default function ProductCard({ product, wished, onOpen, onWish, variant =
         boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 8px 24px -10px rgba(0,0,0,0.11)',
       }}
     >
-      {/* Image */}
-      <div className="relative aspect-square overflow-hidden">
+      {/* Image — taller, more immersive photo */}
+      <div className="relative aspect-[4/5] overflow-hidden">
         <img
           src={product.image}
           alt={product.name}
@@ -190,6 +200,8 @@ export default function ProductCard({ product, wished, onOpen, onWish, variant =
           }}
           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.05]"
         />
+        {/* Scrim for floating price/add legibility */}
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
 
         <button
           onClick={handleWish}
@@ -226,10 +238,20 @@ export default function ProductCard({ product, wished, onOpen, onWish, variant =
             </span>
           )}
         </div>
+
+        {/* Floating price + add — sits directly on the photo, thumb-reachable */}
+        <div className="absolute inset-x-2.5 bottom-2.5 flex items-center justify-between">
+          <span
+            className="glass-strong rounded-full px-2.5 py-1 font-display text-[13.5px] font-bold tabular text-ink"
+          >
+            {formatINR(product.price)}
+          </span>
+          <AddButton size={30} />
+        </div>
       </div>
 
-      {/* Content */}
-      <div className="flex flex-1 flex-col p-3">
+      {/* Content — name + rating only, photo now carries price */}
+      <div className="flex flex-1 flex-col p-3 pt-2.5">
         {/* Low stock urgency */}
         {product.inStock !== false && (product.lowStock || (product.stockCount !== undefined && product.stockCount <= 5)) && (
           <div className="mb-1 flex items-center gap-1">
@@ -247,32 +269,6 @@ export default function ProductCard({ product, wished, onOpen, onWish, variant =
         <h3 className="mt-1 line-clamp-1 font-display text-[14.5px] font-bold tracking-tight text-ink">
           {product.name}
         </h3>
-        <div className="mt-auto flex items-center justify-between pt-2">
-          <span className="font-display text-[14.5px] font-bold tabular text-gradient-coral">
-            {formatINR(product.price)}
-          </span>
-          {(product.inStock ?? true) && (
-            <button
-              onClick={handleAdd}
-              className="flex h-8 w-8 items-center justify-center rounded-full text-white transition-all active:scale-90"
-              style={{
-                background: added
-                  ? 'linear-gradient(135deg, #1baf7a 0%, #0e8f63 100%)'
-                  : 'linear-gradient(135deg, #EE6279 0%, #DC3E58 100%)',
-                boxShadow: added
-                  ? '0 6px 18px -6px rgba(27,175,122,0.5)'
-                  : '0 5px 14px -5px rgba(232,82,106,0.5)',
-                transition: 'background 0.3s ease, box-shadow 0.3s ease',
-              }}
-              aria-label="Add to cart"
-            >
-              {added
-                ? <Check key="check" className="h-3.5 w-3.5 anim-pop" strokeWidth={2.5} />
-                : <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
-              }
-            </button>
-          )}
-        </div>
       </div>
     </article>
   );
