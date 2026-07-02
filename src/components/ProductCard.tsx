@@ -145,7 +145,7 @@ export default function ProductCard({ product, wished, onOpen, onWish, variant =
           {/* Floating price + add — sits directly on the photo, thumb-reachable */}
           <div className="absolute inset-x-3 bottom-3 flex items-center justify-between">
             <span
-              className="glass-strong rounded-full px-3 py-1.5 font-display text-[15px] font-bold tabular text-ink"
+              className="glass-dark rounded-full px-3 py-1.5 font-display text-[15px] font-bold tabular text-white"
             >
               {formatINR(product.price)}
             </span>
@@ -242,7 +242,7 @@ export default function ProductCard({ product, wished, onOpen, onWish, variant =
         {/* Floating price + add — sits directly on the photo, thumb-reachable */}
         <div className="absolute inset-x-2.5 bottom-2.5 flex items-center justify-between">
           <span
-            className="glass-strong rounded-full px-2.5 py-1 font-display text-[13.5px] font-bold tabular text-ink"
+            className="glass-dark rounded-full px-2.5 py-1 font-display text-[13.5px] font-bold tabular text-white"
           >
             {formatINR(product.price)}
           </span>
