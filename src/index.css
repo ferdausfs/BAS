@@ -190,7 +190,7 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 
 .glass-tint {
-  background: var(--tint, rgba(255,244,246,0.72));
+  background: var(--tint, rgba(255,244,246,0.55));
   backdrop-filter: saturate(180%) blur(20px);
   -webkit-backdrop-filter: saturate(180%) blur(20px);
 }

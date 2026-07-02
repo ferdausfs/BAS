@@ -208,7 +208,7 @@ export default function ProductScreen() {
 
           {/* Pagination dots */}
           {galleryImages.length > 1 && (
-            <div className="absolute right-0 bottom-5 left-0 flex justify-center gap-1.5 pointer-events-none">
+            <div className="absolute right-0 bottom-20 left-0 flex justify-center gap-1.5 pointer-events-none">
               {galleryImages.map((_, i) => (
                 <span
                   key={i}
@@ -222,7 +222,7 @@ export default function ProductScreen() {
         </div>
 
         {/* Content sheet below image — flows naturally as user scrolls */}
-        <div className="glass-tint rounded-t-[28px] -mt-5 relative z-10 px-5 pt-6" style={{ '--tint': dominantColor } as CSSProperties}>
+        <div className="glass-tint rounded-t-[28px] -mt-16 relative z-10 px-5 pt-6" style={{ '--tint': dominantColor } as CSSProperties}>
           {/* Gallery Thumbnail Strip */}
           {galleryImages.length > 1 && (
             <div className="flex gap-2 overflow-x-auto pb-4 scrollbar-hide">

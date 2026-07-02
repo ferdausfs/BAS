@@ -8,15 +8,17 @@ import { useEffect, useState } from 'react';
 
 const cache = new Map<string, string>();
 
-const FALLBACK_TINT = 'rgba(255,244,246,0.72)'; // neutral blush tint
+const FALLBACK_TINT = 'rgba(255,244,246,0.55)'; // neutral blush tint
 
 function lightenToPastel(r: number, g: number, b: number): string {
-  // Mix with white to create a pastel, then adjust for warmth
-  const mix = 0.72; // how much white to mix in
+  // Mix with white to create a pastel, then adjust for warmth.
+  // Kept close to white so the extracted color reads as a subtle glass
+  // accent rather than a per-photo background repaint.
+  const mix = 0.88; // how much white to mix in
   const lr = Math.round(r + (255 - r) * mix);
   const lg = Math.round(g + (255 - g) * mix);
   const lb = Math.round(b + (255 - b) * mix);
-  return `rgba(${lr},${lg},${lb},0.72)`;
+  return `rgba(${lr},${lg},${lb},0.55)`;
 }
 
 function extractDominant(url: string): Promise<string> {

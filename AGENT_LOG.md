@@ -1,5 +1,40 @@
 # Agent Log — BAS (Bake Art Style 2)
 
+## Session: 2026-07-02 (glass-tint fix — real glass instead of solid color repaint)
+**Agent/Tool:** Claude (Sonnet 5, in-chat, direct repo access via git clone)
+**Feature worked on:** FIX pass — previous session's glass-tint (Check 3, dominant color) was reported by user as "background changes হয়ে যাচ্ছে, glassy feel না" — regression fix on that same feature.
+
+### Review findings (approved by user — "দুটোই একসাথে"):
+1. Content sheet only overlapped hero image by `-mt-5` (20px) — too little for `backdrop-filter: blur(20px)` to have real photo to blur, so the panel read as a flat solid-color repaint instead of frosted glass.
+2. `lightenToPastel()` mix (0.72) + `.glass-tint` alpha (0.72) made the dominant-color tint dominate the panel almost as a solid fill instead of a subtle accent.
+
+### কী হয়েছে:
+- `src/screens/ProductScreen.tsx`:
+  - Content sheet overlap increased `-mt-5` → `-mt-16` (64px) so backdrop-blur has real image content behind it → genuine glass effect.
+  - Pagination dots moved `bottom-5` → `bottom-20` — companion fix, otherwise the larger overlap would visually cover them. Not scope creep, direct consequence of the overlap change.
+- `src/hooks/useDominantColor.ts`:
+  - `lightenToPastel()` white-mix `0.72` → `0.88`, alpha `0.72` → `0.55` — dominant color now reads as a whisper of warmth, not a per-photo background repaint.
+  - `FALLBACK_TINT` alpha matched to `0.55` for consistency.
+- `src/index.css`:
+  - `.glass-tint` default fallback alpha `0.72` → `0.55` to match the hook.
+
+### Touched files:
+- `src/screens/ProductScreen.tsx`
+- `src/hooks/useDominantColor.ts`
+- `src/index.css`
+
+### Build:
+- `npm run build` → ✓ built in 13.45s (verified before ZIP)
+
+### Commit:
+- Not yet pushed — ZIP delivered for local apply/build/push (`bas-glasstint-fix-070226.zip`)
+
+### পরবর্তী Agent এর জন্য নোট:
+- If dots at `bottom-20` still feel too high/low visually once seen live, that's the only "eyeball it" number in this fix — safe to nudge without touching the other two changes.
+- Don't revert the tint alpha back toward 0.72 — that was the exact cause of the reported bug.
+
+---
+
 ## Session: 2026-07-02 (ProductScreen hero swipe + glass tint + dominant color)
 **Agent/Tool:** Arena.ai Agent Mode
 **Feature worked on:** FIX pass — 3 approved review findings on ProductScreen
