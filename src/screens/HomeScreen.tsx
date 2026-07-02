@@ -140,20 +140,24 @@ export default function HomeScreen({
       <Header onLogoTap={onLogoTap} onNotificationsOpen={onNotificationsOpen} />
 
       <div className="no-scrollbar flex-1 overflow-y-auto pb-32">
-        <div className="relative overflow-hidden px-5 pt-1 anim-up">
-          <div className="pointer-events-none absolute -right-10 -top-8 h-40 w-40 rounded-full bg-blush-200/60 blur-3xl" />
-          <div className="pointer-events-none absolute -left-4 top-4 h-24 w-24 rounded-full bg-blush-100/80 blur-2xl" />
+        <div className="mesh-warm relative overflow-hidden rounded-b-[32px] px-5 pb-6 pt-1 anim-up">
+          <span
+            aria-hidden="true"
+            className="font-brand pointer-events-none absolute -right-5 top-5 select-none whitespace-nowrap text-[58px] leading-none text-coral/[0.09] rotate-[-6deg]"
+          >
+            Bake Art Style
+          </span>
 
-          <div className="text-[12px] font-medium uppercase tracking-[0.2em] text-ink-200">
+          <div className="relative text-[12px] font-medium uppercase tracking-[0.2em] text-ink-200">
             {user ? (isNonLatin ? 'Welcome back!' : `Welcome back, ${firstName}`) : 'Welcome to Bake Art Style'}
           </div>
 
-          <h1 className="mt-1 font-display text-[23px] font-bold leading-[1.1] tracking-tight text-ink">
+          <h1 className="relative mt-1 font-display text-[23px] font-bold leading-[1.1] tracking-tight text-ink">
             What cake are we
             <br />
             <span className="text-gradient-coral">celebrating today?</span>
           </h1>
-          <div className="mt-4">
+          <div className="relative mt-4">
             <SearchBar
               value={search}
               onChange={setSearch}

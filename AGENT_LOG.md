@@ -1,5 +1,33 @@
 # Agent Log — BAS (Bake Art Style 2)
 
+## Session: 2026-07-02 (Home hero signature moment)
+**Agent/Tool:** Claude (Sonnet 5, in-chat, direct repo access via git clone — not Arena.ai this time)
+**Feature worked on:** Premium-feel / signature-identity review → Fix (Code Master protocol, single concept)
+
+### কী হয়েছে:
+- Review report first identified 5 gaps (no hero moment, repetitive white-card grammar, underused Fraunces/Great Vibes, unused `.mesh-warm`/`.confetti-dots`, generic section-header pattern) — no code changed in review pass.
+- User approved direction **A + B**: script-forward hero + textured mesh background, combined into one signature moment at the top of Home only (rest of the screen left untouched, per "spend boldness in one place").
+- Home hero block (greeting + headline + search) changed from flat `bg-cream` + two decorative blur circles → `.mesh-warm` textured background on a `rounded-b-[32px]` panel, with a large (58px), low-opacity (9%), rotated Great Vibes ("Bake Art Style") watermark behind the content as a decorative signature mark (`aria-hidden`, `pointer-events-none`).
+- Rest of Home (banner carousel, wallet nudge, order-again, categories, trending, for-you) intentionally untouched.
+
+### Touched files:
+- `src/screens/HomeScreen.tsx` (hero block only, lines ~143–166 pre-change)
+
+### Commit:
+- Not yet pushed — ZIP delivered to user for local apply/build/push (`bas-home-hero-signature-070226.zip`)
+
+### এখনো Pending (যদি থাকে):
+- Directions C (cinematic banner hero) and D (card-language differentiation) were reviewed but deferred — noted as future options if user wants a second pass later.
+- Full white-card-grammar audit (Check 2 in the review) not addressed — lower priority, left as-is.
+
+### পরবর্তী Agent এর জন্য নোট:
+- `.mesh-warm` and `font-brand` (Great Vibes) were already defined in `src/index.css` — no CSS changes were needed for this fix, only usage in `HomeScreen.tsx`.
+- The script watermark is intentionally decorative/low-opacity (`text-coral/[0.09]`) — do not increase opacity much further or it will hurt text legibility of the headline/search sitting on top of it.
+- Build verified locally (`npm run build` → `✓ built in 9.34s`) before ZIP was created.
+
+---
+
+
 **Repo:** https://github.com/ferdausfs/BAS
 **Stack:** React 19 + TypeScript + Tailwind v4 + Vite + Zustand + Firebase/Firestore
 **Deploy:** Cloudflare Pages — https://bas.umuhammadiswa.workers.dev
