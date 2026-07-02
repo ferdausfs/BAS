@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { ArrowLeft, Plus, Minus, Trash2, Tag, ShoppingBag, Sparkles, Truck, Shield, ShoppingCart, Wallet } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ArrowLeft, Plus, Minus, Trash2, Tag, ShoppingBag, Sparkles, Truck, Shield, ShoppingCart, Wallet, Cake, Flower2, Gift } from 'lucide-react';
 import {
   useCart,
   useUI,
@@ -13,6 +13,13 @@ import {
 } from '../lib/store';
 import { safeArray } from '../lib/utils';
 import type { CartItem } from '../types';
+
+const ADDON_ICON: Record<string, React.ElementType> = {
+  decoration: Sparkles,
+  theme: Cake,
+  flowers: Flower2,
+  extras: Gift,
+};
 
 export default function CartScreen() {
   const { items, add, setQty, remove } = useCart();
@@ -219,7 +226,14 @@ export default function CartScreen() {
                   className="flex w-[104px] flex-shrink-0 flex-col items-start gap-1.5 rounded-2xl bg-white p-3 text-left transition active:scale-95"
                   style={{ boxShadow: '0 1px 2px rgba(26,19,17,.02), 0 8px 24px -16px rgba(26,19,17,.16)' }}
                 >
-                  <span className="text-[20px]">{addon.emoji}</span>
+                  {(() => {
+                    const AddonIcon = ADDON_ICON[addon.category] ?? Sparkles;
+                    return (
+                      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-coral/10">
+                        <AddonIcon className="h-[18px] w-[18px] text-coral" strokeWidth={2} />
+                      </div>
+                    );
+                  })()}
                   <span className="text-[11px] font-bold leading-tight text-ink line-clamp-2">{addon.label}</span>
                   <div className="flex w-full items-center justify-between">
                     <span className="text-[11px] font-bold text-coral">৳{addon.price}</span>

@@ -307,8 +307,8 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
     },
     {
       Icon: MapPin,
-      label: 'Addresses',
-      sub: savedProfile.address ? `${savedProfile.district} · saved` : 'Save delivery address',
+      label: 'Delivery address',
+      sub: savedProfile.address ? `${savedProfile.district} · default` : 'Set your delivery address',
       action: openCustomerEditor,
     },
     {
@@ -436,7 +436,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
         </div>
 
         <div className="mt-4 px-5 anim-up delay-2">
-          {/* Saved Addresses */}
+          {/* Address book */}
           {user && (
             <button
               onClick={() => setShowAddressModal(true)}
@@ -448,9 +448,9 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
                   <MapPin className="h-4 w-4" />
                 </div>
                 <div>
-                  <div className="text-[13px] font-bold text-ink">Saved Addresses</div>
+                  <div className="text-[13px] font-bold text-ink">Address book</div>
                   <div className="text-[11px] text-ink/50">
-                    {addresses.length === 0 ? 'No saved addresses' : `${addresses.length} address${addresses.length > 1 ? 'es' : ''} saved`}
+                    {addresses.length === 0 ? 'Save multiple addresses' : `${addresses.length} address${addresses.length > 1 ? 'es' : ''} saved`}
                   </div>
                 </div>
               </div>
@@ -727,7 +727,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
         <div className="fixed inset-0 z-[80] flex flex-col bg-black/40 backdrop-blur-sm" onClick={() => !editingAddress && setShowAddressModal(false)}>
           <div className="mt-auto w-full rounded-t-3xl glass-strong p-5 pb-8" onClick={(e) => e.stopPropagation()}>
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="font-display text-[17px] font-bold text-ink">Saved Addresses</h2>
+              <h2 className="font-display text-[17px] font-bold text-ink">Address book</h2>
               <button onClick={() => setShowAddressModal(false)} className="h-8 w-8 rounded-full bg-ink/5 flex items-center justify-center">
                 <X className="h-4 w-4" />
               </button>
