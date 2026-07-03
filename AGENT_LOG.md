@@ -1,3 +1,26 @@
+## Session: 2026-07-03, 16:10 (Batch 2: Navigation — floating pill + header glass)
+**Agent/Tool:** Arena.ai Agent Mode (Claude)
+**Feature worked on:** Full-app glassmorphism — Batch 2 (Navigation): BottomTabBar → floating frosted pill + Header → glass-subtle class
+
+### কী হয়েছে:
+- **Fix 1: BottomTabBar floating detached frosted pill** — পুরো-width docked bar থেকে detached pill-এ convert: inner div-এ `glass-strong` class, `mx-4 mb-3 rounded-3xl`, height 56→52px। Inline glass styles remove করে CSS class use করা হয়েছে। Safe-area padding outer `<nav>` এ রাখা আছে।
+- **Fix 2: Header glass-subtle refactor** — Inline glass styles (`rgba(249,249,247,0.92)` + blur + borderBottom) সরিয়ে `.glass-subtle` class। Cart badge ring `ring-cream` → `ring-[var(--color-cream)]` (subtle consistency fix)।
+
+### Touched files:
+- src/components/BottomTabBar.tsx
+- src/components/Header.tsx
+
+### Build: ✓ built in 20.91s
+### Commit: 3cf7a4b — feat(glass): navigation — floating frosted pill BottomTab + Header glass-subtle
+
+### এখনো Pending:
+- Batch 3: Screens — 8 screens extend glass (Cart, Checkout, Categories, Customize, Orders, Success, Tracking, Wishlist)
+- Batch 4: Cards/chips — polish pass
+
+### পরবর্তী Agent এর জন্য নোট:
+- BottomTabBar এখন floating pill — `glass-strong` class, 52px height, 16px side margin, 12px bottom margin.
+- Header এখন `glass-subtle` class — inline styles gone.
+- পরবর্তী ধাপ: Screens (Batch 3) — 8 টা screen-এ glass extend করা + bg-cream remove/replace।
 ## Session: 2026-07-03, 15:59 (Batch 1: Foundation — glass backdrop + token system)
 **Agent/Tool:** Arena.ai Agent Mode (Claude)
 **Feature worked on:** Full-app glassmorphism — Batch 1 (Foundation): mesh backdrop fix on mobile + 3-tier glass token restructuring
