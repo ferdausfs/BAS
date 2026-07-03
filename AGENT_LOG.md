@@ -1,3 +1,79 @@
+## Session: 2026-07-03, 12:17 (PLAN — full-app glassmorphism theme, next agent shuru koro ekhan theke) — PENDING, work not yet done
+**Agent/Tool:** Claude (Sonnet 5, in-chat, direct repo access via git clone)
+**Feature worked on:** User চায় পুরো app-e glass morphism feel ("bakery display case" direction) — review complete, plan approved by user, code change এখনো শুরু হয়নি
+
+### Design direction (user-approved):
+- Dark iOS Control Center style glass **না** — brand-এর cream + coral-pink identity রেখেই light frosted glass ("কেকের display case এর কাচ" feel)
+- Cream (`#FFF8F3`/brand-50) + coral (`#E8526A`/brand-500) ধরে রাখা, শুধু glass alpha/blur tune করা
+- Signature element: BottomTabBar কে floating detached frosted pill বানানো (iOS control-center মতো) — সবচেয়ে বেশি চোখে পড়বে
+
+### Review findings (root cause confirmed):
+
+**1. Global backdrop mobile-এ screen content-এর পেছনে নাই — HIGH priority, foundation**
+- File: `src/components/PhoneFrame.tsx:15` (outer wrapper has `mesh-warm` class) vs `PhoneFrame.tsx:28` (inner screen content sits on flat `bg-cream`)
+- `mesh-warm` gradient def: `src/index.css:223-229` (soft blush radial gradient, looks good)
+- Problem: mobile view (`className="relative h-[100dvh] overflow-hidden md:hidden"`, PhoneFrame.tsx ~line 33) renders children directly inside the `bg-cream` solid div, NOT on top of `mesh-warm` — so on real phones (main use case) glass panels blur a flat solid color, not the mesh gradient. Desktop bezel view does show mesh but only around the phone frame, not behind content.
+- **Fix direction:** bring `mesh-warm` (or a screen-appropriate variant) behind the actual scrollable content on mobile too — e.g. remove/lighten the intermediate solid `bg-cream` layer or make it semi-transparent so mesh shows through, OR add mesh backdrop at each screen's root instead of relying on PhoneFrame.
+
+**2. Glass token system exists but unstructured — HIGH priority**
+- File: `src/index.css:179-207`
+- Existing tokens (all already have real backdrop-filter, don't break these): `.glass` (rgba 255,255,255,0.82 / blur 20px), `.glass-strong` (rgba 255,255,255,0.68 / blur 28px, border rgba(255,255,255,.65) — already tuned last session, don't re-lower), `.glass-dark` (rgba(20,18,19,.55) / blur 24px), `.glass-tint` (var(--tint) / blur 24px, has `isolation:isolate` — keep this, needed for backdrop-filter to sample correctly)
+- **Fix direction:** rename/restructure into a clear 3-tier system: `glass-subtle` (nav/header, most transparent), `glass-strong` (cards/modals — already close to right, keep alpha ~0.68), `glass-deep` (bottom sheets, slightly more opaque for legibility, ~0.80-0.85). Add consistent `1px solid rgba(255,255,255,.4)` border + soft lift shadow to all tiers for "glass edge" feel. Don't touch `.glass-tint`'s `isolation:isolate` mechanism — reuse the pattern for new tiers if needed.
+
+**3. Coverage — only 7/20 files use any glass class — MEDIUM/LOW priority, later batches**
+- Currently using glass: `HomeScreen.tsx`, `ProductScreen.tsx`, `ProfileScreen.tsx`, `ProductCard.tsx`, `AdminPanel.tsx`, `NotificationsSheet.tsx`, `AuthSheet.tsx`
+- NOT using glass yet (148 raw `bg-white` occurrences across these): `CartScreen.tsx`, `CheckoutScreen.tsx`, `CategoriesScreen.tsx`, `CustomizeScreen.tsx`, `OrdersScreen.tsx`, `SuccessScreen.tsx`, `TrackingScreen.tsx`, `WishlistScreen.tsx`, `BottomTabBar.tsx`, `Header.tsx`
+- Brand colors reference (don't guess, use these): `tailwind.config.ts` — `brand.50` #FFF9EC (ivory bg), `brand.100` #FFF4F6 (blush panel), `brand.500` #E8526A (primary coral), `gold.DEFAULT` #C8944A
+
+### Approved rollout plan (execute ONE batch at a time — review→fix→ZIP→verify build→push each, per AGENT-WORKFLOW-PROTOCOL.md — user explicitly wants no batching of untested changes):
+
+1. **Foundation** — fix mesh backdrop visibility on mobile (`PhoneFrame.tsx`) + restructure/rename glass tokens (`index.css`) into `glass-subtle`/`glass-strong`/`glass-deep`
+2. **Navigation** — `BottomTabBar.tsx` → floating detached frosted pill (signature element, most visible change) + `Header.tsx` → glass
+3. **Screens** — extend glass to remaining 8 screens one at a time (CartScreen, CheckoutScreen, CategoriesScreen, CustomizeScreen, OrdersScreen, SuccessScreen, TrackingScreen, WishlistScreen)
+4. **Cards/chips** — smaller polish pass (ProductCard price chip, cart line items, badges)
+
+### এখনো Pending:
+- **সবকিছু** — এই session-এ শুধু review + plan হয়েছে, কোনো code change হয়নি, কোনো commit নাই।
+- পরবর্তী agent সরাসরি ধাপ 1 (Foundation) দিয়ে শুরু করবে — user কে আবার জিজ্ঞেস করার দরকার নাই "কোথা থেকে শুরু করবো", প্ল্যান এখানেই confirmed।
+
+### পরবর্তী Agent এর জন্য নোট:
+- User explicitly বলেছে: dark/black iOS glass না, cream+coral bakery identity বজায় রাখতে হবে।
+- `.glass-strong` এর opacity আগেই 96%→68% এ tune হয়ে গেছে (আগের session) — আবার lower করার দরকার নাই, শুধু rename/restructure বিবেচনা করো।
+- `.glass-tint` এর `isolation:isolate` + `will-change:backdrop-filter` mechanism ভাঙবে না — এটা backdrop-filter সঠিকভাবে কাজ করার জন্য জরুরি ছিল।
+- Foundation ধাপ শেষ না করে Navigation/Screens ধাপে যাওয়া যাবে না — mesh backdrop ঠিক না থাকলে বাকি সব glass flat-ই দেখাবে।
+
+---
+
+## Session: 2026-07-03 (user screenshot follow-up — gallery data bug, Checkout Profile GPS, product image lightbox)
+**Agent/Tool:** Claude (Sonnet 5, in-chat, direct repo access via git clone)
+**Feature worked on:** User reported (via screenshots) "Checkout Profile" modal missing GPS button + multi-image swipe still not showing any images. Diagnosed both, fixed both, then added a requested fullscreen image lightbox.
+
+### কী হয়েছে:
+1. **Real root cause of "multi-image swipe never works" found (previous session's fix #1 only fixed the touch-listener race condition, not this):** `src/lib/firestoreMappers.ts` → `mapProductDoc()` never read the `gallery` field from Firestore docs at all, even though `productToDoc()` (save direction) always wrote it correctly. So Admin-uploaded gallery images were persisted fine but never came back down to the frontend — `product.gallery` was always `undefined`, so `galleryImages.length` was always 1 (no dots, no thumbnails, nothing to swipe to). Fixed: added `gallery: Array.isArray(d?.gallery) ? d.gallery : []` to the mapper. Existing products with previously-saved gallery images should now show them without re-uploading.
+2. **GPS button missing in "Checkout Profile" modal:** This is a *separate* modal from the Address Book modal fixed last session — `customerOpen` state, `draftProfile` form, ~`src/screens/ProfileScreen.tsx:648`. Added the same GPS pattern (geolocation + Nominatim reverse-geocode + `BD_DISTRICTS` match) as a new `handleLocateProfile()` writing to `draftProfile` instead of `addrForm`.
+3. **New: fullscreen image lightbox on ProductScreen (user-requested, not a bug fix):** Tapping the hero image now opens a fullscreen dark overlay (`lightboxOpen` state). If the product has a gallery, supports swipe (touch handlers directly on the lightbox image container, no native-listener ref hacks needed since it's not inside a scrollable page), left/right arrow buttons, and dot indicators — same gallery data (`galleryImages`/`activeIndex`/`currentImg`) as the existing hero/thumbnail strip.
+
+### Touched files:
+- `src/lib/firestoreMappers.ts`
+- `src/screens/ProfileScreen.tsx`
+- `src/screens/ProductScreen.tsx`
+
+### Build:
+- ✓ built in 10.00s (gallery mapping + profile GPS) / ✓ built in 17.59s (lightbox)
+
+### Commits:
+- `f756b42` — fix: gallery images never loaded from Firestore (mapProductDoc missing field) + GPS button in Checkout Profile modal
+- `2df8712` — feat: fullscreen image lightbox on ProductScreen — tap to open, swipe/arrows/dots for gallery
+
+### এখনো Pending:
+- None reported as of this entry.
+
+### পরবর্তী Agent এর জন্য নোট:
+- There are now **two separate address-entry forms** with GPS buttons: Address Book modal (`showAddressModal`/`addrForm`/`handleLocateAddress`) and Checkout Profile modal (`customerOpen`/`draftProfile`/`handleLocateProfile`). They're intentionally separate state — don't try to merge them without user request.
+- If any *other* screen reads `product.gallery` and still shows only 1 image after this fix, check whether that specific product actually has gallery URLs saved in Firestore (Admin → product edit → Additional Images) — the mapping bug is fixed, but products with no gallery uploaded will still correctly show only the main image.
+
+---
+
 ## Session: 2026-07-03 (all 3 diagnosed bugs fixed — plan below fully executed)
 **Agent/Tool:** Claude (Sonnet 5, in-chat, direct repo access via git clone)
 **Feature worked on:** Fix #1, #2, #3 from the plan in the entry directly below — all done, build-verified, pushed one at a time per AGENT-WORKFLOW-PROTOCOL.md
