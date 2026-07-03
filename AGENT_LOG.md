@@ -1,3 +1,40 @@
+## Session: 2026-07-03 (PLAN — next agent shuru koro ekhan theke) — PENDING, work not yet done
+**Agent/Tool:** Claude (Sonnet 5, in-chat, direct repo access via git clone)
+**Feature worked on:** 3 diagnosed bugs from user screenshot review — NOT YET FIXED
+
+### Diagnosed problems (review complete, root cause confirmed, fix pending):
+
+**1. ProductScreen image swipe never works — race condition bug**
+- File: `src/screens/ProductScreen.tsx`
+- Touch listeners (`onStart`/`onMove`/`onEnd`) attach via `useEffect(() => {...}, [])` — empty deps, runs once on mount only, reading `heroRef.current`.
+- `product` loads async (Firestore). On first render `product` is `null` → early-return branch fires (`if (!product) return (...)`, ~line 140) → hero image div (with `ref={heroRef}`) never mounts on that first render → effect runs with `heroRef.current === null` → `if (!el) return` exits immediately → listeners never attach.
+- When `product` data arrives and hero div finally renders, the effect does NOT re-run (empty deps array) — so listeners are permanently never attached in the common async-load case.
+- **Fix direction:** change effect dependency array to re-run when the ref actually has a value / when `product?.id` becomes available — e.g. `}, [product?.id]);` or a callback-ref pattern so listeners attach on the render where the div actually exists.
+
+**2. "Glass" effect looks like flat solid panel, not iOS frosted glass — app-wide**
+- File: `src/index.css`, class `.glass-strong` (~line 185)
+- `background: rgba(255,255,255,0.96)` — 96% opaque. `backdrop-filter: blur(28px)` is applied but has almost nothing translucent to blur — reads as solid white.
+- Used in **9 places across 5 files**: `HomeScreen.tsx` (1), `ProfileScreen.tsx` (4 — includes Address book + Special Dates modals), `AdminPanel.tsx` (1), `NotificationsSheet.tsx` (1), `AuthSheet.tsx` (2).
+- This is the main reason "GLASS morphism full app e koro" request didn't produce a visible effect anywhere `.glass-strong` is used.
+- **Fix direction:** lower the background alpha meaningfully (e.g. ~0.55–0.65 range, similar to `.glass-tint`'s tuned 0.55) so blur is actually visible, test each of the 9 usage sites for text-legibility after the change (don't break readability).
+
+**3. Address Book modal (ProfileScreen.tsx, ~line 726) — language mismatch + no GPS + generic form styling**
+- All labels English ("LABEL (E.G. HOME, OFFICE)", "FULL ADDRESS", "DISTRICT", "PHONE") while Checkout Profile section (`CheckoutScreen.tsx`) uses Bengali for the same conceptual fields — inconsistent within the same app.
+- No GPS-based address entry — manual-only. `LocationGate.tsx` already has a working pattern (`navigator.geolocation.getCurrentPosition` + Nominatim reverse-geocode + zone match) that can be reused for a "Use GPS" button to auto-fill address + district.
+- Plain generic input styling (`bg-cream border-ink/10`) — functional but doesn't carry the same visual polish as ProductScreen.
+- **Fix direction:** rewrite labels to Bengali matching CheckoutScreen's wording, add "📍 GPS দিয়ে ঠিকানা বসান" button reusing LocationGate's geolocation+reverse-geocode logic (user can still edit manually after), keep manual entry as fallback/override.
+
+### Plan for execution (one at a time, review→fix→ZIP→verify build→push, per AGENT-WORKFLOW-PROTOCOL.md):
+1. Fix #1 (swipe race condition) — isolated, low risk
+2. Fix #2 (glass-strong opacity) — CSS-only, check all 9 usage sites for legibility
+3. Fix #3 (Address book Bengali + GPS + polish) — larger, touches ProfileScreen.tsx
+
+### পরবর্তী Agent এর জন্য নোট:
+- User has requested NO more bugs — verify build after every single change before moving to the next fix, do not batch untested changes.
+- Do not touch unrelated code. Do not re-diagnose these 3 issues — root cause is already confirmed above, go straight to fix + verify.
+
+---
+
 ## Session: 2026-07-03 (continued — blush shade consolidation)
 **Agent/Tool:** Claude (Sonnet 5, in-chat, direct repo access via git clone)
 **Feature worked on:** Color token consistency, part 2
