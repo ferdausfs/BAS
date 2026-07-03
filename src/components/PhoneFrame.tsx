@@ -32,7 +32,7 @@ export default function PhoneFrame({ children, onLogoTap }: Props) {
                 width: 'min(420px, calc((100vh - 60px) * 0.477))',
               }}
             >
-              <div className="relative h-full w-full overflow-hidden rounded-[36px] bg-cream">
+              <div className="relative h-full w-full overflow-hidden rounded-[36px]">
                 <div className="absolute inset-0 flex flex-col overflow-hidden" data-logo-tap-handler onClick={onLogoTap ? undefined : undefined}>{children}</div>
                 <HomeIndicator />
               </div>

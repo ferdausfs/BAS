@@ -167,7 +167,7 @@ export default function TrackingScreen() {
                     </button>
                     <button
                       onClick={() => setChatOpen(true)}
-                      className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-xl bg-white border border-red-200 text-[12px] font-bold text-red-600"
+                      className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-xl glass-strong border border-red-200 text-[12px] font-bold text-red-600"
                     >
                       <MessageCircle className="h-3.5 w-3.5" /> সাপোর্ট
                     </button>

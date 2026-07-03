@@ -432,7 +432,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
 
   if (!user) {
     return (
-      <div className="flex h-full flex-col bg-cream items-center justify-center px-8 text-center">
+      <div className="flex h-full flex-col items-center justify-center px-8 text-center">
         <div className="flex justify-center text-ink-200 opacity-60 mb-4">
           <User size={48} strokeWidth={1.5} />
         </div>
@@ -458,7 +458,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
     .toUpperCase();
 
   return (
-    <div className="flex h-full flex-col bg-cream">
+    <div className="flex h-full flex-col">
       <header className="flex-shrink-0 px-5 pt-3 pb-2">
         <h1 className="font-display text-[28px] font-bold tracking-tight text-ink">
           Profile
@@ -533,7 +533,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
           {user && (
             <button
               onClick={() => setShowAddressModal(true)}
-              className="mt-3 flex w-full items-center justify-between rounded-2xl bg-white p-4 text-left transition active:scale-[.98]"
+              className="mt-3 flex w-full items-center justify-between rounded-2xl glass-strong p-4 text-left transition active:scale-[.98]"
               style={{ boxShadow: '0 1px 2px rgba(26,19,17,.02), 0 8px 24px -16px rgba(26,19,17,.16)' }}
             >
               <div className="flex items-center gap-3">
@@ -555,7 +555,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
           {user && (
             <button
               onClick={() => setShowDatesModal(true)}
-              className="mt-3 flex w-full items-center justify-between rounded-2xl bg-white p-4 text-left transition active:scale-[.98]"
+              className="mt-3 flex w-full items-center justify-between rounded-2xl glass-strong p-4 text-left transition active:scale-[.98]"
               style={{ boxShadow: '0 1px 2px rgba(26,19,17,.02), 0 8px 24px -16px rgba(26,19,17,.16)' }}
             >
               <div className="flex items-center gap-3">
@@ -605,7 +605,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
 
         <div className="mt-5 px-5 anim-up delay-3">
           <div
-            className="overflow-hidden rounded-2xl bg-white"
+            className="overflow-hidden rounded-2xl glass-strong"
             style={{ boxShadow: '0 1px 2px rgba(26,19,17,.02), 0 8px 24px -16px rgba(26,19,17,.16)' }}
           >
             {menu.map((m, i) => (
@@ -650,7 +650,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
         <div className="mt-4 px-5 anim-up delay-4">
           <button
             onClick={signOut}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl border border-ink-50 bg-white py-3.5 text-[13px] font-bold text-ink transition active:scale-[.98]"
+            className="flex w-full items-center justify-center gap-2 rounded-2xl border border-white/40 glass-strong py-3.5 text-[13px] font-bold text-ink transition active:scale-[.98]"
           >
             <LogOut className="h-4 w-4" />
 
@@ -851,7 +851,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
                     <div className="py-6 text-center text-[13px] text-ink/40">এখনো কোনো ঠিকানা সংরক্ষণ করা হয়নি</div>
                   )}
                   {addresses.map((addr) => (
-                    <div key={addr.id} className="flex items-center gap-3 rounded-2xl bg-white p-3"
+                    <div key={addr.id} className="flex items-center gap-3 rounded-2xl glass-strong p-3"
                       style={{ boxShadow: '0 1px 4px rgba(26,19,17,.06)' }}>
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
@@ -988,7 +988,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
             <p className="mb-3 text-[11px] text-ink/50">We'll remind you 7 days before to order a cake</p>
             <div className="space-y-2 max-h-48 overflow-y-auto mb-3">
               {specialDates.map((d) => (
-                <div key={d.id} className="flex items-center gap-3 rounded-2xl bg-white p-3" style={{ boxShadow: '0 1px 4px rgba(26,19,17,.06)' }}>
+                <div key={d.id} className="flex items-center gap-3 rounded-2xl glass-strong p-3" style={{ boxShadow: '0 1px 4px rgba(26,19,17,.06)' }}>
                   <span className="flex h-9 w-9 items-center justify-center rounded-full bg-coral/10 text-coral">
                     {d.type === 'birthday' ? <Cake className="h-4 w-4" /> : d.type === 'anniversary' ? <Heart className="h-4 w-4" /> : <Gift className="h-4 w-4" />}
                   </span>
@@ -1049,7 +1049,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
           />
 
           {/* Sheet */}
-          <div className="relative rounded-t-3xl bg-white px-5 pt-5 pb-10 shadow-2xl">
+          <div className="relative rounded-t-3xl glass-deep px-5 pt-5 pb-10">
 
             {/* Drag handle */}
             <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-ink-100" />
@@ -1073,7 +1073,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
             </div>
 
             {/* How it works */}
-            <div className="mb-5 rounded-2xl bg-cream px-4 py-3.5 space-y-2.5">
+            <div className="mb-5 rounded-2xl glass-strong px-4 py-3.5 space-y-2.5">
               <div className="text-[11px] font-bold uppercase tracking-wider text-ink-200 mb-1">
                 কীভাবে কাজ করে
               </div>
@@ -1095,7 +1095,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
             )}
 
             {/* Link display */}
-            <div className="mb-4 flex items-center gap-2 rounded-2xl border border-ink-50 bg-white px-3.5 py-2.5">
+            <div className="mb-4 flex items-center gap-2 rounded-2xl border border-white/40 glass-strong px-3.5 py-2.5">
               <span className="flex-1 truncate text-[11.5px] text-ink-200 font-medium">
                 {referralLink}
               </span>
@@ -1178,7 +1178,7 @@ function Stat({ label, value, onClick }: { label: string; value: number; onClick
   return (
     <button
       onClick={onClick}
-      className="rounded-2xl bg-white p-3 text-center transition active:scale-95"
+      className="rounded-2xl glass-strong p-3 text-center transition active:scale-95"
       style={{ boxShadow: '0 1px 2px rgba(26,19,17,.02), 0 6px 18px -14px rgba(26,19,17,.16)' }}
     >
       <div className="font-display text-[18px] font-bold tabular text-ink">{value}</div>

@@ -136,7 +136,7 @@ export default function HomeScreen({
   }, [activeBanners.length]);
 
   return (
-    <div className="flex h-full flex-col bg-cream">
+    <div className="flex h-full flex-col">
       <Header onLogoTap={onLogoTap} onNotificationsOpen={onNotificationsOpen} />
 
       <div className="no-scrollbar flex-1 overflow-y-auto pb-32">
@@ -171,7 +171,7 @@ export default function HomeScreen({
 
         {!user && (
           <div
-            className="mx-5 mb-3 flex items-center gap-3 rounded-2xl border border-ink-50 bg-white px-4 py-3 anim-up"
+            className="mx-5 mb-3 flex items-center gap-3 rounded-2xl border border-white/40 glass-strong px-4 py-3 anim-up"
             style={{ boxShadow: '0 2px 8px -4px rgba(26,19,17,.1)' }}
           >
             <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-blush-100">
@@ -192,7 +192,7 @@ export default function HomeScreen({
 
         {upcoming && (
           <div
-            className="mx-5 mb-3 flex items-center gap-3 rounded-2xl bg-gradient-to-r from-coral/10 to-blush-100 px-4 py-3 anim-up"
+            className="mx-5 mb-3 flex items-center gap-3 rounded-2xl glass-strong px-4 py-3 anim-up"
             style={{ boxShadow: '0 2px 8px -4px rgba(242,94,115,.2)' }}
           >
             <Cake size={22} className="flex-shrink-0 text-coral" />
@@ -339,7 +339,7 @@ export default function HomeScreen({
 
         {debouncedSearch.trim() && searchResults.length === 0 && (
           <div
-            className="mx-5 mt-4 flex flex-col items-center rounded-2xl bg-white py-8 text-center anim-up"
+            className="mx-5 mt-4 flex flex-col items-center rounded-2xl glass-strong py-8 text-center anim-up"
             style={{ boxShadow: '0 1px 2px rgba(26,19,17,.02), 0 8px 24px -16px rgba(26,19,17,.14)' }}
           >
             <Search className="h-8 w-8 text-ink-200 opacity-50" strokeWidth={1.5} />
@@ -394,7 +394,7 @@ export default function HomeScreen({
                     safeArray(lastOrder.items).forEach((item) => useCart.getState().add({ ...item }));
                     go({ name: 'cart' });
                   }}
-                  className="group flex w-full items-center gap-3 rounded-2xl border border-ink-50 bg-white p-3.5 text-left transition active:scale-[.98]"
+                  className="group flex w-full items-center gap-3 rounded-2xl border border-white/40 glass-strong p-3.5 text-left transition active:scale-[.98]"
                   style={{ boxShadow: '0 1px 2px rgba(26,19,17,.02), 0 8px 24px -18px rgba(26,19,17,.18)' }}
                 >
                   {firstItem?.image ? (
@@ -503,7 +503,7 @@ export default function HomeScreen({
         </div>
 
         <div className="mt-6 px-5 pb-3">
-          <div className="flex items-center justify-center gap-2 rounded-2xl bg-white/60 py-3 text-ink-200">
+          <div className="flex items-center justify-center gap-2 rounded-2xl glass-subtle py-3 text-ink-200">
             <BrandLogo size={20} />
             <span className="text-[11.5px] font-medium uppercase tracking-wider">
               Handcrafted since 2018

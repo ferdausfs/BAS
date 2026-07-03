@@ -499,7 +499,7 @@ export default function CheckoutScreen({ onBack }: Props) {
                 min={getMinDeliveryDate()}
                 value={form.date}
                 onChange={(e) => setForm({ ...form, date: e.target.value })}
-                className="w-full rounded-2xl border border-ink-50 bg-white py-3.5 pl-12 pr-4 text-[14px] font-semibold text-ink outline-none focus:border-coral"
+                className="w-full rounded-2xl border border-white/40 glass-strong py-3.5 pl-12 pr-4 text-[14px] font-semibold text-ink outline-none focus:border-coral"
               />
             </div>
             <p className="mt-1.5 text-[10.5px] text-ink-200">
@@ -670,7 +670,7 @@ export default function CheckoutScreen({ onBack }: Props) {
           </div>
 
           {form.payment !== 'cash' && (
-            <div className="mt-4 rounded-2xl border border-ink/8 bg-cream p-3">
+            <div className="mt-4 rounded-2xl border border-white/40 glass-strong p-3">
               <div className="mb-2 text-[12px] font-bold text-ink">Payment screenshot</div>
               <div className="text-[10.5px] text-ink-200">Upload your bKash/Nagad payment proof so admin can verify the order.</div>
               {paymentScreenshotPreview ? (
@@ -780,7 +780,7 @@ export default function CheckoutScreen({ onBack }: Props) {
           </div>
         </Section>
 
-        <div className="mt-3 flex items-center justify-center gap-2 rounded-2xl bg-cream py-3 text-[11px] text-ink-200">
+        <div className="mt-3 flex items-center justify-center gap-2 rounded-2xl glass-strong py-3 text-[11px] text-ink-200">
           <Shield className="h-3.5 w-3.5" />
           নিরাপদ ও বিশ্বস্ত অর্ডার প্রসেসিং
         </div>

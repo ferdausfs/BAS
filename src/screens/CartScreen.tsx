@@ -81,7 +81,7 @@ export default function CartScreen() {
         <Header title="My cart" onBack={back} />
         <div className="flex flex-1 flex-col items-center justify-center px-8 text-center">
           <div
-            className="flex h-24 w-24 items-center justify-center rounded-3xl bg-white text-ink-200"
+            className="flex h-24 w-24 items-center justify-center rounded-3xl glass-strong text-ink-200"
             style={{ boxShadow: '0 1px 2px rgba(26,19,17,.03), 0 12px 30px -18px rgba(26,19,17,.14)' }}
           >
             <ShoppingCart size={44} strokeWidth={1.5} />
@@ -142,7 +142,7 @@ export default function CartScreen() {
               key={idx}
               className="flex gap-3 rounded-2xl glass-strong p-3 anim-up"
             >
-              <div className="h-24 w-24 flex-shrink-0 overflow-hidden rounded-2xl bg-cream">
+              <div className="h-24 w-24 flex-shrink-0 overflow-hidden rounded-2xl glass-strong">
                 <img
                   loading="lazy"
                   decoding="async"

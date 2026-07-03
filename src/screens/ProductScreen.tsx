@@ -145,7 +145,7 @@ export default function ProductScreen() {
 
   if (!product) {
     return (
-      <div className="flex h-full flex-col items-center justify-center bg-cream px-6 text-center">
+      <div className="flex h-full flex-col items-center justify-center px-6 text-center">
         <div className="flex justify-center text-ink-200 opacity-60">
           <Cake size={48} strokeWidth={1.5} />
         </div>
@@ -228,9 +228,9 @@ export default function ProductScreen() {
   };
 
   return (
-    <div className="relative flex h-full flex-col bg-blush-50">
+    <div className="relative flex h-full flex-col">
       {/* ONE scrollable area: image + all content (parallax scroll) */}
-      <div className="no-scrollbar relative flex-1 overflow-y-auto bg-blush-50 pb-28">
+      <div className="no-scrollbar relative flex-1 overflow-y-auto pb-28">
         {/* Hero image — in normal flow so backdrop-filter on content sheet has real pixels behind it */}
         <div
           ref={heroRef}
@@ -377,7 +377,7 @@ export default function ProductScreen() {
           <p className="mt-4 text-[13.5px] leading-relaxed text-ink-200">{product.description}</p>
 
           {/* Trust row */}
-          <div className="mt-5 flex items-center justify-between rounded-2xl bg-cream px-4 py-3">
+          <div className="mt-5 flex items-center justify-between rounded-2xl glass-strong px-4 py-3">
             <Trust icon={Truck} label="Free delivery" />
             <span className="h-5 w-px bg-ink-50" />
             <Trust icon={Sparkles} label="Freshly baked" />
@@ -386,7 +386,7 @@ export default function ProductScreen() {
           </div>
 
           {settings?.deliveryEstimate && (
-            <div className="mt-3 flex items-center gap-3 rounded-2xl bg-green-50 px-4 py-3">
+            <div className="mt-3 flex items-center gap-3 rounded-2xl glass-strong px-4 py-3">
               <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-green-100">
                 <Clock className="h-[18px] w-[18px] text-green-700" strokeWidth={2} />
               </div>
@@ -409,7 +409,7 @@ export default function ProductScreen() {
                       key={f}
                       onClick={() => setSelectedFlavor(f)}
                       className={`rounded-full border-2 px-4 py-2 text-[12.5px] font-bold transition active:scale-95 ${
-                        active ? 'border-coral bg-coral-50 text-coral' : 'border-ink-50 bg-white text-ink'
+                        active ? 'border-coral bg-coral-50 text-coral' : 'border-white/40 glass-strong text-ink'
                       }`}
                     >
                       {f}
@@ -488,7 +488,7 @@ export default function ProductScreen() {
                   <button
                     key={a.id}
                     onClick={() => setAddons((s) => ({ ...s, [a.id]: !s[a.id] }))}
-                    className={`flex w-full items-center gap-3 rounded-2xl bg-white p-3 text-left transition active:scale-[.99] ${
+                    className={`flex w-full items-center gap-3 rounded-2xl glass-strong p-3 text-left transition active:scale-[.99] ${
                       active ? 'ring-2 ring-coral/40 bg-coral-50' : ''
                     }`}
                     style={{ boxShadow: '0 1px 2px rgba(26,19,17,.02), 0 4px 16px -10px rgba(26,19,17,.18)' }}
@@ -509,7 +509,7 @@ export default function ProductScreen() {
               })}
             </div>
             {addons['message'] && (
-              <div className="mt-3 overflow-hidden rounded-2xl border-2 border-dashed border-ink-100 bg-cream p-3.5">
+              <div className="mt-3 overflow-hidden rounded-2xl border-2 border-dashed border-white/40 glass-strong p-3.5">
                 <textarea
                   maxLength={40}
                   rows={2}
@@ -529,7 +529,7 @@ export default function ProductScreen() {
           {/* Customise CTA */}
           <button
             onClick={() => go({ name: 'customize', productId: product.id })}
-            className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-ink-100 bg-cream py-3.5 text-[13.5px] font-bold text-ink transition active:scale-[.98]"
+            className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-white/40 glass-strong py-3.5 text-[13.5px] font-bold text-ink transition active:scale-[.98]"
           >
             <Sparkles className="h-4 w-4" />
             Fully customize this cake
@@ -562,8 +562,7 @@ export default function ProductScreen() {
 
         {/* Review form */}
         {showReviewForm && (
-          <div className="mb-4 rounded-2xl bg-white p-4 space-y-3"
-            style={{ boxShadow: '0 1px 2px rgba(26,19,17,.02), 0 8px 24px -16px rgba(26,19,17,.16)' }}>
+          <div className="mb-4 rounded-2xl glass-strong p-4 space-y-3">
             {/* Star rating */}
             <div>
               <div className="text-[11px] font-bold text-ink/50 mb-1">Rating</div>
@@ -634,8 +633,7 @@ export default function ProductScreen() {
         {reviews.length > 0 ? (
           <div className="space-y-3">
             {reviews.slice(0, 5).map((r) => (
-              <div key={r.id} className="rounded-2xl bg-white p-4"
-                style={{ boxShadow: '0 1px 2px rgba(26,19,17,.02), 0 4px 12px -8px rgba(26,19,17,.12)' }}>
+              <div key={r.id} className="rounded-2xl glass-strong p-4">
                 <div className="flex items-start gap-3">
                   <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-ink-50 font-bold text-ink text-[13px]">
                     {r.user_name.charAt(0).toUpperCase()}
@@ -706,7 +704,7 @@ export default function ProductScreen() {
       </div>
 
       {/* Sticky bottom CTA */}
-      <div className="absolute right-0 bottom-0 left-0 z-30 border-t border-ink-50/80 bg-white/95 px-5 pt-3 pb-6 backdrop-blur-xl">
+      <div className="absolute right-0 bottom-0 left-0 z-30 border-t border-white/40 glass-strong px-5 pt-3 pb-6">
         <div className="flex items-center gap-3">
           <div>
             <div className="text-[10px] font-bold tracking-wider text-ink-200 uppercase">
