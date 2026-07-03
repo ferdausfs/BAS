@@ -1,3 +1,33 @@
+## Session: 2026-07-03 (user screenshot follow-up — gallery data bug, Checkout Profile GPS, product image lightbox)
+**Agent/Tool:** Claude (Sonnet 5, in-chat, direct repo access via git clone)
+**Feature worked on:** User reported (via screenshots) "Checkout Profile" modal missing GPS button + multi-image swipe still not showing any images. Diagnosed both, fixed both, then added a requested fullscreen image lightbox.
+
+### কী হয়েছে:
+1. **Real root cause of "multi-image swipe never works" found (previous session's fix #1 only fixed the touch-listener race condition, not this):** `src/lib/firestoreMappers.ts` → `mapProductDoc()` never read the `gallery` field from Firestore docs at all, even though `productToDoc()` (save direction) always wrote it correctly. So Admin-uploaded gallery images were persisted fine but never came back down to the frontend — `product.gallery` was always `undefined`, so `galleryImages.length` was always 1 (no dots, no thumbnails, nothing to swipe to). Fixed: added `gallery: Array.isArray(d?.gallery) ? d.gallery : []` to the mapper. Existing products with previously-saved gallery images should now show them without re-uploading.
+2. **GPS button missing in "Checkout Profile" modal:** This is a *separate* modal from the Address Book modal fixed last session — `customerOpen` state, `draftProfile` form, ~`src/screens/ProfileScreen.tsx:648`. Added the same GPS pattern (geolocation + Nominatim reverse-geocode + `BD_DISTRICTS` match) as a new `handleLocateProfile()` writing to `draftProfile` instead of `addrForm`.
+3. **New: fullscreen image lightbox on ProductScreen (user-requested, not a bug fix):** Tapping the hero image now opens a fullscreen dark overlay (`lightboxOpen` state). If the product has a gallery, supports swipe (touch handlers directly on the lightbox image container, no native-listener ref hacks needed since it's not inside a scrollable page), left/right arrow buttons, and dot indicators — same gallery data (`galleryImages`/`activeIndex`/`currentImg`) as the existing hero/thumbnail strip.
+
+### Touched files:
+- `src/lib/firestoreMappers.ts`
+- `src/screens/ProfileScreen.tsx`
+- `src/screens/ProductScreen.tsx`
+
+### Build:
+- ✓ built in 10.00s (gallery mapping + profile GPS) / ✓ built in 17.59s (lightbox)
+
+### Commits:
+- `f756b42` — fix: gallery images never loaded from Firestore (mapProductDoc missing field) + GPS button in Checkout Profile modal
+- `2df8712` — feat: fullscreen image lightbox on ProductScreen — tap to open, swipe/arrows/dots for gallery
+
+### এখনো Pending:
+- None reported as of this entry.
+
+### পরবর্তী Agent এর জন্য নোট:
+- There are now **two separate address-entry forms** with GPS buttons: Address Book modal (`showAddressModal`/`addrForm`/`handleLocateAddress`) and Checkout Profile modal (`customerOpen`/`draftProfile`/`handleLocateProfile`). They're intentionally separate state — don't try to merge them without user request.
+- If any *other* screen reads `product.gallery` and still shows only 1 image after this fix, check whether that specific product actually has gallery URLs saved in Firestore (Admin → product edit → Additional Images) — the mapping bug is fixed, but products with no gallery uploaded will still correctly show only the main image.
+
+---
+
 ## Session: 2026-07-03 (all 3 diagnosed bugs fixed — plan below fully executed)
 **Agent/Tool:** Claude (Sonnet 5, in-chat, direct repo access via git clone)
 **Feature worked on:** Fix #1, #2, #3 from the plan in the entry directly below — all done, build-verified, pushed one at a time per AGENT-WORKFLOW-PROTOCOL.md
