@@ -21,7 +21,7 @@ export default function NotificationsSheet({ open, onClose }: { open: boolean; o
         className="relative max-h-[76%] w-full overflow-hidden rounded-t-[28px] glass-strong anim-up"
         style={{ boxShadow: '0 -20px 60px -20px rgba(26,19,17,.25)' }}
       >
-        <header className="flex items-center justify-between bg-white px-5 py-4">
+        <header className="flex items-center justify-between glass-subtle px-5 py-4">
           <div className="flex items-center gap-2">
             <div className="flex h-9 w-9 items-center justify-center rounded-full bg-ink-50 text-ink-200">
               <Bell className="h-[17px] w-[17px]" />
@@ -63,8 +63,7 @@ export default function NotificationsSheet({ open, onClose }: { open: boolean; o
               {notifications.map((n) => (
                 <article
                   key={n.id}
-                  className="rounded-2xl bg-white p-3"
-                  style={{ boxShadow: '0 1px 2px rgba(26,19,17,.02), 0 4px 16px -12px rgba(26,19,17,.16)' }}
+                  className="rounded-2xl glass-strong p-3"
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1">

@@ -73,11 +73,7 @@ export default function ProductCard({ product, wished, onOpen, onWish, variant =
     return (
       <article
         onClick={onOpen}
-        className="group relative cursor-pointer overflow-hidden rounded-3xl bg-white transition-all duration-200 active:scale-[.97]"
-        style={{
-          border: '1.5px solid rgba(0,0,0,0.055)',
-          boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 8px 24px -10px rgba(0,0,0,0.11)',
-        }}
+        className="group relative cursor-pointer overflow-hidden rounded-3xl glass-strong transition-all duration-200 active:scale-[.97]"
       >
         {/* Image — taller, more immersive photo */}
         <div className="relative aspect-[4/5] overflow-hidden">
@@ -182,11 +178,7 @@ export default function ProductCard({ product, wished, onOpen, onWish, variant =
   return (
     <article
       onClick={onOpen}
-      className="group relative flex w-[170px] flex-shrink-0 cursor-pointer flex-col overflow-hidden rounded-3xl bg-white transition-all duration-200 active:scale-[.97]"
-      style={{
-        border: '1.5px solid rgba(0,0,0,0.055)',
-        boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 8px 24px -10px rgba(0,0,0,0.11)',
-      }}
+      className="group relative flex w-[170px] flex-shrink-0 cursor-pointer flex-col overflow-hidden rounded-3xl glass-strong transition-all duration-200 active:scale-[.97]"
     >
       {/* Image — taller, more immersive photo */}
       <div className="relative aspect-[4/5] overflow-hidden">
