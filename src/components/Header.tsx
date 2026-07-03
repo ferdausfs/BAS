@@ -29,15 +29,7 @@ export default function Header({ onLogoTap, onNotificationsOpen }: Props) {
   }, [cartCount]);
 
   return (
-    <header
-      className="sticky top-0 z-30 flex flex-shrink-0 items-center justify-between px-5 pb-3 pt-4"
-      style={{
-        background: 'rgba(249,249,247,0.92)',
-        backdropFilter: 'saturate(180%) blur(24px)',
-        WebkitBackdropFilter: 'saturate(180%) blur(24px)',
-        borderBottom: '1px solid rgba(28,17,18,0.07)',
-      }}
-    >
+    <header className="sticky top-0 z-30 flex flex-shrink-0 items-center justify-between px-5 pb-3 pt-4 glass-subtle">
       <button
         onClick={onLogoTap ?? (() => setTab('home'))}
         className="flex items-center gap-2.5 transition active:scale-95"
@@ -112,7 +104,7 @@ export default function Header({ onLogoTap, onNotificationsOpen }: Props) {
           {cartCount > 0 && (
             <span
               key={badgeKey}
-              className="absolute -top-1 -right-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-ink px-1 text-[10px] font-bold text-white ring-2 ring-cream anim-pop"
+              className="absolute -top-1 -right-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-ink px-1 text-[10px] font-bold text-white ring-2 ring-[var(--color-cream)] anim-pop"
             >
               {cartCount}
             </span>

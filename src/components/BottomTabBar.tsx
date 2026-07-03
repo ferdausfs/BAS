@@ -19,44 +19,43 @@ export default React.memo(function BottomTabBar() {
         paddingBottom: 'env(safe-area-inset-bottom)',
         transform: 'translateZ(0)',
         willChange: 'transform',
-        background: 'rgba(249,249,247,0.92)',
-        backdropFilter: 'saturate(180%) blur(24px)',
-        WebkitBackdropFilter: 'saturate(180%) blur(24px)',
-        borderTop: '1px solid rgba(28,17,18,0.08)',
       }}
     >
-      <div className="flex items-center justify-around h-[56px] px-2">
-        {tabs.map((t) => {
-          const Icon = t.icon;
-          const active = tab === t.id;
-          return (
-            <button
-              key={t.id}
-              onClick={() => setTab(t.id)}
-              className="flex flex-1 flex-col items-center justify-center h-full transition-all active:scale-90"
-              aria-label={t.label}
-            >
-              <div
-                className="flex flex-col items-center gap-[3px] px-5 py-[6px] rounded-2xl transition-all duration-200"
-                style={active ? {
-                  background: 'rgba(232,82,106,0.10)',
-                } : {}}
+      {/* Floating detached frosted pill */}
+      <div className="mx-4 mb-3 rounded-3xl glass-strong">
+        <div className="flex items-center justify-around h-[52px] px-2">
+          {tabs.map((t) => {
+            const Icon = t.icon;
+            const active = tab === t.id;
+            return (
+              <button
+                key={t.id}
+                onClick={() => setTab(t.id)}
+                className="flex flex-1 flex-col items-center justify-center h-full transition-all active:scale-90"
+                aria-label={t.label}
               >
-                <Icon
-                  className="h-[21px] w-[21px] transition-colors duration-200"
-                  style={{ color: active ? '#E8526A' : '#9A8E8E' }}
-                  strokeWidth={active ? 2.4 : 1.6}
-                />
-                <span
-                  className="text-[10px] font-semibold leading-none transition-colors duration-200"
-                  style={{ color: active ? '#E8526A' : '#9A8E8E' }}
+                <div
+                  className="flex flex-col items-center gap-[3px] px-5 py-[6px] rounded-2xl transition-all duration-200"
+                  style={active ? {
+                    background: 'rgba(232,82,106,0.10)',
+                  } : {}}
                 >
-                  {t.label}
-                </span>
-              </div>
-            </button>
-          );
-        })}
+                  <Icon
+                    className="h-[21px] w-[21px] transition-colors duration-200"
+                    style={{ color: active ? '#E8526A' : '#9A8E8E' }}
+                    strokeWidth={active ? 2.4 : 1.6}
+                  />
+                  <span
+                    className="text-[10px] font-semibold leading-none transition-colors duration-200"
+                    style={{ color: active ? '#E8526A' : '#9A8E8E' }}
+                  >
+                    {t.label}
+                  </span>
+                </div>
+              </button>
+            );
+          })}
+        </div>
       </div>
     </nav>
   );
