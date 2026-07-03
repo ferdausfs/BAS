@@ -31,8 +31,12 @@ export default function ProductScreen() {
   const touchStartX = useRef(0);
   const touchStartY = useRef(0);
   const heroRef = useRef<HTMLDivElement>(null);
+  // Store gallery state in refs so native listeners always have latest values
+  // without being in the dependency array (which would cause hooks-order crash)
+  const galleryRef = useRef<string[]>([]);
+  const activeIndexRef = useRef(0);
 
-  // Native touch listener with passive:false so we can preventDefault on horizontal swipes
+  // Native touch listener — registered once, reads latest values via refs
   useEffect(() => {
     const el = heroRef.current;
     if (!el) return;
@@ -43,29 +47,31 @@ export default function ProductScreen() {
     };
 
     const onMove = (e: TouchEvent) => {
-      if (galleryImages.length <= 1) return;
+      if (galleryRef.current.length <= 1) return;
       const dx = e.touches[0].clientX - touchStartX.current;
       const dy = e.touches[0].clientY - touchStartY.current;
       if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 8) {
-        e.preventDefault(); // block browser scroll on horizontal swipe
+        e.preventDefault();
       }
     };
 
     const onEnd = (e: TouchEvent) => {
-      if (galleryImages.length <= 1) return;
+      const imgs = galleryRef.current;
+      if (imgs.length <= 1) return;
       const dx = e.changedTouches[0].clientX - touchStartX.current;
       const dy = e.changedTouches[0].clientY - touchStartY.current;
       if (Math.abs(dx) > 44 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+        const idx = activeIndexRef.current;
         if (dx < 0) {
-          setActiveImg(galleryImages[Math.min(activeIndex + 1, galleryImages.length - 1)]);
+          setActiveImg(imgs[Math.min(idx + 1, imgs.length - 1)]);
         } else {
-          setActiveImg(galleryImages[Math.max(activeIndex - 1, 0)]);
+          setActiveImg(imgs[Math.max(idx - 1, 0)]);
         }
       }
     };
 
     el.addEventListener('touchstart', onStart, { passive: true });
-    el.addEventListener('touchmove', onMove, { passive: false }); // passive:false = can preventDefault
+    el.addEventListener('touchmove', onMove, { passive: false });
     el.addEventListener('touchend', onEnd, { passive: true });
 
     return () => {
@@ -73,7 +79,7 @@ export default function ProductScreen() {
       el.removeEventListener('touchmove', onMove);
       el.removeEventListener('touchend', onEnd);
     };
-  }, [galleryImages, activeIndex]);
+  }, []); // empty — listeners registered once, read from refs
 
   const handleWish = () => {
     setHeartKey(k => k + 1);
@@ -149,6 +155,9 @@ export default function ProductScreen() {
   const currentImg = activeImg || product.image;
   const galleryImages = [product.image, ...safeArray<string>(product.gallery)];
   const activeIndex = galleryImages.indexOf(currentImg);
+  // Keep refs in sync so native touch listeners always have latest values
+  galleryRef.current = galleryImages;
+  activeIndexRef.current = activeIndex;
 
   // Dominant color extraction for glass-tint (Check 3)
   const dominantColor = useDominantColor(currentImg);
