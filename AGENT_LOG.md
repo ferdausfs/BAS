@@ -527,3 +527,35 @@
 - User communicates in mixed Bengali/English; prefers concise step-by-step Termux commands, one command block at a time, with explicit "✓ built in" confirmation before any push.
 
 ---
+
+---
+
+## Session: 2026-07-03 (Foundation polish by Claude Sonnet 5 — claude.ai) — ✅ DONE
+**Agent/Tool:** Claude (Sonnet 5, claude.ai)
+**Feature worked on:** Foundation glass polish (on top of already-complete Batch 1–4)
+
+### Context:
+- Repo clone করার পরে দেখা গেছে আগের session-এ Batch 1–4 সবই সম্পন্ন ছিল (commits: 9480010 → 001f44d)
+- এই session-এ remaining Foundation gaps পূরণ করা হয়েছে
+
+### কী হয়েছে:
+- `src/index.css` — `glass-subtle` tier add, `glass-strong`+`glass-deep` এ 1px white border + lift shadow
+- `src/components/PhoneFrame.tsx` — mobile wrapper এ `mesh-warm` class (আগে mobile-এ mesh ছিল না)
+- 10টা screen root `bg-cream` → `mesh-warm` (mesh এখন screen content এর পেছনে mobile-এও)
+- Build: ✓ built in 7.78s, zero errors
+
+### Touched files:
+- `src/index.css`, `src/components/PhoneFrame.tsx`, সব screen tsx (root wrapper only)
+
+### Commit:
+- `b195e18` — feat: foundation glass — mesh backdrop mobile + 3-tier glass token system
+
+### এখনো Pending:
+- কিছু নাই — full-app glassmorphism "Bakery Display Case" theme সম্পূর্ণ
+- Visual fine-tuning (blur/opacity) user feedback এর পরে করা যাবে
+
+### পরবর্তী Agent এর জন্য নোট:
+- Glassmorphism project ✅ fully complete — নতুন feature নিয়ে কাজ করো
+- `glass-subtle` = nav/header | `glass-strong` = cards/modals | `glass-deep` = heavy sheets
+- `ProductScreen` bg-blush-50 ইচ্ছাকৃত (hero image backdrop দরকার glass-tint এর জন্য)
+- `glass-dark` = ProductCard price chip — touch করবে না
