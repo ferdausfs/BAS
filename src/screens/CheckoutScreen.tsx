@@ -567,12 +567,12 @@ export default function CheckoutScreen({ onBack }: Props) {
               <div className="text-right text-[10px] text-ink/30">{gift.message.length}/200</div>
               <label className="flex items-center gap-3 cursor-pointer">
                 <input type="checkbox" checked={gift.wrap} onChange={(e) => setGift(g => ({ ...g, wrap: e.target.checked }))}
-                  className="h-4 w-4 rounded accent-coral" />
+                  className="h-4 w-4 rounded accent-brand-500" />
                 <span className="text-[13px] text-ink">Gift wrap <span className="text-coral font-bold">+৳50</span></span>
               </label>
               <label className="flex items-center gap-3 cursor-pointer">
                 <input type="checkbox" checked={gift.hidePrice} onChange={(e) => setGift(g => ({ ...g, hidePrice: e.target.checked }))}
-                  className="h-4 w-4 rounded accent-coral" />
+                  className="h-4 w-4 rounded accent-brand-500" />
                 <span className="text-[13px] text-ink">Hide price from recipient</span>
               </label>
               <div className="space-y-1.5">

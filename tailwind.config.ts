@@ -5,19 +5,23 @@ export default {
   darkMode: 'class',
   theme: {
     extend: {
-      // ── Brand Palette (Food App UI Kit — warm orange-red) ─────────────
+      // ── Brand Palette (Bake Art Style — coral pink + caramel gold) ─────
       colors: {
         brand: {
-          50:  '#FFF3EF',
-          100: '#FFE4D9',
-          200: '#FFCAB3',
-          300: '#FFA07A',
-          400: '#FF7140',
-          500: '#E8472E',   // ← PRIMARY (buttons, active states, icons)
-          600: '#CC3520',
-          700: '#A82A18',
-          800: '#83200F',
-          900: '#5C160A',
+          50:  '#FFF9EC',   // ivory — page/section backgrounds
+          100: '#FFF4F6',   // blush — soft panel backgrounds
+          200: '#FFE4E9',   // blush deeper — gradients, badges
+          300: '#FFB4C2',
+          400: '#F17186',
+          500: '#E8526A',   // ← PRIMARY (buttons, active states, icons)
+          600: '#DC3E58',   // hover/pressed, gradient dark end
+          700: '#C22E47',
+          800: '#8F2135',
+          900: '#5C1522',
+        },
+        gold: {
+          DEFAULT: '#C8944A',  // caramel gold — premium accents, dividers
+          light:   '#E8D3AC',
         },
         accent: {
           DEFAULT: '#2C8C4C',  // green — sale badge, "order again" tag

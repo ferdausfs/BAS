@@ -258,7 +258,7 @@ export default function CategoriesScreen() {
                 step={100}
                 value={priceMax}
                 onChange={(e) => setPriceMax(Number(e.target.value))}
-                className="absolute inset-x-0 top-1/2 h-[5px] w-full -translate-y-1/2 appearance-none bg-transparent accent-coral"
+                className="absolute inset-x-0 top-1/2 h-[5px] w-full -translate-y-1/2 appearance-none bg-transparent accent-brand-500"
               />
             </div>
             <div className="mt-1 flex justify-between text-[11px] text-ink-200">
