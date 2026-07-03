@@ -1,3 +1,33 @@
+## Session: 2026-07-03, 16:18 (Batch 3: Screens — 8 screens root transparent + cards glass)
+**Agent/Tool:** Arena.ai Agent Mode (Claude)
+**Feature worked on:** Full-app glassmorphism — Batch 3 (Screens): 8 screen files — root bg-cream removed, main bg-white cards converted to glass-strong/glass-deep
+
+### কী হয়েছে:
+- **All 8 screens root transparent:** CartScreen, CheckoutScreen, CategoriesScreen, CustomizeScreen, OrdersScreen, SuccessScreen, TrackingScreen, WishlistScreen — root div থেকে `bg-cream` remove করা হয়েছে, এখন PhoneFrame-এর mesh backdrop gradient visible হবে glass panels-এর পেছনে।
+- **Cards glass-ified:** CartScreen (5 cards: delivery nudge, cart items, addons, bill, promo), CheckoutScreen (3 cards: address, gift, summary), CategoriesScreen (filter sheet → glass-deep), CustomizeScreen (3 cards: photo, note, WhatsApp), OrdersScreen (order cards), SuccessScreen (2 cards), TrackingScreen (tracking card + support FAB).
+- **Untouched (by design):** Form inputs, image placeholders, tiny icon buttons, badges, upload areas, loading skeletons, CTA strips, toggle knobs — readability-র জন্য opaque রাখা হয়েছে।
+
+### Touched files:
+- src/screens/CartScreen.tsx (5 glass-strong)
+- src/screens/CheckoutScreen.tsx (3 glass-strong)
+- src/screens/CategoriesScreen.tsx (1 glass-deep)
+- src/screens/CustomizeScreen.tsx (3 glass-strong)
+- src/screens/OrdersScreen.tsx (1 glass-strong)
+- src/screens/SuccessScreen.tsx (2 glass-strong)
+- src/screens/TrackingScreen.tsx (2 glass-strong)
+- src/screens/WishlistScreen.tsx (root only, cards handled by Batch 4)
+
+### Build: ✓ built in 16.52s
+### Commit: 0646865 — feat(glass): screens — 8 screens root transparent + cards glass-strong/glass-deep
+
+### এখনো Pending:
+- Batch 4: Cards/chips — ProductCard price chip polish, cart line items, badges
+
+### পরবর্তী Agent এর জন্য নোট:
+- All screens now have transparent roots — mesh backdrop visible behind content.
+- CartScreen, CheckoutScreen, CustomizeScreen-এ এখনো কিছু bg-white আছে form inputs-এ — এগুলো ইচ্ছাকৃত, opaque রাখা হয়েছে legibility-র জন্য।
+- ProductCard component এখনো Batch 1 log-এ উল্লেখিত bg-white আছে — Batch 4-এ handle হবে।
+- WishlistScreen-এ শুধু root change হয়েছে, ProductCard গুলো Batch 4 এ আসবে।
 ## Session: 2026-07-03, 16:10 (Batch 2: Navigation — floating pill + header glass)
 **Agent/Tool:** Arena.ai Agent Mode (Claude)
 **Feature worked on:** Full-app glassmorphism — Batch 2 (Navigation): BottomTabBar → floating frosted pill + Header → glass-subtle class
