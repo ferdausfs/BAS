@@ -36,7 +36,11 @@ export default function ProductScreen() {
   const galleryRef = useRef<string[]>([]);
   const activeIndexRef = useRef(0);
 
-  // Native touch listener — registered once, reads latest values via refs
+  // Native touch listener — re-attaches once heroRef actually has an element.
+  // product loads async (Firestore); on first render product is null and the
+  // "Cake not found" early-return fires, so heroRef stays null and this effect
+  // used to run once with el === null and never again. Depending on product?.id
+  // makes it re-run on the render where the hero div actually mounts.
   useEffect(() => {
     const el = heroRef.current;
     if (!el) return;
@@ -79,7 +83,7 @@ export default function ProductScreen() {
       el.removeEventListener('touchmove', onMove);
       el.removeEventListener('touchend', onEnd);
     };
-  }, []); // empty — listeners registered once, read from refs
+  }, [product?.id]); // re-run when product loads and hero div actually mounts
 
   const handleWish = () => {
     setHeartKey(k => k + 1);
