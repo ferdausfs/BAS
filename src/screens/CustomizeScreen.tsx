@@ -21,7 +21,7 @@ export default function CustomizeScreen() {
     : `https://wa.me/?text=${waMessage}`;
 
   return (
-    <div className="flex h-full flex-col bg-cream">
+    <div className="flex h-full flex-col">
       <div className="flex items-center gap-3 px-5 pt-4 pb-3">
         <button
           onClick={back}
@@ -34,8 +34,7 @@ export default function CustomizeScreen() {
       </div>
 
       <div className="no-scrollbar flex-1 overflow-y-auto px-5 pb-8">
-        <div className="mt-2 rounded-2xl bg-white p-4 anim-up"
-          style={{ boxShadow: '0 1px 2px rgba(26,19,17,.02), 0 8px 24px -16px rgba(26,19,17,.16)' }}>
+        <div className="mt-2 rounded-2xl glass-strong p-4 anim-up">
           <div className="flex items-center gap-2.5">
             <div className="flex h-9 w-9 items-center justify-center rounded-full bg-coral/10">
               <Sparkles className="h-4 w-4 text-coral" strokeWidth={2} />
@@ -47,8 +46,7 @@ export default function CustomizeScreen() {
           </div>
         </div>
 
-        <div className="mt-3.5 rounded-2xl bg-white p-4 anim-up delay-1"
-          style={{ boxShadow: '0 1px 2px rgba(26,19,17,.02), 0 8px 24px -16px rgba(26,19,17,.16)' }}>
+        <div className="mt-3.5 rounded-2xl glass-strong p-4 anim-up delay-1">
           <div className="mb-3 flex items-center gap-2.5">
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-ink-50 text-ink-200">
               <Camera className="h-4 w-4" strokeWidth={2} />
@@ -87,8 +85,7 @@ export default function CustomizeScreen() {
           )}
         </div>
 
-        <div className="mt-3.5 rounded-2xl bg-white p-4 anim-up delay-2"
-          style={{ boxShadow: '0 1px 2px rgba(26,19,17,.02), 0 8px 24px -16px rgba(26,19,17,.16)' }}>
+        <div className="mt-3.5 rounded-2xl glass-strong p-4 anim-up delay-2">
           <h3 className="mb-2 font-display text-[14px] font-bold text-ink">বিস্তারিত লিখুন</h3>
           <textarea
             value={note}

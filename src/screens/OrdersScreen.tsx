@@ -26,7 +26,7 @@ export default function OrdersScreen() {
   }, [fetchMyOrders, user]);
 
   return (
-    <div className="flex h-full flex-col bg-cream">
+    <div className="flex h-full flex-col">
       <header className="flex-shrink-0 px-5 pt-3 pb-3">
         <div className="section-eyebrow">Activity</div>
         <h1 className="mt-1 font-display text-[28px] font-bold tracking-tight text-ink">
@@ -83,7 +83,7 @@ export default function OrdersScreen() {
               return (
                 <article
                   key={o.id}
-                  className="overflow-hidden rounded-3xl bg-white anim-up"
+                  className="overflow-hidden rounded-3xl glass-strong anim-up"
                   style={{ boxShadow: '0 1px 2px rgba(26,19,17,.02), 0 8px 24px -16px rgba(26,19,17,.16)' }}
                 >
                   {/* Header */}

@@ -99,7 +99,7 @@ export default function CategoriesScreen() {
   }, [products, active, debouncedSearch, sortBy, priceMax]);
 
   return (
-    <div className="flex h-full flex-col bg-cream">
+    <div className="flex h-full flex-col">
       {/* Header */}
       <header className="flex-shrink-0 px-5 pt-3 pb-2">
         <div className="flex items-end justify-between">
@@ -201,7 +201,7 @@ export default function CategoriesScreen() {
           />
           {/* Sheet */}
           <div
-            className="fixed bottom-0 left-0 right-0 z-50 rounded-t-[28px] bg-white px-5 pt-5 pb-10"
+            className="fixed bottom-0 left-0 right-0 z-50 rounded-t-[28px] glass-deep px-5 pt-5 pb-10"
             style={{ boxShadow: '0 -8px 40px -8px rgba(26,19,17,.18)' }}
           >
             <div className="mx-auto mb-3 h-1 w-9 rounded-full bg-ink-100" />

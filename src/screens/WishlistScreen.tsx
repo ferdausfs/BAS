@@ -16,7 +16,7 @@ export default function WishlistScreen({
   const list = safeArray(products).filter((p) => (p.approved ?? true) && wishlist.includes(p.id));
 
   return (
-    <div className="flex h-full flex-col bg-cream">
+    <div className="flex h-full flex-col">
       <header className="flex flex-shrink-0 items-center justify-between px-5 pt-3 pb-3">
         <button
           onClick={back}

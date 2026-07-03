@@ -77,7 +77,7 @@ export default function SuccessScreen() {
         </p>
 
         <div
-          className="mt-5 w-full max-w-[300px] rounded-2xl bg-white anim-rise delay-3"
+          className="mt-5 w-full max-w-[300px] rounded-2xl glass-strong anim-rise delay-3"
           style={{ boxShadow: '0 1px 2px rgba(26,19,17,.02), 0 12px 30px -16px rgba(26,19,17,.18)' }}
         >
           <div className="flex items-center justify-between px-4 py-3">
@@ -108,7 +108,7 @@ export default function SuccessScreen() {
         </div>
 
         {order && (
-          <div className="mt-2.5 w-full max-w-[300px] rounded-2xl bg-white px-4 py-3 anim-rise delay-4 text-left"
+          <div className="mt-2.5 w-full max-w-[300px] rounded-2xl glass-strong px-4 py-3 anim-rise delay-4 text-left"
             style={{ boxShadow: '0 1px 2px rgba(26,19,17,.02), 0 8px 24px -16px rgba(26,19,17,.18)' }}>
             <div className="flex items-center justify-between text-[12px]">
               <span className="text-ink-200">{itemCount}টি আইটেম</span>

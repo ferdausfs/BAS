@@ -68,7 +68,7 @@ export default function TrackingScreen() {
   }, [match?.id, match?.status, fetchMyOrders]);
 
   return (
-    <div className="flex h-full flex-col bg-cream">
+    <div className="flex h-full flex-col">
       <header className="flex flex-shrink-0 items-center justify-between px-5 pt-3 pb-3">
         <button
           onClick={back}
@@ -103,7 +103,7 @@ export default function TrackingScreen() {
           </div>
         ) : match ? (
           <article
-            className="mt-4 overflow-hidden rounded-3xl bg-white"
+            className="mt-4 overflow-hidden rounded-3xl glass-strong"
             style={{ boxShadow: '0 1px 2px rgba(26,19,17,.02), 0 8px 24px -16px rgba(26,19,17,.16)' }}
           >
             <div className="flex items-center justify-between border-b border-ink-50 px-4 py-3.5">
@@ -256,7 +256,7 @@ export default function TrackingScreen() {
           </div>
         ) : (
           <div className="mt-8 text-center">
-            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-white" style={{ boxShadow: '0 1px 2px rgba(26,19,17,.03), 0 12px 30px -18px rgba(26,19,17,.14)' }}>
+            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl glass-strong">
               <Package className="h-10 w-10 text-ink-200" strokeWidth={1.8} />
             </div>
             <p className="mt-3 text-[13px] text-ink-200">

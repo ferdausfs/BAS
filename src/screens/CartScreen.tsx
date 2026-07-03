@@ -77,7 +77,7 @@ export default function CartScreen() {
       clearLoyalty();
     }
     return (
-      <div className="flex h-full flex-col bg-cream">
+      <div className="flex h-full flex-col">
         <Header title="My cart" onBack={back} />
         <div className="flex flex-1 flex-col items-center justify-center px-8 text-center">
           <div
@@ -104,13 +104,13 @@ export default function CartScreen() {
   }
 
   return (
-    <div className="flex h-full flex-col bg-cream">
+    <div className="flex h-full flex-col">
       <Header title="My cart" onBack={back} badge={`${items.length}`} />
 
       <div className="no-scrollbar flex-1 overflow-y-auto px-5 pb-44 pt-1">
         {/* Free delivery nudge */}
         {remaining > 0 ? (
-          <div className="mb-4 rounded-2xl bg-white p-3.5" style={{ boxShadow: '0 1px 2px rgba(26,19,17,.02), 0 8px 24px -16px rgba(26,19,17,.16)' }}>
+          <div className="mb-4 rounded-2xl glass-strong p-3.5">
             <div className="flex items-center gap-2.5">
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-ink-50 text-ink-200">
                 <Truck className="h-4 w-4" strokeWidth={2} />
@@ -140,8 +140,7 @@ export default function CartScreen() {
           {safeArray<CartItem>(items).map((item, idx) => (
             <article
               key={idx}
-              className="flex gap-3 rounded-2xl bg-white p-3 anim-up"
-              style={{ boxShadow: '0 1px 2px rgba(26,19,17,.02), 0 8px 24px -16px rgba(26,19,17,.16)' }}
+              className="flex gap-3 rounded-2xl glass-strong p-3 anim-up"
             >
               <div className="h-24 w-24 flex-shrink-0 overflow-hidden rounded-2xl bg-cream">
                 <img
@@ -223,8 +222,7 @@ export default function CartScreen() {
                       quantity: 1,
                     });
                   }}
-                  className="flex w-[104px] flex-shrink-0 flex-col items-start gap-1.5 rounded-2xl bg-white p-3 text-left transition active:scale-95"
-                  style={{ boxShadow: '0 1px 2px rgba(26,19,17,.02), 0 8px 24px -16px rgba(26,19,17,.16)' }}
+                  className="flex w-[104px] flex-shrink-0 flex-col items-start gap-1.5 rounded-2xl glass-strong p-3 text-left transition active:scale-95"
                 >
                   {(() => {
                     const AddonIcon = ADDON_ICON[addon.category] ?? Sparkles;
@@ -313,8 +311,7 @@ export default function CartScreen() {
         {/* Promo */}
         <div className="mt-4">
           <div
-            className="flex items-center gap-2.5 rounded-2xl border border-dashed border-ink-100 bg-white px-3.5 py-3"
-            style={{ boxShadow: '0 1px 2px rgba(26,19,17,.02), 0 8px 24px -16px rgba(26,19,17,.16)' }}
+            className="flex items-center gap-2.5 rounded-2xl border border-dashed border-ink-100 glass-strong px-3.5 py-3"
           >
             <Tag className="h-4 w-4 text-ink-200" />
             <input
@@ -369,8 +366,7 @@ export default function CartScreen() {
 
         {/* Bill */}
         <section
-          className="mt-4 overflow-hidden rounded-2xl bg-white"
-          style={{ boxShadow: '0 1px 2px rgba(26,19,17,.02), 0 8px 24px -16px rgba(26,19,17,.16)' }}
+          className="mt-4 overflow-hidden rounded-2xl glass-strong"
         >
           <div className="px-4 pt-4 pb-2">
             <div className="text-[10px] font-bold tracking-wider text-ink-200 uppercase">

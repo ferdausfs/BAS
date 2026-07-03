@@ -347,7 +347,7 @@ export default function CheckoutScreen({ onBack }: Props) {
 
   if (items.length === 0) {
     return (
-      <div className="flex h-full flex-col bg-cream">
+      <div className="flex h-full flex-col">
         <Header title="চেকআউট" onBack={handleBack} />
         <div className="flex flex-1 flex-col items-center justify-center px-8 text-center">
           <div className="flex justify-center text-ink-200 opacity-60">
@@ -373,7 +373,7 @@ export default function CheckoutScreen({ onBack }: Props) {
   }
 
   return (
-    <div className="flex h-full flex-col bg-cream">
+    <div className="flex h-full flex-col">
       <Header title="চেকআউট" onBack={handleBack} />
 
       <div className="no-scrollbar flex-1 overflow-y-auto px-5 pb-32 pt-1">
@@ -531,7 +531,7 @@ export default function CheckoutScreen({ onBack }: Props) {
         {/* Gift Mode */}
         <section className="space-y-3">
           <div
-            className="flex items-center justify-between rounded-2xl bg-white px-4 py-3.5 cursor-pointer"
+            className="flex items-center justify-between rounded-2xl glass-strong px-4 py-3.5 cursor-pointer"
             style={{ boxShadow: '0 1px 2px rgba(26,19,17,.02), 0 4px 12px -8px rgba(26,19,17,.12)' }}
             onClick={() => setGiftMode(!giftMode)}
           >
@@ -548,8 +548,7 @@ export default function CheckoutScreen({ onBack }: Props) {
           </div>
 
           {giftMode && (
-            <div className="space-y-3 rounded-2xl bg-white px-4 py-4"
-              style={{ boxShadow: '0 1px 2px rgba(26,19,17,.02), 0 4px 12px -8px rgba(26,19,17,.12)' }}>
+            <div className="space-y-3 rounded-2xl glass-strong px-4 py-4">
               <div className="space-y-1.5">
                 <label htmlFor="gift-message" className="text-[11px] font-bold tracking-wider text-ink-200 uppercase">
                   গিফট মেসেজ (ঐচ্ছিক)
@@ -860,8 +859,7 @@ function Section({
 }) {
   return (
     <section
-      className={`mt-3 overflow-hidden rounded-2xl bg-white ${className}`}
-      style={{ boxShadow: '0 1px 2px rgba(26,19,17,.02), 0 8px 24px -16px rgba(26,19,17,.16)' }}
+      className={`mt-3 overflow-hidden rounded-2xl glass-strong ${className}`}
     >
       <div className="flex items-center gap-2.5 border-b border-ink-50 px-4 py-3">
         {Icon && (
