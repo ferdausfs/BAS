@@ -1,5 +1,36 @@
 # Agent Log — BAS (Bake Art Style 2)
 
+## Session: 2026-07-03 (Repo cleanup + brand color fix)
+**Agent/Tool:** Claude (Sonnet 5, in-chat, direct repo access via git clone)
+**Feature worked on:** Repo hygiene cleanup + brand identity color fix
+
+### কী হয়েছে:
+1. Removed nested `BAS/BAS/` duplicate copy (64MB, stale — old ZIP apply mistake)
+2. Removed committed binary ZIP, dead scripts (`fix.js`, `fix-cart.js`, `fix-merge.js`), leftover Supabase-era SQL files + `src/lib/supabase.ts` (0 references, app fully on Firebase), `bas2-firebase-migration/` staging folder
+3. Added `.env` to `.gitignore`
+4. Found `tailwind.config.ts` had a mismatched orange "food app" brand palette (`#E8472E`) leaking onto `HomeHeader.tsx` (location pin + notification badge) while the rest of the app uses coral-pink (`#E8526A`) — replaced with the app's real coral-pink identity + added `gold` token for caramel accents
+5. Fixed `accent-coral` on checkboxes/slider (CheckoutScreen, CategoriesScreen) — "coral" wasn't a real defined color, so accent styling was silently falling back to browser default; now uses `accent-brand-500`
+
+### Touched files:
+- 258 files removed (cleanup)
+- `tailwind.config.ts`, `src/screens/CheckoutScreen.tsx`, `src/screens/CategoriesScreen.tsx`
+
+### Build:
+- ✓ built in 18.07s (cleanup) / ✓ built in 17.70s (color fix)
+
+### Commits:
+- `c2a451b` — chore: repo cleanup
+- `c2c3a0b` — fix: replace mismatched orange brand palette with actual coral-pink identity
+
+### পরবর্তী Agent এর জন্য নোট:
+- Still pending: ~10 hardcoded pink hex values scattered across `ProductCard.tsx`, `SuccessScreen.tsx`, `HomeScreen.tsx`, `WishlistScreen.tsx`, `LocationGate.tsx` need consolidating to the same brand token values for exact shade consistency.
+- `.font-brand` (Great Vibes signature script) used in only 5/33 files — core screens like Product, Cart, Checkout, Profile don't use it. Next pass: apply consistently for premium feel.
+- Do NOT touch `#d32f2f`/`#f57c00`/`#f5f5f5` (DebugOverlay/ErrorBoundary — dev-only) or `#FEF0E6`/`#EC6608` (Nagad) / `#FCE8F1`/`#E2136E` (bKash) — those are intentional partner/semantic colors, not brand.
+
+---
+
+# Agent Log — BAS (Bake Art Style 2)
+
 ## Session: 2026-07-02 (glass-tint fix — real glass instead of solid color repaint)
 **Agent/Tool:** Claude (Sonnet 5, in-chat, direct repo access via git clone)
 **Feature worked on:** FIX pass — previous session's glass-tint (Check 3, dominant color) was reported by user as "background changes হয়ে যাচ্ছে, glassy feel না" — regression fix on that same feature.
