@@ -172,30 +172,47 @@ export default function ProductScreen() {
     <div className="relative flex h-full flex-col bg-blush-50">
       {/* ONE scrollable area: image + all content (parallax scroll) */}
       <div className="no-scrollbar relative flex-1 overflow-y-auto bg-blush-50 pb-28">
-        {/* Hero image — scrolls up naturally as user scrolls down */}
+        {/* Hero image — in normal flow so backdrop-filter on content sheet has real pixels behind it */}
         <div
-          className="relative w-full aspect-[4/3] bg-blush-100"
+          className="relative w-full bg-blush-100 overflow-hidden"
+          style={{
+            aspectRatio: '4/3',
+            touchAction: galleryImages.length > 1 ? 'pan-y' : 'auto',
+          }}
           onTouchStart={(e) => {
             if (galleryImages.length <= 1) return;
             touchStartX.current = e.touches[0].clientX;
             touchStartY.current = e.touches[0].clientY;
           }}
+          onTouchMove={(e) => {
+            if (galleryImages.length <= 1) return;
+            const dx = e.touches[0].clientX - touchStartX.current;
+            const dy = e.touches[0].clientY - touchStartY.current;
+            if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 8) {
+              e.stopPropagation();
+            }
+          }}
           onTouchEnd={(e) => {
             if (galleryImages.length <= 1) return;
             const deltaX = e.changedTouches[0].clientX - touchStartX.current;
             const deltaY = e.changedTouches[0].clientY - touchStartY.current;
-            if (Math.abs(deltaX) > 48 && Math.abs(deltaX) > Math.abs(deltaY)) {
+            if (Math.abs(deltaX) > 44 && Math.abs(deltaX) > Math.abs(deltaY) * 1.5) {
               if (deltaX < 0) {
-                // swipe left → next image
                 setActiveImg(galleryImages[Math.min(activeIndex + 1, galleryImages.length - 1)]);
               } else {
-                // swipe right → previous image
                 setActiveImg(galleryImages[Math.max(activeIndex - 1, 0)]);
               }
             }
           }}
         >
-          <img loading="lazy" decoding="async" src={currentImg} alt={product.name} className="absolute inset-0 h-full w-full object-cover" />
+          <img
+            loading="lazy"
+            decoding="async"
+            src={currentImg}
+            alt={product.name}
+            className="h-full w-full object-cover select-none"
+            style={{ display: 'block', pointerEvents: 'none' }}
+          />
 
           {/* Soft top fade for control legibility */}
           <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-blush-100/85 to-transparent" />
