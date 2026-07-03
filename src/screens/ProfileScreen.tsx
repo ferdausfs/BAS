@@ -3,7 +3,7 @@ import {
   Heart, MapPin, CreditCard, Bell, HelpCircle, Settings, LogOut,
   ChevronRight, Star, Sparkles, LogIn, X, Save, Check, User, AlertTriangle,
   Cake, Gift, Wallet as WalletIcon,
-  Copy, Share2
+  Copy, Share2, Navigation, Loader2
 } from 'lucide-react';
 import { useUI, useUser, useOrders, useCart, useAuthStore, useWallet, getReferralCode, claimReferralRewards, WALLET_REFERRAL_BONUS } from '../lib/store';
 import { useProducts } from '../hooks/useProducts';
@@ -150,6 +150,8 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
   const [showAddressModal, setShowAddressModal] = useState(false);
   const [editingAddress, setEditingAddress] = useState<SavedAddress | null>(null);
   const [addrForm, setAddrForm] = useState({ name: '', address: '', district: '', phone: '' });
+  const [addrLocating, setAddrLocating] = useState(false);
+  const [addrLocateError, setAddrLocateError] = useState('');
 
   const [specialDates, setSpecialDates] = useState<SpecialDate[]>(() => loadSpecialDates(user?.id));
   const [showDatesModal, setShowDatesModal] = useState(false);
@@ -282,6 +284,51 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
     setCustomerOpen(false);
   }, [draftProfile, user]);
 
+
+  const handleLocateAddress = async () => {
+    setAddrLocating(true);
+    setAddrLocateError('');
+    try {
+      if (!navigator.geolocation) {
+        throw new Error('জিপিএস সমর্থিত নয়');
+      }
+      const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 10000 });
+      });
+      const { latitude: lat, longitude: lng } = pos.coords;
+      const r = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`);
+      if (!r.ok) {
+        throw new Error('সার্ভার থেকে এড্রেস পাওয়া যায়নি');
+      }
+      const data = await r.json();
+      const city =
+        data.address?.city ||
+        data.address?.town ||
+        data.address?.district ||
+        data.address?.county ||
+        data.address?.state_district ||
+        '';
+      const addressText = data.display_name || city || '';
+
+      setAddrForm((prev) => {
+        const next = { ...prev };
+        next.address = addressText;
+        const detectedCity = (city || addressText).toLowerCase();
+        const matchedDistrict = BD_DISTRICTS.find(
+          (d) => detectedCity.includes(d.toLowerCase()) || addressText.toLowerCase().includes(d.toLowerCase())
+        );
+        if (matchedDistrict) {
+          next.district = matchedDistrict;
+        }
+        return next;
+      });
+    } catch (e: unknown) {
+      console.warn('Geolocation failed:', e);
+      setAddrLocateError('লোকেশন শনাক্ত করা যায়নি, অনুগ্রহ করে ম্যানুয়ালি লিখুন।');
+    } finally {
+      setAddrLocating(false);
+    }
+  };
 
   const handleLogoTap = () => {
     setLogoTapCount((count) => {
@@ -727,7 +774,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
         <div className="fixed inset-0 z-[80] flex flex-col bg-black/40 backdrop-blur-sm" onClick={() => !editingAddress && setShowAddressModal(false)}>
           <div className="mt-auto w-full rounded-t-3xl glass-strong p-5 pb-8" onClick={(e) => e.stopPropagation()}>
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="font-display text-[17px] font-bold text-ink">Address book</h2>
+              <h2 className="font-display text-[17px] font-bold text-ink">ঠিকানার তালিকা</h2>
               <button onClick={() => setShowAddressModal(false)} className="h-8 w-8 rounded-full bg-ink/5 flex items-center justify-center">
                 <X className="h-4 w-4" />
               </button>
@@ -737,7 +784,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
               <>
                 <div className="space-y-2 max-h-64 overflow-y-auto">
                   {addresses.length === 0 && (
-                    <div className="py-6 text-center text-[13px] text-ink/40">No saved addresses yet</div>
+                    <div className="py-6 text-center text-[13px] text-ink/40">এখনো কোনো ঠিকানা সংরক্ষণ করা হয়নি</div>
                   )}
                   {addresses.map((addr) => (
                     <div key={addr.id} className="flex items-center gap-3 rounded-2xl bg-white p-3"
@@ -745,7 +792,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
                           <span className="text-[12px] font-bold text-ink">{addr.name}</span>
-                          {addr.isDefault && <span className="rounded-full bg-coral px-2 py-0.5 text-[9px] font-bold text-white">Default</span>}
+                          {addr.isDefault && <span className="rounded-full bg-coral px-2 py-0.5 text-[9px] font-bold text-white">ডিফল্ট</span>}
                         </div>
                         <div className="text-[11px] text-ink/50 mt-0.5">{addr.address}, {addr.district}</div>
                         <div className="text-[11px] text-ink/40">{addr.phone}</div>
@@ -753,10 +800,10 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
                       <div className="flex gap-1">
                         {!addr.isDefault && (
                           <button onClick={() => setAddresses(prev => prev.map(a => ({ ...a, isDefault: a.id === addr.id })))}
-                            className="rounded-lg bg-ink/5 px-2 py-1 text-[10px] font-bold text-ink/60">Set default</button>
+                            className="rounded-lg bg-ink/5 px-2 py-1 text-[10px] font-bold text-ink/60">ডিফল্ট করুন</button>
                         )}
-                        <button onClick={() => { setAddrForm({ name: addr.name, address: addr.address, district: addr.district, phone: addr.phone }); setEditingAddress(addr); }}
-                          className="rounded-lg bg-coral/10 px-2 py-1 text-[10px] font-bold text-coral">Edit</button>
+                        <button onClick={() => { setAddrForm({ name: addr.name, address: addr.address, district: addr.district, phone: addr.phone }); setAddrLocateError(''); setEditingAddress(addr); }}
+                          className="rounded-lg bg-coral/10 px-2 py-1 text-[10px] font-bold text-coral">এডিট</button>
                         <button onClick={() => setAddresses(prev => prev.filter(a => a.id !== addr.id))}
                           className="rounded-lg bg-red-50 px-2 py-1 text-[10px] font-bold text-red-400">×</button>
                       </div>
@@ -765,32 +812,83 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
                 </div>
                 {addresses.length < 5 && (
                   <button
-                    onClick={() => { setAddrForm({ name: '', address: '', district: '', phone: '' }); setEditingAddress({ id: `addr-${Date.now()}`, name: '', address: '', district: '', phone: '', isDefault: addresses.length === 0 }); }}
+                    onClick={() => { setAddrForm({ name: '', address: '', district: '', phone: '' }); setAddrLocateError(''); setEditingAddress({ id: `addr-${Date.now()}`, name: '', address: '', district: '', phone: '', isDefault: addresses.length === 0 }); }}
                     className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl bg-coral py-3 text-[13px] font-bold text-white"
                   >
-                    + Add New Address
+                    + নতুন ঠিকানা যোগ করুন
                   </button>
                 )}
               </>
             ) : (
               <div className="space-y-3">
-                <h3 className="text-[14px] font-bold text-ink">{addresses.find(a => a.id === editingAddress.id) ? 'Edit Address' : 'New Address'}</h3>
-                {[
-                  { key: 'name', label: 'Label (e.g. Home, Office)', placeholder: 'Home' },
-                  { key: 'address', label: 'Full Address', placeholder: 'House 5, Road 3, Comilla' },
-                  { key: 'district', label: 'District', placeholder: 'Comilla' },
-                  { key: 'phone', label: 'Phone', placeholder: '01700000000' },
-                ].map((f) => (
-                  <div key={f.key}>
-                    <label className="text-[10px] font-bold text-ink/50 uppercase">{f.label}</label>
-                    <input
-                      value={addrForm[f.key as keyof typeof addrForm]}
-                      onChange={(e) => setAddrForm(prev => ({ ...prev, [f.key]: e.target.value }))}
-                      placeholder={f.placeholder}
-                      className="mt-1 w-full rounded-xl border border-ink/10 bg-cream px-3 py-2.5 text-[13px] text-ink focus:border-coral focus:outline-none"
-                    />
-                  </div>
-                ))}
+                <h3 className="text-[14px] font-bold text-ink">{addresses.find(a => a.id === editingAddress.id) ? 'ঠিকানা এডিট করুন' : 'নতুন ঠিকানা'}</h3>
+
+                <div>
+                  <label className="text-[10px] font-bold text-ink/50 uppercase">লেবেল (যেমন: বাসা, অফিস)</label>
+                  <input
+                    value={addrForm.name}
+                    onChange={(e) => setAddrForm(prev => ({ ...prev, name: e.target.value }))}
+                    placeholder="বাসা"
+                    className="mt-1 w-full rounded-xl border border-ink-50 bg-white px-3 py-2.5 text-[13px] font-medium text-ink outline-none focus:border-coral focus:ring-2 focus:ring-coral/15"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1.5 pt-0.5">
+                  <button
+                    type="button"
+                    onClick={handleLocateAddress}
+                    disabled={addrLocating}
+                    className="flex items-center justify-center gap-1.5 self-start rounded-full bg-ink-50 px-3.5 py-1.5 text-[11px] font-bold text-ink transition hover:bg-ink-100 active:scale-95 disabled:opacity-50"
+                  >
+                    {addrLocating ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : (
+                      <Navigation className="h-3 w-3" />
+                    )}
+                    {addrLocating ? 'লোকেশন খোঁজা হচ্ছে...' : 'বর্তমান অবস্থান ব্যবহার করুন'}
+                  </button>
+                  {addrLocateError && (
+                    <span className="text-[11px] text-red-500 font-semibold px-1">{addrLocateError}</span>
+                  )}
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-bold text-ink/50 uppercase">সম্পূর্ণ ঠিকানা</label>
+                  <textarea
+                    value={addrForm.address}
+                    onChange={(e) => setAddrForm(prev => ({ ...prev, address: e.target.value }))}
+                    placeholder="বাসা ৫, রোড ৩, কুমিল্লা"
+                    rows={2}
+                    className="mt-1 w-full rounded-xl border border-ink-50 bg-white px-3 py-2.5 text-[13px] font-medium text-ink outline-none focus:border-coral focus:ring-2 focus:ring-coral/15 resize-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-bold text-ink/50 uppercase">জেলা</label>
+                  <select
+                    value={addrForm.district}
+                    onChange={(e) => setAddrForm(prev => ({ ...prev, district: e.target.value }))}
+                    className="mt-1 w-full rounded-xl border border-ink-50 bg-white px-3 py-2.5 text-[13px] font-medium text-ink outline-none focus:border-coral focus:ring-2 focus:ring-coral/15"
+                  >
+                    <option value="">জেলা বাছাই করুন</option>
+                    {BD_DISTRICTS.map((d) => (
+                      <option key={d} value={d}>{d}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-bold text-ink/50 uppercase">মোবাইল নম্বর</label>
+                  <input
+                    type="tel"
+                    inputMode="numeric"
+                    value={addrForm.phone}
+                    onChange={(e) => setAddrForm(prev => ({ ...prev, phone: e.target.value }))}
+                    placeholder="01700000000"
+                    className="mt-1 w-full rounded-xl border border-ink-50 bg-white px-3 py-2.5 text-[13px] font-medium text-ink outline-none focus:border-coral focus:ring-2 focus:ring-coral/15"
+                  />
+                </div>
+
                 <div className="flex gap-2">
                   <button
                     onClick={() => {
@@ -803,9 +901,9 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
                       setEditingAddress(null);
                     }}
                     className="flex-1 rounded-xl bg-coral py-2.5 text-[13px] font-bold text-white"
-                  >Save</button>
-                  <button onClick={() => setEditingAddress(null)}
-                    className="flex-1 rounded-xl bg-ink/5 py-2.5 text-[13px] font-bold text-ink/60">Cancel</button>
+                  >সেভ করুন</button>
+                  <button onClick={() => { setAddrLocateError(''); setEditingAddress(null); }}
+                    className="flex-1 rounded-xl bg-ink/5 py-2.5 text-[13px] font-bold text-ink/60">বাতিল</button>
                 </div>
               </div>
             )}
