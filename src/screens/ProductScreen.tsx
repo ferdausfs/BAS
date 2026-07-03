@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import type { CSSProperties } from 'react';
-import { ArrowLeft, Heart, Star, ShoppingBag, Check, Share2, Truck, Sparkles, Shield, Cake, Pencil, CheckCircle2, Camera, X, AlertTriangle, Bell, Eye, Clock } from 'lucide-react';
+import { ArrowLeft, Heart, Star, ShoppingBag, Check, Share2, Truck, Sparkles, Shield, Cake, Pencil, CheckCircle2, Camera, X, AlertTriangle, Bell, Eye, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useUI, formatINR, useCart, useUser, useAuthStore, useSettingsStore } from '../lib/store';
 import { useProducts } from '../hooks/useProducts';
 import { useReviews } from '../hooks/useReviews';
@@ -26,6 +26,8 @@ export default function ProductScreen() {
   const product = view.name === 'product' ? typedProducts.find((p) => p.id === view.productId) : null;
   const [activeImg, setActiveImg] = useState<string | null>(null);
   const [heartKey, setHeartKey] = useState(0);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const lbTouchStart = useRef({ x: 0, y: 0 });
 
   // Swipe gesture refs
   const touchStartX = useRef(0);
@@ -232,6 +234,7 @@ export default function ProductScreen() {
         {/* Hero image — in normal flow so backdrop-filter on content sheet has real pixels behind it */}
         <div
           ref={heroRef}
+          onClick={() => setLightboxOpen(true)}
           className="relative w-full bg-blush-100 overflow-hidden"
           style={{ aspectRatio: '4/3' }}
         >
@@ -752,6 +755,81 @@ export default function ProductScreen() {
           )}
         </div>
       </div>
+
+      {/* Fullscreen image lightbox — tap hero image to open, swipe/arrows/dots for gallery */}
+      {lightboxOpen && (
+        <div
+          className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-black/95 backdrop-blur-sm"
+          onClick={() => setLightboxOpen(false)}
+        >
+          <button
+            onClick={() => setLightboxOpen(false)}
+            className="absolute top-5 right-5 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white active:scale-90"
+            aria-label="Close"
+          >
+            <X className="h-5 w-5" strokeWidth={2.2} />
+          </button>
+
+          <div
+            className="relative w-full max-w-md px-4"
+            onClick={(e) => e.stopPropagation()}
+            onTouchStart={(e) => {
+              lbTouchStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+            }}
+            onTouchEnd={(e) => {
+              const dx = e.changedTouches[0].clientX - lbTouchStart.current.x;
+              const dy = e.changedTouches[0].clientY - lbTouchStart.current.y;
+              if (Math.abs(dx) > 44 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+                if (dx < 0 && activeIndex < galleryImages.length - 1) {
+                  setActiveImg(galleryImages[activeIndex + 1]);
+                } else if (dx > 0 && activeIndex > 0) {
+                  setActiveImg(galleryImages[activeIndex - 1]);
+                }
+              }
+            }}
+          >
+            <img
+              src={currentImg}
+              alt={product.name}
+              className="w-full max-h-[70vh] rounded-2xl object-contain select-none"
+            />
+
+            {galleryImages.length > 1 && activeIndex > 0 && (
+              <button
+                onClick={() => setActiveImg(galleryImages[activeIndex - 1])}
+                className="absolute left-1 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/15 text-white active:scale-90"
+                aria-label="Previous image"
+              >
+                <ChevronLeft className="h-5 w-5" strokeWidth={2.4} />
+              </button>
+            )}
+            {galleryImages.length > 1 && activeIndex < galleryImages.length - 1 && (
+              <button
+                onClick={() => setActiveImg(galleryImages[activeIndex + 1])}
+                className="absolute right-1 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/15 text-white active:scale-90"
+                aria-label="Next image"
+              >
+                <ChevronRight className="h-5 w-5" strokeWidth={2.4} />
+              </button>
+            )}
+          </div>
+
+          {galleryImages.length > 1 && (
+            <div className="mt-4 flex gap-1.5">
+              {galleryImages.map((url, i) => (
+                <button
+                  key={i}
+                  onClick={(e) => { e.stopPropagation(); setActiveImg(url); }}
+                  className={`h-1.5 rounded-full transition-all ${
+                    i === activeIndex ? 'w-5 bg-white' : 'w-1.5 bg-white/40'
+                  }`}
+                  aria-label={`Image ${i + 1}`}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
