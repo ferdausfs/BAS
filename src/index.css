@@ -175,18 +175,43 @@ button { -webkit-tap-highlight-color: transparent; }
     0 20px 48px -20px rgba(0,0,0,0.13);
 }
 
-/* ===== Glass ===== */
-.glass {
+/* ===== Glass — 3-tier system =====
+ *
+ * Tier 1: .glass / .glass-subtle — headers, nav bars, chips
+ *   Most opaque (82%), least blur (20px). Light border + soft lift.
+ *
+ * Tier 2: .glass-strong — cards, modals, panels
+ *   More transparent (68%), more blur (28px). Pronounced soft shadow.
+ *
+ * Tier 3: .glass-deep — bottom sheets, heavy overlays
+ *   Most opaque for legibility (82%), medium blur (24px).
+ *
+ * Variants (unchanged): .glass-dark, .glass-tint
+ */
+
+.glass,
+.glass-subtle {
   background: rgba(255,255,255,0.82);
   backdrop-filter: saturate(180%) blur(20px);
   -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border: 1px solid rgba(255,255,255,0.40);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
 }
 
 .glass-strong {
   background: rgba(255,255,255,0.68);
   backdrop-filter: saturate(200%) blur(28px);
   -webkit-backdrop-filter: saturate(200%) blur(28px);
-  border: 1px solid rgba(255,255,255,0.65);
+  border: 1px solid rgba(255,255,255,0.40);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+}
+
+.glass-deep {
+  background: rgba(255,255,255,0.82);
+  backdrop-filter: saturate(200%) blur(24px);
+  -webkit-backdrop-filter: saturate(200%) blur(24px);
+  border: 1px solid rgba(255,255,255,0.45);
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
 }
 
 .glass-dark {

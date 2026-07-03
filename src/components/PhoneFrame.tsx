@@ -43,6 +43,8 @@ export default function PhoneFrame({ children, onLogoTap }: Props) {
 
       {/* Mobile / native */}
       <div className="relative h-[100dvh] overflow-hidden md:hidden">
+        {/* Persistent mesh gradient backdrop — so glass panels blur the blush gradient, not flat cream */}
+        <div className="absolute inset-0 mesh-warm pointer-events-none" />
         <div className="absolute inset-0 flex flex-col overflow-hidden">{children}</div>
       </div>
     </div>
