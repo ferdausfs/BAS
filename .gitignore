@@ -11,3 +11,4 @@ dist
 .env.production
 .env.production
 
+.env
