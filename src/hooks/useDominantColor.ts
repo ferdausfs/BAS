@@ -1,24 +1,14 @@
 import { useEffect, useState } from 'react';
 
-/**
- * Extracts the dominant color from an image URL using canvas downscale.
- * Returns a CSS color string (lightened/pastel) for use as --tint variable.
- * Results are cached by URL to avoid redundant canvas work.
- */
-
 const cache = new Map<string, string>();
-
-const FALLBACK_TINT = 'rgba(255,244,246,0.55)'; // neutral blush tint
+const FALLBACK_TINT = 'rgba(255,244,246,0.55)';
 
 function lightenToPastel(r: number, g: number, b: number): string {
-  // Mix with white to create a pastel, then adjust for warmth.
-  // Kept close to white so the extracted color reads as a subtle glass
-  // accent rather than a per-photo background repaint.
-  const mix = 0.88; // how much white to mix in
+  const mix = 0.82;
   const lr = Math.round(r + (255 - r) * mix);
   const lg = Math.round(g + (255 - g) * mix);
   const lb = Math.round(b + (255 - b) * mix);
-  return `rgba(${lr},${lg},${lb},0.55)`;
+  return `rgba(${lr},${lg},${lb},0.60)`;
 }
 
 function extractDominant(url: string): Promise<string> {
@@ -29,6 +19,8 @@ function extractDominant(url: string): Promise<string> {
     }
 
     const img = new Image();
+    // CRITICAL: crossOrigin must be set BEFORE src to avoid CORS cache poisoning.
+    // If src is set first, browser caches without CORS headers and getImageData throws.
     img.crossOrigin = 'anonymous';
     img.decoding = 'async';
 
@@ -39,16 +31,13 @@ function extractDominant(url: string): Promise<string> {
         canvas.width = size;
         canvas.height = size;
         const ctx = canvas.getContext('2d', { willReadFrequently: true });
-        if (!ctx) {
-          resolve(FALLBACK_TINT);
-          return;
-        }
+        if (!ctx) { resolve(FALLBACK_TINT); return; }
+
         ctx.drawImage(img, 0, 0, size, size);
         const data = ctx.getImageData(0, 0, size, size).data;
 
         let totalR = 0, totalG = 0, totalB = 0, count = 0;
         for (let i = 0; i < data.length; i += 4) {
-          // Skip very transparent pixels (possible padding)
           if (data[i + 3] < 128) continue;
           totalR += data[i];
           totalG += data[i + 1];
@@ -56,10 +45,7 @@ function extractDominant(url: string): Promise<string> {
           count++;
         }
 
-        if (count === 0) {
-          resolve(FALLBACK_TINT);
-          return;
-        }
+        if (count === 0) { resolve(FALLBACK_TINT); return; }
 
         const avgR = Math.round(totalR / count);
         const avgG = Math.round(totalG / count);
@@ -68,13 +54,16 @@ function extractDominant(url: string): Promise<string> {
         cache.set(url, pastel);
         resolve(pastel);
       } catch {
-        // getImageData can throw on tainted canvas
         resolve(FALLBACK_TINT);
       }
     };
 
     img.onerror = () => resolve(FALLBACK_TINT);
-    img.src = url;
+
+    // Add cache-busting param so browser re-fetches with CORS headers
+    // if the image was previously cached without them.
+    const sep = url.includes('?') ? '&' : '?';
+    img.src = `${url}${sep}_cors=1`;
   });
 }
 
@@ -85,22 +74,13 @@ export function useDominantColor(imageUrl: string | null | undefined): string {
   });
 
   useEffect(() => {
-    if (!imageUrl) {
-      setColor(FALLBACK_TINT);
-      return;
-    }
-
-    // If already cached, use immediately
-    if (cache.has(imageUrl)) {
-      setColor(cache.get(imageUrl)!);
-      return;
-    }
+    if (!imageUrl) { setColor(FALLBACK_TINT); return; }
+    if (cache.has(imageUrl)) { setColor(cache.get(imageUrl)!); return; }
 
     let cancelled = false;
     extractDominant(imageUrl).then((c) => {
       if (!cancelled) setColor(c);
     });
-
     return () => { cancelled = true; };
   }, [imageUrl]);
 

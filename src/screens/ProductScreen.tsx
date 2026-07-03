@@ -27,9 +27,53 @@ export default function ProductScreen() {
   const [activeImg, setActiveImg] = useState<string | null>(null);
   const [heartKey, setHeartKey] = useState(0);
 
-  // Swipe gesture refs (not state — avoids re-renders)
+  // Swipe gesture refs
   const touchStartX = useRef(0);
   const touchStartY = useRef(0);
+  const heroRef = useRef<HTMLDivElement>(null);
+
+  // Native touch listener with passive:false so we can preventDefault on horizontal swipes
+  useEffect(() => {
+    const el = heroRef.current;
+    if (!el) return;
+
+    const onStart = (e: TouchEvent) => {
+      touchStartX.current = e.touches[0].clientX;
+      touchStartY.current = e.touches[0].clientY;
+    };
+
+    const onMove = (e: TouchEvent) => {
+      if (galleryImages.length <= 1) return;
+      const dx = e.touches[0].clientX - touchStartX.current;
+      const dy = e.touches[0].clientY - touchStartY.current;
+      if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 8) {
+        e.preventDefault(); // block browser scroll on horizontal swipe
+      }
+    };
+
+    const onEnd = (e: TouchEvent) => {
+      if (galleryImages.length <= 1) return;
+      const dx = e.changedTouches[0].clientX - touchStartX.current;
+      const dy = e.changedTouches[0].clientY - touchStartY.current;
+      if (Math.abs(dx) > 44 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+        if (dx < 0) {
+          setActiveImg(galleryImages[Math.min(activeIndex + 1, galleryImages.length - 1)]);
+        } else {
+          setActiveImg(galleryImages[Math.max(activeIndex - 1, 0)]);
+        }
+      }
+    };
+
+    el.addEventListener('touchstart', onStart, { passive: true });
+    el.addEventListener('touchmove', onMove, { passive: false }); // passive:false = can preventDefault
+    el.addEventListener('touchend', onEnd, { passive: true });
+
+    return () => {
+      el.removeEventListener('touchstart', onStart);
+      el.removeEventListener('touchmove', onMove);
+      el.removeEventListener('touchend', onEnd);
+    };
+  }, [galleryImages, activeIndex]);
 
   const handleWish = () => {
     setHeartKey(k => k + 1);
@@ -174,36 +218,9 @@ export default function ProductScreen() {
       <div className="no-scrollbar relative flex-1 overflow-y-auto bg-blush-50 pb-28">
         {/* Hero image — in normal flow so backdrop-filter on content sheet has real pixels behind it */}
         <div
+          ref={heroRef}
           className="relative w-full bg-blush-100 overflow-hidden"
-          style={{
-            aspectRatio: '4/3',
-            touchAction: galleryImages.length > 1 ? 'pan-y' : 'auto',
-          }}
-          onTouchStart={(e) => {
-            if (galleryImages.length <= 1) return;
-            touchStartX.current = e.touches[0].clientX;
-            touchStartY.current = e.touches[0].clientY;
-          }}
-          onTouchMove={(e) => {
-            if (galleryImages.length <= 1) return;
-            const dx = e.touches[0].clientX - touchStartX.current;
-            const dy = e.touches[0].clientY - touchStartY.current;
-            if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 8) {
-              e.stopPropagation();
-            }
-          }}
-          onTouchEnd={(e) => {
-            if (galleryImages.length <= 1) return;
-            const deltaX = e.changedTouches[0].clientX - touchStartX.current;
-            const deltaY = e.changedTouches[0].clientY - touchStartY.current;
-            if (Math.abs(deltaX) > 44 && Math.abs(deltaX) > Math.abs(deltaY) * 1.5) {
-              if (deltaX < 0) {
-                setActiveImg(galleryImages[Math.min(activeIndex + 1, galleryImages.length - 1)]);
-              } else {
-                setActiveImg(galleryImages[Math.max(activeIndex - 1, 0)]);
-              }
-            }
-          }}
+          style={{ aspectRatio: '4/3' }}
         >
           <img
             loading="lazy"
