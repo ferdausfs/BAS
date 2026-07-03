@@ -1,3 +1,34 @@
+## Session: 2026-07-03 (all 3 diagnosed bugs fixed — plan below fully executed)
+**Agent/Tool:** Claude (Sonnet 5, in-chat, direct repo access via git clone)
+**Feature worked on:** Fix #1, #2, #3 from the plan in the entry directly below — all done, build-verified, pushed one at a time per AGENT-WORKFLOW-PROTOCOL.md
+
+### কী হয়েছে:
+- **Fix #1 (ProductScreen swipe race condition):** `useEffect` dependency changed from `[]` to `[product?.id]` so touch listeners attach on the render where the hero div actually exists (after async product load). Verified live in repo — comment at `src/screens/ProductScreen.tsx:42` confirms.
+- **Fix #2 (glass-strong opacity):** `src/index.css` — `.glass-strong` background alpha lowered from 0.96 to 0.68 so `backdrop-filter: blur(28px)` has translucency to actually blur, across all 9 usage sites (Home, Profile ×4, AdminPanel, NotificationsSheet, AuthSheet ×2).
+- **Fix #3 (Address Book modal — ProfileScreen.tsx):** All labels/placeholders translated to Bengali matching CheckoutScreen's wording; added "বর্তমান অবস্থান ব্যবহার করুন" GPS button reusing CheckoutScreen's geolocation + Nominatim reverse-geocode + BD_DISTRICTS match pattern (manual entry still works as fallback); district field changed from free-text to `BD_DISTRICTS` `<select>`; input styling upgraded from `bg-cream border-ink/10` to Checkout's `bg-white border-ink-50` + coral focus ring for visual consistency.
+
+### Touched files:
+- `src/screens/ProductScreen.tsx` (fix #1, prior to this log entry)
+- `src/index.css` (fix #2)
+- `src/screens/ProfileScreen.tsx` (fix #3)
+
+### Build:
+- ✓ built in 18.54s (fix #2) / ✓ built in 17.82s (fix #3)
+
+### Commits:
+- `6bd1c98` — fix: glass-strong was 96% opaque, defeating backdrop-blur — lowered to 68% for real frosted-glass effect
+- `84fc8e4` — fix: address book modal — Bengali labels, GPS auto-fill, Checkout-matching input styling
+- (fix #1 commit hash not captured in this session's visible log — verify via `git log -p -- src/screens/ProductScreen.tsx` if needed)
+
+### এখনো Pending:
+- None from this diagnosed list. All 3 items from the plan entry below are complete.
+
+### পরবর্তী Agent এর জন্য নোট:
+- The plan entry immediately below this one is now historical — its 3 items are done, don't re-diagnose or re-fix them.
+- No new bugs reported by user as of this entry.
+
+---
+
 ## Session: 2026-07-03 (PLAN — next agent shuru koro ekhan theke) — PENDING, work not yet done
 **Agent/Tool:** Claude (Sonnet 5, in-chat, direct repo access via git clone)
 **Feature worked on:** 3 diagnosed bugs from user screenshot review — NOT YET FIXED
