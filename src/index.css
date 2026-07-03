@@ -175,43 +175,41 @@ button { -webkit-tap-highlight-color: transparent; }
     0 20px 48px -20px rgba(0,0,0,0.13);
 }
 
-/* ===== Glass — 3-tier system =====
- *
- * Tier 1: .glass / .glass-subtle — headers, nav bars, chips
- *   Most opaque (82%), least blur (20px). Light border + soft lift.
- *
- * Tier 2: .glass-strong — cards, modals, panels
- *   More transparent (68%), more blur (28px). Pronounced soft shadow.
- *
- * Tier 3: .glass-deep — bottom sheets, heavy overlays
- *   Most opaque for legibility (82%), medium blur (24px).
- *
- * Variants (unchanged): .glass-dark, .glass-tint
- */
+/* ===== Glass (3-tier system for bakery display-case feel) ===== */
+/* All tiers share consistent glass edge + soft lift shadow */
 
-.glass,
 .glass-subtle {
+  /* nav / header / light overlays */
   background: rgba(255,255,255,0.82);
   backdrop-filter: saturate(180%) blur(20px);
   -webkit-backdrop-filter: saturate(180%) blur(20px);
-  border: 1px solid rgba(255,255,255,0.40);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  border: 1px solid rgba(255,255,255,0.4);
+  box-shadow: 0 8px 32px -8px rgba(0,0,0,0.12);
 }
 
 .glass-strong {
+  /* cards / modals (already tuned) */
   background: rgba(255,255,255,0.68);
   backdrop-filter: saturate(200%) blur(28px);
   -webkit-backdrop-filter: saturate(200%) blur(28px);
-  border: 1px solid rgba(255,255,255,0.40);
-  box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+  border: 1px solid rgba(255,255,255,0.4);
+  box-shadow: 0 8px 32px -8px rgba(0,0,0,0.12);
 }
 
 .glass-deep {
+  /* bottom sheets / heavier overlays */
   background: rgba(255,255,255,0.82);
-  backdrop-filter: saturate(200%) blur(24px);
-  -webkit-backdrop-filter: saturate(200%) blur(24px);
-  border: 1px solid rgba(255,255,255,0.45);
-  box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
+  backdrop-filter: saturate(180%) blur(24px);
+  -webkit-backdrop-filter: saturate(180%) blur(24px);
+  border: 1px solid rgba(255,255,255,0.4);
+  box-shadow: 0 12px 40px -10px rgba(0,0,0,0.16);
+}
+
+/* Legacy aliases (for backward compatibility during rollout) */
+.glass {
+  background: rgba(255,255,255,0.82);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
 }
 
 .glass-dark {
