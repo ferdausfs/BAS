@@ -1,3 +1,28 @@
+## Session: 2026-07-03, 15:59 (Batch 1: Foundation — glass backdrop + token system)
+**Agent/Tool:** Arena.ai Agent Mode (Claude)
+**Feature worked on:** Full-app glassmorphism — Batch 1 (Foundation): mesh backdrop fix on mobile + 3-tier glass token restructuring
+
+### কী হয়েছে:
+- **Fix 1: Mesh backdrop mobile-এ আনা হয়েছে** — PhoneFrame.tsx-এ mobile container-এর ভেতরে persistent mesh-warm backdrop layer add করা হয়েছে (pointer-events-none), যাতে glass panels blush gradient blur করতে পারে (flat cream না)।
+- **Fix 2: Glass tokens 3-tier system-এ restructure** — index.css-এ নতুন tier system: .glass / .glass-subtle (82%, 20px blur — header/nav), .glass-strong (68%, 28px — cards/modals, border normalized, soft shadow added), .glass-deep (82%, 24px — bottom sheets, NEW). .glass-dark ও .glass-tint untouched.
+
+### Touched files:
+- src/components/PhoneFrame.tsx
+- src/index.css
+
+### Build: ✓ built in 17.67s
+### Commit: a78ce36 — feat(glass): foundation — mesh backdrop on mobile + 3-tier glass token system
+
+### এখনো Pending:
+- Batch 2: Navigation — BottomTabBar.tsx floating frosted pill + Header.tsx glass
+- Batch 3: Screens — 8 screens extend glass
+- Batch 4: Cards/chips — polish pass
+
+### পরবর্তী Agent এর জন্য নোট:
+- Foundation done. Screen গুলো এখনো bg-cream opaque (Batch 3-এ change হবে), কিন্তু mesh backdrop layer ready.
+- New tokens: glass-subtle / glass-strong / glass-deep. .glass এখনো কাজ করে (backward compat alias).
+- .glass-tint ও .glass-dark untouched.
+- Batch 2 (Navigation) শুরু করার আগে agent AGENT_LOG.md পড়ে continue করবে.
 ## Session: 2026-07-03, 12:17 (PLAN — full-app glassmorphism theme, next agent shuru koro ekhan theke) — PENDING, work not yet done
 **Agent/Tool:** Claude (Sonnet 5, in-chat, direct repo access via git clone)
 **Feature worked on:** User চায় পুরো app-e glass morphism feel ("bakery display case" direction) — review complete, plan approved by user, code change এখনো শুরু হয়নি
