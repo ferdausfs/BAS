@@ -45,6 +45,7 @@ export const mapProductDoc = (id: string, row: any): Product => {
     approved: d?.approved ?? true,
     sizes: d?.sizes,
     addons: d?.addons,
+    gallery: Array.isArray(d?.gallery) ? d.gallery : [],
   };
 };
 

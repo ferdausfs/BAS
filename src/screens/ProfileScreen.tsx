@@ -152,6 +152,8 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
   const [addrForm, setAddrForm] = useState({ name: '', address: '', district: '', phone: '' });
   const [addrLocating, setAddrLocating] = useState(false);
   const [addrLocateError, setAddrLocateError] = useState('');
+  const [profileLocating, setProfileLocating] = useState(false);
+  const [profileLocateError, setProfileLocateError] = useState('');
 
   const [specialDates, setSpecialDates] = useState<SpecialDate[]>(() => loadSpecialDates(user?.id));
   const [showDatesModal, setShowDatesModal] = useState(false);
@@ -284,6 +286,50 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
     setCustomerOpen(false);
   }, [draftProfile, user]);
 
+
+  const handleLocateProfile = async () => {
+    setProfileLocating(true);
+    setProfileLocateError('');
+    try {
+      if (!navigator.geolocation) {
+        throw new Error('জিপিএস সমর্থিত নয়');
+      }
+      const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 10000 });
+      });
+      const { latitude: lat, longitude: lng } = pos.coords;
+      const r = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`);
+      if (!r.ok) {
+        throw new Error('সার্ভার থেকে এড্রেস পাওয়া যায়নি');
+      }
+      const data = await r.json();
+      const city =
+        data.address?.city ||
+        data.address?.town ||
+        data.address?.district ||
+        data.address?.county ||
+        data.address?.state_district ||
+        '';
+      const addressText = data.display_name || city || '';
+
+      setDraftProfile((prev) => {
+        const next = { ...prev, address: addressText };
+        const detectedCity = (city || addressText).toLowerCase();
+        const matchedDistrict = BD_DISTRICTS.find(
+          (d) => detectedCity.includes(d.toLowerCase()) || addressText.toLowerCase().includes(d.toLowerCase())
+        );
+        if (matchedDistrict) {
+          next.district = matchedDistrict;
+        }
+        return next;
+      });
+    } catch (e: unknown) {
+      console.warn('Geolocation failed:', e);
+      setProfileLocateError('লোকেশন শনাক্ত করা যায়নি, অনুগ্রহ করে ম্যানুয়ালি লিখুন।');
+    } finally {
+      setProfileLocating(false);
+    }
+  };
 
   const handleLocateAddress = async () => {
     setAddrLocating(true);
@@ -678,6 +724,24 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
                 <span className="mb-1 block text-[10.5px] font-bold tracking-wider text-ink-200 uppercase">
                   সম্পূর্ণ ঠিকানা
                 </span>
+                <div className="mb-1.5 flex flex-col gap-1.5">
+                  <button
+                    type="button"
+                    onClick={handleLocateProfile}
+                    disabled={profileLocating}
+                    className="flex items-center justify-center gap-1.5 self-start rounded-full bg-ink-50 px-3.5 py-1.5 text-[11px] font-bold text-ink transition hover:bg-ink-100 active:scale-95 disabled:opacity-50"
+                  >
+                    {profileLocating ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : (
+                      <Navigation className="h-3 w-3" />
+                    )}
+                    {profileLocating ? 'লোকেশন খোঁজা হচ্ছে...' : 'বর্তমান অবস্থান ব্যবহার করুন'}
+                  </button>
+                  {profileLocateError && (
+                    <span className="text-[11px] text-red-500 font-semibold px-1">{profileLocateError}</span>
+                  )}
+                </div>
                 <textarea
                   value={draftProfile.address}
                   onChange={(e) => setDraftProfile({ ...draftProfile, address: e.target.value })}
