@@ -1,3 +1,32 @@
+## Session: 2026-07-03, 16:46 (Batch 4: Cards/Chips — ProductCard + NotificationsSheet)
+**Agent/Tool:** Arena.ai Agent Mode (Claude)
+**Feature worked on:** Full-app glassmorphism — Batch 4 (Cards/Chips): ProductCard wrappers + NotificationsSheet internals
+
+### কী হয়েছে:
+- **ProductCard glass-strong:** Grid ও horizontal — দুই variant-এর main wrapper `bg-white` + inline border/shadow সরিয়ে `glass-strong` class. Wishlist heart (`bg-white/90`), price chip (`glass-dark`), sold badge, bestseller badge untouched (already glass/brand)।
+- **NotificationsSheet:** Header → `glass-subtle`, notification cards → `glass-strong`। Sheet container আগেই `glass-strong` ছিল।
+
+### Touched files:
+- src/components/ProductCard.tsx (2 glass-strong)
+- src/components/NotificationsSheet.tsx (1 glass-subtle + 1 glass-strong)
+
+### Build: ✓ built
+### Commit: latest — feat(glass): cards — ProductCard + NotificationsSheet
+
+### এখনো Pending:
+- কিছুই না — ফুল glassmorphism project complete 🎉
+
+### পরবর্তী Agent এর জন্য নোট:
+- পুরো app-এ এখন unified 3-tier glass system active:
+  - **glass-subtle** (82%): Header, NotificationsSheet header
+  - **glass-strong** (68%): BottomTab floating pill, ProductCard, Cart/Checkout/Customize cards, NotificationsSheet shell+cards, Orders, Tracking, Success
+  - **glass-deep** (82%): Categories filter sheet
+  - **glass-dark**: ProductCard price chip (unchanged legacy)
+  - **glass-tint**: ProductScreen info panel (unchanged legacy, isolation:isolate mechanism)
+- PhoneFrame-এ mesh backdrop mobile container-এর ভেতরে persistent আছে।
+- সব screen root থেকে `bg-cream` সরানো হয়েছে — mesh gradient এখন glass panels-এর পেছনে visible।
+- Form inputs, upload areas, tiny icons, badges — opaque রাখা হয়েছে intentionally।
+- কোনো নতুন glass class add করার দরকার হলে existing comment block (`index.css:173-189`) পড়ে tier system অনুযায়ী করবে।
 ## Session: 2026-07-03, 16:18 (Batch 3: Screens — 8 screens root transparent + cards glass)
 **Agent/Tool:** Arena.ai Agent Mode (Claude)
 **Feature worked on:** Full-app glassmorphism — Batch 3 (Screens): 8 screen files — root bg-cream removed, main bg-white cards converted to glass-strong/glass-deep
