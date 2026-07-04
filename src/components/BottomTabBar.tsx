@@ -25,19 +25,20 @@ export default React.memo(function BottomTabBar() {
     >
       {/* Floating detached pill — solid opaque background (no backdrop transparency; see AGENT_LOG) */}
       <div
-        className="relative mx-4 mb-3 rounded-3xl"
+        className="relative mx-4 mb-3 rounded-3xl p-2"
         style={{
-          background: 'linear-gradient(158deg, #FFFFFF 0%, #FFF8FA 100%)',
-          border: '1px solid rgba(232,82,106,0.07)',
+          background: 'linear-gradient(180deg, rgba(255,255,255,0.92) 0%, rgba(255,255,255,0.78) 100%)',
+          border: '0.5px solid rgba(255,255,255,0.9)',
           boxShadow:
-            'inset 0 1px 0 rgba(255,255,255,1), 0 18px 34px -18px rgba(74,27,12,0.35), 0 4px 12px -6px rgba(74,27,12,0.15)',
+            'inset 0 1px 0 rgba(255,255,255,0.9), 0 18px 34px -18px rgba(74,27,12,0.35), 0 4px 12px -6px rgba(74,27,12,0.15)',
         }}
       >
-        {/* Sliding active indicator */}
+        {/* Sliding active indicator — matches approved mockup proportions exactly */}
         <div
-          className="absolute top-2 bottom-2 left-2 rounded-2xl transition-transform duration-300 ease-out pointer-events-none"
+          className="absolute top-2 left-2 rounded-[18px] transition-transform duration-300 ease-out pointer-events-none"
           style={{
-            width: 'calc(25% - 8px)',
+            width: 'calc(25% - 4px)',
+            height: 'calc(100% - 16px)',
             transform: `translate3d(${activeIndex * 100}%, 0, 0)`,
             willChange: 'transform',
             background:
@@ -46,7 +47,7 @@ export default React.memo(function BottomTabBar() {
           }}
         />
 
-        <div className="relative flex items-end justify-around h-[52px] px-2">
+        <div className="relative flex items-end justify-around h-[52px]">
           {tabs.map((t, i) => {
             const Icon = t.icon;
             const active = i === activeIndex;
