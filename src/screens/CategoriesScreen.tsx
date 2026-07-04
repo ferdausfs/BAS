@@ -101,7 +101,7 @@ export default function CategoriesScreen() {
   return (
     <div className="flex h-full flex-col">
       {/* Header */}
-      <header className="flex-shrink-0 px-5 pt-3 pb-2">
+      <header className="flex-shrink-0 px-5 pt-14 pb-2">
         <div className="flex items-end justify-between">
           <div>
             <div className="section-eyebrow">Explore</div>

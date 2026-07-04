@@ -1,3 +1,29 @@
+## Session: 2026-07-04 (QuickBar↔CategoriesScreen overlap fix + premium polish)
+**Agent/Tool:** Claude (Sonnet 4.6, claude.ai)
+**Feature worked on:** Fix visual collision between global QuickBar pill and CategoriesScreen filter button; premium polish pass on QuickBar
+
+### কী হয়েছে:
+- **Root cause (user-reported, production screenshot):** `QuickBar` is `fixed top-3 right-3 z-50` and renders over every screen. `CategoriesScreen.tsx`'s own filter button (`h-10 w-10`, top-right of its header, `items-end` row) occupies almost the identical x/y band — the two visually mashed together. No other screen has this problem (checked all of `src/screens/*.tsx`: Orders/Profile have no right-side header button; Wishlist/Tracking have an empty `w-10` spacer, not a real button — only CategoriesScreen collides).
+- **Fix:** `CategoriesScreen.tsx` header `pt-3` → `pt-14` — single line, pushes the whole title+filter+searchbar row down below the pill's vertical footprint. No restructuring, no risk to other screens.
+- **Premium polish on QuickBar pill:** bigger touch target (`px-3.5 py-2`, icon 15px→16px), custom layered box-shadow (ambient coral shadow + inset top highlight for glossy finish) replacing generic `shadow-lg`.
+- **Premium polish on popup:** container switched from ad-hoc `bg-white/98 shadow-xl backdrop-blur-sm` to the app's existing `glass-strong` premium card system (already used everywhere else — Cards, Cart, Checkout, NotificationsSheet) for visual consistency instead of a one-off style. Inner tiles (Notif/Wishlist/Wallet) given a subtle depth shadow.
+
+### Touched files:
+- `src/screens/CategoriesScreen.tsx` — `pt-3` → `pt-14` on header
+- `src/components/QuickBar.tsx` — pill shadow/sizing polish, popup → `glass-strong`, tile shadows
+
+### Build: ✓ built in 18.38s
+
+### এখনো Pending:
+- **Production (bas.umuhammadiswa.workers.dev) is still on an OLDER build** — the gradient-pill change from the previous session hasn't been deployed yet, which is why the reported screenshot showed a plain (non-gradient) icon. User needs to apply this + the previous zip, build, and deploy.
+
+### পরবর্তী Agent এর জন্য নোট:
+- **Lesson captured in `tasks/lessons.md`:** when adding/repositioning a `fixed`-position global overlay, check every screen under `src/screens/*.tsx` for competing header content in the same corner — don't review the changed component in isolation.
+- Popup now uses `glass-strong` — if that class's definition changes app-wide (index.css), QuickBar popup will follow automatically (this is intentional, for consistency).
+- Before reporting a visual bug fixed, confirm what's actually deployed vs what's been reviewed locally — production screenshots can lag behind.
+
+---
+
 ## Session: 2026-07-04 (QuickBar pill redesign + popup layout)
 **Agent/Tool:** Claude (Sonnet 4.6, claude.ai)
 **Feature worked on:** QuickBar trigger pill + popup dropdown redesign

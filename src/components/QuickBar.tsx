@@ -43,15 +43,19 @@ export default function QuickBar({ onNotificationsOpen }: Props) {
       {/* Pill trigger */}
       <button
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-1.5 rounded-full bg-gradient-to-br from-coral-400 to-coral-600 px-3 py-1.5 text-white shadow-lg shadow-coral-600/30 transition active:scale-95"
+        className="flex items-center gap-1.5 rounded-full bg-gradient-to-br from-coral-400 to-coral-600 px-3.5 py-2 text-white transition active:scale-95"
+        style={{
+          boxShadow:
+            '0 6px 18px -4px rgba(212,60,86,0.55), 0 2px 6px -1px rgba(212,60,86,0.35), inset 0 1px 0 rgba(255,255,255,0.35)',
+        }}
         aria-label="Quick actions"
       >
-        <ShoppingBag className="h-[15px] w-[15px]" strokeWidth={2} />
+        <ShoppingBag className="h-4 w-4" strokeWidth={2} />
         {cartCount > 0 && (
-          <span className="text-[11px] font-bold leading-none">{cartCount}</span>
+          <span className="text-[12px] font-bold leading-none">{cartCount}</span>
         )}
         {totalBadge > cartCount && (
-          <span className="flex h-4 min-w-[16px] items-center justify-center rounded-full bg-white/25 px-1 text-[9px] font-bold text-white">
+          <span className="flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-white/25 px-1 text-[9.5px] font-bold text-white">
             +{totalBadge - cartCount}
           </span>
         )}
@@ -59,7 +63,7 @@ export default function QuickBar({ onNotificationsOpen }: Props) {
 
       {/* Popup */}
       {open && (
-        <div className="absolute top-[calc(100%+8px)] right-0 w-44 rounded-2xl border border-black/8 bg-white/98 shadow-xl backdrop-blur-sm">
+        <div className="glass-strong absolute top-[calc(100%+8px)] right-0 w-44 rounded-2xl">
           {/* Arrow */}
           <div className="absolute -top-[5px] right-4 h-2.5 w-2.5 rotate-45 rounded-[1px] border-l border-t border-black/8 bg-white" />
 
@@ -69,7 +73,7 @@ export default function QuickBar({ onNotificationsOpen }: Props) {
               {/* Notifications */}
               <button
                 onClick={() => { setOpen(false); onNotificationsOpen(); }}
-                className="relative flex flex-1 flex-col items-center gap-1 rounded-xl bg-cream py-2.5 transition active:scale-95"
+                className="relative flex flex-1 flex-col items-center gap-1 rounded-xl bg-cream py-2.5 shadow-[0_1px_2px_rgba(26,19,17,0.04)] transition active:scale-95"
               >
                 {unreadCount > 0 && (
                   <span className="absolute top-1 right-1 flex h-[14px] min-w-[14px] items-center justify-center rounded-full bg-coral px-0.5 text-[8px] font-bold text-white">
@@ -83,7 +87,7 @@ export default function QuickBar({ onNotificationsOpen }: Props) {
               {/* Wishlist */}
               <button
                 onClick={() => { setOpen(false); go({ name: 'wishlist' }); }}
-                className="relative flex flex-1 flex-col items-center gap-1 rounded-xl bg-cream py-2.5 transition active:scale-95"
+                className="relative flex flex-1 flex-col items-center gap-1 rounded-xl bg-cream py-2.5 shadow-[0_1px_2px_rgba(26,19,17,0.04)] transition active:scale-95"
               >
                 {wishCount > 0 && (
                   <span className="absolute top-1 right-1 flex h-[14px] min-w-[14px] items-center justify-center rounded-full bg-coral px-0.5 text-[8px] font-bold text-white">
@@ -101,7 +105,7 @@ export default function QuickBar({ onNotificationsOpen }: Props) {
               {hasWallet && (
                 <button
                   onClick={() => { setOpen(false); go({ name: 'tabs', tab: 'profile' }); }}
-                  className="relative flex flex-1 flex-col items-center gap-1 rounded-xl bg-gold/12 py-2.5 transition active:scale-95"
+                  className="relative flex flex-1 flex-col items-center gap-1 rounded-xl bg-gold/12 py-2.5 shadow-[0_1px_2px_rgba(26,19,17,0.04)] transition active:scale-95"
                 >
                   <Wallet className="h-5 w-5 text-gold-800" strokeWidth={1.8} />
                   <span className="text-[9px] font-medium text-gold-800">
