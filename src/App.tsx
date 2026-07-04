@@ -18,6 +18,7 @@ import WishlistScreen from './screens/WishlistScreen';
 import TrackingScreen from './screens/TrackingScreen';
 import AdminScreen from './screens/AdminScreen';
 import AppErrorBoundary from './components/AppErrorBoundary';
+import QuickBar from './components/QuickBar';
 
 export default function App() {
   const { view, tab, chatOpen, modalDepth } = useUI();
@@ -93,7 +94,7 @@ export default function App() {
             : (
               <div key={screenKey} className="h-full w-full anim-fade">
                 {view.name === 'tabs' && activeTab === 'home' && (
-                  <HomeScreen onLogoTap={() => {}} onNotificationsOpen={() => setNotificationsOpen(true)} onAuthOpen={() => setAuthOpen(true)} />
+                  <HomeScreen onAuthOpen={() => setAuthOpen(true)} />
                 )}
                 {view.name === 'tabs' && activeTab === 'categories' && <CategoriesScreen />}
                 {view.name === 'tabs' && activeTab === 'orders' && (
@@ -124,6 +125,10 @@ export default function App() {
         </main>
 
         {showTabBar && <BottomTabBar />}
+
+        {view.name !== 'splash' && (
+          <QuickBar onNotificationsOpen={() => setNotificationsOpen(true)} />
+        )}
 
         <NotificationsSheet open={notificationsOpen} onClose={() => setNotificationsOpen(false)} />
         <AuthSheet open={authOpen} onClose={() => setAuthOpen(false)} />

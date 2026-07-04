@@ -6,7 +6,6 @@ import { ls, safeArray } from '../lib/utils';
 import { categories } from '../lib/data';
 import { useProducts } from '../hooks/useProducts';
 import { useBanners } from '../hooks/useBanners';
-import Header from '../components/Header';
 import SearchBar from '../components/SearchBar';
 import ProductCard from '../components/ProductCard';
 import SectionHeader from '../components/SectionHeader';
@@ -32,12 +31,8 @@ const getUpcomingDate = (userId?: string): { name: string; daysLeft: number } | 
 };
 
 export default function HomeScreen({
-  onLogoTap,
-  onNotificationsOpen,
   onAuthOpen,
 }: {
-  onLogoTap?: () => void;
-  onNotificationsOpen?: () => void;
   onAuthOpen?: () => void;
 }) {
   const { go } = useUI();
@@ -137,8 +132,6 @@ export default function HomeScreen({
 
   return (
     <div className="flex h-full flex-col">
-      <Header onLogoTap={onLogoTap} onNotificationsOpen={onNotificationsOpen} />
-
       <div className="no-scrollbar flex-1 overflow-y-auto pb-32">
         <div className="mesh-warm relative overflow-hidden rounded-b-[32px] px-5 pb-6 pt-1 anim-up">
           <span
