@@ -1,3 +1,26 @@
+## Session: 2026-07-04 (Search backdrop: portal fix — anim-up transform was trapping the fixed overlay)
+**Agent/Tool:** Claude (Sonnet 5, claude.ai)
+**Feature worked on:** Search suggestions backdrop wasn't covering the full screen
+
+### কী হয়েছে:
+- **Problem (user screenshot, 3rd follow-up):** আগের session-এর backdrop-blur fix apply করার পরেও blur শুধু header-এর উপরের অংশে (title text) দেখা যাচ্ছিল, নিচের banner section-এ কোনো blur ছিল না — যেন backdrop অর্ধেক screen-এই আটকে আছে।
+- **Root cause:** HomeScreen header wrapper-এর `anim-up` class একটা `slideUp` animation চালায় যার শেষ keyframe হলো `transform: translateY(0)` — `animation-fill-mode: both` থাকায় animation শেষ হওয়ার পরেও এই transform (even `translateY(0)`, "none" না) স্থায়ীভাবে থেকে যায়। CSS spec অনুযায়ী non-none transform থাকা যেকোনো element তার descendant `position: fixed` element-এর জন্য একটা নতুন **containing block** তৈরি করে — ফলে SearchBar-এর ভেতরের `fixed inset-0` backdrop সত্যিকারের viewport-এর বদলে header div-এর bounding box-এর মধ্যেই আটকে যাচ্ছিল। (QuickBar-এর `fixed` ঠিকমতো কাজ করে কারণ সেটা App root-এ বসানো, কোনো `anim-up` ancestor-এর ভেতরে না।)
+- **Fix (SearchBar.tsx):** backdrop + dropdown দুটোকেই `createPortal`-এর মাধ্যমে সরাসরি `document.body`-তে portal করা হয়েছে — এখন কোনো ancestor-এর transform/animation state আর প্রভাব ফেলতে পারবে না। যেহেতু portal করার ফলে dropdown আর input-এর সাথে DOM-এ সংযুক্ত থাকে না, তাই input-এর `getBoundingClientRect()` দিয়ে position track করে dropdown-কে সঠিক জায়গায় (input-এর ঠিক নিচে) বসানো হয়েছে (`useLayoutEffect`, resize/scroll-এ reposition)। Scroll হলে dropdown auto-dismiss হয়ে যায় (stale position এড়ানোর জন্য)।
+
+### Touched files:
+- `src/components/SearchBar.tsx`
+
+### Build: ✓ built in 10.37s
+
+### এখনো Pending:
+- কিছুই না এই batch-এর জন্য।
+
+### পরবর্তী Agent এর জন্য নোট:
+- **Lesson (গুরুত্বপূর্ণ):** app-এ যেকোনো `anim-*` class (`anim-up`, `anim-scale`, `anim-right` ইত্যাদি) ব্যবহৃত element-এর ভেতরে `position: fixed` child বসালে সেটা viewport-relative না হয়ে ওই animated element-এর ভেতরেই আটকে যাবে — কারণ এই animation গুলোর শেষ keyframe-এ non-none `transform` থেকে যায় (`fill-mode: both`)। এরকম কোনো overlay/backdrop/modal দরকার হলে হয় (ক) `createPortal(document.body)` ব্যবহার করো, অথবা (খ) সেই component-টাকে App root level-এ (QuickBar-এর মতো) বসাও, `anim-*` wrapped container-এর ভেতরে না।
+- SearchBar dropdown এখন portal-based, position tracked — input move/resize হলে automatically re-sync হয়, কিন্তু scroll হলে dismiss হয়ে যায় (stale-position bug এড়াতে, continuous reposition করার বদলে)।
+
+---
+
 ## Session: 2026-07-04 (Search dropdown: blurred backdrop + focus-tracked visibility)
 **Agent/Tool:** Claude (Sonnet 5, claude.ai)
 **Feature worked on:** Search suggestions dropdown visual separation from page content behind it
