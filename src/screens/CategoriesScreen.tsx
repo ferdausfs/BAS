@@ -13,6 +13,7 @@ import { useUI, useUser } from '../lib/store';
 import { categories } from '../lib/data';
 import { useProducts } from '../hooks/useProducts';
 import { safeArray } from '../lib/utils';
+import { useModalDepth } from '../hooks/useModalDepth';
 import SearchBar from '../components/SearchBar';
 import ProductCard from '../components/ProductCard';
 import OccasionIcon from '../components/OccasionIcon';
@@ -50,6 +51,7 @@ export default function CategoriesScreen() {
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebounce(search, 300);
   const [filterOpen, setFilterOpen] = useState(false);
+  useModalDepth(filterOpen);
   const [sortBy, setSortBy] = useState<'popular' | 'newest' | 'price-asc' | 'price-desc'>('popular');
   const [priceMax, setPriceMax] = useState<number>(5000);
 
