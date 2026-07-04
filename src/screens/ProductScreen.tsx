@@ -250,6 +250,33 @@ export default function ProductScreen() {
           {/* Soft top fade for control legibility */}
           <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-blush-100/85 to-transparent" />
 
+          {/* Tier badge — floats on the hero image like a wax seal, keeps the title row uncluttered */}
+          {product.tier && product.tier !== 'normal' && (
+            <div
+              className={`absolute left-4 top-[74px] z-10 inline-flex items-center gap-1 rounded-full px-3 py-1 text-[10.5px] font-bold uppercase tracking-wide text-white ${
+                product.tier === 'premium'
+                  ? 'bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600'
+                  : 'bg-ink'
+              }`}
+              style={{
+                boxShadow:
+                  product.tier === 'premium'
+                    ? '0 6px 16px -4px rgba(217,155,20,0.55), 0 2px 6px -1px rgba(217,155,20,0.35), inset 0 1px 0 rgba(255,255,255,0.35)'
+                    : '0 6px 16px -4px rgba(26,19,17,0.35)',
+              }}
+            >
+              {product.tier === 'premium' ? (
+                <>
+                  <Star className="h-3 w-3 fill-current" strokeWidth={0} /> Premium
+                </>
+              ) : (
+                <>
+                  <Pencil className="h-3 w-3" strokeWidth={2.5} /> Custom Order
+                </>
+              )}
+            </div>
+          )}
+
           {product.inStock === false && (
             <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-b-[32px]">
               <span className="rounded-full bg-white/90 px-4 py-2 text-[13px] font-bold text-ink backdrop-blur">Out of Stock</span>
@@ -275,18 +302,26 @@ export default function ProductScreen() {
         <div className="glass-tint rounded-t-[28px] -mt-16 relative z-10 px-5 pt-6" style={{ '--tint': dominantColor } as CSSProperties}>
           {/* Gallery Thumbnail Strip */}
           {galleryImages.length > 1 && (
-            <div className="flex gap-2 overflow-x-auto pb-4 scrollbar-hide">
-              {galleryImages.map((url, i) => (
-                <button
-                  key={i}
-                  onClick={() => setActiveImg(url)}
-                  className={`flex-shrink-0 w-14 h-14 rounded-xl overflow-hidden border-2 transition-colors ${
-                    currentImg === url ? 'border-coral' : 'border-transparent'
-                  }`}
-                >
-                  <img loading="lazy" decoding="async" src={url} alt="" className="w-full h-full object-cover" />
-                </button>
-              ))}
+            <div className="flex gap-2.5 overflow-x-auto pb-4 pt-1 scrollbar-hide">
+              {galleryImages.map((url, i) => {
+                const isActive = currentImg === url;
+                return (
+                  <button
+                    key={i}
+                    onClick={() => setActiveImg(url)}
+                    className={`flex-shrink-0 w-14 h-14 rounded-2xl overflow-hidden transition-all duration-200 ${
+                      isActive ? '-translate-y-1 ring-2 ring-coral ring-offset-2 ring-offset-white' : 'opacity-80'
+                    }`}
+                    style={{
+                      boxShadow: isActive
+                        ? '0 10px 20px -8px rgba(232,82,106,0.45), 0 2px 6px -2px rgba(26,19,17,0.12)'
+                        : '0 2px 8px -4px rgba(26,19,17,0.18)',
+                    }}
+                  >
+                    <img loading="lazy" decoding="async" src={url} alt="" className="w-full h-full object-cover" />
+                  </button>
+                );
+              })}
             </div>
           )}
 
@@ -295,28 +330,11 @@ export default function ProductScreen() {
             <h1 className="flex-1 font-display text-[20px] font-bold leading-[1.1] tracking-tight text-ink">
               {product.name}
             </h1>
-            {product.tier && product.tier !== 'normal' && (
-              <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
-                product.tier === 'premium'
-                  ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-white'
-                  : 'bg-ink text-white'
-              }`}>
-                {product.tier === 'premium' ? (
-                  <>
-                    <Star className="h-3 w-3" strokeWidth={2.5} /> Premium
-                  </>
-                ) : (
-                  <>
-                    <Pencil className="h-3 w-3" strokeWidth={2.5} /> Custom Order
-                  </>
-                )}
-              </span>
-            )}
           </div>
 
           {/* Rating + meta */}
-          <div className="mt-2 flex items-center gap-2 text-[12.5px]">
-            <div className="flex items-center gap-0.5 text-gold">
+          <div className="mt-3 flex items-center gap-2 text-[12.5px]">
+            <div className="flex items-center gap-0.5 text-gold" style={{ filter: 'drop-shadow(0 1px 3px rgba(217,155,20,0.4))' }}>
               {[...Array(5)].map((_, i) => (
                 <Star
                   key={i}

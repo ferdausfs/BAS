@@ -126,7 +126,7 @@ export default function App() {
 
         {showTabBar && <BottomTabBar />}
 
-        {view.name !== 'splash' && (
+        {view.name !== 'splash' && view.name !== 'product' && (
           <QuickBar onNotificationsOpen={() => setNotificationsOpen(true)} />
         )}
 
