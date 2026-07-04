@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import type { CSSProperties } from 'react';
-import { ArrowLeft, Heart, Star, ShoppingBag, Check, Share2, Truck, Sparkles, Shield, Cake, Pencil, CheckCircle2, Camera, X, AlertTriangle, Bell, Eye, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Heart, Star, ShoppingBag, Check, Share2, Sparkles, Cake, Pencil, CheckCircle2, Camera, X, AlertTriangle, Bell, Eye, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useUI, formatINR, useCart, useUser, useAuthStore, useSettingsStore } from '../lib/store';
 import { useProducts } from '../hooks/useProducts';
 import { useReviews } from '../hooks/useReviews';
@@ -256,7 +256,7 @@ export default function ProductScreen() {
           ref={heroRef}
           onClick={() => setLightboxOpen(true)}
           className="relative w-full bg-blush-100 overflow-hidden"
-          style={{ aspectRatio: '4/3' }}
+          style={{ aspectRatio: '4/4.6' }}
         >
           <img
             loading="lazy"
@@ -414,24 +414,12 @@ export default function ProductScreen() {
           {/* Description */}
           <p className="mt-4 text-[13.5px] leading-relaxed text-ink-200">{product.description}</p>
 
-          {/* Trust row */}
-          <div className="mt-5 flex items-center justify-between rounded-2xl glass-strong px-4 py-3">
-            <Trust icon={Truck} label="Free delivery" />
-            <span className="h-5 w-px bg-ink-50" />
-            <Trust icon={Sparkles} label="Freshly baked" />
-            <span className="h-5 w-px bg-ink-50" />
-            <Trust icon={Shield} label="Secure pay" />
-          </div>
-
           {settings?.deliveryEstimate && (
-            <div className="mt-3 flex items-center gap-3 rounded-2xl glass-strong px-4 py-3">
-              <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-green-100">
-                <Clock className="h-[18px] w-[18px] text-green-700" strokeWidth={2} />
-              </div>
-              <div>
-                <p className="text-[12px] font-bold text-green-800">আজ অর্ডার করলে</p>
-                <p className="text-[11.5px] text-green-600">{settings.deliveryEstimate} এর মধ্যে পৌঁছাবে</p>
-              </div>
+            <div className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-green-50 px-3 py-1.5">
+              <Clock className="h-3.5 w-3.5 text-green-700 flex-shrink-0" strokeWidth={2.5} />
+              <p className="text-[11.5px] font-bold text-green-700">
+                আজ অর্ডার করলে {settings.deliveryEstimate} এর মধ্যে পৌঁছাবে
+              </p>
             </div>
           )}
 
@@ -866,15 +854,6 @@ export default function ProductScreen() {
           )}
         </div>
       )}
-    </div>
-  );
-}
-
-function Trust({ icon: Icon, label }: { icon: any; label: string }) {
-  return (
-    <div className="flex items-center gap-1.5 text-[11px] font-medium text-ink-200">
-      <Icon className="h-3.5 w-3.5 text-ink-200" strokeWidth={2} />
-      {label}
     </div>
   );
 }
