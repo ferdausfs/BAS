@@ -1,3 +1,34 @@
+## Session: 2026-07-04 (Glass fix → Premium card system)
+**Agent/Tool:** Claude (Sonnet 4.6, claude.ai)
+**Feature worked on:** Glass blur fix + card visual system overhaul
+
+### কী হয়েছে:
+- **Root cause diagnosed:** `backdrop-filter` কাজ করছিল না কারণ glass cards সব `overflow:hidden` stacking context-এর ভেতরে ছিল — mesh backdrop reach করতে পারছিল না। এবং mesh gradient-এ যথেষ্ট color contrast ছিল না blur visible হওয়ার জন্য।
+- **Fix 1 (PhoneFrame.tsx):** `position:fixed; inset:0; z-index:-1` mesh backdrop layer add করা হয়েছে — এটা সব stacking context-এর নিচে থাকে।
+- **Fix 2 (index.css mesh-warm):** Gradient stronger করা হয়েছে — `#FFB4C2` coral stop যোগ করা হয়েছে বেশি contrast-এর জন্য।
+- **Strategy shift (user approved):** backdrop-filter approach abandon করে premium gradient+shadow card system-এ গেছি। সব `glass-*` class name অপরিবর্তিত রেখে শুধু CSS redefine করা হয়েছে — zero JSX change।
+- **Result:** Cards এখন `linear-gradient(158deg, #FFFFFF, #FFF8FA)` + coral-tinted layered shadow। Visually consistent সব browser-এ।
+
+### Touched files:
+- `src/components/PhoneFrame.tsx` — fixed mesh backdrop layer
+- `src/index.css` — mesh-warm stronger + glass-* → premium gradient cards
+
+### Commits:
+- `96e420f` — fix(glass): fixed mesh backdrop layer
+- latest — feat(cards): replace glass/backdrop-filter with premium gradient+shadow card system
+
+### এখনো Pending:
+- Cycle 2: tailwind.config.ts color token cleanup (ink.DEFAULT teal mismatch)
+- Cycle 3: HomeScreen watermark opacity বাড়ানো, signature polish
+
+### পরবর্তী Agent এর জন্য নোট:
+- `glass-*` class গুলো এখন আর actual backdrop-filter নয় — premium gradient+shadow card। নতুন কোনো glass element add করলে এই system follow করো।
+- `glass-dark` একমাত্র যেটা dark রাখা হয়েছে (ProductCard price chip) — touch করবে না।
+- `glass-tint` ProductScreen-এ dominant color tint হিসেবে কাজ করছে — backdrop-filter removed, এখন solid tint background।
+- PhoneFrame-এ fixed -z-10 mesh layer আছে — এটা visual background হিসেবে থাকুক, ভবিষ্যতে কেউ blur ব্যবহার করতে চাইলে এই layer-ই sample করবে।
+
+---
+
 ## Session: 2026-07-03, 16:46 (Batch 4: Cards/Chips — ProductCard + NotificationsSheet)
 **Agent/Tool:** Arena.ai Agent Mode (Claude)
 **Feature worked on:** Full-app glassmorphism — Batch 4 (Cards/Chips): ProductCard wrappers + NotificationsSheet internals
