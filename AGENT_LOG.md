@@ -1,3 +1,28 @@
+## Session: 2026-07-04 (Home search bar modernize + suggestions clipping fix)
+**Agent/Tool:** Claude (Sonnet 5, claude.ai)
+**Feature worked on:** Home hero search bar redesign + fix suggestions dropdown getting clipped
+
+### কী হয়েছে:
+- **Root cause (user screenshot):** HomeScreen header wrapper (`mesh-warm relative overflow-hidden rounded-b-[32px]`) `overflow-hidden` রাখা হয়েছিল watermark + rounded corners ঠিকমতো ক্লিপ করার জন্য — কিন্তু SearchBar-এর `absolute` suggestions dropdown এই একই container-এর ভেতরে থাকায় সেটাও ক্লিপ হয়ে যাচ্ছিল ("Rose Garden" suggestion আধখানা কাটা দেখাচ্ছিল)।
+- **Fix (HomeScreen.tsx):** `mesh-warm` background + watermark span + `overflow-hidden rounded-b-[32px]` কে একটা আলাদা `absolute inset-0 -z-10` background layer-এ সরানো হয়েছে। Content wrapper (title/search) থেকে `overflow-hidden` তুলে দেওয়া হয়েছে — visual অপরিবর্তিত (rounded corners background layer-এই clip হয়), কিন্তু dropdown এখন free-floating, clip হয় না।
+- **SearchBar.tsx modernize:** input `rounded-2xl`→`rounded-full` pill shape, flat border→soft ambient shadow (`shadow-[0_2px_10px...]`) + focus-এ coral glow shadow, search icon `group-focus-within:text-coral` color shift। Suggestions dropdown: hard border+`shadow-lg` → floating card (`rounded-[22px]`, layered soft shadow, no visible border-box feel), প্রতিটা suggestion/recent row এখন icon-in-circle pattern (QuickBar polish-এর সাথে consistent) — coral-tint circle for suggestions, cream circle for recent, row-level rounded-2xl hover highlight।
+
+### Touched files:
+- `src/screens/HomeScreen.tsx` — header background restructure (watermark/mesh-warm → separate layer)
+- `src/components/SearchBar.tsx` — full modernize pass
+
+### Build: ✓ built in 12.48s
+
+### এখনো Pending:
+- কিছুই না এই batch-এর জন্য।
+
+### পরবর্তী Agent এর জন্য নোট:
+- **Lesson:** কোনো `absolute`-positioned dropdown/popover parent-এর ভেতরে বসালে, সেই parent-এ `overflow-hidden` আছে কিনা আগে check করো — decorative background clip করার জন্য রাখা `overflow-hidden` প্রায়ই ভুলবশত dropdown/tooltip-ও ক্লিপ করে ফেলে। Fix pattern: background/decoration কে আলাদা `absolute inset-0 -z-10 overflow-hidden` layer-এ সরাও, content wrapper থেকে overflow-hidden সরাও।
+- SearchBar-এর suggestion row এখন icon-in-circle pattern ব্যবহার করে — নতুন কোনো dropdown/list বানালে এই pattern follow করো consistency-র জন্য।
+- HomeScreen header-এর watermark এখন background layer-এর ভেতরে বসানো, content div গুলোর `relative` class রাখা হয়েছে (harmless, background এখন `-z-10` দিয়েই আলাদা থাকে)।
+
+---
+
 ## Session: 2026-07-04 (QuickBar popup premium tiles + context-aware Wishlist/Wallet + Home banner slim)
 **Agent/Tool:** Claude (Sonnet 5, claude.ai)
 **Feature worked on:** QuickBar popup visual upgrade + context-aware tile swapping; Home hero banner ratio

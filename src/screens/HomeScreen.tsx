@@ -133,13 +133,15 @@ export default function HomeScreen({
   return (
     <div className="flex h-full flex-col">
       <div className="no-scrollbar flex-1 overflow-y-auto pb-32">
-        <div className="mesh-warm relative overflow-hidden rounded-b-[32px] px-5 pb-6 pt-1 anim-up">
-          <span
-            aria-hidden="true"
-            className="font-brand pointer-events-none absolute -right-5 top-5 select-none whitespace-nowrap text-[58px] leading-none text-coral/[0.09] rotate-[-6deg]"
-          >
-            Bake Art Style
-          </span>
+        <div className="relative px-5 pb-6 pt-1 anim-up">
+          <div className="mesh-warm pointer-events-none absolute inset-0 -z-10 overflow-hidden rounded-b-[32px]">
+            <span
+              aria-hidden="true"
+              className="font-brand absolute -right-5 top-5 select-none whitespace-nowrap text-[58px] leading-none text-coral/[0.09] rotate-[-6deg]"
+            >
+              Bake Art Style
+            </span>
+          </div>
 
           <div className="relative text-[12px] font-medium uppercase tracking-[0.2em] text-ink-200">
             {user ? (isNonLatin ? 'Welcome back!' : `Welcome back, ${firstName}`) : 'Welcome to Bake Art Style'}
