@@ -1,13 +1,13 @@
 import React from 'react';
-import { Home, Search, ShoppingBag, User } from 'lucide-react';
+import { Home, CakeSlice, ShoppingBag, User } from 'lucide-react';
 import { useUI } from '../lib/store';
 
 export default React.memo(function BottomTabBar() {
   const { tab, setTab } = useUI();
 
   const tabs = [
-    { id: 'home'       as const, icon: Home,       label: 'Shop'    },
-    { id: 'categories' as const, icon: Search,      label: 'Browse'  },
+    { id: 'home'       as const, icon: Home,       label: 'Home'    },
+    { id: 'categories' as const, icon: CakeSlice,  label: 'Cake'    },
     { id: 'orders'     as const, icon: ShoppingBag, label: 'Orders'  },
     { id: 'profile'    as const, icon: User,        label: 'Profile' },
   ];

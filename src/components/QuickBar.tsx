@@ -128,14 +128,15 @@ export default function QuickBar({ onNotificationsOpen }: Props) {
               {hasWallet && (
                 <button
                   onClick={() => { setOpen(false); go({ name: 'tabs', tab: 'profile' }); }}
-                  className="relative flex flex-1 flex-col items-center gap-1.5 rounded-xl bg-gradient-to-b from-gold/15 to-gold/8 py-3 shadow-[0_1px_3px_rgba(26,19,17,0.06)] transition active:scale-95"
+                  className="relative flex flex-1 flex-col items-center gap-1 rounded-xl bg-gradient-to-b from-gold/15 to-gold/8 py-3 shadow-[0_1px_3px_rgba(26,19,17,0.06)] transition active:scale-95"
                 >
                   <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-gold/30 to-gold/20">
                     <Wallet className="h-4 w-4 text-gold-800" strokeWidth={1.8} />
                   </span>
-                  <span className="text-[9px] font-medium text-gold-800">
+                  <span className="text-[13px] font-extrabold leading-none text-gold-800">
                     ৳{walletBalance.toLocaleString('en-BD')}
                   </span>
+                  <span className="text-[8px] font-medium uppercase tracking-wide text-gold-800/70">Wallet</span>
                 </button>
               )}
             </div>

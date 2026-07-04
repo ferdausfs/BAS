@@ -1,9 +1,8 @@
 import { useEffect, useState, useMemo } from 'react';
-import { ArrowRight, Sparkles, ChevronLeft, ChevronRight, Megaphone, RefreshCw, Cake, Search, Wallet } from 'lucide-react';
+import { ArrowRight, Sparkles, ChevronLeft, ChevronRight, Megaphone, RefreshCw, Cake, Search } from 'lucide-react';
 import { useDebounce } from '../hooks/useDebounce';
-import { useUI, useUser, useOrders, useAuthStore, useCart, useWallet } from '../lib/store';
+import { useUI, useUser, useOrders, useAuthStore, useCart } from '../lib/store';
 import { ls, safeArray } from '../lib/utils';
-import { categories } from '../lib/data';
 import { useProducts } from '../hooks/useProducts';
 import { useBanners } from '../hooks/useBanners';
 import SearchBar from '../components/SearchBar';
@@ -11,10 +10,7 @@ import ProductCard from '../components/ProductCard';
 import SectionHeader from '../components/SectionHeader';
 import BrandLogo from '../components/BrandLogo';
 import { useModalDepth } from '../hooks/useModalDepth';
-import OccasionIcon from '../components/OccasionIcon';
 import type { Banner, SpecialDate } from '../types';
-
-const ALL_CAT = { id: 'all' as const, name: 'All' };
 
 const getUpcomingDate = (userId?: string): { name: string; daysLeft: number } | null => {
   if (!userId) return null;
@@ -39,7 +35,6 @@ export default function HomeScreen({
   const { wishlist, toggleWish } = useUser();
   const { orders } = useOrders();
   const { user } = useAuthStore();
-  const walletBalance = useWallet((s) => s.balance);
   const { products } = useProducts();
   const { banners } = useBanners();
   const activeBanners = useMemo(() => safeArray(banners).filter((b) => b.active !== false), [banners]);
@@ -352,32 +347,6 @@ export default function HomeScreen({
           </div>
         )}
 
-        {user && walletBalance >= 50 && (
-          <div className="mx-5 mb-3 anim-up">
-            <button
-              onClick={() => go({ name: 'tabs', tab: 'categories' })}
-              className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left transition active:scale-[.98]"
-              style={{
-                background: 'linear-gradient(135deg, #C8944A15 0%, #C8944A08 100%)',
-                border: '1px solid rgba(200,148,74,0.25)',
-              }}
-            >
-              <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-gold/15">
-                <Wallet className="h-4 w-4 text-gold" strokeWidth={2} />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="text-[12px] font-bold text-ink">
-                  আপনার ৳{walletBalance.toLocaleString()} wallet এ আছে
-                </div>
-                <div className="text-[11px] text-ink/50">
-                  পরের order এ use করুন — এখনই দেখুন
-                </div>
-              </div>
-              <ArrowRight className="h-4 w-4 flex-shrink-0 text-ink/30" />
-            </button>
-          </div>
-        )}
-
         {orders.length > 0 &&
           (() => {
             const lastOrder = orders[0];
@@ -410,30 +379,6 @@ export default function HomeScreen({
               </div>
             );
           })()}
-
-        <div className="mt-7 anim-up delay-2">
-          <SectionHeader title="Browse by occasion" />
-          <div className="no-scrollbar mt-3 flex gap-3 overflow-x-auto px-5 pb-1">
-            {[ALL_CAT, ...categories].map((c) => (
-              <button
-                key={c.id}
-                onClick={() => go({ name: 'tabs', tab: 'categories', categoryId: c.id } as any)}
-                className="group flex w-[78px] flex-shrink-0 flex-col items-center gap-2 transition active:scale-95"
-              >
-                <div
-                  className="relative flex h-[64px] w-[64px] items-center justify-center overflow-hidden rounded-[22px] border border-white bg-gradient-to-br from-white to-blush-100 text-ink-200 shadow-[0_10px_24px_-16px_rgba(26,19,17,.18)] transition group-active:scale-95"
-                  style={{
-                    boxShadow: 'inset 0 1px 0 rgba(255,255,255,.9), 0 10px 24px -16px rgba(26,19,17,.18)',
-                  }}
-                >
-                  <span className="absolute -right-4 -top-4 h-10 w-10 rounded-full bg-blush-200/50" />
-                  <OccasionIcon id={c.id} size={28} className="relative" />
-                </div>
-                <span className="text-[12px] font-semibold text-ink">{c.name}</span>
-              </button>
-            ))}
-          </div>
-        </div>
 
         <div className="mt-7 anim-up delay-3">
           <SectionHeader
