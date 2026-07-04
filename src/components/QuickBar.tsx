@@ -31,10 +31,10 @@ export default function QuickBar({ onNotificationsOpen }: Props) {
   const unreadCount = notifications.filter((n) => !n.read).length;
   const totalBadge = unreadCount + wishCount + cartCount;
   const onWishlistPage = view.name === 'wishlist';
-  const onCheckoutPage = view.name === 'checkout' || view.name === 'cart';
+  const onCartPage = view.name === 'cart';
   const onProfileTab = view.name === 'tabs' && view.tab === 'profile';
   const hasWallet = Boolean(user) && walletBalance > 0 && !onProfileTab;
-  const showCheckout = cartCount > 0 && !onCheckoutPage;
+  const showCheckout = cartCount > 0 && !onCartPage;
 
   // Close on outside tap
   useEffect(() => {
@@ -168,10 +168,12 @@ export default function QuickBar({ onNotificationsOpen }: Props) {
 
               {/* Checkout — same card recipe as Wallet (icon tile + bold amount + label),
                   coral tint instead of gold so it reads as its own action. Only shown
-                  when the cart has items and we're not already on cart/checkout. */}
+                  when the cart has items and we're not already on the cart page.
+                  Goes to `cart` (review + extras page), not straight to `checkout` (payment) —
+                  user wants to land on the same "My Cart" review screen the bottom-nav cart uses. */}
               {showCheckout && (
                 <button
-                  onClick={() => { setOpen(false); go({ name: 'checkout' }); }}
+                  onClick={() => { setOpen(false); go({ name: 'cart' }); }}
                   className="relative flex flex-1 flex-col items-center gap-1 rounded-xl bg-gradient-to-b from-coral-100 to-coral-50 py-3 shadow-[0_1px_3px_rgba(26,19,17,0.06)] transition active:scale-95"
                 >
                   <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-coral-200 to-coral-100">
