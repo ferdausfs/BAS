@@ -1,3 +1,25 @@
+## Session: 2026-07-04 (Custom Cake screen crash — React error #300, Rules of Hooks violation)
+**Agent/Tool:** Claude (Sonnet 5, claude.ai)
+**Feature worked on:** App crash when opening "Custom Cake" from a home banner
+
+### কী হয়েছে:
+- **Problem (user screenshot, error boundary):** Banner থেকে "Custom" এ click করলেই পুরো app crash করে ErrorBoundary দেখাতো — `Minified React error #300`।
+- **Root cause:** `src/screens/CustomizeScreen.tsx`-এ `if (view.name !== 'customize') return null;` লাইনটা `useState` hooks-এর **আগে** বসানো ছিল। যখন view `'customize'` না থাকে, component কোনো hook call না করেই early-return করে; view `'customize'` হলে দুইটা `useState` call হয়। এই hook-count mismatch React-এর Rules of Hooks ভাঙে — error #300 = "Rendered fewer hooks than expected"। Banner থেকে navigate করলে ঠিক এই দুই render-state এর মধ্যে transition ঘটে, তাই crash।
+- **Fix:** দুইটা `useState` call কে early-return check-এর আগে move করা হয়েছে, যাতে প্রতিটা render-এ hook count/order সবসময় একই থাকে — logic/UI অপরিবর্তিত।
+
+### Touched files:
+- `src/screens/CustomizeScreen.tsx`
+
+### Build: (verify locally — Termux এ `npm run build` দিয়ে confirm করো)
+
+### এখনো Pending:
+- কিছুই না এই fix-এর জন্য।
+
+### পরবর্তী Agent এর জন্য নোট:
+- **এই pattern (early-return before hooks) পুরো codebase-এ আর কোথাও আছে কিনা check করা উচিত** — একই bug অন্য screen/component-এও লুকিয়ে থাকতে পারে যেগুলো `if (view.name !== 'x') return null;` দিয়ে শুরু হয়। কোনো নতুন screen লেখার সময় সবসময় সব hooks সবচেয়ে উপরে (কোনো conditional/early-return-এর আগে) রাখতে হবে — এটাই Rules of Hooks-এর মূল নিয়ম।
+
+---
+
 ## Session: 2026-07-04 (BottomTabBar opacity regression + QuickBar popup made consistent with nav bar)
 **Agent/Tool:** Claude (Sonnet 5, claude.ai)
 **Feature worked on:** Bottom nav bar transparency bug + QuickBar (top-right cart/wishlist/wallet capsule) size + popup styling

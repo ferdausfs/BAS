@@ -6,11 +6,10 @@ import { fileToBase64 } from '../lib/utils';
 export default function CustomizeScreen() {
   const { view, back } = useUI();
   const { settings } = useSettingsStore();
-
-  if (view.name !== 'customize') return null;
-
   const [refImagePreview, setRefImagePreview] = useState('');
   const [note, setNote] = useState('');
+
+  if (view.name !== 'customize') return null;
 
   const whatsappNumber = settings?.whatsappNumber ?? '';
   const waMessage = encodeURIComponent(
