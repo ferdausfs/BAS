@@ -1,3 +1,31 @@
+## Session: 2026-07-04 (Search dropdown: blurred backdrop + focus-tracked visibility)
+**Agent/Tool:** Claude (Sonnet 5, claude.ai)
+**Feature worked on:** Search suggestions dropdown visual separation from page content behind it
+
+### কী হয়েছে:
+- **Problem (user screenshot, follow-up):** আগের fix-এ suggestion আর cut হচ্ছিল না, কিন্তু dropdown সরাসরি নিচের banner-এর সাথে merge/overlap হয়ে যাচ্ছিল — কোনো gap বা shadow বোঝা যাচ্ছিল না, দেখতে ভাঙা লাগছিল।
+- **Root cause:** dropdown visibility শুধু `suggestions`/`recentSearches` prop-এর presence-এর উপর নির্ভর করতো, input focus state track করা হতো না — তাই কোনো real "open/close" moment ছিল না backdrop বসানোর জন্য।
+- **Fix (SearchBar.tsx):**
+  - `focused` state add করা হয়েছে (`onFocus`/`onBlur` দিয়ে, blur-এ 120ms delay যাতে suggestion button-এর `onClick` আগে fire করার সময় পায়)।
+  - Internal `inputRef` + forwarded `ref` merge করা হয়েছে (`setRefs`) — suggestion select করলে বা backdrop tap করলে input থেকে programmatically blur করা যায়।
+  - Dropdown এখন `focused && hasContent` হলেই দেখায় — সাথে একটা `fixed inset-0 z-40 bg-ink/10 backdrop-blur-md` backdrop layer বসানো হয়েছে (dropdown-এর ঠিক নিচে, `z-50` dropdown-এর নিচে) — এখন dropdown open থাকলে নিচের banner/content blur+dim হয়ে যায়, dropdown clearly floats above। Backdrop tap করলে dismiss হয়ে যায়।
+  - Suggestion/recent-search button গুলোতে `onMouseDown={e => e.preventDefault()}` add করা হয়েছে যাতে blur আগে fire করে click miss না হয়।
+  - `fixed inset-0` ব্যবহার করা হয়েছে — এটা app-এর existing convention (QuickBar-ও একই pattern ব্যবহার করে), consistency বজায় রাখা হয়েছে।
+
+### Touched files:
+- `src/components/SearchBar.tsx`
+
+### Build: ✓ built in 12.54s
+
+### এখনো Pending:
+- কিছুই না এই batch-এর জন্য। Desktop preview-তে (PhoneFrame md+ bezel view) `fixed` elements পুরো browser viewport cover করে (bezel-এ কোনো transform/containment নাই) — এটা QuickBar-এও আগে থেকেই আছে, existing known limitation, mobile-first app বলে intentionally address করা হয়নি।
+
+### পরবর্তী Agent এর জন্য নোট:
+- SearchBar dropdown এখন focus-tied — আগে যেমন সবসময় suggestions/recentSearches থাকলেই দেখাতো, এখন input focused না থাকলে দেখাবে না। কোনো programmatic search trigger (URL param ইত্যাদি) থাকলে এই behavior change মাথায় রাখতে হবে।
+- Backdrop blur pattern (`fixed inset-0 z-40 bg-ink/10 backdrop-blur-md`) — অন্য কোনো floating dropdown/sheet-এ একই "float above page" feel দরকার হলে reuse করা যায়।
+
+---
+
 ## Session: 2026-07-04 (Home search bar modernize + suggestions clipping fix)
 **Agent/Tool:** Claude (Sonnet 5, claude.ai)
 **Feature worked on:** Home hero search bar redesign + fix suggestions dropdown getting clipped
