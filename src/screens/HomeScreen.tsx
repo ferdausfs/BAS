@@ -206,7 +206,7 @@ export default function HomeScreen({
           </div>
         )}
 
-        {activeBanners.length > 0 && (
+        {!search.trim() && activeBanners.length > 0 && (
           <div className="mt-5 px-5 anim-up delay-1">
             <div
               className="relative overflow-hidden rounded-[28px] bg-white"
