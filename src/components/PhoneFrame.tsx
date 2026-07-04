@@ -9,12 +9,25 @@ interface Props {
  * Phone frame:
  * - On small viewports: fullscreen native mobile experience.
  * - On md+: centered "phone" stage with soft warm gradients around it.
+ *
+ * GLASS ARCHITECTURE:
+ * The fixed -z-10 mesh div escapes ALL overflow/stacking contexts.
+ * backdrop-filter on any child (glass-strong, glass-subtle, etc.) samples
+ * this fixed layer — that's how frosted glass works on mobile.
  */
 export default function PhoneFrame({ children, onLogoTap }: Props) {
   return (
-    <div className="min-h-screen w-full mesh-warm">
+    <div className="min-h-screen w-full">
+      {/* Fixed mesh backdrop — the layer that all glass elements blur against.
+          position:fixed means it lives in the top compositing layer, visible
+          to backdrop-filter regardless of overflow:hidden ancestors. */}
+      <div
+        className="fixed inset-0 -z-10 mesh-warm pointer-events-none"
+        aria-hidden="true"
+      />
+
       {/* Desktop stage */}
-      <div className="hidden md:block">
+      <div className="hidden md:block mesh-warm">
         <div className="mx-auto flex min-h-screen items-center justify-center px-6 py-10">
           <div className="relative">
             {/* Decorative warm blobs */}
@@ -41,8 +54,8 @@ export default function PhoneFrame({ children, onLogoTap }: Props) {
         </div>
       </div>
 
-      {/* Mobile / native */}
-      <div className="relative h-[100dvh] overflow-hidden md:hidden mesh-warm">
+      {/* Mobile / native — transparent so fixed mesh shows through */}
+      <div className="relative h-[100dvh] overflow-hidden md:hidden">
         <div className="absolute inset-0 flex flex-col overflow-hidden">{children}</div>
       </div>
     </div>
