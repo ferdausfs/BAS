@@ -6,6 +6,15 @@ interface Props {
   onNotificationsOpen: () => void;
 }
 
+// Shared "nav-bar recipe" — same opaque background/border/shadow as BottomTabBar's
+// floating pill, so the popup reads as one consistent surface family with the nav bar.
+const NAV_BAR_SURFACE = {
+  background: 'linear-gradient(180deg, #FFFFFF 0%, #FFF8FA 100%)',
+  border: '0.5px solid rgba(255,255,255,0.9)',
+  boxShadow:
+    'inset 0 1px 0 rgba(255,255,255,0.9), 0 18px 34px -18px rgba(74,27,12,0.35), 0 4px 12px -6px rgba(74,27,12,0.15)',
+};
+
 export default function QuickBar({ onNotificationsOpen }: Props) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -42,32 +51,44 @@ export default function QuickBar({ onNotificationsOpen }: Props) {
 
   return (
     <div ref={ref} className="fixed top-3 right-3 z-50">
-      {/* Pill trigger */}
+      {/* Pill trigger — bumped up a size (070426): px-3.5/py-2 -> px-4/py-2.5,
+          icon 16px -> 18px, count text 12px -> 13px, +badge 18px -> 20px */}
       <button
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-1.5 rounded-full bg-gradient-to-br from-coral-400 to-coral-600 px-3.5 py-2 text-white transition active:scale-95"
+        className="flex items-center gap-1.5 rounded-full bg-gradient-to-br from-coral-400 to-coral-600 px-4 py-2.5 text-white transition active:scale-95"
         style={{
           boxShadow:
             '0 6px 18px -4px rgba(212,60,86,0.55), 0 2px 6px -1px rgba(212,60,86,0.35), inset 0 1px 0 rgba(255,255,255,0.35)',
         }}
         aria-label="Quick actions"
       >
-        <ShoppingBag className="h-4 w-4" strokeWidth={2} />
+        <ShoppingBag className="h-[18px] w-[18px]" strokeWidth={2} />
         {cartCount > 0 && (
-          <span className="text-[12px] font-bold leading-none">{cartCount}</span>
+          <span className="text-[13px] font-bold leading-none">{cartCount}</span>
         )}
         {totalBadge > cartCount && (
-          <span className="flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-white/25 px-1 text-[9.5px] font-bold text-white">
+          <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-white/25 px-1.5 text-[10px] font-bold text-white">
             +{totalBadge - cartCount}
           </span>
         )}
       </button>
 
-      {/* Popup */}
+      {/* Popup — now uses the exact same opaque surface recipe as BottomTabBar
+          (was `.glass-strong`; kept width/radius the same, just swapped the paint). */}
       {open && (
-        <div className="glass-strong absolute top-[calc(100%+8px)] right-0 w-52 rounded-2xl">
+        <div
+          className="absolute top-[calc(100%+8px)] right-0 w-52 rounded-2xl"
+          style={NAV_BAR_SURFACE}
+        >
           {/* Arrow */}
-          <div className="absolute -top-[5px] right-4 h-2.5 w-2.5 rotate-45 rounded-[1px] border-l border-t border-black/8 bg-white" />
+          <div
+            className="absolute -top-[5px] right-4 h-2.5 w-2.5 rotate-45 rounded-[1px]"
+            style={{
+              background: '#FFFFFF',
+              borderLeft: '0.5px solid rgba(255,255,255,0.9)',
+              borderTop: '0.5px solid rgba(255,255,255,0.9)',
+            }}
+          />
 
           <div className="p-3">
             {/* Row: Bell, Wishlist/Cart (context-aware), (Wallet if available) */}

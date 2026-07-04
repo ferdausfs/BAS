@@ -1,3 +1,29 @@
+## Session: 2026-07-04 (BottomTabBar opacity regression + QuickBar popup made consistent with nav bar)
+**Agent/Tool:** Claude (Sonnet 5, claude.ai)
+**Feature worked on:** Bottom nav bar transparency bug + QuickBar (top-right cart/wishlist/wallet capsule) size + popup styling
+
+### কী হয়েছে:
+- **Problem 1 (user screenshot):** Bottom nav pill আবার transparent দেখাচ্ছিল — পেছনের product card bleed করছিল।
+  - **Root cause:** `BottomTabBar.tsx`-এর pill background gradient `rgba(255,255,255,0.92) → rgba(255,255,255,0.78)` — নিচের দিকে 0.78 alpha, high-contrast content পেছনে থাকলে bleed করে।
+  - **Fix:** Gradient কে fully opaque করা হয়েছে (`#FFFFFF → #FFF8FA`, 0% alpha), border/shadow অপরিবর্তিত।
+- **Problem 2 (user request):** top-right এর pink QuickBar capsule (tap করলে Notif/Wishlist/Wallet popup খোলে) — এই capsule টা আগের কোনো session-এ AGENT_LOG-এ documented ছিল না, তাই খুঁজে পেতে সময় লেগেছে (`src/components/QuickBar.tsx`)। User চেয়েছে: (a) capsule position অপরিবর্তিত থাকবে, (b) pink pill টা একটু বড় হবে, (c) popup-এর color/style বটম nav bar-এর মতো same হবে।
+  - **Fix:** Pill trigger বড় করা হয়েছে (`px-3.5/py-2` → `px-4/py-2.5`, icon 16px→18px, count text 12px→13px, `+N` badge 18px→20px)। Popup-এর `.glass-strong` class সরিয়ে BottomTabBar-এর ঠিক same opaque background/border/shadow recipe (`NAV_BAR_SURFACE` constant হিসেবে) apply করা হয়েছে — width/radius অপরিবর্তিত।
+
+### Touched files:
+- `src/components/BottomTabBar.tsx`
+- `src/components/QuickBar.tsx`
+
+### Build: (verify locally — না test করা এই session-এ, Termux-এ `npm run build` দিয়ে confirm করতে হবে)
+
+### এখনো Pending:
+- Screenshot-এ দেখা একটা বড় লাল ভাসমান সংখ্যা (cart-এ item add করলে "1", "2" — hero title-এর উপর overlap করছিল) — এটা fix করার কথা বলা হয়নি explicit ভাবে, তাই touch করা হয়নি। পরের session-এ জিজ্ঞেস করে নিশ্চিত হতে হবে এটা bug না feature।
+
+### পরবর্তী Agent এর জন্য নোট:
+- **`QuickBar.tsx` অত্যন্ত গুরুত্বপূর্ণ কিন্তু আগে কখনো log-এ mention হয়নি** — এটা top-right fixed capsule, `Header.tsx`-এর cart/wishlist button থেকে আলাদা একটা component, HomeScreen-এ আলাদাভাবে mount করা। ভবিষ্যতে "top-right capsule/popup" related কোনো request এলে সরাসরি এই file-এ যাও, `Header.tsx` না।
+- Nav-bar আর popup surface এখন `NAV_BAR_SURFACE`/inline duplicate recipe শেয়ার করছে (২ জায়গায় copy করা আছে, shared CSS var/token বানানো হয়নি) — ভবিষ্যতে চাইলে `.nav-surface` নামে একটা নতুন CSS class বানিয়ে দুই জায়গা থেকে refer করানো যায়, DRY করার জন্য।
+
+---
+
 ## Session: 2026-07-04 (Search backdrop: exclude input row so search box stays sharp)
 **Agent/Tool:** Claude (Sonnet 5, claude.ai)
 **Feature worked on:** Search input itself was getting blurred along with the backdrop

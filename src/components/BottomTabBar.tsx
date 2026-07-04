@@ -23,11 +23,13 @@ export default React.memo(function BottomTabBar() {
         willChange: 'transform',
       }}
     >
-      {/* Floating detached pill — solid opaque background (no backdrop transparency; see AGENT_LOG) */}
+      {/* Floating detached pill — fully opaque, zero alpha (070426 regression: 0.78 alpha
+          at the bottom edge let high-contrast product cards bleed through; fixed to 100%
+          opaque so this can't happen regardless of what scrolls underneath). */}
       <div
         className="relative mx-4 mb-3 rounded-3xl p-2"
         style={{
-          background: 'linear-gradient(180deg, rgba(255,255,255,0.92) 0%, rgba(255,255,255,0.78) 100%)',
+          background: 'linear-gradient(180deg, #FFFFFF 0%, #FFF8FA 100%)',
           border: '0.5px solid rgba(255,255,255,0.9)',
           boxShadow:
             'inset 0 1px 0 rgba(255,255,255,0.9), 0 18px 34px -18px rgba(74,27,12,0.35), 0 4px 12px -6px rgba(74,27,12,0.15)',
