@@ -1,3 +1,24 @@
+## Session: 2026-07-04 (Cycle 2 — color token cleanup)
+**Agent/Tool:** Claude (Sonnet 4.6, claude.ai)
+**Feature worked on:** tailwind.config.ts color token deduplication
+
+### কী হয়েছে:
+- `ink.*` block removed from config — `#1A3037` (teal) conflict fixed, @theme `#1C1112` (warm black) now sole definition
+- `surface.*` block removed — `#F7F7F9` (cool grey) conflict fixed, @theme `--color-cream: #F9F9F7` wins
+- `border.*` block removed — unused in JSX, no @theme equivalent needed
+- `brand.*`, `gold.*`, `accent.*` kept — these are config-only, no @theme equivalent
+- `btn` shadow corrected: `rgba(232,71,46,…)` → `rgba(232,82,106,…)` (was wrong orange, now correct coral)
+
+### Touched files:
+- `tailwind.config.ts`
+
+### পরবর্তী Agent এর জন্য নোট:
+- Tailwind v4: ink/cream/paper/blush/coral tokens → src/index.css @theme only
+- brand/gold/accent tokens → tailwind.config.ts only
+- দুই জায়গায় same token define করবে না
+
+---
+
 ## Session: 2026-07-04 (Glass fix → Premium card system)
 **Agent/Tool:** Claude (Sonnet 4.6, claude.ai)
 **Feature worked on:** Glass blur fix + card visual system overhaul
