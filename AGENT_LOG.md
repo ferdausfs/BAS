@@ -1,3 +1,28 @@
+## Session: 2026-07-04 (QuickBar pill redesign + popup layout)
+**Agent/Tool:** Claude (Sonnet 4.6, claude.ai)
+**Feature worked on:** QuickBar trigger pill + popup dropdown redesign
+
+### কী হয়েছে:
+- **Root cause of this session:** একটা আগের chat/agent session এ pill design (4 options: A Gradient / B Dark glass / C Outlined / D FAB) এবং popup layout নিয়ে user কে সিদ্ধান্ত জিজ্ঞেস করা হয়েছিল, কিন্তু কোনো entry `AGENT_LOG.md`-তে add হয়নি এবং code-ও পুরনো `bg-coral` version এই ছিল। এই session এ সেই gap ঠিক করে actual implementation করা হলো।
+- **Pill trigger:** `bg-coral` solid → `bg-gradient-to-br from-coral-400 to-coral-600` (Option A — Gradient pill)। Combined notif+wishlist badge dark `bg-ink` circle থেকে lighter inline `bg-white/25` chip-এ (`+N` ফরম্যাট) পরিবর্তন — pill-এর ভেতরেই মিশে থাকে।
+- **Popup grid:** আগে ৩-column ছিল (Notif, Wishlist, Cart) + নিচে আলাদা full-width Wallet row। এখন Cart row সম্পূর্ণ সরানো হয়েছে (cart count trigger pill-এই visible, redundant ছিল), এবং Wallet সেই ৩য় slot-এ move করা হয়েছে (icon + ৳ balance, compact)।
+- **Conditional layout:** `hasWallet = user && walletBalance > 0` — true হলে ৩-column (Notif/Wishlist/Wallet), false হলে row auto-shrink করে ২-column (Notif/Wishlist) হয়ে যায় (`flex` + `flex-1` দিয়ে, কোনো placeholder/empty box রাখা হয়নি)।
+
+### Touched files:
+- `src/components/QuickBar.tsx`
+
+### Build: ✓ built in 9.79s
+
+### এখনো Pending:
+- কিছুই না এই feature-এর জন্য।
+
+### পরবর্তী Agent এর জন্য নোট:
+- QuickBar popup এখন conditional column count (2 বা 3) — নতুন কোনো item popup-এ add করলে এই pattern follow করো, fixed 3-column assume করবে না।
+- Pill trigger এখন gradient (`coral-400` → `coral-600`) — অন্য কোথাও solid `bg-coral` ব্যবহার হলে সেটা intentionally আলাদা রাখা হয়েছে, touch করার দরকার নাই এই session-এর scope-এ।
+- **Lesson:** design-decision চ্যাটে হলেও, approve হওয়া মাত্রই `AGENT_LOG.md`-তে entry দেওয়া বাধ্যতামূলক — নাহলে পরের agent/session confuse হয়ে পুরনো code-ই ধরে রাখে।
+
+---
+
 ## Session: 2026-07-04 (Cycle 2 — color token cleanup)
 **Agent/Tool:** Claude (Sonnet 4.6, claude.ai)
 **Feature worked on:** tailwind.config.ts color token deduplication

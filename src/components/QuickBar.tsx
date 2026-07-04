@@ -20,6 +20,7 @@ export default function QuickBar({ onNotificationsOpen }: Props) {
   const wishCount = wishlist.length;
   const unreadCount = notifications.filter((n) => !n.read).length;
   const totalBadge = unreadCount + wishCount + cartCount;
+  const hasWallet = Boolean(user) && walletBalance > 0;
 
   // Close on outside tap
   useEffect(() => {
@@ -42,7 +43,7 @@ export default function QuickBar({ onNotificationsOpen }: Props) {
       {/* Pill trigger */}
       <button
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-1.5 rounded-full bg-coral px-3 py-1.5 text-white shadow-lg transition active:scale-95"
+        className="flex items-center gap-1.5 rounded-full bg-gradient-to-br from-coral-400 to-coral-600 px-3 py-1.5 text-white shadow-lg shadow-coral-600/30 transition active:scale-95"
         aria-label="Quick actions"
       >
         <ShoppingBag className="h-[15px] w-[15px]" strokeWidth={2} />
@@ -50,8 +51,8 @@ export default function QuickBar({ onNotificationsOpen }: Props) {
           <span className="text-[11px] font-bold leading-none">{cartCount}</span>
         )}
         {totalBadge > cartCount && (
-          <span className="flex h-4 min-w-[16px] items-center justify-center rounded-full bg-ink px-1 text-[9px] font-bold text-white">
-            {totalBadge - cartCount}
+          <span className="flex h-4 min-w-[16px] items-center justify-center rounded-full bg-white/25 px-1 text-[9px] font-bold text-white">
+            +{totalBadge - cartCount}
           </span>
         )}
       </button>
@@ -63,8 +64,8 @@ export default function QuickBar({ onNotificationsOpen }: Props) {
           <div className="absolute -top-[5px] right-4 h-2.5 w-2.5 rotate-45 rounded-[1px] border-l border-t border-black/8 bg-white" />
 
           <div className="p-2.5">
-            {/* Row: Bell, Wishlist, Cart */}
-            <div className="mb-2 flex gap-1.5">
+            {/* Row: Bell, Wishlist, (Wallet if available) */}
+            <div className="flex gap-1.5">
               {/* Notifications */}
               <button
                 onClick={() => { setOpen(false); onNotificationsOpen(); }}
@@ -96,36 +97,19 @@ export default function QuickBar({ onNotificationsOpen }: Props) {
                 <span className="text-[9px] text-ink-300">Wishlist</span>
               </button>
 
-              {/* Cart */}
-              <button
-                onClick={() => { setOpen(false); go({ name: 'cart' }); }}
-                className="relative flex flex-1 flex-col items-center gap-1 rounded-xl bg-cream py-2.5 transition active:scale-95"
-              >
-                {cartCount > 0 && (
-                  <span className="absolute top-1 right-1 flex h-[14px] min-w-[14px] items-center justify-center rounded-full bg-ink px-0.5 text-[8px] font-bold text-white">
-                    {cartCount}
+              {/* Wallet — only rendered when logged in and has balance; otherwise row shrinks to 2-column */}
+              {hasWallet && (
+                <button
+                  onClick={() => { setOpen(false); go({ name: 'tabs', tab: 'profile' }); }}
+                  className="relative flex flex-1 flex-col items-center gap-1 rounded-xl bg-gold/12 py-2.5 transition active:scale-95"
+                >
+                  <Wallet className="h-5 w-5 text-gold-800" strokeWidth={1.8} />
+                  <span className="text-[9px] font-medium text-gold-800">
+                    ৳{walletBalance.toLocaleString('en-BD')}
                   </span>
-                )}
-                <ShoppingBag className="h-5 w-5 text-ink-300" strokeWidth={1.8} />
-                <span className="text-[9px] text-ink-300">Cart</span>
-              </button>
+                </button>
+              )}
             </div>
-
-            {/* Wallet row — only if logged in and has balance */}
-            {user && walletBalance > 0 && (
-              <button
-                onClick={() => { setOpen(false); go({ name: 'tabs', tab: 'profile' }); }}
-                className="flex w-full items-center justify-between rounded-xl bg-gradient-to-r from-gold/20 to-gold/10 px-3 py-2 transition active:scale-95"
-              >
-                <div className="flex items-center gap-1.5">
-                  <Wallet className="h-3.5 w-3.5 text-gold" strokeWidth={2} />
-                  <span className="text-[10px] font-medium text-gold-800">Wallet</span>
-                </div>
-                <span className="text-[13px] font-bold text-gold-800">
-                  ৳{walletBalance.toLocaleString('en-BD')}
-                </span>
-              </button>
-            )}
           </div>
         </div>
       )}
