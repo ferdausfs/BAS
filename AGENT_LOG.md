@@ -1,3 +1,26 @@
+## Session: 2026-07-04 (Search backdrop: exclude input row so search box stays sharp)
+**Agent/Tool:** Claude (Sonnet 5, claude.ai)
+**Feature worked on:** Search input itself was getting blurred along with the backdrop
+
+### কী হয়েছে:
+- **Problem (user screenshot, 4th follow-up):** portal fix-এর পর backdrop পুরো screen ঠিকমতো cover করলো, কিন্তু এখন search input box নিজেই blur হয়ে অদৃশ্য/অস্পষ্ট হয়ে গিয়েছিল — "বেশি হয়ে গেছে"।
+- **Root cause:** backdrop portal হয়ে `document.body`-তে সরাসরি child হিসেবে বসে (top-level stacking context-এ explicit positive z-index নিয়ে), যেখানে input `#root` subtree-এর ভেতরে normal-flow (z-auto)। top-level stacking-এ explicit z-index সবসময় জেতে normal-flow subtree-র বিরুদ্ধে, তাই input-এর নিজের কোনো z-index (৫০ হোক বা যাই হোক) portal-এর against কাজ করে না — পুরো `fixed inset-0` backdrop input-কেও ঢেকে blur করে দিচ্ছিল।
+- **Fix (SearchBar.tsx):** single full-screen backdrop-এর বদলে **দুইটা backdrop piece** — একটা input-এর উপরে (`height: box.top`), একটা input-এর নিচে (`top: box.bottom`)। মাঝখানে input-এর নিজের row-টা কোনো backdrop element দিয়েই covered না (gap) — তাই input স্বাভাবিকভাবে sharp/crisp থাকে, header text (উপরে) আর page content (নিচে) ঠিকই blur/dim হয়।
+
+### Touched files:
+- `src/components/SearchBar.tsx`
+
+### Build: ✓ built in 10.34s
+
+### এখনো Pending:
+- কিছুই না এই batch-এর জন্য।
+
+### পরবর্তী Agent এর জন্য নোট:
+- **Lesson:** portal-এ কোনো full-screen overlay বসালে, সেই portal-এর বাইরে (in-tree) থাকা কোনো sibling element-কে (এখানে input) z-index দিয়ে overlay-এর উপরে আনা সম্ভব না — portal top-level stacking context-এ থাকে, in-tree element যত high z-index দিলেও তার নিজের subtree-র মধ্যেই সীমাবদ্ধ। Overlay-এর মধ্যে "hole"/gap রাখতে হলে overlay-কে ভেঙে একাধিক piece-এ ভাগ করে সেই অংশটা বাদ দিতে হবে (এই session-এ যেমন করা হলো), অথবা সেই element-টাকেও একই portal-এ আনতে হবে।
+- এখন backdrop দুই ভাগে বিভক্ত (`box.top`-এর উপরে, `box.bottom`-এর নিচে) — dropdown position calculation (`box.bottom + 8`) অপরিবর্তিত।
+
+---
+
 ## Session: 2026-07-04 (Search backdrop: portal fix — anim-up transform was trapping the fixed overlay)
 **Agent/Tool:** Claude (Sonnet 5, claude.ai)
 **Feature worked on:** Search suggestions backdrop wasn't covering the full screen

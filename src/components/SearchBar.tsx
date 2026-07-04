@@ -16,7 +16,7 @@ type Props = {
 const SearchBar = forwardRef<HTMLInputElement, Props>(
   ({ value, onChange, onSearch, placeholder = 'Search cakes, occasions, flavors…', className = '', suggestions, recentSearches, onClearRecent }, ref) => {
     const [focused, setFocused] = useState(false);
-    const [rect, setRect] = useState<{ top: number; left: number; width: number } | null>(null);
+    const [box, setBox] = useState<{ top: number; bottom: number; left: number; width: number } | null>(null);
     const inputRef = useRef<HTMLInputElement>(null);
 
     const setRefs = (node: HTMLInputElement | null) => {
@@ -43,7 +43,7 @@ const SearchBar = forwardRef<HTMLInputElement, Props>(
       if (!showDropdown || !inputRef.current) return;
       const update = () => {
         const r = inputRef.current?.getBoundingClientRect();
-        if (r) setRect({ top: r.bottom, left: r.left, width: r.width });
+        if (r) setBox({ top: r.top, bottom: r.bottom, left: r.left, width: r.width });
       };
       update();
       window.addEventListener('resize', update);
@@ -88,14 +88,24 @@ const SearchBar = forwardRef<HTMLInputElement, Props>(
           </button>
         )}
 
-        {showDropdown && rect &&
+        {showDropdown && box &&
           createPortal(
             <>
-              {/* Backdrop — portaled to <body> so it truly covers the full screen
-                  instead of being trapped inside an ancestor with a lingering
-                  transform (anim-up). Blurs/dims everything behind it. */}
+              {/* Backdrop — split above/below the input's own row so the input
+                  itself stays sharp; only the header text above and the page
+                  content below get blurred/dimmed. Portaled to <body> so it
+                  truly covers the full screen instead of being trapped inside
+                  an ancestor with a lingering transform (anim-up). */}
               <div
-                className="fixed inset-0 z-[9998] bg-ink/10 backdrop-blur-md transition-opacity"
+                className="fixed inset-x-0 top-0 z-[9998] bg-ink/10 backdrop-blur-md transition-opacity"
+                style={{ height: box.top }}
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={dismiss}
+                aria-hidden="true"
+              />
+              <div
+                className="fixed inset-x-0 bottom-0 z-[9998] bg-ink/10 backdrop-blur-md transition-opacity"
+                style={{ top: box.bottom }}
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={dismiss}
                 aria-hidden="true"
@@ -104,9 +114,9 @@ const SearchBar = forwardRef<HTMLInputElement, Props>(
               <div
                 className="fixed z-[9999] overflow-hidden rounded-[22px] border border-black/5 bg-white p-1.5"
                 style={{
-                  top: rect.top + 8,
-                  left: rect.left,
-                  width: rect.width,
+                  top: box.bottom + 8,
+                  left: box.left,
+                  width: box.width,
                   boxShadow: '0 24px 48px -18px rgba(26,19,17,0.35), 0 6px 16px -6px rgba(26,19,17,0.15)',
                 }}
               >
