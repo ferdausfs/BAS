@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Bell, Heart, ShoppingBag, Wallet } from 'lucide-react';
-import { useUI, useCart, useUser, useAuthStore, useWallet } from '../lib/store';
+import { useUI, useCart, useUser, useAuthStore, useWallet, formatINR, cartSubtotal } from '../lib/store';
 
 interface Props {
   onNotificationsOpen: () => void;
@@ -26,12 +26,15 @@ export default function QuickBar({ onNotificationsOpen }: Props) {
   const walletBalance = useWallet((s) => s.balance);
 
   const cartCount = items.reduce((s, i) => s + i.quantity, 0);
+  const cartTotal = cartSubtotal(items);
   const wishCount = wishlist.length;
   const unreadCount = notifications.filter((n) => !n.read).length;
   const totalBadge = unreadCount + wishCount + cartCount;
   const onWishlistPage = view.name === 'wishlist';
+  const onCheckoutPage = view.name === 'checkout' || view.name === 'cart';
   const onProfileTab = view.name === 'tabs' && view.tab === 'profile';
   const hasWallet = Boolean(user) && walletBalance > 0 && !onProfileTab;
+  const showCheckout = cartCount > 0 && !onCheckoutPage;
 
   // Close on outside tap
   useEffect(() => {
@@ -77,7 +80,9 @@ export default function QuickBar({ onNotificationsOpen }: Props) {
           (was `.glass-strong`; kept width/radius the same, just swapped the paint). */}
       {open && (
         <div
-          className="absolute top-[calc(100%+8px)] right-0 w-52 rounded-2xl"
+          className={`absolute top-[calc(100%+8px)] right-0 rounded-2xl ${
+            showCheckout && hasWallet ? 'w-64' : 'w-52'
+          }`}
           style={NAV_BAR_SURFACE}
         >
           {/* Arrow */}
@@ -158,6 +163,24 @@ export default function QuickBar({ onNotificationsOpen }: Props) {
                     ৳{walletBalance.toLocaleString('en-BD')}
                   </span>
                   <span className="text-[8px] font-medium uppercase tracking-wide text-gold-800/70">Wallet</span>
+                </button>
+              )}
+
+              {/* Checkout — same card recipe as Wallet (icon tile + bold amount + label),
+                  coral tint instead of gold so it reads as its own action. Only shown
+                  when the cart has items and we're not already on cart/checkout. */}
+              {showCheckout && (
+                <button
+                  onClick={() => { setOpen(false); go({ name: 'checkout' }); }}
+                  className="relative flex flex-1 flex-col items-center gap-1 rounded-xl bg-gradient-to-b from-coral-100 to-coral-50 py-3 shadow-[0_1px_3px_rgba(26,19,17,0.06)] transition active:scale-95"
+                >
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-coral-200 to-coral-100">
+                    <ShoppingBag className="h-4 w-4 text-coral-700" strokeWidth={1.8} />
+                  </span>
+                  <span className="text-[13px] font-extrabold leading-none text-coral-700">
+                    {formatINR(cartTotal)}
+                  </span>
+                  <span className="text-[8px] font-medium uppercase tracking-wide text-coral-700/70">Checkout</span>
                 </button>
               )}
             </div>
