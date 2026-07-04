@@ -23,14 +23,14 @@ export default React.memo(function BottomTabBar() {
         willChange: 'transform',
       }}
     >
-      {/* Floating detached pill — layered gradient + border highlight for depth */}
+      {/* Floating detached pill — solid opaque background (no backdrop transparency; see AGENT_LOG) */}
       <div
-        className="relative mx-4 mb-3 rounded-3xl glass-strong"
+        className="relative mx-4 mb-3 rounded-3xl"
         style={{
-          background: 'linear-gradient(180deg, rgba(255,255,255,0.92) 0%, rgba(255,255,255,0.78) 100%)',
-          border: '0.5px solid rgba(255,255,255,0.9)',
+          background: 'linear-gradient(158deg, #FFFFFF 0%, #FFF8FA 100%)',
+          border: '1px solid rgba(232,82,106,0.07)',
           boxShadow:
-            'inset 0 1px 0 rgba(255,255,255,0.9), 0 18px 34px -18px rgba(74,27,12,0.35), 0 4px 12px -6px rgba(74,27,12,0.15)',
+            'inset 0 1px 0 rgba(255,255,255,1), 0 18px 34px -18px rgba(74,27,12,0.35), 0 4px 12px -6px rgba(74,27,12,0.15)',
         }}
       >
         {/* Sliding active indicator */}
@@ -38,7 +38,8 @@ export default React.memo(function BottomTabBar() {
           className="absolute top-2 bottom-2 left-2 rounded-2xl transition-transform duration-300 ease-out pointer-events-none"
           style={{
             width: 'calc(25% - 8px)',
-            transform: `translateX(${activeIndex * 100}%)`,
+            transform: `translate3d(${activeIndex * 100}%, 0, 0)`,
+            willChange: 'transform',
             background:
               'radial-gradient(circle at 50% 20%, rgba(232,82,106,0.16), rgba(232,82,106,0.06))',
             transitionTimingFunction: 'cubic-bezier(.34,1.56,.64,1)',
@@ -60,7 +61,8 @@ export default React.memo(function BottomTabBar() {
                   className="h-[21px] w-[21px] transition-all duration-300"
                   style={{
                     color: active ? '#E8526A' : '#9A8E8E',
-                    transform: active ? 'translateY(-5px)' : 'translateY(0)',
+                    transform: active ? 'translate3d(0,-5px,0)' : 'translate3d(0,0,0)',
+                    willChange: 'transform',
                     filter: active ? 'drop-shadow(0 6px 10px rgba(232,82,106,0.45))' : 'none',
                     transitionTimingFunction: 'cubic-bezier(.34,1.56,.64,1)',
                   }}
