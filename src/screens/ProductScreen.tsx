@@ -141,6 +141,45 @@ export default function ProductScreen() {
     setActiveImg(null);
   }, [view.name === 'product' ? view.productId : '']);
 
+  // --- Everything below must run on EVERY render, even while `product` is still
+  // null (Firestore fetch in flight on first mount). These used to sit below the
+  // `if (!product) return` early-return, so the "loading" render called fewer
+  // hooks than the "loaded" render — React error #300, "Rendered fewer hooks
+  // than expected". This is the same class of bug as CustomizeScreen; see
+  // AGENT_LOG. Null-safe versions of the product-derived values below let the
+  // hooks execute unconditionally either way. ---
+  const currentImg = activeImg || product?.image || '';
+  const galleryImages = product ? [product.image, ...safeArray<string>(product.gallery)] : [];
+  const activeIndex = galleryImages.indexOf(currentImg);
+  // Keep refs in sync so native touch listeners always have latest values
+  galleryRef.current = galleryImages;
+  activeIndexRef.current = activeIndex;
+
+  // Dominant color extraction for glass-tint (Check 3)
+  const dominantColor = useDominantColor(currentImg);
+
+  const productWeights = safeArray<{ size: string; price: number }>(product?.weights);
+  const productFlavors = safeArray<string>(product?.flavors);
+  const safeWeights = productWeights.length ? productWeights : [{ size: '1 kg', price: product?.price ?? 0 }];
+  const safeFlavors = productFlavors.length ? productFlavors : ['Chocolate'];
+
+  const [size, setSize] = useState(safeWeights[1]?.size ?? safeWeights[0]?.size);
+  const [selectedFlavor, setSelectedFlavor] = useState(safeFlavors[0]);
+  const [addons, setAddons] = useState<Record<string, boolean>>({});
+  const [cakeMessage, setCakeMessage] = useState('');
+  const [customWeight, setCustomWeight] = useState('1');
+  const [weightError, setWeightError] = useState('');
+
+  // Product loads async — on first mount `product` is often still null, so the
+  // useState initial values above may have locked in the fallback defaults.
+  // Re-sync size/flavor once the real product data actually arrives.
+  useEffect(() => {
+    if (!product) return;
+    setSize(safeWeights[1]?.size ?? safeWeights[0]?.size);
+    setSelectedFlavor(safeFlavors[0]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [product?.id]);
+
   if (view.name !== 'product') return null;
 
   if (!product) {
@@ -158,25 +197,6 @@ export default function ProductScreen() {
     );
   }
 
-  const currentImg = activeImg || product.image;
-  const galleryImages = [product.image, ...safeArray<string>(product.gallery)];
-  const activeIndex = galleryImages.indexOf(currentImg);
-  // Keep refs in sync so native touch listeners always have latest values
-  galleryRef.current = galleryImages;
-  activeIndexRef.current = activeIndex;
-
-  // Dominant color extraction for glass-tint (Check 3)
-  const dominantColor = useDominantColor(currentImg);
-  const productWeights = safeArray<{ size: string; price: number }>(product.weights);
-  const productFlavors = safeArray<string>(product.flavors);
-  const safeWeights = productWeights.length ? productWeights : [{ size: '1 kg', price: product.price }];
-  const safeFlavors = productFlavors.length ? productFlavors : ['Chocolate'];
-  const [size, setSize] = useState(safeWeights[1]?.size ?? safeWeights[0]?.size);
-  const [selectedFlavor, setSelectedFlavor] = useState(safeFlavors[0]);
-  const [addons, setAddons] = useState<Record<string, boolean>>({});
-  const [cakeMessage, setCakeMessage] = useState('');
-  const [customWeight, setCustomWeight] = useState('1');
-  const [weightError, setWeightError] = useState('');
   const wished = wishlist.includes(product.id);
 
   const selectedWeight = safeWeights.find((w) => w.size === size);

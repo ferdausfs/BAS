@@ -1,3 +1,30 @@
+## Session: 2026-07-04 (Product page crash — SAME React error #300, found in ProductScreen.tsx too — likely the actual repeat crash)
+**Agent/Tool:** Claude (Sonnet 5, claude.ai)
+**Feature worked on:** App crash (identical stack trace as the CustomizeScreen fix, still occurring after that fix)
+
+### কী হয়েছে:
+- **Problem:** CustomizeScreen fix push করার পরেও user একই exact error #300 crash পাচ্ছিল, একই stack trace/line numbers — অর্থাৎ crash এর আসল জায়গা অন্য কোথাও।
+- **Full repo scan:** সব screen file-এ "early-return before hooks" pattern খুঁজে `src/screens/ProductScreen.tsx`-এ আরও বড় ও বেশি ঘন ঘন trigger হওয়ার মতো একই bug পাওয়া গেছে:
+  - Line 144: `if (view.name !== 'product') return null;`
+  - Line 146-159: `if (!product) return (<div>Cake not found...</div>);` — product Firestore থেকে async load হয়, তাই **প্রথম render-এ `product` null থাকে**।
+  - কিন্তু এই দুই early-return-এর **পরে** আরও hooks call হতো: `useDominantColor(currentImg)` আর ৬টা `useState` (size, selectedFlavor, addons, cakeMessage, customWeight, weightError)।
+  - Result: "loading" render (product null) কম hook call করে, "loaded" render (product এসে গেলে) বেশি hook call করে — hook count mismatch, error #300। যেকোনো product page খুললেই (শুধু customize না) এটা trigger হতে পারে, race condition depend করে data কত দ্রুত আসে তার উপর — তাই user বারবার একই crash পাচ্ছিল।
+- **Fix:** ঐ hooks গুলো (dominantColor + ৬টা useState) দুইটা early-return-এর **আগে** move করা হয়েছে। যেসব value `product`-এর উপর নির্ভর করত (currentImg, galleryImages, safeWeights, safeFlavors) সেগুলোকে `product?.xxx` দিয়ে null-safe করা হয়েছে যাতে product null থাকা অবস্থাতেও hooks safely call হতে পারে। একটা নতুন `useEffect` যোগ করা হয়েছে যেটা product আসলে (`product?.id` change হলে) size/selectedFlavor কে actual product data দিয়ে re-sync করে — আগে যেহেতু hooks শুধু product থাকলেই mount হতো, initial value সবসময় সঠিক data দিয়েই set হতো; এখন unconditionally mount হওয়ায় এই sync effect ছাড়া প্রথমবার fallback default আটকে থাকতে পারতো।
+
+### Touched files:
+- `src/screens/ProductScreen.tsx`
+
+### Build: (verify locally — Termux এ `npm run build` দিয়ে confirম করো, তারপর যেকোনো product page খুলে/reload করে বেশ কয়েকবার test করো crash আর হয় কিনা)
+
+### এখনো Pending:
+- কিছুই না এই fix-এর জন্য। **তবে এই fix build+push+deploy করার পরও যদি একই crash আবার আসে, screenshot-সহ পরবর্তী agent কে দিতে হবে** — component stack ভালোভাবে দেখে exact component identify করা দরকার হবে (non-minified build বা sourcemap থাকলে অনেক সহজ হবে)।
+
+### পরবর্তী Agent এর জন্য নোট:
+- **Rules of Hooks lesson (repeat, now confirmed twice — CustomizeScreen + ProductScreen):** কোনো screen যদি async data (Firestore/API) এর উপর নির্ভর করে conditionally render করে ("data null থাকলে early return, data এলে full UI"), তাহলে **সব hooks অবশ্যই সেই conditional early-return-এর আগে** থাকতে হবে, ফলব্যাক/null-safe initial values দিয়ে। এই codebase-এ নতুন কোনো data-dependent screen লেখার সময় এই checklist মাথায় রাখা উচিত।
+- Production build minified হওয়ায় error stack trace-এ component/function নাম (যেমন `ZI`, `o6`) অর্থহীন হয়ে যায় — ভবিষ্যতে দ্রুত debug করতে চাইলে dev-mode build বা sourcemap deploy করার কথা ভাবা যেতে পারে (শুধু debugging-এর জন্য, production-এ না)।
+
+---
+
 ## Session: 2026-07-04 (Custom Cake screen crash — React error #300, Rules of Hooks violation)
 **Agent/Tool:** Claude (Sonnet 5, claude.ai)
 **Feature worked on:** App crash when opening "Custom Cake" from a home banner
