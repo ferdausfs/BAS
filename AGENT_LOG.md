@@ -1,3 +1,28 @@
+## Session: 2026-07-04 (Banner CTA button was routing "customize" banners to a random product page — real trigger for the recurring crash)
+**Agent/Tool:** Claude (Sonnet 5, claude.ai)
+**Feature worked on:** Home banner — CTA pill button ignored `b.link === 'customize'`
+
+### কী হয়েছে:
+- **User confirmed reproduction:** "Custom" এ product screen থেকে গেলে crash হয় না, কিন্তু **banner থেকে** customize এ tap করলে crash হয় সবসময়।
+- **Root cause (`src/screens/HomeScreen.tsx`):** Banner card-এ আসলে দুইটা আলাদা `onClick` handler আছে:
+  - বড় card/background (`div onClick`, ~line 214) — এটা ঠিকভাবে `b.link === 'customize'` চেক করে `go({ name: 'customize' })` করে।
+  - ভেতরের ছোট CTA pill button (`button onClick`, ~line 248, `e.stopPropagation()` দিয়ে) — এখানে `b.link` চেক-ই ছিল না। `discount`/`notice` টাইপ ছাড়া বাকি সব ক্ষেত্রে সরাসরি `go({ name: 'product', productId: b.productId || safeArray(products)[0]?.id || 'p1' })` চলে যেত — মানে "customize" banner-এর CTA button tap করলেও সেটা একটা (প্রায়ই bogus/fallback `'p1'`) product id নিয়ে `ProductScreen` এ চলে যেত।
+  - এটাই আগের session-এ fix করা `ProductScreen.tsx`-এর hook-mismatch bug (error #300) trigger করছিল — user সম্ভবত বড় card না, ভেতরের CTA button-টাতেই tap করছিল।
+- **Fix:** CTA button-এর `onClick`-কে বড় card-এর handler-এর মতোই `b.productId` → `b.link === 'customize'` → `b.link === 'categories'` → fallback ক্রমে চেক করানো হয়েছে, যাতে দুই জায়গার routing logic সবসময় সিঙ্ক থাকে।
+
+### Touched files:
+- `src/screens/HomeScreen.tsx`
+
+### Build: (verify locally)
+
+### এখনো Pending:
+- এই ৩টা fix (CustomizeScreen hooks + ProductScreen hooks + এই banner CTA routing) — সব একসাথে build/push/deploy করে **banner CTA button-এই** tap করে customize এ ঠিকভাবে যায় কিনা, আর crash আর হয় না কিনা, verify করা বাকি।
+
+### পরবর্তী Agent এর জন্য নোট:
+- Banner-এর দুই click target (card বনাম CTA button) এর routing logic duplicate করা আছে — DRY করতে চাইলে একটা shared `handleBannerAction(b)` function বানিয়ে দুই জায়গা থেকেই call করানো যায়।
+
+---
+
 ## Session: 2026-07-04 (Product page crash — SAME React error #300, found in ProductScreen.tsx too — likely the actual repeat crash)
 **Agent/Tool:** Claude (Sonnet 5, claude.ai)
 **Feature worked on:** App crash (identical stack trace as the CustomizeScreen fix, still occurring after that fix)

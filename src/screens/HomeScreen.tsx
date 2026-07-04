@@ -256,8 +256,14 @@ export default function HomeScreen({
                             }
                           } else if (b.type === 'notice') {
                             setActiveNotice(b);
+                          } else if (b.productId) {
+                            go({ name: 'product', productId: b.productId });
+                          } else if (b.link === 'customize') {
+                            go({ name: 'customize' });
+                          } else if (b.link === 'categories') {
+                            go({ name: 'tabs', tab: 'categories' });
                           } else {
-                            go({ name: 'product', productId: b.productId || safeArray(products)[0]?.id || 'p1' });
+                            go({ name: 'product', productId: safeArray(products)[0]?.id || 'p1' });
                           }
                         }}
                         className="mt-3.5 inline-flex h-10 w-fit items-center gap-1.5 rounded-full bg-white px-4 text-[12.5px] font-bold text-ink shadow transition active:scale-95"
