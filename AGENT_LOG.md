@@ -1,3 +1,29 @@
+## Session: 2026-07-04 (QuickBar popup premium tiles + context-aware Wishlist/Wallet + Home banner slim)
+**Agent/Tool:** Claude (Sonnet 5, claude.ai)
+**Feature worked on:** QuickBar popup visual upgrade + context-aware tile swapping; Home hero banner ratio
+
+### কী হয়েছে:
+- **Popup premium upgrade:** `w-44` → `w-52`, spacing `gap-1.5`→`gap-2` / `p-2.5`→`p-3` / tile `py-2.5`→`py-3`। প্রতিটা tile-এর flat `bg-cream` background → subtle `bg-gradient-to-b from-white to-cream` chip, এবং icon এখন একটা আলাদা gradient icon-circle-এর ভেতরে (coral tint circle for Notif/Wishlist/Cart, gold tint circle for Wallet) — flat pink lagar সমস্যা fix।
+- **Context-aware Wishlist↔Cart:** `view.name === 'wishlist'` হলে Wishlist tile-এর জায়গায় Cart tile দেখায় (icon `Heart`→`ShoppingBag`, badge `wishCount`→`cartCount`, tap `go({name:'cart'})`)।
+- **Context-aware Wallet hide:** `view.name === 'tabs' && view.tab === 'profile'` হলে `hasWallet` false করে দেওয়া হয়েছে (Wallet tile hide) — Profile-এ already wallet card থাকায় duplicate avoid। Row `flex-1` দিয়েই auto ৩→২ column shrink করে, কোনো placeholder লাগে না।
+- **Home banner slim:** hero banner `aspect-[16/11]` → `aspect-[16/9]` (standard slim hero ratio, moderate reduction)।
+
+### Touched files:
+- \`src/components/QuickBar.tsx\`
+- \`src/screens/HomeScreen.tsx\`
+
+### Build: ✓ built in 9.65s
+
+### এখনো Pending:
+- কিছুই না এই batch-এর জন্য।
+
+### পরবর্তী Agent এর জন্য নোট:
+- QuickBar popup tiles এখন icon-in-circle pattern ব্যবহার করে (h-8 w-8 rounded-full gradient wrapper) — নতুন tile add করলে এই pattern follow করো, flat bg-cream এ ফিরে যেও না।
+- Wishlist/Cart swap শুধু popup-এর মধ্যে, bottom tab bar বা অন্য কোথাও touch হয়নি।
+- Wallet hide logic শুধু Profile tab-স্পেসিফিক — অন্য কোনো screen-এ wallet tile hide করার দরকার হলে আলাদা flag বসাতে হবে, `onProfileTab` reuse করবে না blindly।
+
+---
+
 ## Session: 2026-07-04 (QuickBar↔CategoriesScreen overlap fix + premium polish)
 **Agent/Tool:** Claude (Sonnet 4.6, claude.ai)
 **Feature worked on:** Fix visual collision between global QuickBar pill and CategoriesScreen filter button; premium polish pass on QuickBar

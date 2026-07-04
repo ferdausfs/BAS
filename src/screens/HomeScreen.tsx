@@ -210,7 +210,7 @@ export default function HomeScreen({
               className="relative overflow-hidden rounded-[28px] bg-white"
               style={{ boxShadow: '0 1px 2px rgba(26,19,17,.03), 0 18px 50px -28px rgba(26,19,17,.18)' }}
             >
-              <div className="relative aspect-[16/11] w-full overflow-hidden">
+              <div className="relative aspect-[16/9] w-full overflow-hidden">
                 {activeBanners.map((b, i) => (
                   <div
                     key={b.id}

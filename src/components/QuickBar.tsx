@@ -10,7 +10,7 @@ export default function QuickBar({ onNotificationsOpen }: Props) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
-  const { go, notifications } = useUI();
+  const { go, notifications, view } = useUI();
   const { items } = useCart();
   const { wishlist } = useUser();
   const { user } = useAuthStore();
@@ -20,7 +20,9 @@ export default function QuickBar({ onNotificationsOpen }: Props) {
   const wishCount = wishlist.length;
   const unreadCount = notifications.filter((n) => !n.read).length;
   const totalBadge = unreadCount + wishCount + cartCount;
-  const hasWallet = Boolean(user) && walletBalance > 0;
+  const onWishlistPage = view.name === 'wishlist';
+  const onProfileTab = view.name === 'tabs' && view.tab === 'profile';
+  const hasWallet = Boolean(user) && walletBalance > 0 && !onProfileTab;
 
   // Close on outside tap
   useEffect(() => {
@@ -63,51 +65,74 @@ export default function QuickBar({ onNotificationsOpen }: Props) {
 
       {/* Popup */}
       {open && (
-        <div className="glass-strong absolute top-[calc(100%+8px)] right-0 w-44 rounded-2xl">
+        <div className="glass-strong absolute top-[calc(100%+8px)] right-0 w-52 rounded-2xl">
           {/* Arrow */}
           <div className="absolute -top-[5px] right-4 h-2.5 w-2.5 rotate-45 rounded-[1px] border-l border-t border-black/8 bg-white" />
 
-          <div className="p-2.5">
-            {/* Row: Bell, Wishlist, (Wallet if available) */}
-            <div className="flex gap-1.5">
+          <div className="p-3">
+            {/* Row: Bell, Wishlist/Cart (context-aware), (Wallet if available) */}
+            <div className="flex gap-2">
               {/* Notifications */}
               <button
                 onClick={() => { setOpen(false); onNotificationsOpen(); }}
-                className="relative flex flex-1 flex-col items-center gap-1 rounded-xl bg-cream py-2.5 shadow-[0_1px_2px_rgba(26,19,17,0.04)] transition active:scale-95"
+                className="relative flex flex-1 flex-col items-center gap-1.5 rounded-xl bg-gradient-to-b from-white to-cream py-3 shadow-[0_1px_3px_rgba(26,19,17,0.06)] transition active:scale-95"
               >
                 {unreadCount > 0 && (
-                  <span className="absolute top-1 right-1 flex h-[14px] min-w-[14px] items-center justify-center rounded-full bg-coral px-0.5 text-[8px] font-bold text-white">
+                  <span className="absolute top-1.5 right-1.5 flex h-[14px] min-w-[14px] items-center justify-center rounded-full bg-coral px-0.5 text-[8px] font-bold text-white">
                     {unreadCount}
                   </span>
                 )}
-                <Bell className="h-5 w-5 text-ink-300" strokeWidth={1.8} />
+                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-coral-100 to-coral-200">
+                  <Bell className="h-4 w-4 text-coral-700" strokeWidth={1.8} />
+                </span>
                 <span className="text-[9px] text-ink-300">Notif</span>
               </button>
 
-              {/* Wishlist */}
-              <button
-                onClick={() => { setOpen(false); go({ name: 'wishlist' }); }}
-                className="relative flex flex-1 flex-col items-center gap-1 rounded-xl bg-cream py-2.5 shadow-[0_1px_2px_rgba(26,19,17,0.04)] transition active:scale-95"
-              >
-                {wishCount > 0 && (
-                  <span className="absolute top-1 right-1 flex h-[14px] min-w-[14px] items-center justify-center rounded-full bg-coral px-0.5 text-[8px] font-bold text-white">
-                    {wishCount}
+              {/* Wishlist (default) — swaps to Cart while already on the Wishlist page */}
+              {onWishlistPage ? (
+                <button
+                  onClick={() => { setOpen(false); go({ name: 'cart' }); }}
+                  className="relative flex flex-1 flex-col items-center gap-1.5 rounded-xl bg-gradient-to-b from-white to-cream py-3 shadow-[0_1px_3px_rgba(26,19,17,0.06)] transition active:scale-95"
+                >
+                  {cartCount > 0 && (
+                    <span className="absolute top-1.5 right-1.5 flex h-[14px] min-w-[14px] items-center justify-center rounded-full bg-coral px-0.5 text-[8px] font-bold text-white">
+                      {cartCount}
+                    </span>
+                  )}
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-coral-100 to-coral-200">
+                    <ShoppingBag className="h-4 w-4 text-coral-700" strokeWidth={1.8} />
                   </span>
-                )}
-                <Heart
-                  className={'h-5 w-5 ' + (wishCount > 0 ? 'fill-coral text-coral' : 'text-ink-300')}
-                  strokeWidth={1.8}
-                />
-                <span className="text-[9px] text-ink-300">Wishlist</span>
-              </button>
+                  <span className="text-[9px] text-ink-300">Cart</span>
+                </button>
+              ) : (
+                <button
+                  onClick={() => { setOpen(false); go({ name: 'wishlist' }); }}
+                  className="relative flex flex-1 flex-col items-center gap-1.5 rounded-xl bg-gradient-to-b from-white to-cream py-3 shadow-[0_1px_3px_rgba(26,19,17,0.06)] transition active:scale-95"
+                >
+                  {wishCount > 0 && (
+                    <span className="absolute top-1.5 right-1.5 flex h-[14px] min-w-[14px] items-center justify-center rounded-full bg-coral px-0.5 text-[8px] font-bold text-white">
+                      {wishCount}
+                    </span>
+                  )}
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-coral-100 to-coral-200">
+                    <Heart
+                      className={'h-4 w-4 ' + (wishCount > 0 ? 'fill-coral text-coral-700' : 'text-coral-700')}
+                      strokeWidth={1.8}
+                    />
+                  </span>
+                  <span className="text-[9px] text-ink-300">Wishlist</span>
+                </button>
+              )}
 
-              {/* Wallet — only rendered when logged in and has balance; otherwise row shrinks to 2-column */}
+              {/* Wallet — hidden on Profile tab (already shown there via wallet card); row shrinks to 2-column otherwise */}
               {hasWallet && (
                 <button
                   onClick={() => { setOpen(false); go({ name: 'tabs', tab: 'profile' }); }}
-                  className="relative flex flex-1 flex-col items-center gap-1 rounded-xl bg-gold/12 py-2.5 shadow-[0_1px_2px_rgba(26,19,17,0.04)] transition active:scale-95"
+                  className="relative flex flex-1 flex-col items-center gap-1.5 rounded-xl bg-gradient-to-b from-gold/15 to-gold/8 py-3 shadow-[0_1px_3px_rgba(26,19,17,0.06)] transition active:scale-95"
                 >
-                  <Wallet className="h-5 w-5 text-gold-800" strokeWidth={1.8} />
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-gold/30 to-gold/20">
+                    <Wallet className="h-4 w-4 text-gold-800" strokeWidth={1.8} />
+                  </span>
                   <span className="text-[9px] font-medium text-gold-800">
                     ৳{walletBalance.toLocaleString('en-BD')}
                   </span>
