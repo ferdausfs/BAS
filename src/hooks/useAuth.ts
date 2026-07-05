@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
   createUserWithEmailAndPassword,
+  FacebookAuthProvider,
   GoogleAuthProvider,
   onAuthStateChanged,
   signInWithEmailAndPassword,
@@ -172,10 +173,19 @@ export function useAuth() {
     login(await mapFirebaseUser(cred.user));
   }, [login]);
 
+  // Requires the Facebook provider to be turned on in Firebase Console
+  // (Authentication → Sign-in method → Facebook), with the App ID/Secret
+  // from a Facebook App created at developers.facebook.com.
+  const signInWithFacebook = useCallback(async () => {
+    const provider = new FacebookAuthProvider();
+    const cred = await signInWithPopup(auth, provider);
+    login(await mapFirebaseUser(cred.user));
+  }, [login]);
+
   const signOut = useCallback(async () => {
     await firebaseSignOut(auth);
     logout();
   }, [logout]);
 
-  return { user, loading, signUp, signIn, signOut, signInWithGoogle };
+  return { user, loading, signUp, signIn, signOut, signInWithGoogle, signInWithFacebook };
 }

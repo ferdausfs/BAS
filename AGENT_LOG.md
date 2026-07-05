@@ -7,6 +7,37 @@
 
 ---
 
+## Session: 2026-07-05 (Facebook login added — Firebase auth)
+**Agent/Tool:** Claude (claude.ai)
+**Feature worked on:** Facebook sign-in alongside existing Google sign-in
+
+### কী হয়েছে:
+- User এর app-এ আগে থেকেই Google login ছিল, এখন Facebook login-ও যোগ করতে চেয়েছিল
+- `src/hooks/useAuth.ts`: `firebase/auth` থেকে `FacebookAuthProvider` import করা হলো, নতুন `signInWithFacebook()` function যোগ হলো — `signInWithGoogle()` এর মতোই pattern (`signInWithPopup` + `mapFirebaseUser()` দিয়ে profile hydration reuse)। Hook-এর return object-এ `signInWithFacebook` যোগ করা হলো
+- `src/components/AuthSheet.tsx`: `signInWithFacebook` destructure করা হলো, `handleFacebook()` handler যোগ (Google-এর প্যাটার্নে, error হলে toast দেখায়)। Google বাটনের ঠিক নিচে "Continue with Facebook" বাটন যোগ (inline SVG Facebook "f" logo, `lucide-react`-এ brand icon নেই তাই custom SVG ব্যবহার করা হয়েছে)
+- **এখনো বাকি (code-এর বাইরে, user কে নিজে করতে হবে):**
+  1. `developers.facebook.com`-এ একটা Facebook App তৈরি করে "Facebook Login" product যোগ করা, App ID + App Secret নেওয়া (user-কে জানানো হয়েছে যে এই portal Android phone browser-এ ভালো কাজ করে না — iPad/PC/desktop browser লাগবে এই একটা ধাপের জন্য)
+  2. Firebase Console → Authentication → Sign-in method → Facebook enable করে ওই App ID/Secret বসানো, আর Firebase যে OAuth redirect URI দিবে সেটা ফেরত Facebook App-এর settings-এ বসানো
+  3. এই দুটো ধাপ complete না হলে "Continue with Facebook" বাটনে click করলে Firebase error দিবে (provider not enabled) — এটা normal, code ঠিক আছে
+- Build verify করা হয়েছে: `✓ built in 9.63s`, `useAuth.ts`/`AuthSheet.tsx`-এ কোনো নতুন TS error নেই
+
+### Touched files:
+- `src/hooks/useAuth.ts`
+- `src/components/AuthSheet.tsx`
+
+### Commit:
+- (pending — user local এ ZIP apply করে push করবে: `bas-facebook-login-070526.zip`)
+
+### এখনো Pending:
+- Firebase Console-এ Facebook provider enable করা (user এর কাজ, কোনো code লাগবে না)
+- Facebook App review/business verification (যদি ভবিষ্যতে public users-এর জন্য প্রয়োজন হয় Meta-র policy অনুযায়ী — dev mode-এ শুধু test users দিয়ে login test করা যাবে সেটা ছাড়াই)
+
+### পরবর্তী Agent এর জন্য নোট:
+- `signInWithFacebook` ঠিক `signInWithGoogle`-এর মতোই কাজ করে — নতুন কোনো social provider (Apple, Twitter ইত্যাদি) যোগ করতে চাইলে এই একই pattern follow করা যাবে (Firebase provider class + `signInWithPopup` + `mapFirebaseUser`)
+- App ID/Secret কোথাও code-এ hardcode করা হয়নি — এটা সম্পূর্ণ Firebase Console side-এ configure হয়, তাই এই commit deploy হলেও provider enable না করা পর্যন্ত বাটন কাজ করবে না (expected, bug না)
+
+---
+
 ## Session: 2026-07-05 (Checkout reorder + 2-part advance payment)
 **Agent/Tool:** Claude (claude.ai)
 **Feature worked on:** Checkout step reorder (ঠিকানা → নিশ্চিত → পেমেন্ট) + advance/remaining payment split
