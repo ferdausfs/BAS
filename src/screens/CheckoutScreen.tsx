@@ -26,6 +26,14 @@ const PAYMENT_METHODS = [
   { id: 'cash', name: 'Cash on Delivery', desc: 'Pay when you receive', color: '#1c1110', bg: '#F4F2EE' },
 ] as const;
 
+// Advance (preparation) payment must always be online — cake production starts
+// only after this is received, so Cash on Delivery is not offered here.
+const ADVANCE_METHODS = PAYMENT_METHODS.filter((m) => m.id !== 'cash');
+
+// Customer pays for cake production in 2 parts: 1/3 upfront (online only, to
+// start baking) and the rest however they like (cash or online) at delivery.
+const ADVANCE_FRACTION = 1 / 3;
+
 const SLOTS = [
   { v: '10am - 12pm', hot: false },
   { v: '12pm - 2pm',  hot: false },
@@ -135,6 +143,11 @@ export default function CheckoutScreen({ onBack }: Props) {
   const [giftMode, setGiftMode] = useState(false);
   const [gift, setGift] = useState({ message: '', hidePrice: false, wrap: false, recipientName: '', recipientPhone: '' });
 
+  // Advance (preparation) payment method — always online, so no 'cash' option.
+  // `paymentScreenshotFile`/`paymentScreenshotPreview` (declared above) hold the
+  // proof-of-payment image for this advance amount.
+  const [advancePayment, setAdvancePayment] = useState<typeof ADVANCE_METHODS[number]['id']>('bkash');
+
   const [form, setForm] = useState({
     name: '',
     phone: '',
@@ -142,6 +155,7 @@ export default function CheckoutScreen({ onBack }: Props) {
     district: detectedDistrict || 'Comilla',
     date: getMinDeliveryDate(),
     time: '4pm - 6pm',
+    // Remaining-amount payment method, settled at delivery — cash allowed here.
     payment: 'cash' as typeof PAYMENT_METHODS[number]['id'],
   });
 
@@ -209,6 +223,11 @@ export default function CheckoutScreen({ onBack }: Props) {
     const giftWrapFee = giftMode && gift.wrap ? 50 : 0;
     return { subtotal: sub, delivery: dlv, promoDiscountAmount: promoDisc, walletDiscount: walletDisc, discountAmount: disc, total: Math.max(0, sub + dlv - disc + giftWrapFee) };
   }, [items, currentDeliveryFee, currentFreeThreshold, promoDiscount, pendingLoyaltyRedeem, giftMode, gift.wrap]);
+
+  // 1/3 of the total is due now (online) so the baker can start production;
+  // rounded up to the nearest ৳1 so the advance is never short-changed.
+  const advanceAmount = items.length === 0 ? 0 : Math.ceil(total * ADVANCE_FRACTION);
+  const remainingAmount = Math.max(0, total - advanceAmount);
 
   // Wallet redeem + promo code — moved here from CartScreen (same store state/actions,
   // so Cart and Checkout always stay in sync with whatever was applied).
@@ -291,8 +310,8 @@ export default function CheckoutScreen({ onBack }: Props) {
       setShowLocationGate(true);
       return;
     }
-    if (form.payment !== 'cash' && !paymentScreenshotFile) {
-      setSubmitError('অনলাইন পেমেন্টের জন্য screenshot আপলোড করুন।');
+    if (!paymentScreenshotFile) {
+      setSubmitError('অগ্রিম পেমেন্টের screenshot আপলোড করুন।');
       scrollToTop();
       return;
     }
@@ -316,6 +335,9 @@ export default function CheckoutScreen({ onBack }: Props) {
         },
         delivery: { date: form.date, time: form.time },
         payment: form.payment,
+        advancePayment,
+        advanceAmount,
+        remainingAmount,
         subtotal,
         deliveryFee: delivery,
         total,
@@ -403,8 +425,8 @@ export default function CheckoutScreen({ onBack }: Props) {
   };
 
   const validatePaymentStep = () => {
-    if (form.payment !== 'cash' && !paymentScreenshotFile) {
-      setSubmitError('অনলাইন পেমেন্টের জন্য screenshot আপলোড করুন।');
+    if (!paymentScreenshotFile) {
+      setSubmitError(`অগ্রিম ৳${advanceAmount} পেমেন্টের screenshot আপলোড করুন।`);
       scrollToTop();
       return false;
     }
@@ -426,9 +448,12 @@ export default function CheckoutScreen({ onBack }: Props) {
       if (!validateAddressStep()) return;
       setStep(1);
     } else if (step === 1) {
-      if (!validatePaymentStep()) return;
+      // Step 1 is now the confirm/review step — nothing to validate here,
+      // the payment method + screenshot are chosen next, on step 2.
+      setSubmitError('');
       setStep(2);
     } else {
+      if (!validatePaymentStep()) return;
       void handleSubmit();
     }
   };
@@ -637,78 +662,6 @@ export default function CheckoutScreen({ onBack }: Props) {
 
         {step === 1 && (
         <>
-        {/* Payment — the main task of this step, shown first so the user isn't
-            scrolling past optional extras before reaching it. */}
-        <Section icon={Wallet} title="পেমেন্ট পদ্ধতি">
-          <div className="space-y-2">
-            {PAYMENT_METHODS.map((method) => {
-              const isSelected = form.payment === method.id;
-              return (
-                <button
-                  key={method.id}
-                  onClick={() => setForm({ ...form, payment: method.id })}
-                  className={`flex w-full items-center gap-3 rounded-2xl border-2 p-3.5 transition ${
-                    isSelected ? 'border-coral bg-coral-50' : 'border-ink-50 bg-white'
-                  }`}
-                >
-                  <div
-                    className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl text-[13px] font-bold text-white"
-                    style={{ background: method.color }}
-                  >
-                    {method.name.slice(0, 2)}
-                  </div>
-                  <div className="flex-1 text-left">
-                    <p className="text-[13.5px] font-bold text-ink">{method.name}</p>
-                    <p className="text-[12px] text-ink-200">{method.desc}</p>
-                  </div>
-                  <div
-                    className={`flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full border-2 ${
-                      isSelected ? 'border-coral' : 'border-ink-100'
-                    }`}
-                  >
-                    {isSelected && <div className="h-2.5 w-2.5 rounded-full bg-coral" />}
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-
-          {form.payment !== 'cash' && (
-            <div className="mt-4 rounded-2xl border border-white/40 glass-strong p-3">
-              <div className="mb-2 text-[12.5px] font-bold text-ink">Payment screenshot</div>
-              <div className="text-[11.5px] text-ink-200">Upload your bKash/Nagad payment proof so admin can verify the order.</div>
-              {paymentScreenshotPreview ? (
-                <div className="mt-3 relative inline-block">
-                  <img src={paymentScreenshotPreview} alt="payment screenshot" className="h-24 w-24 rounded-xl object-cover" />
-                  <button
-                    type="button"
-                    onClick={() => { setPaymentScreenshotFile(null); setPaymentScreenshotPreview(''); }}
-                    className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-ink text-white"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                </div>
-              ) : (
-                <label className="mt-3 flex h-20 w-20 cursor-pointer items-center justify-center rounded-xl border-2 border-dashed border-ink/20 bg-white hover:border-coral">
-                  <ImageIcon className="h-6 w-6 text-ink-200" strokeWidth={1.5} />
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (!file) return;
-                      setPaymentScreenshotFile(file);
-                      setPaymentScreenshotPreview(URL.createObjectURL(file));
-                      setSubmitError('');
-                    }}
-                  />
-                </label>
-              )}
-            </div>
-          )}
-        </Section>
-
         {/* Gift Mode — collapsed toggle, optional */}
         <section className="mt-3 space-y-3">
           <div
@@ -970,12 +923,9 @@ export default function CheckoutScreen({ onBack }: Props) {
             </div>
           )}
         </section>
-        </>
-        )}
 
-        {step === 2 && (
-        <>
-        {/* Review summary — read-only recap of what was entered in steps 1-2 */}
+        {/* Review summary — read-only recap of what was entered on step 1.
+            No payment-method row here — that's picked next, on step 2. */}
         <Section icon={Check} title="অর্ডার সামারি">
           <div className="space-y-2.5 text-[13px]">
             <div className="flex items-start justify-between gap-3">
@@ -997,32 +947,21 @@ export default function CheckoutScreen({ onBack }: Props) {
                 <EditButton onClick={() => goToStep(0)} />
               </div>
             </div>
-            <div className="h-px bg-ink-50" />
-            <div className="flex items-center justify-between">
-              <span className="text-ink-200">পেমেন্ট পদ্ধতি</span>
-              <div className="flex items-center gap-2.5">
-                <span className="font-bold text-ink">
-                  {PAYMENT_METHODS.find((m) => m.id === form.payment)?.name}
-                </span>
-                <EditButton onClick={() => goToStep(1)} />
-              </div>
-            </div>
             {giftMode && (
               <>
                 <div className="h-px bg-ink-50" />
                 <div className="flex items-center justify-between">
                   <span className="text-ink-200">গিফট অর্ডার</span>
-                  <div className="flex items-center gap-2.5">
-                    <span className="font-bold text-ink">{gift.wrap ? 'হ্যাঁ, wrap সহ' : 'হ্যাঁ'}</span>
-                    <EditButton onClick={() => goToStep(1)} />
-                  </div>
+                  <span className="font-bold text-ink">{gift.wrap ? 'হ্যাঁ, wrap সহ' : 'হ্যাঁ'}</span>
                 </div>
               </>
             )}
           </div>
         </Section>
 
-        {/* Bill */}
+        {/* Bill — now also breaks the total into what's due now (advance) vs
+            what's settled at delivery (remaining), so there are no surprises
+            before the payment step. */}
         <Section title="বিল বিবরণ" className="!p-0">
           <div className="space-y-2 px-4 py-4 text-[13px]">
             <Row label={`সাবটোটাল (${items.length} আইটেম)`} value={formatINR(subtotal)} />
@@ -1051,6 +990,138 @@ export default function CheckoutScreen({ onBack }: Props) {
               <span className="font-display text-[15px] font-bold tracking-tight text-ink">মোট</span>
               <span className="font-display text-[20px] font-bold tabular text-ink">{formatINR(total)}</span>
             </div>
+            <div className="h-px bg-ink-50" />
+            <Row label="অগ্রিম (এখনই, প্রস্তুতির জন্য)" value={formatINR(advanceAmount)} positive />
+            <Row label="বাকি (ডেলিভারির সময়)" value={formatINR(remainingAmount)} />
+          </div>
+        </Section>
+
+        <div className="mt-3 flex items-center justify-center gap-2 rounded-2xl glass-strong py-3 text-[11px] text-ink-200">
+          <Shield className="h-3.5 w-3.5" />
+          নিরাপদ ও বিশ্বস্ত অর্ডার প্রসেসিং
+        </div>
+        </>
+        )}
+
+        {step === 2 && (
+        <>
+        {/* Advance payment — always online (bKash/Nagad), required before the
+            baker starts production. */}
+        <Section icon={Wallet} title="অগ্রিম পেমেন্ট">
+          <div className="mb-3 flex items-center justify-between rounded-2xl bg-coral-50 px-3.5 py-3">
+            <div>
+              <div className="text-[11px] font-bold uppercase tracking-wide text-coral-700">এখনই দিতে হবে</div>
+              <div className="text-[11.5px] text-ink/50">কেক প্রস্তুতি শুরু হবে এই পেমেন্ট পাওয়ার পর</div>
+            </div>
+            <div className="font-display text-[20px] font-bold tabular text-coral-700">{formatINR(advanceAmount)}</div>
+          </div>
+          <div className="space-y-2">
+            {ADVANCE_METHODS.map((method) => {
+              const isSelected = advancePayment === method.id;
+              return (
+                <button
+                  key={method.id}
+                  onClick={() => setAdvancePayment(method.id)}
+                  className={`flex w-full items-center gap-3 rounded-2xl border-2 p-3.5 transition ${
+                    isSelected ? 'border-coral bg-coral-50' : 'border-ink-50 bg-white'
+                  }`}
+                >
+                  <div
+                    className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl text-[13px] font-bold text-white"
+                    style={{ background: method.color }}
+                  >
+                    {method.name.slice(0, 2)}
+                  </div>
+                  <div className="flex-1 text-left">
+                    <p className="text-[13.5px] font-bold text-ink">{method.name}</p>
+                    <p className="text-[12px] text-ink-200">{method.desc}</p>
+                  </div>
+                  <div
+                    className={`flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full border-2 ${
+                      isSelected ? 'border-coral' : 'border-ink-100'
+                    }`}
+                  >
+                    {isSelected && <div className="h-2.5 w-2.5 rounded-full bg-coral" />}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="mt-4 rounded-2xl border border-white/40 glass-strong p-3">
+            <div className="mb-2 text-[12.5px] font-bold text-ink">Payment screenshot</div>
+            <div className="text-[11.5px] text-ink-200">অগ্রিম ৳{advanceAmount} পাঠানোর পর screenshot upload করুন, admin verify করবে।</div>
+            {paymentScreenshotPreview ? (
+              <div className="mt-3 relative inline-block">
+                <img src={paymentScreenshotPreview} alt="payment screenshot" className="h-24 w-24 rounded-xl object-cover" />
+                <button
+                  type="button"
+                  onClick={() => { setPaymentScreenshotFile(null); setPaymentScreenshotPreview(''); }}
+                  className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-ink text-white"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            ) : (
+              <label className="mt-3 flex h-20 w-20 cursor-pointer items-center justify-center rounded-xl border-2 border-dashed border-ink/20 bg-white hover:border-coral">
+                <ImageIcon className="h-6 w-6 text-ink-200" strokeWidth={1.5} />
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    setPaymentScreenshotFile(file);
+                    setPaymentScreenshotPreview(URL.createObjectURL(file));
+                    setSubmitError('');
+                  }}
+                />
+              </label>
+            )}
+          </div>
+        </Section>
+
+        {/* Remaining amount — settled at delivery, customer's choice of method */}
+        <Section icon={Banknote} title="বাকি টাকা পরিশোধ">
+          <div className="mb-3 flex items-center justify-between rounded-2xl bg-ink-50 px-3.5 py-3">
+            <div>
+              <div className="text-[11px] font-bold uppercase tracking-wide text-ink-200">ডেলিভারির সময় দিবেন</div>
+              <div className="text-[11.5px] text-ink/50">Cash অথবা bKash/Nagad — যেভাবে সুবিধা</div>
+            </div>
+            <div className="font-display text-[20px] font-bold tabular text-ink">{formatINR(remainingAmount)}</div>
+          </div>
+          <div className="space-y-2">
+            {PAYMENT_METHODS.map((method) => {
+              const isSelected = form.payment === method.id;
+              return (
+                <button
+                  key={method.id}
+                  onClick={() => setForm({ ...form, payment: method.id })}
+                  className={`flex w-full items-center gap-3 rounded-2xl border-2 p-3.5 transition ${
+                    isSelected ? 'border-coral bg-coral-50' : 'border-ink-50 bg-white'
+                  }`}
+                >
+                  <div
+                    className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl text-[13px] font-bold text-white"
+                    style={{ background: method.color }}
+                  >
+                    {method.name.slice(0, 2)}
+                  </div>
+                  <div className="flex-1 text-left">
+                    <p className="text-[13.5px] font-bold text-ink">{method.name}</p>
+                    <p className="text-[12px] text-ink-200">{method.desc}</p>
+                  </div>
+                  <div
+                    className={`flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full border-2 ${
+                      isSelected ? 'border-coral' : 'border-ink-100'
+                    }`}
+                  >
+                    {isSelected && <div className="h-2.5 w-2.5 rounded-full bg-coral" />}
+                  </div>
+                </button>
+              );
+            })}
           </div>
         </Section>
 
@@ -1067,13 +1138,15 @@ export default function CheckoutScreen({ onBack }: Props) {
         <div className="flex items-center gap-3">
           <div>
             <div className="text-[11px] font-bold tracking-wider text-ink-200 uppercase">
-              {step === 2 ? 'পেমেন্ট' : 'মোট'}
+              {step === 2 ? 'অগ্রিম দিন' : 'মোট'}
             </div>
-            <div className="font-display text-[20px] font-bold tabular text-ink">{formatINR(total)}</div>
+            <div className="font-display text-[20px] font-bold tabular text-ink">
+              {formatINR(step === 2 ? advanceAmount : total)}
+            </div>
           </div>
           <button
             onClick={goNext}
-            disabled={step === 2 ? (!form.name || !form.phone || !form.address || submitting) : false}
+            disabled={step === 2 ? (!form.name || !form.phone || !form.address || !paymentScreenshotFile || submitting) : false}
             className="btn-primary ml-auto flex h-14 flex-1 items-center justify-center gap-2 rounded-2xl text-[14px] font-bold tracking-tight disabled:opacity-50"
           >
             {step < 2 ? 'পরবর্তী' : submitting ? 'Submitting...' : 'অর্ডার করুন'}
@@ -1093,7 +1166,7 @@ function Header({
   step?: number;
   onStepClick?: (i: 0 | 1 | 2) => void;
 }) {
-  const steps = ['ঠিকানা', 'পেমেন্ট', 'নিশ্চিত'];
+  const steps = ['ঠিকানা', 'নিশ্চিত', 'পেমেন্ট'];
   return (
     <header className="flex-shrink-0 border-b border-ink-50/80 px-5 pt-3 pb-3">
       <div className="flex items-center justify-between mb-3">

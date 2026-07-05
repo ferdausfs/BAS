@@ -7,6 +7,48 @@
 
 ---
 
+## Session: 2026-07-05 (Checkout reorder + 2-part advance payment)
+**Agent/Tool:** Claude (claude.ai)
+**Feature worked on:** Checkout step reorder (ঠিকানা → নিশ্চিত → পেমেন্ট) + advance/remaining payment split
+
+### কী হয়েছে:
+- User request: checkout-এর step order বদলে address → confirm(review) → payment করা, আর payment step-এ নতুন logic যোগ করা — cake production শুরুর জন্য মোট টাকার ১/৩ অংশ অগ্রিম (advance) দিতে হবে, এবং এই অগ্রিম **সবসময় online (bKash/Nagad)** হতে হবে (Cash on Delivery option advance-এ নেই)। বাকি ২/৩ টাকা customer ইচ্ছামতো Cash on Delivery বা online দিয়ে ডেলিভারির সময় দিতে পারবে, এবং তার জন্য checkout-এ কোনো screenshot লাগবে না (শুধু advance-এর screenshot মাস্ট)।
+- **Step reorder (`CheckoutScreen.tsx`):** Header stepper label বদলে `['ঠিকানা', 'নিশ্চিত', 'পেমেন্ট']` করা হলো। `step 1` (আগে payment ছিল) এখন **confirm/review** — Gift toggle + Wallet/Promo/Referral extras + delivery address/time recap + Bill (subtotal/delivery/discount/total সহ নতুন "অগ্রিম" ও "বাকি" row)। `step 2` (আগে review ছিল) এখন **payment** — advance section + remaining section, আর submit (`handleSubmit`) এই step থেকেই হয়।
+- **Advance/remaining calculation:** `advanceAmount = Math.ceil(total / 3)` (নিকটতম ৳১ এ round up, যাতে advance কখনো কম না হয়), `remainingAmount = total - advanceAmount`।
+- **Advance payment section (step 2):** নতুন `ADVANCE_METHODS` constant (`PAYMENT_METHODS` থেকে `cash` বাদ দিয়ে) — শুধু bKash/Nagad দেখায়। নতুন `advancePayment` state (default `'bkash'`)। Screenshot upload (আগে থেকেই থাকা `paymentScreenshotFile`/`paymentScreenshotPreview` state reuse করা হয়েছে, এখন conceptually এটা advance-এর proof) — এখন **সবসময় mandatory** (আগে শুধু non-cash হলে লাগতো, এখন cash option-ই নেই advance-এ)।
+- **Remaining payment section (step 2):** পুরনো payment method selector (`form.payment`, সব ৩টা method: bKash/Nagad/Cash) এখানে move করা হয়েছে — এটা এখন "বাকি টাকা কীভাবে দিবেন" বোঝায়, screenshot লাগে না।
+- **Validation:** `validatePaymentStep()` ও `handleSubmit()` এর screenshot check বদলে সবসময় mandatory করা হলো (cash branch বাদ দেওয়া হলো, যেহেতু advance আর কখনো cash হয় না)। Sticky footer CTA-তে step 2-তে "অগ্রিম দিন" label + advance amount দেখায় (আগে "পেমেন্ট" + total দেখাতো), আর submit button `paymentScreenshotFile` না থাকলে disabled থাকে।
+- **Data model (`types/index.ts`):** `Order` type-এ নতুন optional fields: `advancePayment?: 'bkash' | 'nagad'`, `advanceAmount?: number`, `remainingAmount?: number`। পুরনো `payment` field এখন conceptually "remaining/final payment method" বোঝায় (backward-compatible, কোনো existing code ভাঙেনি)। `paymentScreenshot` field এখনো advance-এর proof হিসেবে ব্যবহৃত হয় (field rename করা হয়নি, শুধু comment দিয়ে clarify করা হয়েছে)। `DbOrder` interface-এও mirror করে `advance_payment`/`advance_amount`/`remaining_amount` যোগ করা হলো (ভবিষ্যতে দরকার হতে পারে, Firestore schema-less বলে migration লাগেনি)।
+- **`AdminPanel.tsx`:** Order card-এ advance/remaining breakdown দেখানো হচ্ছে (amount + method দুটোই)। CSV export-এ ৩টা নতুন column যোগ (Advance Amount/Advance Method/Remaining Amount)। "Payment proof" বাটন relabel করে "Advance proof" করা হলো (clarity)।
+- **`ChatBot.tsx` (BAS assistant) — user explicitly চেয়েছিল Order Tracking-এর "সাহায্য দরকার?" বাটনে (যেটা আগে থেকেই ChatBot খোলে, `TrackingScreen.tsx` লাইন ২৮৪-২৯৪) BAS যেন নতুন payment system সম্পর্কে জানে:**
+  - `paymentText()` (rule-based reply, payment/bkash/nagad/cash keyword এ trigger হয়) নতুন ২-ধাপ payment ব্যাখ্যা করে rewrite করা হলো
+  - `appGuideText()` এর payment bullet আপডেট
+  - `orderText()` এর step 5 আপডেট (আগে ছিল "Payment select করে order confirm করুন", এখন advance/screenshot উল্লেখ করে)
+  - Gemini `systemPrompt` (AI fallback path)-এর Store info payment line আপডেট, যাতে rule-based match না হলেও AI সঠিক info দেয়
+- Build verify করা হয়েছে: `✓ built in 6.81s`। `tsc --noEmit`-এ `CheckoutScreen.tsx`/`AdminPanel.tsx`/`ChatBot.tsx`/`types/index.ts`-এ কোনো নতুন error নেই — শুধু pre-existing error (HomeScreen/OrdersScreen/TrackingScreen/WishlistScreen-এ আগে থেকে থাকা unrelated TS error, CheckoutScreen-এর `Phone` unused-import warning, AdminPanel-এর `approveReview` unused + কিছু `unknown` type warning) — এগুলো এই session-এ touch হয়নি।
+
+### Touched files:
+- `src/screens/CheckoutScreen.tsx`
+- `src/types/index.ts`
+- `src/components/AdminPanel.tsx`
+- `src/components/ChatBot.tsx`
+
+### Commit:
+- (pending — user local এ ZIP apply করে push করবে: `bas-advance-payment-checkout-070526.zip`)
+
+### এখনো Pending:
+- Concept 1-4 (Home/Product-card/Cart-Checkout/Typography) — সব আগেই Done ছিল
+- **Checkout reorder + advance payment — STATUS: Done (এই session)**
+
+### পরবর্তী Agent এর জন্য নোট:
+- `form.payment` field এখন **"remaining/final payment method"** বোঝায় (bKash/Nagad/Cash সবগুলোই valid), আর নতুন `advancePayment` state (শুধু bKash/Nagad) হলো **advance/production payment method**। এই দুটো field গুলিয়ে ফেলবেন না — `Order.payment` ≠ advance, `Order.advancePayment` = advance।
+- `paymentScreenshotFile`/`paymentScreenshotPreview` state (এবং `Order.paymentScreenshot` field) এখন conceptually **advance-এর proof**, remaining-এর জন্য কোনো screenshot নেই — field rename করা হয়নি backward-compat এর জন্য, শুধু comment এ clarify করা আছে।
+- Advance amount round হয় `Math.ceil(total / 3)` দিয়ে (নিকটতম ৳১, ছোট taka-ও advance-এ যোগ হয়ে যায় যাতে remaining short না হয়)। এটা user-approved default; ভবিষ্যতে round-to-৳১০ বা অন্য rule দরকার হলে এই একলাইন বদলালেই হবে।
+- Checkout step index এখন: **0 = ঠিকানা, 1 = নিশ্চিত (review+extras+gift+bill), 2 = পেমেন্ট (advance+remaining, submit এখানেই হয়)** — আগে ছিল 0=ঠিকানা, 1=পেমেন্ট, 2=নিশ্চিত। ভবিষ্যতে `goToStep()`/`EditButton` reference যোগ করার সময় এই নতুন index মনে রাখা দরকার।
+- ChatBot-এর payment knowledge (rule-based + Gemini system prompt দুটোই) আপডেট করা হয়েছে — ভবিষ্যতে advance fraction (১/৩) বা logic বদলালে এই টেক্সটগুলোও sync রাখতে হবে, নাহলে BAS পুরনো তথ্য বলবে।
+
+---
+
 ## Session: 2026-07-05 (Concept 4 — Typography + color system, brand feel)
 **Agent/Tool:** Claude (claude.ai)
 **Feature worked on:** Concept 4 — Typography + color system (brand feel)

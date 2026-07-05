@@ -181,8 +181,9 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
       o.delivery?.date || '', o.delivery?.time || '',
       o.items?.map((i) => `${i?.name || 'N/A'}×${i?.quantity || 1}`).join('; ') || '',
       o.subtotal || 0, o.deliveryFee || 0, o.total || 0, o.status || 'placed', o.payment || 'cash',
+      o.advanceAmount ?? '', o.advancePayment ?? '', o.remainingAmount ?? '',
     ]);
-    const csv = [['ID','Name','Phone','Address','Date','Time','Items','Subtotal','Delivery','Total','Status','Payment'], ...rows]
+    const csv = [['ID','Name','Phone','Address','Date','Time','Items','Subtotal','Delivery','Total','Status','Payment','Advance Amount','Advance Method','Remaining Amount'], ...rows]
       .map((r) => r.join(',')).join('\n');
     const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
     const url = URL.createObjectURL(blob);
@@ -326,7 +327,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                   </div>
                   <div className="text-right">
                     <p className="font-black text-coral">{formatINR(o.total || 0)}</p>
-                    <p className="text-[10px] font-bold text-ink/45 capitalize">{o.payment || 'cash'}</p>
+                    <p className="text-[10px] font-bold text-ink/45 capitalize">বাকি: {o.payment || 'cash'}</p>
                   </div>
                 </div>
 
@@ -336,6 +337,13 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                   <p><span className="font-bold text-ink">Address:</span> {o.customer?.address || 'N/A'}, {o.customer?.city || ''}</p>
                   <p><span className="font-bold text-ink">Delivery:</span> {o.delivery?.date || ''} · {o.delivery?.time || ''}</p>
                   <p><span className="font-bold text-ink">Bill:</span> {formatINR(o.subtotal || 0)} - {formatINR(o.discount || 0)} + {formatINR(o.deliveryFee || 0)} = {formatINR(o.total || 0)}</p>
+                  {typeof o.advanceAmount === 'number' && (
+                    <p className="mt-1">
+                      <span className="font-bold text-ink">Advance:</span> {formatINR(o.advanceAmount)} via {o.advancePayment || 'online'}
+                      {' · '}
+                      <span className="font-bold text-ink">Remaining:</span> {formatINR(o.remainingAmount ?? 0)} via {o.payment || 'cash'}
+                    </p>
+                  )}
                 </div>
 
                 <div className="mt-2 space-y-2">
@@ -403,7 +411,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                       onClick={() => void openPaymentScreenshot(o.paymentScreenshot)}
                       className="rounded-xl bg-amber-50 px-3 py-2 text-xs font-bold text-amber-700"
                     >
-                      Payment proof
+                      Advance proof
                     </button>
                   )}
                   <button

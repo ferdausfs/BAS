@@ -113,7 +113,7 @@ export function ChatBot({ embedded = false }: Props) {
     `• কেক মেনু, দাম ও বেস্টসেলার দেখানো\n` +
     `• কাস্টম কেক অর্ডার করার ধাপ বলা\n` +
     `• ডেলিভারি জোন/সময়/চার্জ বোঝানো\n` +
-    `• bKash, Nagad, Cash payment info দেওয়া\n` +
+    `• Payment বোঝানো — ১/৩ অগ্রিম (bKash/Nagad) + বাকি delivery-তে (Cash/bKash/Nagad)\n` +
     `• Cart, Wishlist, Checkout, Order tracking বুঝিয়ে দেওয়া\n` +
     `• সমস্যা হলে WhatsApp support link দেওয়া\n\n` +
     `আপনি সাধারণভাবেও কথা বলতে পারেন — যেমন “kemon aso”, “ki koro”, “order korte chai”।`;
@@ -136,7 +136,7 @@ export function ChatBot({ embedded = false }: Props) {
     `2. Size, flavour, topping বা message customize করুন\n` +
     `3. Add to cart চাপুন\n` +
     `4. Cart → Checkout এ নাম, ফোন, ঠিকানা দিন\n` +
-    `5. Payment select করে order confirm করুন\n\n` +
+    `5. অর্ডার নিশ্চিত করুন, তারপর ১/৩ টাকা অগ্রিম bKash/Nagad-এ পাঠিয়ে screenshot upload করুন — কেক প্রস্তুতি তখনই শুরু হবে\n\n` +
     `অর্ডার হলে Order ID পাবেন, তারপর Tracking screen থেকে status দেখতে পারবেন।`;
 
   const zoneText = () => {
@@ -146,7 +146,10 @@ export function ChatBot({ embedded = false }: Props) {
 
   const paymentText = () => {
     const minPrice = products.length ? Math.min(...products.map((p) => p.price)) : 0;
-    return `Payment options\n• bKash\n• Nagad\n• Cash on Delivery\n\nদাম শুরু ${formatBDT(minPrice)} থেকে। Delivery fee ${formatBDT(settings.deliveryFee)}। ${settings.promoEnabled ? `Promo code ${settings.promoCode} দিলে ${settings.promoPercent}% discount পেতে পারেন।` : ''}`;
+    return `Payment — ২ ধাপে\n\n` +
+      `1️⃣ অগ্রিম (১/৩ টাকা) — এখনই, checkout-এর শেষ ধাপে। কেক প্রস্তুতি শুরু হয় এই টাকা পাওয়ার পর। শুধু bKash বা Nagad-এ দিতে হয় (অনলাইন), আর screenshot upload করতে হয় verify-এর জন্য।\n` +
+      `2️⃣ বাকি (২/৩ টাকা) — ডেলিভারির সময় দেবেন, Cash on Delivery বা bKash/Nagad যেভাবে সুবিধা।\n\n` +
+      `দাম শুরু ${formatBDT(minPrice)} থেকে। Delivery fee ${formatBDT(settings.deliveryFee)}। ${settings.promoEnabled ? `Promo code ${settings.promoCode} দিলে ${settings.promoPercent}% discount পেতে পারেন।` : ''}`;
   };
 
   const getSavedCustomer = (): { name?: string; phone?: string; address?: string; district?: string; payment?: string } => {
@@ -330,7 +333,7 @@ Store info:
 - Currency: BDT (৳)
 - Delivery estimate: ${settings.deliveryEstimate}, fee: ৳${settings.deliveryFee}
 - Zones: ${zones}
-- Payment: bKash, Nagad, Cash on Delivery
+- Payment: ২ ধাপে — (1) অগ্রিম ১/৩ টাকা, checkout-এর শেষ ধাপে, শুধু bKash/Nagad (অনলাইন, screenshot লাগে) — কেক প্রস্তুতি শুরু হয় এই টাকা পাওয়ার পর, (2) বাকি ২/৩ টাকা ডেলিভারির সময়, Cash on Delivery বা bKash/Nagad যেকোনোটা
 ${settings.promoEnabled ? `- Promo: ${settings.promoCode} = ${settings.promoPercent}% off` : ''}
 
 Products:

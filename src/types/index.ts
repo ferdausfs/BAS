@@ -54,13 +54,19 @@ export type Order = {
     pin: string;
   };
   delivery: { date: string; time: string };
+  // Remaining-amount payment method, settled at delivery (cash allowed here).
   payment: 'bkash' | 'nagad' | 'cash';
+  // Advance (production) payment — always online, paid before baking starts.
+  advancePayment?: 'bkash' | 'nagad';
+  advanceAmount?: number;
+  remainingAmount?: number;
   subtotal: number;
   deliveryFee: number;
   total: number;
   discount?: number;
   promoCode?: string;
   loyaltyPointsRedeemed?: number;
+  // Proof-of-payment screenshot for the advance amount.
   paymentScreenshot?: string;
   gpsLat?: number | null;
   gpsLng?: number | null;
@@ -142,6 +148,9 @@ export interface DbOrder {
   delivery_time: string;
   payment_method: 'bkash' | 'nagad' | 'cash';
   payment_screenshot?: string;
+  advance_payment?: 'bkash' | 'nagad';
+  advance_amount?: number;
+  remaining_amount?: number;
   items: DbOrderItem[];
   subtotal: number;
   discount: number;
