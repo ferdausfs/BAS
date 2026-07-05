@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Heart, Plus, Star, Check, Award, Sparkles } from 'lucide-react';
+import { Heart, Plus, Star, Check, Award, Sparkles, ZoomIn } from 'lucide-react';
 import { useCart, formatINR } from '../lib/store';
 import type { Product } from '../types';
 
@@ -15,6 +15,13 @@ export default function ProductCard({ product, wished, onOpen, onWish, variant =
   const { add } = useCart();
   const [heartKey, setHeartKey] = useState(0);
   const [added, setAdded] = useState(false);
+  const [zoomed, setZoomed] = useState(false);
+
+  const handleImageTap = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    setZoomed((z) => !z);
+  };
 
   const safeWeights = product.weights?.length ? product.weights : [{ size: '1 kg', price: product.price }];
   const safeFlavors = product.flavors?.length ? product.flavors : ['Chocolate'];
@@ -85,12 +92,23 @@ export default function ProductCard({ product, wished, onOpen, onWish, variant =
             onError={(e) => {
               (e.target as HTMLImageElement).src = '/cakes/logo-cake.png';
             }}
-            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.05]"
+            onClick={handleImageTap}
+            className={`h-full w-full object-cover transition-transform duration-300 ${
+              zoomed ? 'scale-[1.7]' : 'group-hover:scale-[1.05]'
+            }`}
           />
           {/* Scrim for floating price/add legibility */}
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
+          {!zoomed && (
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
+          )}
+          {!zoomed && (
+            <span className="pointer-events-none absolute bottom-2 left-1/2 -translate-x-1/2 flex h-5 w-5 items-center justify-center rounded-full bg-black/35">
+              <ZoomIn className="h-2.5 w-2.5 text-white/85" strokeWidth={2.2} />
+            </span>
+          )}
 
           {/* Wishlist */}
+          {!zoomed && (
           <button
             onClick={handleWish}
             className="absolute top-2.5 right-2.5 flex h-7 w-7 items-center justify-center rounded-full bg-white/90 backdrop-blur-md transition-all active:scale-90"
@@ -110,8 +128,10 @@ export default function ProductCard({ product, wished, onOpen, onWish, variant =
               strokeWidth={2}
             />
           </button>
+          )}
 
           {/* Badges */}
+          {!zoomed && (
           <div className="absolute top-3 left-3 flex flex-col gap-1.5">
             {product.bestseller && (
               <span className="badge-premium flex items-center gap-1 rounded-full px-2 py-1 text-[9px] font-bold uppercase tracking-wide">
@@ -137,8 +157,10 @@ export default function ProductCard({ product, wished, onOpen, onWish, variant =
               </span>
             )}
           </div>
+          )}
 
           {/* Floating price + add — sits directly on the photo, thumb-reachable */}
+          {!zoomed && (
           <div className="absolute inset-x-3 bottom-3 flex items-center justify-between">
             <span
               className="glass-dark rounded-full px-3 py-1.5 font-display text-[15px] font-bold tabular text-white"
@@ -147,6 +169,7 @@ export default function ProductCard({ product, wished, onOpen, onWish, variant =
             </span>
             <AddButton size={34} />
           </div>
+          )}
         </div>
 
         {/* Content — name + rating only, photo now carries price */}
@@ -190,11 +213,22 @@ export default function ProductCard({ product, wished, onOpen, onWish, variant =
           onError={(e) => {
             (e.target as HTMLImageElement).src = '/cakes/logo-cake.png';
           }}
-          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.05]"
+          onClick={handleImageTap}
+          className={`h-full w-full object-cover transition-transform duration-300 ${
+            zoomed ? 'scale-[1.7]' : 'group-hover:scale-[1.05]'
+          }`}
         />
         {/* Scrim for floating price/add legibility */}
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
+        {!zoomed && (
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
+        )}
+        {!zoomed && (
+          <span className="pointer-events-none absolute bottom-2 left-1/2 -translate-x-1/2 flex h-5 w-5 items-center justify-center rounded-full bg-black/35">
+            <ZoomIn className="h-2.5 w-2.5 text-white/85" strokeWidth={2.2} />
+          </span>
+        )}
 
+        {!zoomed && (
         <button
           onClick={handleWish}
           className="absolute top-3 right-3 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 backdrop-blur-md transition-all active:scale-90"
@@ -214,7 +248,9 @@ export default function ProductCard({ product, wished, onOpen, onWish, variant =
             strokeWidth={2}
           />
         </button>
+        )}
 
+        {!zoomed && (
         <div className="absolute top-3 left-3 flex flex-col gap-1">
           {product.bestseller && (
             <span className="badge-premium rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider">
@@ -230,8 +266,10 @@ export default function ProductCard({ product, wished, onOpen, onWish, variant =
             </span>
           )}
         </div>
+        )}
 
         {/* Floating price + add — sits directly on the photo, thumb-reachable */}
+        {!zoomed && (
         <div className="absolute inset-x-2.5 bottom-2.5 flex items-center justify-between">
           <span
             className="glass-dark rounded-full px-2.5 py-1 font-display text-[13.5px] font-bold tabular text-white"
@@ -240,6 +278,7 @@ export default function ProductCard({ product, wished, onOpen, onWish, variant =
           </span>
           <AddButton size={30} />
         </div>
+        )}
       </div>
 
       {/* Content — name + rating only, photo now carries price */}

@@ -27,6 +27,7 @@ export default function ProductScreen() {
   const [activeImg, setActiveImg] = useState<string | null>(null);
   const [heartKey, setHeartKey] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxZoomed, setLightboxZoomed] = useState(false);
   const lbTouchStart = useRef({ x: 0, y: 0 });
 
   // Swipe gesture refs
@@ -151,6 +152,15 @@ export default function ProductScreen() {
   const currentImg = activeImg || product?.image || '';
   const galleryImages = product ? [product.image, ...safeArray<string>(product.gallery)] : [];
   const activeIndex = galleryImages.indexOf(currentImg);
+
+  // Reset lightbox zoom whenever the lightbox closes or the shown image changes,
+  // so it never reopens/advances already zoomed-in.
+  useEffect(() => {
+    if (!lightboxOpen) setLightboxZoomed(false);
+  }, [lightboxOpen]);
+  useEffect(() => {
+    setLightboxZoomed(false);
+  }, [currentImg]);
   // Keep refs in sync so native touch listeners always have latest values
   galleryRef.current = galleryImages;
   activeIndexRef.current = activeIndex;
@@ -801,6 +811,7 @@ export default function ProductScreen() {
               lbTouchStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
             }}
             onTouchEnd={(e) => {
+              if (lightboxZoomed) return;
               const dx = e.changedTouches[0].clientX - lbTouchStart.current.x;
               const dy = e.changedTouches[0].clientY - lbTouchStart.current.y;
               if (Math.abs(dx) > 44 && Math.abs(dx) > Math.abs(dy) * 1.5) {
@@ -815,10 +826,18 @@ export default function ProductScreen() {
             <img
               src={currentImg}
               alt={product.name}
-              className="w-full max-h-[70vh] rounded-2xl object-contain select-none"
+              onDoubleClick={() => setLightboxZoomed((z) => !z)}
+              className={`w-full max-h-[70vh] rounded-2xl object-contain select-none transition-transform duration-300 ${
+                lightboxZoomed ? 'scale-[2] cursor-zoom-out' : 'cursor-zoom-in'
+              }`}
             />
+            {!lightboxZoomed && (
+              <span className="pointer-events-none absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-black/40 px-3 py-1 text-[10px] font-semibold text-white/85">
+                Double-tap to zoom
+              </span>
+            )}
 
-            {galleryImages.length > 1 && activeIndex > 0 && (
+            {!lightboxZoomed && galleryImages.length > 1 && activeIndex > 0 && (
               <button
                 onClick={() => setActiveImg(galleryImages[activeIndex - 1])}
                 className="absolute left-1 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/15 text-white active:scale-90"
@@ -827,7 +846,7 @@ export default function ProductScreen() {
                 <ChevronLeft className="h-5 w-5" strokeWidth={2.4} />
               </button>
             )}
-            {galleryImages.length > 1 && activeIndex < galleryImages.length - 1 && (
+            {!lightboxZoomed && galleryImages.length > 1 && activeIndex < galleryImages.length - 1 && (
               <button
                 onClick={() => setActiveImg(galleryImages[activeIndex + 1])}
                 className="absolute right-1 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/15 text-white active:scale-90"
