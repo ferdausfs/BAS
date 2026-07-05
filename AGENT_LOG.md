@@ -1,5 +1,35 @@
 # Agent Log — BAS (Bake Art Style)
 
+## Session: 2026-07-05 (Concept 2 — Product card + interaction polish)
+**Agent/Tool:** Claude (claude.ai)
+**Feature worked on:** Concept 2 — Product card + interaction polish
+
+### কী হয়েছে:
+- Review করে দেখা গেছে `ProductScreen.tsx` (detail page) এ আগে থেকেই gallery/lightbox/pagination-dots/thumbnail-strip এবং weight-flavor selector সহ live price calculation ছিল — এই concept এর বেশিরভাগ অংশ detail screen এ আগে থেকেই সম্পন্ন
+- **B (lightbox zoom, ছোট gap fix):** `ProductScreen.tsx` এর fullscreen lightbox এ double-tap-to-zoom যোগ করা হলো (`lightboxZoomed` state) — zoom অবস্থায় swipe-navigation ও prev/next arrows disable করা হয়েছে (gesture conflict এড়াতে), zoom auto-reset হয় lightbox close বা image পরিবর্তনে
+- **A (main gap):** `ProductCard.tsx` (list card — HomeScreen/CategoriesScreen/WishlistScreen এ ব্যবহৃত, 170px horizontal + grid variant) এ আগে কোনো zoom/interaction ছিল না। Tap-to-zoom (`zoomed` state, `handleImageTap` — `stopPropagation` দিয়ে `onOpen` থেকে আলাদা) এবং একটা subtle zoom-hint icon যোগ করা হলো, দুই variant এ। Zoom অবস্থায় wishlist/badges/price-add overlay hide করা হয়েছে যাতে zoomed photo পরিষ্কার দেখা যায়
+- Scope decision অনুযায়ী **কোনো weight/flavor pill selector card এ যোগ করা হয়নি** — 170px/grid width এ জায়গা নেই বলে review report এ আগেই flag করা হয়েছিল, তাই `handleAdd` এখনো আগের মতোই default (index[0]) weight/flavor ব্যবহার করে — কোনো mismatch risk নেই
+- Build verify করা হয়েছে: `✓ built in 10.11s`, এবং `tsc --noEmit` এ touched files এ কোনো নতুন error নেই (repo তে আগে থেকেই কিছু unrelated pre-existing TS error আছে অন্য screens এ — HomeScreen/OrdersScreen/TrackingScreen/WishlistScreen, এইগুলা এই session এ touch করা হয়নি)
+
+### Touched files:
+- `src/screens/ProductScreen.tsx`
+- `src/components/ProductCard.tsx`
+
+### Commit:
+- (এই session এ push হয়নি — user local এ ZIP apply করে push করবে)
+
+### এখনো Pending:
+1. **Concept 2 (Product card + interaction polish)** — STATUS: **Done**
+2. **Cart/Checkout simplify (all-ages easy)** — STATUS: Pending
+3. **Typography + color system (brand feel)** — STATUS: Pending
+
+### পরবর্তী Agent এর জন্য নোট:
+- `ProductCard.tsx` এ `zoomed` state যোগ হয়েছে — grid এবং horizontal দুই variant এই আলাদা করে duplicate করা আছে (component এ কোনো shared sub-component নাই), future change এ দুই জায়গাতেই mirror করে দিতে হবে
+- Lightbox zoom শুধু scale-transform (center-origin) — pan/drag-to-reposition করা হয়নি, ইচ্ছাকৃতভাবে simple রাখা হয়েছে (over-engineering এড়াতে)
+- Product card এ weight/flavor selector এখনো যোগ হয়নি — যদি ভবিষ্যতে দরকার হয়, card width বাড়ানো লাগবে অথবা bottom-sheet quick-view বানাতে হবে
+
+---
+
 ## Session: 2026-07-05 (update)
 **Agent/Tool:** Claude (claude.ai)
 **Feature worked on:** Concept 1 — HomeScreen/Browsing premium redesign
