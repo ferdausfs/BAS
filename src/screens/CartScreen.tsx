@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Plus, Minus, Trash2, Tag, ShoppingBag, Sparkles, Truck, Shield, ShoppingCart, Wallet, Cake, Flower2, Gift } from 'lucide-react';
+import React, { useEffect } from 'react';
+import { ArrowLeft, Plus, Minus, Trash2, ShoppingBag, Sparkles, Truck, Shield, ShoppingCart, Cake, Flower2, Gift } from 'lucide-react';
 import {
   useCart,
   useUI,
   useWallet,
   WALLET_MAX_REDEEM,
-  WALLET_MIN_ORDER_TO_REDEEM,
   formatINR,
   cartSubtotal,
   standardDeliveryFee,
@@ -27,15 +26,12 @@ export default function CartScreen() {
     back,
     go,
     promoDiscount,
-    applyPromo,
     clearPromo,
     pendingLoyaltyRedeem,
     setPendingLoyaltyRedeem,
     clearLoyalty,
   } = useUI();
   const { balance } = useWallet();
-  const [code, setCode] = useState('');
-  const [promoError, setPromoError] = useState('');
 
   const { settings } = useSettingsStore();
   const currentDeliveryFee = settings.deliveryFee !== undefined ? settings.deliveryFee : standardDeliveryFee;
@@ -49,7 +45,6 @@ export default function CartScreen() {
   // Max redeem = min(balance, WALLET_MAX_REDEEM, subtotal cap)
   const maxRedeemable = Math.min(balance, WALLET_MAX_REDEEM, subtotal);
   const walletDiscount = pendingLoyaltyRedeem; // pendingLoyaltyRedeem now stores ৳ directly
-  const canRedeem = balance > 0 && subtotal >= WALLET_MIN_ORDER_TO_REDEEM && promoDiscount === 0;
 
   const promoDiscountAmount = promoDiscount > 0 ? (subtotal * promoDiscount) / 100 : 0;
   const discountAmount = promoDiscountAmount + walletDiscount;
@@ -245,126 +240,9 @@ export default function CartScreen() {
           </div>
         )}
 
-        {/* Wallet Redemption */}
-        {balance > 0 && (
-          <div
-            className="mt-4 rounded-2xl overflow-hidden border border-coral/20 bg-coral-50"
-            style={{ boxShadow: '0 1px 2px rgba(26,19,17,.02), 0 8px 24px -16px rgba(26,19,17,.16)' }}
-          >
-            <div className="flex items-center justify-between px-4 py-3">
-              <div className="flex items-center gap-2">
-                <Wallet className="h-[18px] w-[18px] text-coral" strokeWidth={2} />
-                <div>
-                  <div className="text-[12px] font-bold text-coral-800">
-                    ৳{balance.toLocaleString()} wallet balance
-                  </div>
-                  <div className="text-[10px] text-coral-600">
-                    Max ৳{WALLET_MAX_REDEEM} off per order
-                  </div>
-                </div>
-              </div>
-              {pendingLoyaltyRedeem === 0 ? (
-                <button
-                  onClick={() => {
-                    if (promoDiscount > 0) {
-                      setPromoError('Promo code is active — remove it first to use wallet');
-                      return;
-                    }
-                    if (maxRedeemable <= 0) return;
-                    setPendingLoyaltyRedeem(maxRedeemable);
-                    setPromoError('');
-                  }}
-                  disabled={!canRedeem}
-                  className="rounded-xl bg-coral px-3 py-1.5 text-[11px] font-bold text-white active:scale-95 transition disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  Use ৳{maxRedeemable}
-                </button>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <span className="text-[11px] font-bold text-emerald-700">
-                    −৳{walletDiscount} applied
-                  </span>
-                  <button
-                    onClick={() => {
-                      clearLoyalty();
-                    }}
-                    className="text-[10px] text-ink/40 underline"
-                  >
-                    Remove
-                  </button>
-                </div>
-              )}
-            </div>
-            {!canRedeem && balance > 0 && subtotal < WALLET_MIN_ORDER_TO_REDEEM && (
-              <div className="px-4 pb-2 text-[10px] text-ink/40">
-                Add ৳{WALLET_MIN_ORDER_TO_REDEEM - subtotal} more to use wallet
-              </div>
-            )}
-            {promoDiscount > 0 && pendingLoyaltyRedeem === 0 && (
-              <div className="px-4 pb-2.5 text-[10px] text-coral-700">
-                Remove the promo code to use wallet balance.
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Promo */}
-        <div className="mt-4">
-          <div
-            className="flex items-center gap-2.5 rounded-2xl border border-dashed border-ink-100 glass-strong px-3.5 py-3"
-          >
-            <Tag className="h-4 w-4 text-ink-200" />
-            <input
-              value={code}
-              onChange={(e) => {
-                setCode(e.target.value);
-                setPromoError('');
-              }}
-              placeholder="Promo code"
-              className="flex-1 bg-transparent text-[13px] font-medium outline-none placeholder:text-ink-200"
-              disabled={pendingLoyaltyRedeem > 0}
-            />
-            <button
-              onClick={() => {
-                if (pendingLoyaltyRedeem > 0) {
-                  setPromoError('Wallet balance is active — remove it first');
-                  return;
-                }
-                if (!settings.promoEnabled) {
-                  setPromoError('No active promo right now');
-                  clearPromo();
-                  return;
-                }
-                if (code.trim().toUpperCase() === settings.promoCode.trim().toUpperCase()) {
-                  applyPromo(settings.promoPercent);
-                  setPromoError('');
-                } else {
-                  setPromoError('Invalid promo code');
-                  clearPromo();
-                }
-              }}
-              disabled={pendingLoyaltyRedeem > 0}
-              className="text-[11.5px] font-bold uppercase tracking-wider text-ink hover:text-coral disabled:opacity-40"
-            >
-              Apply
-            </button>
-          </div>
-          {promoError && (
-            <p className="mt-1.5 px-3.5 text-red-500 text-[11px] font-semibold">{promoError}</p>
-          )}
-          {promoDiscount > 0 && !promoError && (
-            <p className="mt-1.5 px-3.5 text-emerald-600 text-[11px] font-semibold">
-              Promo code "{settings.promoCode}" applied! ({settings.promoPercent}% discount)
-            </p>
-          )}
-          {pendingLoyaltyRedeem > 0 && (
-            <p className="mt-1.5 px-3.5 text-emerald-600 text-[11px] font-semibold">
-              ৳{walletDiscount} wallet balance redeemed
-            </p>
-          )}
-        </div>
-
-        {/* Bill */}
+        {/* Promo/wallet discounts are now applied from the Checkout → পেমেন্ট step,
+            not here. Discount state itself is global (useUI store) so this page's
+            Bill below still reflects whatever was applied there. */}
         <section
           className="mt-4 overflow-hidden rounded-2xl glass-strong"
         >

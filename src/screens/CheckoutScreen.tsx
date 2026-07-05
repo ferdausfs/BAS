@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { ArrowLeft, MapPin, Clock, Wallet, Check, Shield, Navigation, Loader2, Phone, Banknote, ShoppingCart, Gift, Users, Image as ImageIcon, X, Calendar } from 'lucide-react';
+import { ArrowLeft, MapPin, Clock, Wallet, Check, Shield, Navigation, Loader2, Phone, Banknote, ShoppingCart, Gift, Users, Image as ImageIcon, X, Calendar, Tag } from 'lucide-react';
 import {
   useCart, useOrders, useUI, formatINR,
   cartSubtotal, standardDeliveryFee,
@@ -9,6 +9,8 @@ import {
   useWallet,
   getReferralCode,
   WALLET_REFERRAL_BONUS,
+  WALLET_MAX_REDEEM,
+  WALLET_MIN_ORDER_TO_REDEEM,
   applyReferralCode,
 } from '../lib/store';
 import { doc, setDoc } from 'firebase/firestore';
@@ -47,11 +49,13 @@ interface Props {
 export default function CheckoutScreen({ onBack }: Props) {
   const { items, clear } = useCart();
   const { placeOrder, orders } = useOrders();
-  const { back, go, promoDiscount, pendingLoyaltyRedeem } = useUI();
+  const {
+    back, go, promoDiscount, pendingLoyaltyRedeem,
+    setPendingLoyaltyRedeem, clearLoyalty, applyPromo, clearPromo,
+  } = useUI();
   const { verified: locationVerified, district: detectedDistrict, lat: locationLat, lng: locationLng } = useLocation();
   const user = useAuthStore((s) => s.user);
   const walletBalance = useWallet((s) => s.balance);
-  const walletApplied = pendingLoyaltyRedeem > 0;
 
   // Referral
   const [referralInput, setReferralInput] = useState('');
@@ -60,37 +64,33 @@ export default function CheckoutScreen({ onBack }: Props) {
   const [referralLoading, setReferralLoading] = useState(false);
   const userReferralCode = getReferralCode(user);
 
-  // Auto-fill referral code from URL ?ref= param (e.g. from shared link)
+  // Auto-fill referral code from URL ?ref= param (e.g. from shared link) or a
+  // pending deep-link stored by App.tsx. Runs once on mount.
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const refParam = params.get('ref');
-    if (refParam && !referralApplied) {
-      const code = refParam.trim().toUpperCase();
-      if (/^[A-Z0-9]{8}$/i.test(code) && code !== userReferralCode) {
-        setReferralInput(code);
-      }
-    }
-    // Also check localStorage (set by App.tsx on deep link open)
-    try {
-      const stored = localStorage.getItem('bas-pending-ref');
-      if (stored && !referralApplied) {
-        const code = stored.trim().toUpperCase();
-        if (/^[A-Z0-9]{8}$/i.test(code) && code !== userReferralCode) {
-          setReferralInput(code);
+    let code = params.get('ref')?.trim().toUpperCase() || '';
+    if (!code) {
+      try {
+        const stored = localStorage.getItem('bas-pending-ref');
+        if (stored) {
+          code = stored.trim().toUpperCase();
+          localStorage.removeItem('bas-pending-ref');
         }
-        localStorage.removeItem('bas-pending-ref');
-      }
-    } catch { /* ignore */ }
+      } catch { /* ignore */ }
+    }
+    if (code && /^[A-Z0-9]{8}$/i.test(code) && code !== userReferralCode) {
+      setReferralInput(code);
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const applyReferralCodeHandler = async () => {
+  const applyReferralCodeHandler = async (codeOverride?: string) => {
     if (!user) {
       setReferralError('Login করুন');
       return;
     }
 
-    const code = referralInput.trim().toUpperCase();
+    const code = (codeOverride ?? referralInput).trim().toUpperCase();
 
     if (!/^[A-Z0-9]{8}$/.test(code)) {
       setReferralError('Invalid code format');
@@ -113,6 +113,17 @@ export default function CheckoutScreen({ onBack }: Props) {
       setReferralLoading(false);
     }
   };
+
+  // Auto-apply once we have both a pre-filled code (from the link, above) and a
+  // logged-in user — don't make them tap "Apply" for a link they already followed.
+  // Manual entry (typed in by hand) still requires the Apply button as before.
+  useEffect(() => {
+    if (referralInput && user && !referralApplied) {
+      void applyReferralCodeHandler(referralInput);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [referralInput, user]);
+
 
   const [showLocationGate, setShowLocationGate] = useState(false);
   const [locating, setLocating] = useState(false);
@@ -198,6 +209,13 @@ export default function CheckoutScreen({ onBack }: Props) {
     const giftWrapFee = giftMode && gift.wrap ? 50 : 0;
     return { subtotal: sub, delivery: dlv, promoDiscountAmount: promoDisc, walletDiscount: walletDisc, discountAmount: disc, total: Math.max(0, sub + dlv - disc + giftWrapFee) };
   }, [items, currentDeliveryFee, currentFreeThreshold, promoDiscount, pendingLoyaltyRedeem, giftMode, gift.wrap]);
+
+  // Wallet redeem + promo code — moved here from CartScreen (same store state/actions,
+  // so Cart and Checkout always stay in sync with whatever was applied).
+  const maxRedeemable = Math.min(walletBalance, WALLET_MAX_REDEEM, subtotal);
+  const canRedeem = walletBalance > 0 && subtotal >= WALLET_MIN_ORDER_TO_REDEEM && promoDiscount === 0;
+  const [promoInput, setPromoInput] = useState('');
+  const [promoError, setPromoError] = useState('');
 
   const handleLocate = async () => {
     setLocating(true);
@@ -669,36 +687,117 @@ export default function CheckoutScreen({ onBack }: Props) {
 
         {/* Payment */}
         <Section icon={Wallet} title="পেমেন্ট পদ্ধতি">
-          {user && (
-            <div className="mb-3 rounded-2xl border border-gold/20 bg-gold/5 p-3">
-              {/* Wallet balance header */}
-              <div className="flex items-center justify-between">
+          {user && walletBalance > 0 && (
+            <div
+              className="mb-3 rounded-2xl overflow-hidden border border-coral/20 bg-coral-50"
+              style={{ boxShadow: '0 1px 2px rgba(26,19,17,.02), 0 8px 24px -16px rgba(26,19,17,.16)' }}
+            >
+              <div className="flex items-center justify-between px-4 py-3">
                 <div className="flex items-center gap-2">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gold/15">
-                    <Wallet className="h-4 w-4 text-gold" strokeWidth={2} />
-                  </div>
+                  <Wallet className="h-[18px] w-[18px] text-coral" strokeWidth={2} />
                   <div>
-                    <p className="text-[11px] font-bold tracking-wider text-ink-200 uppercase">
-                      আপনার Wallet
-                    </p>
-                    <p className="text-[16px] font-bold text-gold">
-                      ৳{walletBalance.toLocaleString()}
-                    </p>
+                    <div className="text-[12px] font-bold text-coral-800">
+                      ৳{walletBalance.toLocaleString()} wallet balance
+                    </div>
+                    <div className="text-[10px] text-coral-600">
+                      Max ৳{WALLET_MAX_REDEEM} off per order
+                    </div>
                   </div>
                 </div>
-                {walletBalance > 0 && !walletApplied && (
-                  <span className="rounded-full bg-gold/10 px-2.5 py-1 text-[10px] font-bold text-gold">
-                    Use করুন →
-                  </span>
+                {pendingLoyaltyRedeem === 0 ? (
+                  <button
+                    onClick={() => {
+                      if (promoDiscount > 0) {
+                        setPromoError('Promo code is active — remove it first to use wallet');
+                        return;
+                      }
+                      if (maxRedeemable <= 0) return;
+                      setPendingLoyaltyRedeem(maxRedeemable);
+                      setPromoError('');
+                    }}
+                    disabled={!canRedeem}
+                    className="rounded-xl bg-coral px-3 py-1.5 text-[11px] font-bold text-white active:scale-95 transition disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    Use ৳{maxRedeemable}
+                  </button>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <span className="text-[11px] font-bold text-emerald-700">
+                      −৳{walletDiscount} applied
+                    </span>
+                    <button onClick={() => clearLoyalty()} className="text-[10px] text-ink/40 underline">
+                      Remove
+                    </button>
+                  </div>
                 )}
               </div>
-              {walletApplied && (
-                <div className="mt-2 rounded-xl bg-emerald-50 px-3 py-2 text-[11px] font-bold text-emerald-600">
-                  ৳{pendingLoyaltyRedeem.toLocaleString()} wallet discount applied
+              {!canRedeem && walletBalance > 0 && subtotal < WALLET_MIN_ORDER_TO_REDEEM && (
+                <div className="px-4 pb-2 text-[10px] text-ink/40">
+                  Add ৳{WALLET_MIN_ORDER_TO_REDEEM - subtotal} more to use wallet
+                </div>
+              )}
+              {promoDiscount > 0 && pendingLoyaltyRedeem === 0 && (
+                <div className="px-4 pb-2.5 text-[10px] text-coral-700">
+                  Remove the promo code to use wallet balance.
                 </div>
               )}
             </div>
           )}
+
+          {/* Promo code — ported from CartScreen unchanged */}
+          <div className="mb-3">
+            <div className="flex items-center gap-2.5 rounded-2xl border border-dashed border-ink-100 glass-strong px-3.5 py-3">
+              <Tag className="h-4 w-4 text-ink-200" />
+              <input
+                value={promoInput}
+                onChange={(e) => {
+                  setPromoInput(e.target.value);
+                  setPromoError('');
+                }}
+                placeholder="Promo code"
+                className="flex-1 bg-transparent text-[13px] font-medium outline-none placeholder:text-ink-200"
+                disabled={pendingLoyaltyRedeem > 0}
+              />
+              <button
+                onClick={() => {
+                  if (pendingLoyaltyRedeem > 0) {
+                    setPromoError('Wallet balance is active — remove it first');
+                    return;
+                  }
+                  if (!settings.promoEnabled) {
+                    setPromoError('No active promo right now');
+                    clearPromo();
+                    return;
+                  }
+                  if (promoInput.trim().toUpperCase() === settings.promoCode.trim().toUpperCase()) {
+                    applyPromo(settings.promoPercent);
+                    setPromoError('');
+                  } else {
+                    setPromoError('Invalid promo code');
+                    clearPromo();
+                  }
+                }}
+                disabled={pendingLoyaltyRedeem > 0}
+                className="text-[11.5px] font-bold uppercase tracking-wider text-ink hover:text-coral disabled:opacity-40"
+              >
+                Apply
+              </button>
+            </div>
+            {promoError && (
+              <p className="mt-1.5 px-3.5 text-red-500 text-[11px] font-semibold">{promoError}</p>
+            )}
+            {promoDiscount > 0 && !promoError && (
+              <p className="mt-1.5 px-3.5 text-emerald-600 text-[11px] font-semibold">
+                Promo code "{settings.promoCode}" applied! ({settings.promoPercent}% discount)
+              </p>
+            )}
+            {pendingLoyaltyRedeem > 0 && (
+              <p className="mt-1.5 px-3.5 text-emerald-600 text-[11px] font-semibold">
+                ৳{walletDiscount} wallet balance redeemed
+              </p>
+            )}
+          </div>
+
           <div className="space-y-2">
             {PAYMENT_METHODS.map((method) => {
               const isSelected = form.payment === method.id;
