@@ -7,6 +7,34 @@
 
 ---
 
+## Session: 2026-07-05 (Privacy Policy page — for Facebook App publish requirement)
+**Agent/Tool:** Claude (claude.ai)
+**Feature worked on:** Static Privacy Policy page, needed to publish/go-Live the Facebook App used for Facebook Login
+
+### কী হয়েছে:
+- Facebook App এখনো "Unpublished" (Development mode) থাকায়, App owner ছাড়া অন্য কেউ (customer) "Continue with Facebook" দিয়ে login করতে গেলে **"App not active"** error পাচ্ছিল
+- App-কে **Live/Publish** করার জন্য Facebook Basic Settings-এ একটা **Privacy Policy URL** বাধ্যতামূলক — সেটার জন্য নতুন static page বানানো হলো: `public/privacy-policy.html`
+- **কেন `public/` folder এ:** এই repo `vite-plugin-singlefile` দিয়ে main app bundle একটা `index.html`-এ inline করে, কিন্তু `public/` folder-এর যেকোনো file build-এর সময় হুবহু `dist/` root-এ copy হয় (singlefile plugin শুধু main entry bundle-কে touch করে) — তাই `privacy-policy.html` আলাদা static page হিসেবে ঠিকভাবে কাজ করবে, deploy হওয়ার পর URL হবে: `https://bas.umuhammadiswa.workers.dev/privacy-policy.html`
+- Page-এ যা আছে: কী তথ্য সংগ্রহ করা হয় (নাম/ফোন/ঠিকানা/GPS/email, Facebook Login profile+email, payment screenshot), কীভাবে ব্যবহার হয়, কোথায় store হয় (Firebase/Firestore/Cloudinary), কার সাথে share হয় (delivery staff, service provider — বিক্রি করা হয় না), এবং **Data Deletion Instructions** section (`#data-deletion` anchor) — এটা Facebook Login ব্যবহারকারী app-এর জন্য বাধ্যতামূলক requirement (ব্যবহারকারী কীভাবে account/data deletion request করবে তার instructions, callback URL ছাড়াই এই instructions-page approach acceptable)
+- **⚠️ Placeholder আছে, পূরণ করতে হবে:** page-এর মধ্যে দুই জায়গায় `[আপনার business phone number বসান]` আর `[আপনার email/phone বসান]` লেখা আছে — real contact info দিয়ে বদলে নিতে হবে (raw HTML edit করে, বা future session-এ চাইলে বলবেন করে দিব)। Facebook Page link-ও `href="#"` বসানো আছে, real Facebook Page URL দিয়ে বদলাতে হবে।
+- Build verify করা হয়েছে: `✓ built in 15.23s`, `dist/privacy-policy.html` ঠিকভাবে static file হিসেবে output-এ আছে confirm করা হয়েছে
+
+### Touched files:
+- `public/privacy-policy.html` (নতুন file)
+
+### Commit:
+- (pending — user local এ ZIP apply করে push করবে: `bas-privacy-policy-070526.zip`)
+
+### এখনো Pending:
+- Placeholder contact info (`[আপনার business phone number বসান]`, `[আপনার email/phone বসান]`, Facebook Page link) real তথ্য দিয়ে replace করা
+- Facebook App → Basic Settings → Privacy Policy URL ফিল্ডে `https://bas.umuhammadiswa.workers.dev/privacy-policy.html` বসিয়ে App Publish/Live করা
+- App Live করার পরেও App Icon + Category select করা লাগতে পারে Basic Settings-এ (Facebook require করে)
+
+### পরবর্তী Agent এর জন্য নোট:
+- `public/` folder-এ নতুন static HTML page যোগ করলে Vite build-এ automatically `dist/` root এ চলে যায় — কোনো router config লাগে না, `vite-plugin-singlefile` শুধু main SPA bundle কে touch করে। ভবিষ্যতে Terms of Service বা অন্য static legal page লাগলে এই একই pattern follow করা যাবে।
+
+---
+
 ## Session: 2026-07-05 (Facebook login added — Firebase auth)
 **Agent/Tool:** Claude (claude.ai)
 **Feature worked on:** Facebook sign-in alongside existing Google sign-in
