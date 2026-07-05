@@ -34,11 +34,11 @@
 - `src/components/ChatBot.tsx`
 
 ### Commit:
-- (pending — user local এ ZIP apply করে push করবে: `bas-advance-payment-checkout-070526.zip`)
+- `a2b91c7` — feat: checkout reorder + 2-part advance payment (1/3 online, rest flexible)
 
 ### এখনো Pending:
 - Concept 1-4 (Home/Product-card/Cart-Checkout/Typography) — সব আগেই Done ছিল
-- **Checkout reorder + advance payment — STATUS: Done (এই session)**
+- **Checkout reorder + advance payment — STATUS: Done, pushed & deployed (এই session)**
 
 ### পরবর্তী Agent এর জন্য নোট:
 - `form.payment` field এখন **"remaining/final payment method"** বোঝায় (bKash/Nagad/Cash সবগুলোই valid), আর নতুন `advancePayment` state (শুধু bKash/Nagad) হলো **advance/production payment method**। এই দুটো field গুলিয়ে ফেলবেন না — `Order.payment` ≠ advance, `Order.advancePayment` = advance।
