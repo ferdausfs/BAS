@@ -345,6 +345,63 @@ export default function CheckoutScreen({ onBack }: Props) {
 
   const handleBack = onBack ?? back;
 
+  // ===== 3-step wizard state =====
+  // Was previously a decorative stepper (always showed step 1 active while the
+  // whole form scrolled as one page). Now step actually gates what's rendered.
+  const [step, setStep] = useState<0 | 1 | 2>(0);
+
+  const validateAddressStep = () => {
+    if (!form.name || !form.phone || !form.address) {
+      setSubmitError('নাম, ফোন এবং ঠিকানা পূরণ করুন।');
+      return false;
+    }
+    if (!isValidPhone(form.phone)) {
+      setSubmitError('সঠিক মোবাইল নম্বর দিন (যেমন 01XXXXXXXXX)');
+      return false;
+    }
+    setSubmitError('');
+    return true;
+  };
+
+  const validatePaymentStep = () => {
+    if (form.payment !== 'cash' && !paymentScreenshotFile) {
+      setSubmitError('অনলাইন পেমেন্টের জন্য screenshot আপলোড করুন।');
+      return false;
+    }
+    setSubmitError('');
+    return true;
+  };
+
+  const goToStep = (i: 0 | 1 | 2) => {
+    // Only allow jumping to a step that's already been reached — same guard
+    // the Header's clickable-stepper uses (i <= step).
+    if (i <= step) {
+      setSubmitError('');
+      setStep(i);
+    }
+  };
+
+  const goNext = () => {
+    if (step === 0) {
+      if (!validateAddressStep()) return;
+      setStep(1);
+    } else if (step === 1) {
+      if (!validatePaymentStep()) return;
+      setStep(2);
+    } else {
+      void handleSubmit();
+    }
+  };
+
+  const goPrevStep = () => {
+    if (step > 0) {
+      setSubmitError('');
+      setStep((s) => (s - 1) as 0 | 1 | 2);
+    } else {
+      handleBack();
+    }
+  };
+
   if (items.length === 0) {
     return (
       <div className="flex h-full flex-col">
@@ -374,9 +431,11 @@ export default function CheckoutScreen({ onBack }: Props) {
 
   return (
     <div className="flex h-full flex-col">
-      <Header title="চেকআউট" onBack={handleBack} />
+      <Header title="চেকআউট" onBack={goPrevStep} step={step} onStepClick={goToStep} />
 
       <div className="no-scrollbar flex-1 overflow-y-auto px-5 pb-32 pt-1">
+        {step === 0 && (
+        <>
         {/* Items */}
         <Section icon={MapPin} title="অর্ডারের আইটেম">
           <div className="space-y-2.5">
@@ -527,7 +586,11 @@ export default function CheckoutScreen({ onBack }: Props) {
             ))}
           </div>
         </Section>
+        </>
+        )}
 
+        {step === 1 && (
+        <>
         {/* Gift Mode */}
         <section className="space-y-3">
           <div
@@ -747,6 +810,45 @@ export default function CheckoutScreen({ onBack }: Props) {
             )}
           </div>
         </Section>
+        </>
+        )}
+
+        {step === 2 && (
+        <>
+        {/* Review summary — read-only recap of what was entered in steps 1-2 */}
+        <Section icon={Check} title="অর্ডার সামারি">
+          <div className="space-y-2.5 text-[13px]">
+            <div className="flex items-start justify-between gap-3">
+              <span className="text-ink-200">ডেলিভারি ঠিকানা</span>
+              <div className="text-right">
+                <p className="font-bold text-ink">{form.name}</p>
+                <p className="text-ink-200">{form.phone}</p>
+                <p className="max-w-[200px] text-ink-200">{form.address}, {form.district}</p>
+              </div>
+            </div>
+            <div className="h-px bg-ink-50" />
+            <div className="flex items-center justify-between">
+              <span className="text-ink-200">ডেলিভারি সময়</span>
+              <span className="font-bold text-ink">{form.date} · {form.time}</span>
+            </div>
+            <div className="h-px bg-ink-50" />
+            <div className="flex items-center justify-between">
+              <span className="text-ink-200">পেমেন্ট পদ্ধতি</span>
+              <span className="font-bold text-ink">
+                {PAYMENT_METHODS.find((m) => m.id === form.payment)?.name}
+              </span>
+            </div>
+            {giftMode && (
+              <>
+                <div className="h-px bg-ink-50" />
+                <div className="flex items-center justify-between">
+                  <span className="text-ink-200">গিফট অর্ডার</span>
+                  <span className="font-bold text-ink">{gift.wrap ? 'হ্যাঁ, wrap সহ' : 'হ্যাঁ'}</span>
+                </div>
+              </>
+            )}
+          </div>
+        </Section>
 
         {/* Bill */}
         <Section title="বিল বিবরণ" className="!p-0">
@@ -784,6 +886,8 @@ export default function CheckoutScreen({ onBack }: Props) {
           <Shield className="h-3.5 w-3.5" />
           নিরাপদ ও বিশ্বস্ত অর্ডার প্রসেসিং
         </div>
+        </>
+        )}
       </div>
 
       {/* Sticky CTA */}
@@ -791,16 +895,18 @@ export default function CheckoutScreen({ onBack }: Props) {
         {submitError && <div className="mb-2 text-[11px] font-semibold text-red-500">{submitError}</div>}
         <div className="flex items-center gap-3">
           <div>
-            <div className="text-[10px] font-bold tracking-wider text-ink-200 uppercase">পেমেন্ট</div>
+            <div className="text-[10px] font-bold tracking-wider text-ink-200 uppercase">
+              {step === 2 ? 'পেমেন্ট' : 'মোট'}
+            </div>
             <div className="font-display text-[20px] font-bold tabular text-ink">{formatINR(total)}</div>
           </div>
           <button
-            onClick={() => void handleSubmit()}
-            disabled={!form.name || !form.phone || !form.address || submitting}
+            onClick={goNext}
+            disabled={step === 2 ? (!form.name || !form.phone || !form.address || submitting) : false}
             className="btn-primary ml-auto flex h-14 flex-1 items-center justify-center gap-2 rounded-2xl text-[14px] font-bold tracking-tight disabled:opacity-50"
           >
-            {submitting ? 'Submitting...' : 'অর্ডার করুন'}
-            {submitting ? <Loader2 className="h-[18px] w-[18px] animate-spin" strokeWidth={2.5} /> : <Check className="h-[18px] w-[18px]" strokeWidth={2.5} />}
+            {step < 2 ? 'পরবর্তী' : submitting ? 'Submitting...' : 'অর্ডার করুন'}
+            {step < 2 ? null : submitting ? <Loader2 className="h-[18px] w-[18px] animate-spin" strokeWidth={2.5} /> : <Check className="h-[18px] w-[18px]" strokeWidth={2.5} />}
           </button>
         </div>
       </div>
@@ -808,10 +914,15 @@ export default function CheckoutScreen({ onBack }: Props) {
   );
 }
 
-function Header({ title, onBack }: { title: string; onBack: () => void }) {
+function Header({
+  title, onBack, step = 0, onStepClick,
+}: {
+  title: string;
+  onBack: () => void;
+  step?: number;
+  onStepClick?: (i: 0 | 1 | 2) => void;
+}) {
   const steps = ['ঠিকানা', 'পেমেন্ট', 'নিশ্চিত'];
-  // Infer step from scroll/sections — simple heuristic: always show step 1 as active
-  // User sees progress visually even if not state-driven
   return (
     <header className="flex-shrink-0 border-b border-ink-50/80 px-5 pt-3 pb-3">
       <div className="flex items-center justify-between mb-3">
@@ -825,24 +936,32 @@ function Header({ title, onBack }: { title: string; onBack: () => void }) {
         <h1 className="font-display text-[16px] font-bold tracking-tight text-ink">{title}</h1>
         <div className="w-10" />
       </div>
-      {/* Step indicator */}
+      {/* Step indicator — reflects real step state; tapping a reached step jumps back to it */}
       <div className="flex items-center gap-1.5">
-        {steps.map((s, i) => (
-          <div key={s} className="flex flex-1 items-center gap-1.5">
-            <div className="flex flex-1 flex-col items-center gap-1">
-              <div
-                className="h-1 w-full rounded-full transition-all"
-                style={{ background: i === 0 ? '#E8526A' : 'rgba(28,17,18,0.10)' }}
-              />
-              <span
-                className="text-[9px] font-bold tracking-wide"
-                style={{ color: i === 0 ? '#E8526A' : '#9A8E8E' }}
-              >
-                {s}
-              </span>
+        {steps.map((s, i) => {
+          const reached = i <= step;
+          const clickable = Boolean(onStepClick) && i <= step;
+          return (
+            <div
+              key={s}
+              className={`flex flex-1 items-center gap-1.5 ${clickable ? 'cursor-pointer' : ''}`}
+              onClick={() => clickable && onStepClick?.(i as 0 | 1 | 2)}
+            >
+              <div className="flex flex-1 flex-col items-center gap-1">
+                <div
+                  className="h-1 w-full rounded-full transition-all"
+                  style={{ background: reached ? '#E8526A' : 'rgba(28,17,18,0.10)' }}
+                />
+                <span
+                  className="text-[9px] font-bold tracking-wide"
+                  style={{ color: reached ? '#E8526A' : '#9A8E8E' }}
+                >
+                  {s}
+                </span>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </header>
   );
