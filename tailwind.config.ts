@@ -50,10 +50,11 @@ export default {
       },
 
       // ── Fonts ─────────────────────────────────────────────────────────
+      // Note: playfair/script tokens removed — not loaded in index.html and
+      // never used anywhere; real brand fonts (Fraunces/Great Vibes/Inter)
+      // live as font-display/font-brand/font-body in src/index.css @theme.
       fontFamily: {
         siliguri: ['"Hind Siliguri"', 'sans-serif'],
-        script:   ['"Dancing Script"', 'cursive'],
-        playfair: ['"Playfair Display"', 'serif'],
         sans:     ['"Inter"', '"Hind Siliguri"', 'sans-serif'],
       },
 

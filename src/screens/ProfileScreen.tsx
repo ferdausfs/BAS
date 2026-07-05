@@ -460,7 +460,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
   return (
     <div className="flex h-full flex-col">
       <header className="flex-shrink-0 px-5 pt-3 pb-2">
-        <h1 className="font-display text-[28px] font-bold tracking-tight text-ink">
+        <h1 className="font-display text-[24px] font-bold tracking-tight text-ink">
           Profile
         </h1>
       </header>
@@ -469,7 +469,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
         <div className="px-5 anim-up">
           <div
             className="relative overflow-hidden rounded-[28px] p-5"
-            style={{ background: 'linear-gradient(135deg, #2A1F1E 0%, #3D2D2C 100%)' }}
+            style={{ background: 'linear-gradient(135deg, var(--color-ink-400) 0%, var(--color-ink-500) 100%)' }}
           >
             <div className="absolute -top-10 -right-10 h-32 w-32 rounded-full bg-white/10" />
             <div className="absolute -bottom-12 -left-12 h-40 w-40 rounded-full bg-gold/15" />

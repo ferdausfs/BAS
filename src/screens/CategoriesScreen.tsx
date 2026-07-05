@@ -107,7 +107,7 @@ export default function CategoriesScreen() {
         <div className="flex items-end justify-between">
           <div>
             <div className="section-eyebrow">Explore</div>
-            <h1 className="mt-1 font-display text-[22px] font-bold tracking-tight text-ink">
+            <h1 className="mt-1 font-display text-[24px] font-bold tracking-tight text-ink">
               All cakes
             </h1>
           </div>

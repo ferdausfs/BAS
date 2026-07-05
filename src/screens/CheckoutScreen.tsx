@@ -1121,11 +1121,11 @@ function Header({
               <div className="flex flex-1 flex-col items-center gap-1">
                 <div
                   className="h-1 w-full rounded-full transition-all"
-                  style={{ background: reached ? '#E8526A' : 'rgba(28,17,18,0.10)' }}
+                  style={{ background: reached ? 'var(--color-coral)' : 'rgba(28,17,18,0.10)' }}
                 />
                 <span
                   className="text-[9px] font-bold tracking-wide"
-                  style={{ color: reached ? '#E8526A' : '#9A8E8E' }}
+                  style={{ color: reached ? 'var(--color-coral)' : 'var(--color-ink-200)' }}
                 >
                   {s}
                 </span>

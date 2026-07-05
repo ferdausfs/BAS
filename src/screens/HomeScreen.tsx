@@ -146,7 +146,7 @@ export default function HomeScreen({
             {user ? (isNonLatin ? 'Welcome back!' : `Welcome back, ${firstName}`) : 'Welcome to Bake Art Style'}
           </div>
 
-          <h1 className="relative mt-1 font-display text-[23px] font-bold leading-[1.1] tracking-tight text-ink">
+          <h1 className="relative mt-1 font-display text-[24px] font-bold leading-[1.1] tracking-tight text-ink">
             What cake are we
             <br />
             <span className="text-gradient-coral">celebrating today?</span>

@@ -29,7 +29,7 @@ export default function CustomizeScreen() {
         >
           <ArrowLeft className="h-[18px] w-[18px] text-ink" strokeWidth={2} />
         </button>
-        <h1 className="font-display text-[18px] font-bold tracking-tight text-ink">Custom Cake</h1>
+        <h1 className="font-display text-[16px] font-bold tracking-tight text-ink">Custom Cake</h1>
       </div>
 
       <div className="no-scrollbar flex-1 overflow-y-auto px-5 pb-8">
