@@ -1,5 +1,37 @@
 # Agent Log — BAS (Bake Art Style)
 
+## Session: 2026-07-05 (Concept 3 — Cart/Checkout simplify, all-ages easy)
+**Agent/Tool:** Claude (claude.ai)
+**Feature worked on:** Concept 3 — Cart/Checkout simplify (all-ages easy)
+
+### কী হয়েছে:
+- Review report বানিয়ে ৬টা finding flag করা হয়েছিল, ইউজার সবগুলা approve করেছে (Check 6 এর জন্য direction: CartScreen কে Bengali তে আনা, Checkout এর মতো)
+- **Check 1 (icon fix):** `CheckoutScreen.tsx` এর "অর্ডারের আইটেম" section এ ভুল `MapPin` icon ছিল, `ShoppingCart` এ ঠিক করা হলো
+- **Check 2 (payment step reorder + accordion):** Step 1 (পেমেন্ট) এ আগে Gift/Wallet/Promo/Payment/Screenshot/Referral সবকিছু একসাথে expanded ছিল। এখন: Payment method selection সবার আগে (মূল কাজ), তারপর Gift toggle (আগে থেকেই collapsed ছিল, অপরিবর্তিত), তারপর নতুন collapsible "ডিসকাউন্ট / রেফারেল (ঐচ্ছিক)" section — এতে Wallet redeem card + Promo code + Referral code একসাথে, ডিফল্ট বন্ধ থাকে, কিন্তু আগে থেকে কিছু apply করা থাকলে (promo/wallet/referral) অটো-open হয় (`extrasAlreadyApplied` চেক দিয়ে) যাতে ইউজার হারিয়ে না ফেলে
+- **Check 3 (font size):** Checkout ফর্মের সব label (11px→12px) আর hint text (10.5px→11.5px, 10px→11px) বাড়ানো হয়েছে — readability সব বয়সের জন্য। CartScreen এও item meta/addon/bill label text bump করা হয়েছে
+- **Check 4 (Edit button):** Review step (step 2) এ প্রতিটা সামারি row এর পাশে ছোট "Edit" বাটন যোগ করা হয়েছে (`EditButton` helper component, `goToStep()` reuse করে) — আগে শুধু উপরের tiny stepper bar clickable ছিল যেটা discoverable না
+- **Check 5 (error visibility):** আগে submit error শুধু sticky footer এর নিচে ছোট লাইন হিসেবে দেখাতো। এখন scroll container এর একদম উপরে একটা লাল banner (icon সহ) দেখায়, আর validation fail হলে `scrollToTop()` কল হয়ে স্বয়ংক্রিয়ভাবে ইউজারকে error এর কাছে নিয়ে আসে (নতুন `scrollRef` + `useRef` যোগ)
+- **Check 6 (ভাষা):** `CartScreen.tsx` এর সব ইংরেজি UI copy Bengali তে আনা হলো (title, empty state, free-delivery nudge, bill labels, trust line, CTA) — এখন Cart ও Checkout দুই স্ক্রিনেই সামঞ্জস্যপূর্ণ ভাষা। "Wallet discount" শব্দটা ইচ্ছাকৃতভাবে English রাখা হয়েছে কারণ CheckoutScreen নিজেও এটা একই ভাবে ব্যবহার করে (brand/system term হিসেবে)
+- Build verify করা হয়েছে: `✓ built in 9.26s`। `tsc --noEmit` এ touched files এ কোনো নতুন error নেই — শুধু ২টা pre-existing unused-import warning (`Phone`, `Banknote`) আগে থেকেই ছিল, এই session এ touch হয়নি
+
+### Touched files:
+- `src/screens/CartScreen.tsx`
+- `src/screens/CheckoutScreen.tsx`
+
+### Commit:
+- (এই session এ push হয়নি — user local এ ZIP apply করে push করবে)
+
+### এখনো Pending:
+1. **Concept 3 (Cart/Checkout simplify)** — STATUS: **Done**
+2. **Typography + color system (brand feel)** — STATUS: Pending
+
+### পরবর্তী Agent এর জন্য নোট:
+- Checkout step 1 এ এখন `showExtras` state আছে (wallet/promo/referral এর জন্য) — auto-expand হয় `extrasAlreadyApplied` true হলে। ভবিষ্যতে নতুন discount-related feature যোগ করলে এই accordion এর ভেতরেই রাখা ভালো (scope creep এড়াতে payment method section কে হালকা রাখতে)
+- Review step এর `EditButton` শুধু `goToStep(0)` / `goToStep(1)` কল করে — protocol অনুযায়ী `goToStep` আগে থেকেই `i <= step` guard করে, তাই নতুন কোনো permission logic লাগেনি
+- CartScreen এখন পুরোপুরি Bengali (Checkout এর মতো), কিন্তু HomeScreen/ProductScreen/CategoriesScreen এখনো English — এটা এই session এর scope এ ছিল না, ভবিষ্যতে পুরো app এর ভাষা সামঞ্জস্য করতে চাইলে আলাদা concept হিসেবে ধরতে হবে
+
+---
+
 ## Session: 2026-07-05 (Concept 2 — Product card + interaction polish)
 **Agent/Tool:** Claude (claude.ai)
 **Feature worked on:** Concept 2 — Product card + interaction polish

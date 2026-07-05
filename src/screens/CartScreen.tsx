@@ -73,7 +73,7 @@ export default function CartScreen() {
     }
     return (
       <div className="flex h-full flex-col">
-        <Header title="My cart" onBack={back} />
+        <Header title="আমার কার্ট" onBack={back} />
         <div className="flex flex-1 flex-col items-center justify-center px-8 text-center">
           <div
             className="flex h-24 w-24 items-center justify-center rounded-3xl glass-strong text-ink-200"
@@ -82,16 +82,16 @@ export default function CartScreen() {
             <ShoppingCart size={44} strokeWidth={1.5} />
           </div>
           <h2 className="mt-5 font-display text-[22px] font-bold tracking-tight text-ink">
-            Your cart is empty
+            আপনার কার্ট খালি
           </h2>
-          <p className="mt-1.5 text-[13px] text-ink-200">
-            Add some delicious cakes to get started.
+          <p className="mt-1.5 text-[13.5px] text-ink-200">
+            শুরু করতে সুস্বাদু কিছু কেক যোগ করুন।
           </p>
           <button
             onClick={back}
             className="btn-primary mt-6 flex h-12 items-center gap-2 rounded-2xl px-7 text-[13px] font-bold"
           >
-            <Sparkles className="h-4 w-4" /> Browse cakes
+            <Sparkles className="h-4 w-4" /> কেক দেখুন
           </button>
         </div>
       </div>
@@ -100,7 +100,7 @@ export default function CartScreen() {
 
   return (
     <div className="flex h-full flex-col">
-      <Header title="My cart" onBack={back} badge={`${items.length}`} />
+      <Header title="আমার কার্ট" onBack={back} badge={`${items.length}`} />
 
       <div className="no-scrollbar flex-1 overflow-y-auto px-5 pb-44 pt-1">
         {/* Free delivery nudge */}
@@ -111,8 +111,8 @@ export default function CartScreen() {
                 <Truck className="h-4 w-4" strokeWidth={2} />
               </div>
               <div className="flex-1">
-                <div className="text-[12.5px] font-bold text-ink">
-                  Add {formatINR(remaining)} more for free delivery
+                <div className="text-[13px] font-bold text-ink">
+                  ফ্রি ডেলিভারির জন্য আরও {formatINR(remaining)} যোগ করুন
                 </div>
                 <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-ink-50">
                   <div
@@ -126,7 +126,7 @@ export default function CartScreen() {
         ) : (
           <div className="mb-4 flex items-center gap-2.5 rounded-2xl bg-emerald-50 px-3.5 py-3 text-emerald-700">
             <Shield className="h-4 w-4" />
-            <span className="text-[12.5px] font-bold">You unlocked free delivery</span>
+            <span className="text-[13px] font-bold">আপনি ফ্রি ডেলিভারি পেয়ে গেছেন</span>
           </div>
         )}
 
@@ -153,11 +153,11 @@ export default function CartScreen() {
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1">
                     <h4 className="line-clamp-1 text-[14px] font-bold text-ink">{item.name}</h4>
-                    <div className="mt-0.5 text-[11px] text-ink-200">
+                    <div className="mt-0.5 text-[12px] text-ink-200">
                       {item.size} · {item.flavor}
                     </div>
                     {item.message && (
-                      <div className="mt-0.5 line-clamp-1 text-[10.5px] italic text-coral">
+                      <div className="mt-0.5 line-clamp-1 text-[11.5px] italic text-coral">
                         "{item.message}"
                       </div>
                     )}
@@ -199,8 +199,8 @@ export default function CartScreen() {
         {/* Suggested add-ons */}
         {settings?.customAddons && settings.customAddons.length > 0 && (
           <div className="mt-5">
-            <div className="mb-2.5 text-[10px] font-bold tracking-wider text-ink-200 uppercase">
-              Add something extra
+            <div className="mb-2.5 text-[11px] font-bold tracking-wider text-ink-200 uppercase">
+              আরও কিছু যোগ করুন
             </div>
             <div className="no-scrollbar flex gap-2.5 overflow-x-auto pb-1">
               {settings.customAddons.slice(0, 6).map((addon) => (
@@ -227,9 +227,9 @@ export default function CartScreen() {
                       </div>
                     );
                   })()}
-                  <span className="text-[11px] font-bold leading-tight text-ink line-clamp-2">{addon.label}</span>
+                  <span className="text-[12px] font-bold leading-tight text-ink line-clamp-2">{addon.label}</span>
                   <div className="flex w-full items-center justify-between">
-                    <span className="text-[11px] font-bold text-coral">৳{addon.price}</span>
+                    <span className="text-[12px] font-bold text-coral">৳{addon.price}</span>
                     <div className="flex h-5 w-5 items-center justify-center rounded-full bg-coral">
                       <Plus className="h-3 w-3 text-white" strokeWidth={2.5} />
                     </div>
@@ -247,20 +247,20 @@ export default function CartScreen() {
           className="mt-4 overflow-hidden rounded-2xl glass-strong"
         >
           <div className="px-4 pt-4 pb-2">
-            <div className="text-[10px] font-bold tracking-wider text-ink-200 uppercase">
-              Bill details
+            <div className="text-[11px] font-bold tracking-wider text-ink-200 uppercase">
+              বিল বিবরণ
             </div>
           </div>
           <div className="space-y-2.5 px-4 py-3 text-[13px]">
-            <Row label={`Subtotal (${items.length} items)`} value={formatINR(subtotal)} />
+            <Row label={`সাবটোটাল (${items.length} আইটেম)`} value={formatINR(subtotal)} />
             <Row
-              label="Delivery"
-              value={delivery === 0 ? 'FREE' : formatINR(delivery)}
+              label="ডেলিভারি চার্জ"
+              value={delivery === 0 ? 'ফ্রি' : formatINR(delivery)}
               positive={delivery === 0}
             />
             {promoDiscountAmount > 0 && (
               <Row
-                label="Promo discount"
+                label="প্রোমো ডিসকাউন্ট"
                 value={'-' + formatINR(Math.round(promoDiscountAmount))}
                 positive
               />
@@ -271,7 +271,7 @@ export default function CartScreen() {
             <div className="h-px bg-ink-50" />
             <div className="flex items-center justify-between pt-1">
               <span className="font-display text-[15px] font-bold tracking-tight text-ink">
-                Total
+                মোট
               </span>
               <span className="font-display text-[18px] font-bold tabular text-ink">
                 {formatINR(total)}
@@ -281,9 +281,9 @@ export default function CartScreen() {
         </section>
 
         {/* Trust */}
-        <div className="mt-4 flex items-center justify-center gap-2 text-[11px] text-ink-200">
+        <div className="mt-4 flex items-center justify-center gap-2 text-[12px] text-ink-200">
           <Shield className="h-3.5 w-3.5" />
-          Secure 256-bit SSL checkout
+          নিরাপদ ও বিশ্বস্ত অর্ডার প্রসেসিং
         </div>
       </div>
 
@@ -294,7 +294,7 @@ export default function CartScreen() {
           className="btn-primary flex h-14 w-full items-center justify-center gap-2 rounded-2xl text-[14px] font-bold tracking-tight"
         >
           <ShoppingBag className="h-[18px] w-[18px]" strokeWidth={2.2} />
-          Checkout · {formatINR(total)}
+          চেকআউট · {formatINR(total)}
         </button>
       </div>
     </div>

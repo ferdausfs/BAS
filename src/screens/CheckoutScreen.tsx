@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { ArrowLeft, MapPin, Clock, Wallet, Check, Shield, Navigation, Loader2, Phone, Banknote, ShoppingCart, Gift, Users, Image as ImageIcon, X, Calendar, Tag } from 'lucide-react';
 import {
   useCart, useOrders, useUI, formatINR,
@@ -217,6 +217,13 @@ export default function CheckoutScreen({ onBack }: Props) {
   const [promoInput, setPromoInput] = useState('');
   const [promoError, setPromoError] = useState('');
 
+  // Extras (wallet redeem / promo code / referral code) collapsed by default —
+  // keeps the payment step focused on the main task first. Auto-opens if the
+  // user already applied one of these, so they don't lose track of it.
+  const [showExtras, setShowExtras] = useState(false);
+  const extrasAlreadyApplied = pendingLoyaltyRedeem > 0 || promoDiscount > 0 || referralApplied;
+  const extrasOpen = showExtras || extrasAlreadyApplied;
+
   const handleLocate = async () => {
     setLocating(true);
     setLocateError('');
@@ -271,10 +278,12 @@ export default function CheckoutScreen({ onBack }: Props) {
     if (items.length === 0) return;
     if (!form.name || !form.phone || !form.address) {
       setSubmitError('নাম, ফোন এবং ঠিকানা পূরণ করুন।');
+      scrollToTop();
       return;
     }
     if (!isValidPhone(form.phone)) {
       setSubmitError('সঠিক মোবাইল নম্বর দিন (যেমন 01XXXXXXXXX)');
+      scrollToTop();
       return;
     }
     if (requiresLocationGate && !locationVerified) {
@@ -284,6 +293,7 @@ export default function CheckoutScreen({ onBack }: Props) {
     }
     if (form.payment !== 'cash' && !paymentScreenshotFile) {
       setSubmitError('অনলাইন পেমেন্টের জন্য screenshot আপলোড করুন।');
+      scrollToTop();
       return;
     }
 
@@ -368,13 +378,24 @@ export default function CheckoutScreen({ onBack }: Props) {
   // whole form scrolled as one page). Now step actually gates what's rendered.
   const [step, setStep] = useState<0 | 1 | 2>(0);
 
+  // Scrollable content ref — when a validation error appears, the user might be
+  // scrolled down (e.g. filled address but not date/time) and never see the
+  // small error text near the sticky button. Scroll them to the top so the
+  // error banner is always visible.
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const scrollToTop = () => {
+    scrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const validateAddressStep = () => {
     if (!form.name || !form.phone || !form.address) {
       setSubmitError('নাম, ফোন এবং ঠিকানা পূরণ করুন।');
+      scrollToTop();
       return false;
     }
     if (!isValidPhone(form.phone)) {
       setSubmitError('সঠিক মোবাইল নম্বর দিন (যেমন 01XXXXXXXXX)');
+      scrollToTop();
       return false;
     }
     setSubmitError('');
@@ -384,6 +405,7 @@ export default function CheckoutScreen({ onBack }: Props) {
   const validatePaymentStep = () => {
     if (form.payment !== 'cash' && !paymentScreenshotFile) {
       setSubmitError('অনলাইন পেমেন্টের জন্য screenshot আপলোড করুন।');
+      scrollToTop();
       return false;
     }
     setSubmitError('');
@@ -451,11 +473,17 @@ export default function CheckoutScreen({ onBack }: Props) {
     <div className="flex h-full flex-col">
       <Header title="চেকআউট" onBack={goPrevStep} step={step} onStepClick={goToStep} />
 
-      <div className="no-scrollbar flex-1 overflow-y-auto px-5 pb-32 pt-1">
+      <div ref={scrollRef} className="no-scrollbar flex-1 overflow-y-auto px-5 pb-32 pt-1">
+        {submitError && (
+          <div className="mb-3 flex items-start gap-2 rounded-2xl bg-red-50 px-3.5 py-3 text-[12.5px] font-semibold text-red-600">
+            <Shield className="mt-0.5 h-4 w-4 flex-shrink-0" />
+            {submitError}
+          </div>
+        )}
         {step === 0 && (
         <>
         {/* Items */}
-        <Section icon={MapPin} title="অর্ডারের আইটেম">
+        <Section icon={ShoppingCart} title="অর্ডারের আইটেম">
           <div className="space-y-2.5">
             {safeArray<CartItem>(items).slice(0, 3).map((it, i) => (
               <div key={i} className="flex items-center gap-3">
@@ -464,7 +492,7 @@ export default function CheckoutScreen({ onBack }: Props) {
                 </div>
                 <div className="flex-1">
                   <div className="line-clamp-1 text-[13px] font-bold text-ink">{it.name}</div>
-                  <div className="text-[10.5px] text-ink-200">{it.size} · ×{it.quantity}</div>
+                  <div className="text-[11.5px] text-ink-200">{it.size} · ×{it.quantity}</div>
                 </div>
                 <div className="font-display text-[13px] font-bold tabular text-ink">
                   {formatINR(it.price * it.quantity)}
@@ -483,7 +511,7 @@ export default function CheckoutScreen({ onBack }: Props) {
         <Section icon={MapPin} title="ডেলিভারি ঠিকানা">
           <div className="space-y-2.5">
             <div className="space-y-1.5">
-              <label htmlFor="checkout-name" className="text-[11px] font-bold tracking-wider text-ink-200 uppercase">
+              <label htmlFor="checkout-name" className="text-[12px] font-bold tracking-wider text-ink-200 uppercase">
                 নাম
               </label>
               <input
@@ -495,7 +523,7 @@ export default function CheckoutScreen({ onBack }: Props) {
               />
             </div>
             <div className="space-y-1.5">
-              <label htmlFor="checkout-phone" className="text-[11px] font-bold tracking-wider text-ink-200 uppercase">
+              <label htmlFor="checkout-phone" className="text-[12px] font-bold tracking-wider text-ink-200 uppercase">
                 মোবাইল নম্বর
               </label>
               <input
@@ -530,7 +558,7 @@ export default function CheckoutScreen({ onBack }: Props) {
             </div>
 
             <div className="space-y-1.5">
-              <label htmlFor="checkout-address" className="text-[11px] font-bold tracking-wider text-ink-200 uppercase">
+              <label htmlFor="checkout-address" className="text-[12px] font-bold tracking-wider text-ink-200 uppercase">
                 ডেলিভারি ঠিকানা
               </label>
               <textarea
@@ -543,7 +571,7 @@ export default function CheckoutScreen({ onBack }: Props) {
               />
             </div>
             <div className="space-y-1.5">
-              <label htmlFor="checkout-district" className="text-[11px] font-bold tracking-wider text-ink-200 uppercase">
+              <label htmlFor="checkout-district" className="text-[12px] font-bold tracking-wider text-ink-200 uppercase">
                 জেলা
               </label>
               <select
@@ -563,7 +591,7 @@ export default function CheckoutScreen({ onBack }: Props) {
         {/* Date & time */}
         <Section icon={Clock} title="ডেলিভারি সময়">
           <div className="space-y-1.5">
-            <label htmlFor="checkout-date" className="text-[11px] font-bold tracking-wider text-ink-200 uppercase">
+            <label htmlFor="checkout-date" className="text-[12px] font-bold tracking-wider text-ink-200 uppercase">
               ডেলিভারি তারিখ
             </label>
             <div className="relative">
@@ -579,7 +607,7 @@ export default function CheckoutScreen({ onBack }: Props) {
                 className="w-full rounded-2xl border border-white/40 glass-strong py-3.5 pl-12 pr-4 text-[14px] font-semibold text-ink outline-none focus:border-coral"
               />
             </div>
-            <p className="mt-1.5 text-[10.5px] text-ink-200">
+            <p className="mt-1.5 text-[11.5px] text-ink-200">
               আজ বিকেল ৪টার আগে অর্ডার করলে আগামীকাল পাবেন
             </p>
           </div>
@@ -609,195 +637,9 @@ export default function CheckoutScreen({ onBack }: Props) {
 
         {step === 1 && (
         <>
-        {/* Gift Mode */}
-        <section className="space-y-3">
-          <div
-            className="flex items-center justify-between rounded-2xl glass-strong px-4 py-3.5 cursor-pointer"
-            style={{ boxShadow: '0 1px 2px rgba(26,19,17,.02), 0 4px 12px -8px rgba(26,19,17,.12)' }}
-            onClick={() => setGiftMode(!giftMode)}
-          >
-            <div className="flex items-center gap-3">
-              <Gift className="h-6 w-6 text-ink" strokeWidth={1.75} />
-              <div>
-                <div className="text-[13px] font-bold text-ink">This is a gift order</div>
-                <div className="text-[11px] text-ink/50">Add message, gift wrap & recipient details</div>
-              </div>
-            </div>
-            <div className={`h-6 w-11 rounded-full transition-colors ${giftMode ? 'bg-coral' : 'bg-ink/15'} relative flex-shrink-0`}>
-              <div className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${giftMode ? 'translate-x-5' : 'translate-x-0.5'}`} />
-            </div>
-          </div>
-
-          {giftMode && (
-            <div className="space-y-3 rounded-2xl glass-strong px-4 py-4">
-              <div className="space-y-1.5">
-                <label htmlFor="gift-message" className="text-[11px] font-bold tracking-wider text-ink-200 uppercase">
-                  গিফট মেসেজ (ঐচ্ছিক)
-                </label>
-                <textarea
-                  id="gift-message"
-                  maxLength={200}
-                  placeholder="Write a heartfelt message..."
-                  className="w-full resize-none rounded-xl border border-ink/10 bg-cream px-3 py-2.5 text-[13px] text-ink placeholder:text-ink/30 focus:border-coral focus:outline-none"
-                  rows={3}
-                  value={gift.message}
-                  onChange={(e) => setGift(g => ({ ...g, message: e.target.value }))}
-                />
-              </div>
-              <div className="text-right text-[10px] text-ink/30">{gift.message.length}/200</div>
-              <label className="flex items-center gap-3 cursor-pointer">
-                <input type="checkbox" checked={gift.wrap} onChange={(e) => setGift(g => ({ ...g, wrap: e.target.checked }))}
-                  className="h-4 w-4 rounded accent-brand-500" />
-                <span className="text-[13px] text-ink">Gift wrap <span className="text-coral font-bold">+৳50</span></span>
-              </label>
-              <label className="flex items-center gap-3 cursor-pointer">
-                <input type="checkbox" checked={gift.hidePrice} onChange={(e) => setGift(g => ({ ...g, hidePrice: e.target.checked }))}
-                  className="h-4 w-4 rounded accent-brand-500" />
-                <span className="text-[13px] text-ink">Hide price from recipient</span>
-              </label>
-              <div className="space-y-1.5">
-                <label htmlFor="gift-recipient-name" className="text-[11px] font-bold tracking-wider text-ink-200 uppercase">
-                  প্রাপকের নাম
-                </label>
-                <input
-                  id="gift-recipient-name"
-                  placeholder="Recipient name (optional)"
-                  className="w-full rounded-xl border border-ink/10 bg-cream px-3 py-2.5 text-[13px] text-ink placeholder:text-ink/30 focus:border-coral focus:outline-none"
-                  value={gift.recipientName}
-                  onChange={(e) => setGift(g => ({ ...g, recipientName: e.target.value }))}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label htmlFor="gift-recipient-phone" className="text-[11px] font-bold tracking-wider text-ink-200 uppercase">
-                  প্রাপকের নম্বর
-                </label>
-                <input
-                  id="gift-recipient-phone"
-                  type="tel"
-                  inputMode="numeric"
-                  placeholder="Recipient phone (optional)"
-                  className="w-full rounded-xl border border-ink/10 bg-cream px-3 py-2.5 text-[13px] text-ink placeholder:text-ink/30 focus:border-coral focus:outline-none"
-                  value={gift.recipientPhone}
-                  onChange={(e) => setGift(g => ({ ...g, recipientPhone: e.target.value }))}
-                />
-              </div>
-            </div>
-          )}
-        </section>
-
-        {/* Payment */}
+        {/* Payment — the main task of this step, shown first so the user isn't
+            scrolling past optional extras before reaching it. */}
         <Section icon={Wallet} title="পেমেন্ট পদ্ধতি">
-          {user && walletBalance > 0 && (
-            <div
-              className="mb-3 rounded-2xl overflow-hidden border border-coral/20 bg-coral-50"
-              style={{ boxShadow: '0 1px 2px rgba(26,19,17,.02), 0 8px 24px -16px rgba(26,19,17,.16)' }}
-            >
-              <div className="flex items-center justify-between px-4 py-3">
-                <div className="flex items-center gap-2">
-                  <Wallet className="h-[18px] w-[18px] text-coral" strokeWidth={2} />
-                  <div>
-                    <div className="text-[12px] font-bold text-coral-800">
-                      ৳{walletBalance.toLocaleString()} wallet balance
-                    </div>
-                    <div className="text-[10px] text-coral-600">
-                      Max ৳{WALLET_MAX_REDEEM} off per order
-                    </div>
-                  </div>
-                </div>
-                {pendingLoyaltyRedeem === 0 ? (
-                  <button
-                    onClick={() => {
-                      if (promoDiscount > 0) {
-                        setPromoError('Promo code is active — remove it first to use wallet');
-                        return;
-                      }
-                      if (maxRedeemable <= 0) return;
-                      setPendingLoyaltyRedeem(maxRedeemable);
-                      setPromoError('');
-                    }}
-                    disabled={!canRedeem}
-                    className="rounded-xl bg-coral px-3 py-1.5 text-[11px] font-bold text-white active:scale-95 transition disabled:opacity-40 disabled:cursor-not-allowed"
-                  >
-                    Use ৳{maxRedeemable}
-                  </button>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <span className="text-[11px] font-bold text-emerald-700">
-                      −৳{walletDiscount} applied
-                    </span>
-                    <button onClick={() => clearLoyalty()} className="text-[10px] text-ink/40 underline">
-                      Remove
-                    </button>
-                  </div>
-                )}
-              </div>
-              {!canRedeem && walletBalance > 0 && subtotal < WALLET_MIN_ORDER_TO_REDEEM && (
-                <div className="px-4 pb-2 text-[10px] text-ink/40">
-                  Add ৳{WALLET_MIN_ORDER_TO_REDEEM - subtotal} more to use wallet
-                </div>
-              )}
-              {promoDiscount > 0 && pendingLoyaltyRedeem === 0 && (
-                <div className="px-4 pb-2.5 text-[10px] text-coral-700">
-                  Remove the promo code to use wallet balance.
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Promo code — ported from CartScreen unchanged */}
-          <div className="mb-3">
-            <div className="flex items-center gap-2.5 rounded-2xl border border-dashed border-ink-100 glass-strong px-3.5 py-3">
-              <Tag className="h-4 w-4 text-ink-200" />
-              <input
-                value={promoInput}
-                onChange={(e) => {
-                  setPromoInput(e.target.value);
-                  setPromoError('');
-                }}
-                placeholder="Promo code"
-                className="flex-1 bg-transparent text-[13px] font-medium outline-none placeholder:text-ink-200"
-                disabled={pendingLoyaltyRedeem > 0}
-              />
-              <button
-                onClick={() => {
-                  if (pendingLoyaltyRedeem > 0) {
-                    setPromoError('Wallet balance is active — remove it first');
-                    return;
-                  }
-                  if (!settings.promoEnabled) {
-                    setPromoError('No active promo right now');
-                    clearPromo();
-                    return;
-                  }
-                  if (promoInput.trim().toUpperCase() === settings.promoCode.trim().toUpperCase()) {
-                    applyPromo(settings.promoPercent);
-                    setPromoError('');
-                  } else {
-                    setPromoError('Invalid promo code');
-                    clearPromo();
-                  }
-                }}
-                disabled={pendingLoyaltyRedeem > 0}
-                className="text-[11.5px] font-bold uppercase tracking-wider text-ink hover:text-coral disabled:opacity-40"
-              >
-                Apply
-              </button>
-            </div>
-            {promoError && (
-              <p className="mt-1.5 px-3.5 text-red-500 text-[11px] font-semibold">{promoError}</p>
-            )}
-            {promoDiscount > 0 && !promoError && (
-              <p className="mt-1.5 px-3.5 text-emerald-600 text-[11px] font-semibold">
-                Promo code "{settings.promoCode}" applied! ({settings.promoPercent}% discount)
-              </p>
-            )}
-            {pendingLoyaltyRedeem > 0 && (
-              <p className="mt-1.5 px-3.5 text-emerald-600 text-[11px] font-semibold">
-                ৳{walletDiscount} wallet balance redeemed
-              </p>
-            )}
-          </div>
-
           <div className="space-y-2">
             {PAYMENT_METHODS.map((method) => {
               const isSelected = form.payment === method.id;
@@ -816,8 +658,8 @@ export default function CheckoutScreen({ onBack }: Props) {
                     {method.name.slice(0, 2)}
                   </div>
                   <div className="flex-1 text-left">
-                    <p className="text-[13px] font-bold text-ink">{method.name}</p>
-                    <p className="text-[11px] text-ink-200">{method.desc}</p>
+                    <p className="text-[13.5px] font-bold text-ink">{method.name}</p>
+                    <p className="text-[12px] text-ink-200">{method.desc}</p>
                   </div>
                   <div
                     className={`flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full border-2 ${
@@ -833,8 +675,8 @@ export default function CheckoutScreen({ onBack }: Props) {
 
           {form.payment !== 'cash' && (
             <div className="mt-4 rounded-2xl border border-white/40 glass-strong p-3">
-              <div className="mb-2 text-[12px] font-bold text-ink">Payment screenshot</div>
-              <div className="text-[10.5px] text-ink-200">Upload your bKash/Nagad payment proof so admin can verify the order.</div>
+              <div className="mb-2 text-[12.5px] font-bold text-ink">Payment screenshot</div>
+              <div className="text-[11.5px] text-ink-200">Upload your bKash/Nagad payment proof so admin can verify the order.</div>
               {paymentScreenshotPreview ? (
                 <div className="mt-3 relative inline-block">
                   <img src={paymentScreenshotPreview} alt="payment screenshot" className="h-24 w-24 rounded-xl object-cover" />
@@ -865,50 +707,269 @@ export default function CheckoutScreen({ onBack }: Props) {
               )}
             </div>
           )}
+        </Section>
 
-          {/* Referral Code - BUG 3 FIX */}
-          <div className="mt-4 pt-4 border-t border-ink/5">
-            <div className="space-y-1.5">
-              <div className="flex items-center gap-2">
-                <Users className="h-4 w-4 text-ink-200" />
-                <label htmlFor="referral-code" className="text-[11px] font-bold tracking-wider text-ink-200 uppercase">
-                  রেফারেল কোড (ঐচ্ছিক)
-                </label>
-                <span className="text-[10px] text-ink/40">(সর্বোচ্চ ৩ বার ব্যবহার করা যাবে)</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <input
-                  id="referral-code"
-                  value={referralInput}
-                  onChange={(e) => { setReferralInput(e.target.value); setReferralError(''); }}
-                  placeholder="কারো রেফারেল কোড আছে?"
-                  disabled={referralApplied}
-                  className="flex-1 h-10 rounded-xl border border-ink-50 bg-white px-3 text-[13px] font-medium text-ink outline-none focus:border-coral focus:ring-2 focus:ring-coral/15 disabled:opacity-50"
-                />
-                <button
-                  onClick={() => void applyReferralCodeHandler()}
-                  disabled={referralApplied || !referralInput || referralLoading}
-                  className="rounded-xl bg-coral px-3.5 py-2 text-[11px] font-bold text-white active:scale-95 transition disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  {referralLoading ? 'Checking...' : 'Apply'}
-                </button>
+        {/* Gift Mode — collapsed toggle, optional */}
+        <section className="mt-3 space-y-3">
+          <div
+            className="flex items-center justify-between rounded-2xl glass-strong px-4 py-3.5 cursor-pointer"
+            style={{ boxShadow: '0 1px 2px rgba(26,19,17,.02), 0 4px 12px -8px rgba(26,19,17,.12)' }}
+            onClick={() => setGiftMode(!giftMode)}
+          >
+            <div className="flex items-center gap-3">
+              <Gift className="h-6 w-6 text-ink" strokeWidth={1.75} />
+              <div>
+                <div className="text-[13.5px] font-bold text-ink">This is a gift order</div>
+                <div className="text-[12px] text-ink/50">Add message, gift wrap & recipient details</div>
               </div>
             </div>
-            {referralApplied && (
-              <div className="mt-2 text-[11px] text-emerald-600 font-semibold">
-                Referral code applied! ৳{WALLET_REFERRAL_BONUS} wallet credit — পরের অর্ডারে ব্যবহার করুন
-              </div>
-            )}
-            {referralError && (
-              <div className="mt-2 text-[11px] text-red-500 font-semibold">{referralError}</div>
-            )}
-            {userReferralCode && (
-              <div className="mt-2 text-[10px] text-ink/40">
-                Your code: <span className="font-mono font-bold">{userReferralCode}</span> — share it to earn ৳{WALLET_REFERRAL_BONUS} per referral
-              </div>
-            )}
+            <div className={`h-6 w-11 rounded-full transition-colors ${giftMode ? 'bg-coral' : 'bg-ink/15'} relative flex-shrink-0`}>
+              <div className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${giftMode ? 'translate-x-5' : 'translate-x-0.5'}`} />
+            </div>
           </div>
-        </Section>
+
+          {giftMode && (
+            <div className="space-y-3 rounded-2xl glass-strong px-4 py-4">
+              <div className="space-y-1.5">
+                <label htmlFor="gift-message" className="text-[12px] font-bold tracking-wider text-ink-200 uppercase">
+                  গিফট মেসেজ (ঐচ্ছিক)
+                </label>
+                <textarea
+                  id="gift-message"
+                  maxLength={200}
+                  placeholder="Write a heartfelt message..."
+                  className="w-full resize-none rounded-xl border border-ink/10 bg-cream px-3 py-2.5 text-[13px] text-ink placeholder:text-ink/30 focus:border-coral focus:outline-none"
+                  rows={3}
+                  value={gift.message}
+                  onChange={(e) => setGift(g => ({ ...g, message: e.target.value }))}
+                />
+              </div>
+              <div className="text-right text-[11px] text-ink/30">{gift.message.length}/200</div>
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input type="checkbox" checked={gift.wrap} onChange={(e) => setGift(g => ({ ...g, wrap: e.target.checked }))}
+                  className="h-4 w-4 rounded accent-brand-500" />
+                <span className="text-[13px] text-ink">Gift wrap <span className="text-coral font-bold">+৳50</span></span>
+              </label>
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input type="checkbox" checked={gift.hidePrice} onChange={(e) => setGift(g => ({ ...g, hidePrice: e.target.checked }))}
+                  className="h-4 w-4 rounded accent-brand-500" />
+                <span className="text-[13px] text-ink">Hide price from recipient</span>
+              </label>
+              <div className="space-y-1.5">
+                <label htmlFor="gift-recipient-name" className="text-[12px] font-bold tracking-wider text-ink-200 uppercase">
+                  প্রাপকের নাম
+                </label>
+                <input
+                  id="gift-recipient-name"
+                  placeholder="Recipient name (optional)"
+                  className="w-full rounded-xl border border-ink/10 bg-cream px-3 py-2.5 text-[13px] text-ink placeholder:text-ink/30 focus:border-coral focus:outline-none"
+                  value={gift.recipientName}
+                  onChange={(e) => setGift(g => ({ ...g, recipientName: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label htmlFor="gift-recipient-phone" className="text-[12px] font-bold tracking-wider text-ink-200 uppercase">
+                  প্রাপকের নম্বর
+                </label>
+                <input
+                  id="gift-recipient-phone"
+                  type="tel"
+                  inputMode="numeric"
+                  placeholder="Recipient phone (optional)"
+                  className="w-full rounded-xl border border-ink/10 bg-cream px-3 py-2.5 text-[13px] text-ink placeholder:text-ink/30 focus:border-coral focus:outline-none"
+                  value={gift.recipientPhone}
+                  onChange={(e) => setGift(g => ({ ...g, recipientPhone: e.target.value }))}
+                />
+              </div>
+            </div>
+          )}
+        </section>
+
+        {/* Extras — wallet redeem / promo code / referral code, collapsed by
+            default so the payment step doesn't overwhelm on first view.
+            Auto-expands if one of these was already applied earlier. */}
+        <section className="mt-3 overflow-hidden rounded-2xl glass-strong">
+          <button
+            type="button"
+            onClick={() => setShowExtras((v) => !v)}
+            className="flex w-full items-center justify-between px-4 py-3.5"
+          >
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-ink-50 text-ink-200">
+                <Tag className="h-4 w-4" strokeWidth={2} />
+              </div>
+              <span className="font-display text-[14px] font-bold tracking-tight text-ink">
+                ডিসকাউন্ট / রেফারেল (ঐচ্ছিক)
+              </span>
+              {extrasAlreadyApplied && (
+                <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10.5px] font-bold text-emerald-600">
+                  Applied
+                </span>
+              )}
+            </div>
+            <span className="text-[11px] font-bold text-ink-200">
+              {extrasOpen ? 'Hide' : 'Show'}
+            </span>
+          </button>
+
+          {extrasOpen && (
+            <div className="border-t border-ink-50 px-4 py-3.5">
+              {user && walletBalance > 0 && (
+                <div
+                  className="mb-3 rounded-2xl overflow-hidden border border-coral/20 bg-coral-50"
+                  style={{ boxShadow: '0 1px 2px rgba(26,19,17,.02), 0 8px 24px -16px rgba(26,19,17,.16)' }}
+                >
+                  <div className="flex items-center justify-between px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      <Wallet className="h-[18px] w-[18px] text-coral" strokeWidth={2} />
+                      <div>
+                        <div className="text-[12.5px] font-bold text-coral-800">
+                          ৳{walletBalance.toLocaleString()} wallet balance
+                        </div>
+                        <div className="text-[11px] text-coral-600">
+                          Max ৳{WALLET_MAX_REDEEM} off per order
+                        </div>
+                      </div>
+                    </div>
+                    {pendingLoyaltyRedeem === 0 ? (
+                      <button
+                        onClick={() => {
+                          if (promoDiscount > 0) {
+                            setPromoError('Promo code is active — remove it first to use wallet');
+                            return;
+                          }
+                          if (maxRedeemable <= 0) return;
+                          setPendingLoyaltyRedeem(maxRedeemable);
+                          setPromoError('');
+                        }}
+                        disabled={!canRedeem}
+                        className="rounded-xl bg-coral px-3 py-1.5 text-[11.5px] font-bold text-white active:scale-95 transition disabled:opacity-40 disabled:cursor-not-allowed"
+                      >
+                        Use ৳{maxRedeemable}
+                      </button>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <span className="text-[11.5px] font-bold text-emerald-700">
+                          −৳{walletDiscount} applied
+                        </span>
+                        <button onClick={() => clearLoyalty()} className="text-[11px] text-ink/40 underline">
+                          Remove
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  {!canRedeem && walletBalance > 0 && subtotal < WALLET_MIN_ORDER_TO_REDEEM && (
+                    <div className="px-4 pb-2 text-[11px] text-ink/40">
+                      Add ৳{WALLET_MIN_ORDER_TO_REDEEM - subtotal} more to use wallet
+                    </div>
+                  )}
+                  {promoDiscount > 0 && pendingLoyaltyRedeem === 0 && (
+                    <div className="px-4 pb-2.5 text-[11px] text-coral-700">
+                      Remove the promo code to use wallet balance.
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Promo code — ported from CartScreen unchanged */}
+              <div className="mb-3">
+                <div className="flex items-center gap-2.5 rounded-2xl border border-dashed border-ink-100 glass-strong px-3.5 py-3">
+                  <Tag className="h-4 w-4 text-ink-200" />
+                  <input
+                    value={promoInput}
+                    onChange={(e) => {
+                      setPromoInput(e.target.value);
+                      setPromoError('');
+                    }}
+                    placeholder="Promo code"
+                    className="flex-1 bg-transparent text-[13px] font-medium outline-none placeholder:text-ink-200"
+                    disabled={pendingLoyaltyRedeem > 0}
+                  />
+                  <button
+                    onClick={() => {
+                      if (pendingLoyaltyRedeem > 0) {
+                        setPromoError('Wallet balance is active — remove it first');
+                        return;
+                      }
+                      if (!settings.promoEnabled) {
+                        setPromoError('No active promo right now');
+                        clearPromo();
+                        return;
+                      }
+                      if (promoInput.trim().toUpperCase() === settings.promoCode.trim().toUpperCase()) {
+                        applyPromo(settings.promoPercent);
+                        setPromoError('');
+                      } else {
+                        setPromoError('Invalid promo code');
+                        clearPromo();
+                      }
+                    }}
+                    disabled={pendingLoyaltyRedeem > 0}
+                    className="text-[12px] font-bold uppercase tracking-wider text-ink hover:text-coral disabled:opacity-40"
+                  >
+                    Apply
+                  </button>
+                </div>
+                {promoError && (
+                  <p className="mt-1.5 px-3.5 text-red-500 text-[11.5px] font-semibold">{promoError}</p>
+                )}
+                {promoDiscount > 0 && !promoError && (
+                  <p className="mt-1.5 px-3.5 text-emerald-600 text-[11.5px] font-semibold">
+                    Promo code "{settings.promoCode}" applied! ({settings.promoPercent}% discount)
+                  </p>
+                )}
+                {pendingLoyaltyRedeem > 0 && (
+                  <p className="mt-1.5 px-3.5 text-emerald-600 text-[11.5px] font-semibold">
+                    ৳{walletDiscount} wallet balance redeemed
+                  </p>
+                )}
+              </div>
+
+              {/* Referral Code - BUG 3 FIX */}
+              <div className="pt-3 border-t border-ink/5">
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-2">
+                    <Users className="h-4 w-4 text-ink-200" />
+                    <label htmlFor="referral-code" className="text-[12px] font-bold tracking-wider text-ink-200 uppercase">
+                      রেফারেল কোড (ঐচ্ছিক)
+                    </label>
+                    <span className="text-[11px] text-ink/40">(সর্বোচ্চ ৩ বার ব্যবহার করা যাবে)</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      id="referral-code"
+                      value={referralInput}
+                      onChange={(e) => { setReferralInput(e.target.value); setReferralError(''); }}
+                      placeholder="কারো রেফারেল কোড আছে?"
+                      disabled={referralApplied}
+                      className="flex-1 h-10 rounded-xl border border-ink-50 bg-white px-3 text-[13px] font-medium text-ink outline-none focus:border-coral focus:ring-2 focus:ring-coral/15 disabled:opacity-50"
+                    />
+                    <button
+                      onClick={() => void applyReferralCodeHandler()}
+                      disabled={referralApplied || !referralInput || referralLoading}
+                      className="rounded-xl bg-coral px-3.5 py-2 text-[12px] font-bold text-white active:scale-95 transition disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      {referralLoading ? 'Checking...' : 'Apply'}
+                    </button>
+                  </div>
+                </div>
+                {referralApplied && (
+                  <div className="mt-2 text-[11.5px] text-emerald-600 font-semibold">
+                    Referral code applied! ৳{WALLET_REFERRAL_BONUS} wallet credit — পরের অর্ডারে ব্যবহার করুন
+                  </div>
+                )}
+                {referralError && (
+                  <div className="mt-2 text-[11.5px] text-red-500 font-semibold">{referralError}</div>
+                )}
+                {userReferralCode && (
+                  <div className="mt-2 text-[11px] text-ink/40">
+                    Your code: <span className="font-mono font-bold">{userReferralCode}</span> — share it to earn ৳{WALLET_REFERRAL_BONUS} per referral
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </section>
         </>
         )}
 
@@ -919,30 +980,42 @@ export default function CheckoutScreen({ onBack }: Props) {
           <div className="space-y-2.5 text-[13px]">
             <div className="flex items-start justify-between gap-3">
               <span className="text-ink-200">ডেলিভারি ঠিকানা</span>
-              <div className="text-right">
-                <p className="font-bold text-ink">{form.name}</p>
-                <p className="text-ink-200">{form.phone}</p>
-                <p className="max-w-[200px] text-ink-200">{form.address}, {form.district}</p>
+              <div className="flex items-start gap-2.5">
+                <div className="text-right">
+                  <p className="font-bold text-ink">{form.name}</p>
+                  <p className="text-ink-200">{form.phone}</p>
+                  <p className="max-w-[200px] text-ink-200">{form.address}, {form.district}</p>
+                </div>
+                <EditButton onClick={() => goToStep(0)} />
               </div>
             </div>
             <div className="h-px bg-ink-50" />
             <div className="flex items-center justify-between">
               <span className="text-ink-200">ডেলিভারি সময়</span>
-              <span className="font-bold text-ink">{form.date} · {form.time}</span>
+              <div className="flex items-center gap-2.5">
+                <span className="font-bold text-ink">{form.date} · {form.time}</span>
+                <EditButton onClick={() => goToStep(0)} />
+              </div>
             </div>
             <div className="h-px bg-ink-50" />
             <div className="flex items-center justify-between">
               <span className="text-ink-200">পেমেন্ট পদ্ধতি</span>
-              <span className="font-bold text-ink">
-                {PAYMENT_METHODS.find((m) => m.id === form.payment)?.name}
-              </span>
+              <div className="flex items-center gap-2.5">
+                <span className="font-bold text-ink">
+                  {PAYMENT_METHODS.find((m) => m.id === form.payment)?.name}
+                </span>
+                <EditButton onClick={() => goToStep(1)} />
+              </div>
             </div>
             {giftMode && (
               <>
                 <div className="h-px bg-ink-50" />
                 <div className="flex items-center justify-between">
                   <span className="text-ink-200">গিফট অর্ডার</span>
-                  <span className="font-bold text-ink">{gift.wrap ? 'হ্যাঁ, wrap সহ' : 'হ্যাঁ'}</span>
+                  <div className="flex items-center gap-2.5">
+                    <span className="font-bold text-ink">{gift.wrap ? 'হ্যাঁ, wrap সহ' : 'হ্যাঁ'}</span>
+                    <EditButton onClick={() => goToStep(1)} />
+                  </div>
                 </div>
               </>
             )}
@@ -991,10 +1064,9 @@ export default function CheckoutScreen({ onBack }: Props) {
 
       {/* Sticky CTA */}
       <div className="absolute right-0 bottom-0 left-0 z-30 border-t border-ink-50/80 bg-white/95 px-5 pt-3 pb-6 backdrop-blur-xl">
-        {submitError && <div className="mb-2 text-[11px] font-semibold text-red-500">{submitError}</div>}
         <div className="flex items-center gap-3">
           <div>
-            <div className="text-[10px] font-bold tracking-wider text-ink-200 uppercase">
+            <div className="text-[11px] font-bold tracking-wider text-ink-200 uppercase">
               {step === 2 ? 'পেমেন্ট' : 'মোট'}
             </div>
             <div className="font-display text-[20px] font-bold tabular text-ink">{formatINR(total)}</div>
@@ -1105,5 +1177,20 @@ function Row({ label, value, positive }: { label: string; value: string; positiv
         {value}
       </span>
     </div>
+  );
+}
+
+// Explicit "Edit" affordance on each review row — the small step-indicator at
+// the top is clickable too, but that's not discoverable on its own. A visible
+// button here makes it obvious a mistake can be fixed with one tap.
+function EditButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex-shrink-0 rounded-full bg-ink-50 px-2.5 py-1 text-[11px] font-bold text-ink active:scale-95 transition"
+    >
+      Edit
+    </button>
   );
 }
