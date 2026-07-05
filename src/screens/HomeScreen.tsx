@@ -3,14 +3,18 @@ import { ArrowRight, Sparkles, ChevronLeft, ChevronRight, Megaphone, RefreshCw, 
 import { useDebounce } from '../hooks/useDebounce';
 import { useUI, useUser, useOrders, useAuthStore, useCart } from '../lib/store';
 import { ls, safeArray } from '../lib/utils';
+import { categories } from '../lib/data';
 import { useProducts } from '../hooks/useProducts';
 import { useBanners } from '../hooks/useBanners';
 import SearchBar from '../components/SearchBar';
 import ProductCard from '../components/ProductCard';
 import SectionHeader from '../components/SectionHeader';
 import BrandLogo from '../components/BrandLogo';
+import OccasionIcon from '../components/OccasionIcon';
 import { useModalDepth } from '../hooks/useModalDepth';
 import type { Banner, SpecialDate } from '../types';
+
+const STAGGER_DELAYS = ['delay-1', 'delay-2', 'delay-3', 'delay-4', 'delay-5'];
 
 const getUpcomingDate = (userId?: string): { name: string; daysLeft: number } | null => {
   if (!userId) return null;
@@ -157,6 +161,24 @@ export default function HomeScreen({
               onClearRecent={clearRecent}
             />
           </div>
+        </div>
+
+        <div className="no-scrollbar -mt-1 flex gap-3 overflow-x-auto px-5 pb-1 anim-up delay-1">
+          {categories.map((c) => (
+            <button
+              key={c.id}
+              onClick={() => go({ name: 'tabs', tab: 'categories', categoryId: c.id })}
+              className="flex flex-shrink-0 flex-col items-center gap-1.5"
+            >
+              <div
+                className="flex items-center justify-center rounded-2xl"
+                style={{ width: 52, height: 52, background: c.color }}
+              >
+                <OccasionIcon id={c.id} size={22} className="text-coral" />
+              </div>
+              <span className="text-[10px] font-medium text-ink-200">{c.name}</span>
+            </button>
+          ))}
         </div>
 
         {!user && (
@@ -320,14 +342,15 @@ export default function HomeScreen({
               action={{ label: 'See all', onClick: () => go({ name: 'tabs', tab: 'categories' }) }}
             />
             <div className="no-scrollbar mt-3 flex gap-3 overflow-x-auto px-5 pb-2">
-              {searchResults.map((p) => (
-                <ProductCard
-                  key={p.id}
-                  product={p}
-                  wished={wishlist.includes(p.id)}
-                  onWish={toggleWish}
-                  onOpen={() => go({ name: 'product', productId: p.id })}
-                />
+              {searchResults.map((p, i) => (
+                <div key={p.id} className={`anim-up flex-shrink-0 ${STAGGER_DELAYS[i % STAGGER_DELAYS.length]}`}>
+                  <ProductCard
+                    product={p}
+                    wished={wishlist.includes(p.id)}
+                    onWish={toggleWish}
+                    onOpen={() => go({ name: 'product', productId: p.id })}
+                  />
+                </div>
               ))}
             </div>
           </div>
@@ -393,14 +416,15 @@ export default function HomeScreen({
             action={{ label: 'See all', onClick: () => go({ name: 'tabs', tab: 'categories' }) }}
           />
           <div className="no-scrollbar mt-3 flex gap-3 overflow-x-auto px-5 pb-2">
-            {trending.map((p) => (
-              <ProductCard
-                key={p.id}
-                product={p}
-                wished={wishlist.includes(p.id)}
-                onWish={toggleWish}
-                onOpen={() => go({ name: 'product', productId: p.id })}
-              />
+            {trending.map((p, i) => (
+              <div key={p.id} className={`anim-up flex-shrink-0 ${STAGGER_DELAYS[i % STAGGER_DELAYS.length]}`}>
+                <ProductCard
+                  product={p}
+                  wished={wishlist.includes(p.id)}
+                  onWish={toggleWish}
+                  onOpen={() => go({ name: 'product', productId: p.id })}
+                />
+              </div>
             ))}
           </div>
         </div>

@@ -50,7 +50,7 @@ export type NotificationItem = {
 
 export type View =
   | { name: 'splash' }
-  | { name: 'tabs'; tab: Tab }
+  | { name: 'tabs'; tab: Tab; categoryId?: string }
   | { name: 'product'; productId: string }
   | { name: 'customize'; productId?: string }
   | { name: 'cart' }
