@@ -18,6 +18,7 @@ import WishlistScreen from './screens/WishlistScreen';
 import TrackingScreen from './screens/TrackingScreen';
 import AdminScreen from './screens/AdminScreen';
 import AppErrorBoundary from './components/AppErrorBoundary';
+import { ChatBot } from './components/ChatBot';
 import QuickBar from './components/QuickBar';
 
 export default function App() {
@@ -132,6 +133,7 @@ export default function App() {
 
         <NotificationsSheet open={notificationsOpen} onClose={() => setNotificationsOpen(false)} />
         <AuthSheet open={authOpen} onClose={() => setAuthOpen(false)} />
+        <ChatBot />
       </div>
     </AppErrorBoundary>
   );

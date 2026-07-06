@@ -90,6 +90,7 @@ export default function OrdersScreen() {
             {safeArray(orders).filter(Boolean).map((o) => {
               const currentIdx = STATUSES.findIndex((s) => s.key === o.status);
               const isDelivered = o.status === 'delivered';
+              const isCancelled = o.status === 'cancelled';
               const items = safeArray(o.items);
               const isExpanded = expanded.has(o.id);
               const visibleItems = isExpanded ? items : items.slice(0, 2);
@@ -121,12 +122,12 @@ export default function OrdersScreen() {
                       <span
                         className="mt-1 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9.5px] font-bold uppercase tracking-wide"
                         style={{
-                          background: isDelivered ? 'rgba(28,17,18,.07)' : 'var(--color-coral-50)',
-                          color: isDelivered ? 'var(--color-ink)' : 'var(--color-coral-700)',
+                          background: isCancelled ? 'rgba(220,38,38,.1)' : isDelivered ? 'rgba(28,17,18,.07)' : 'var(--color-coral-50)',
+                          color: isCancelled ? '#DC2626' : isDelivered ? 'var(--color-ink)' : 'var(--color-coral-700)',
                         }}
                       >
                         {isDelivered && <Check className="h-2.5 w-2.5" strokeWidth={3} />}
-                        {STATUSES[currentIdx]?.label || 'Placed'}
+                        {isCancelled ? 'Cancelled' : STATUSES[currentIdx]?.label || 'Placed'}
                       </span>
                     </div>
                   </div>
@@ -171,66 +172,88 @@ export default function OrdersScreen() {
                       <span className="text-[10px] font-bold tracking-wider text-ink-200 uppercase">
                         Live status
                       </span>
-                      <span className="text-[12px] font-bold capitalize text-ink">
-                        {STATUSES[currentIdx]?.label || 'Placed'}
+                      <span className={`text-[12px] font-bold capitalize ${isCancelled ? 'text-red-600' : 'text-ink'}`}>
+                        {isCancelled ? 'Cancelled' : STATUSES[currentIdx]?.label || 'Placed'}
                       </span>
                     </div>
 
-                    {/* Single continuous progress track with gradient fill */}
-                    <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-ink-50">
-                      <div
-                        className="h-full rounded-full transition-all duration-700 ease-out"
-                        style={{
-                          width: `${progressPct}%`,
-                          background: 'linear-gradient(90deg, var(--color-gold) 0%, var(--color-coral) 100%)',
-                        }}
-                      />
-                    </div>
+                    {isCancelled ? (
+                      <div className="rounded-2xl bg-red-50 px-3 py-2.5">
+                        <p className="text-[12px] font-semibold text-red-700">অর্ডার বাতিল হয়েছে</p>
+                        {o.cancelReason && (
+                          <p className="mt-0.5 text-[11px] text-red-700/80">কারণ: {o.cancelReason}</p>
+                        )}
+                      </div>
+                    ) : (
+                      <>
+                        {/* Single continuous progress track with gradient fill */}
+                        <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-ink-50">
+                          <div
+                            className="h-full rounded-full transition-all duration-700 ease-out"
+                            style={{
+                              width: `${progressPct}%`,
+                              background: 'linear-gradient(90deg, var(--color-gold) 0%, var(--color-coral) 100%)',
+                            }}
+                          />
+                        </div>
 
-                    <div className="mt-2.5 flex items-center gap-0.5">
-                      {STATUSES.map((s, i) => {
-                        const isPast = i < currentIdx;
-                        const isCurrent = i === currentIdx;
-                        return (
-                          <div key={s.key} className="flex flex-1 flex-col items-center gap-1">
-                            <div
-                              className={`flex h-5 w-5 items-center justify-center rounded-full transition ${
-                                isPast || isCurrent ? 'bg-coral text-white' : 'bg-ink-50 text-ink-200'
-                              } ${isCurrent && !isDelivered ? 'anim-ring' : ''}`}
-                            >
-                              <s.icon className="h-3 w-3" strokeWidth={2.5} />
-                            </div>
-                            <span className={`text-[9px] font-semibold ${isPast || isCurrent ? 'text-ink' : 'text-ink-200'}`}>
-                              {s.label}
-                            </span>
-                          </div>
-                        );
-                      })}
-                    </div>
+                        <div className="mt-2.5 flex items-center gap-0.5">
+                          {STATUSES.map((s, i) => {
+                            const isPast = i < currentIdx;
+                            const isCurrent = i === currentIdx;
+                            return (
+                              <div key={s.key} className="flex flex-1 flex-col items-center gap-1">
+                                <div
+                                  className={`flex h-5 w-5 items-center justify-center rounded-full transition ${
+                                    isPast || isCurrent ? 'bg-coral text-white' : 'bg-ink-50 text-ink-200'
+                                  } ${isCurrent && !isDelivered ? 'anim-ring' : ''}`}
+                                >
+                                  <s.icon className="h-3 w-3" strokeWidth={2.5} />
+                                </div>
+                                <span className={`text-[9px] font-semibold ${isPast || isCurrent ? 'text-ink' : 'text-ink-200'}`}>
+                                  {s.label}
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </>
+                    )}
 
-                    {/* Side-by-side actions */}
-                    <div className="mt-3.5 grid grid-cols-2 gap-2">
-                      <button
-                        onClick={() => go({ name: 'tracking', orderId: o.id })}
-                        className="flex h-11 items-center justify-center gap-1.5 rounded-2xl border border-ink-100 bg-white text-[12px] font-bold text-ink transition active:scale-[.98]"
-                      >
-                        <Search className="h-3.5 w-3.5" /> Track order
-                      </button>
-                      <button
-                        onClick={() => {
-                          const safeItems = safeArray(o.items);
-                          safeItems.forEach((item) => useCart.getState().add({ ...item }));
-                          useUI.getState().addNotification(
-                            'Added to cart!',
-                            `${safeItems.length} item${safeItems.length > 1 ? 's' : ''} from Order #${o.id} added to cart.`
-                          );
-                          setTimeout(() => go({ name: 'cart' }), 600);
-                        }}
-                        className="flex h-11 items-center justify-center gap-1.5 rounded-2xl bg-ink text-[12px] font-bold text-white transition active:scale-[.98]"
-                      >
-                        <RefreshCw className="h-3.5 w-3.5" /> Order again
-                      </button>
-                    </div>
+                    {/* Actions */}
+                    {isCancelled ? (
+                      <div className="mt-3.5">
+                        <button
+                          onClick={() => go({ name: 'tracking', orderId: o.id })}
+                          className="flex h-11 w-full items-center justify-center gap-1.5 rounded-2xl bg-red-500 text-[12px] font-bold text-white transition active:scale-[.98]"
+                        >
+                          <Search className="h-3.5 w-3.5" /> Track order
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="mt-3.5 grid grid-cols-2 gap-2">
+                        <button
+                          onClick={() => go({ name: 'tracking', orderId: o.id })}
+                          className="flex h-11 items-center justify-center gap-1.5 rounded-2xl border border-ink-100 bg-white text-[12px] font-bold text-ink transition active:scale-[.98]"
+                        >
+                          <Search className="h-3.5 w-3.5" /> Track order
+                        </button>
+                        <button
+                          onClick={() => {
+                            const safeItems = safeArray(o.items);
+                            safeItems.forEach((item) => useCart.getState().add({ ...item }));
+                            useUI.getState().addNotification(
+                              'Added to cart!',
+                              `${safeItems.length} item${safeItems.length > 1 ? 's' : ''} from Order #${o.id} added to cart.`
+                            );
+                            setTimeout(() => go({ name: 'cart' }), 600);
+                          }}
+                          className="flex h-11 items-center justify-center gap-1.5 rounded-2xl bg-ink text-[12px] font-bold text-white transition active:scale-[.98]"
+                        >
+                          <RefreshCw className="h-3.5 w-3.5" /> Order again
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </article>
               );

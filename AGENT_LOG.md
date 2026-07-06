@@ -7,6 +7,45 @@
 
 ---
 
+## Session: 2026-07-06 (Round 2 — Chatbot modal broken, OrdersScreen cancelled display)
+**Agent/Tool:** Claude (claude.ai)
+**Feature worked on:** Fixed non-functional support/chat buttons; fixed OrdersScreen showing "Placed" for cancelled orders
+
+### বাগ রিপোর্ট (screenshot দিয়ে):
+1. Tracking screen-এ "সাপোর্ট" (cancelled card-এর ভেতরে) এবং "সাহায্য দরকার?" (floating) — দুটো বাটনই ক্লিক করলে কিছু হতো না।
+2. OrdersScreen-এ cancelled order badge "PLACED" দেখাচ্ছিল (ভুল), আর cancelled order-এও "Order again" বাটন থেকে যাচ্ছিল।
+
+### Root cause:
+1. `ChatBot.tsx`-এ `if (!embedded) return null;` — non-embedded (global) mode কখনো বাস্তবে implement হয়নি। `TrackingScreen.tsx`-এর বাটনগুলো ঠিকই `setChatOpen(true)` কল করছিল (store-এ state ঠিকই বদলাচ্ছিল), কিন্তু কোথাও global `chatOpen` শুনে `<ChatBot>` mount করা হতো না — তাই click করলে state বদলালেও কোনো UI render হতো না।
+2. `OrdersScreen.tsx`-এর `STATUSES` array-তে `'cancelled'` স্ট্যাটাসটাই নেই — `STATUSES.findIndex(s => s.key === o.status)` cancelled order-এর জন্য `-1` রিটার্ন করতো, আর `STATUSES[currentIdx]?.label || 'Placed'` fallback করে "Placed" দেখাতো।
+
+### কী হয়েছে:
+- **`ChatBot.tsx`:** `!embedded` মোডে এখন global `chatOpen`/`setChatOpen` (useUI) ব্যবহার করে full-screen modal (backdrop + header-এ close ✕ বাটন) হিসেবে render হয়। `embedded` mode (ProfileScreen-এর ভেতরের inline panel) অপরিবর্তিত।
+- **`App.tsx`:** root level-এ global `<ChatBot />` (non-embedded) mount করা হয়েছে — এখন থেকে যেকোনো screen থেকে `setChatOpen(true)` কল করলেই chat modal খুলবে।
+- **`OrdersScreen.tsx`:** cancelled order-এর জন্য —
+  - Badge এখন সঠিকভাবে "Cancelled" (লাল) দেখায়, "Placed" fallback হয় না
+  - পুরো progress bar + ৬-step timeline hide হয়ে যায়, বদলে একটা লাল "অর্ডার বাতিল হয়েছে" card দেখায় (cancelReason থাকলে সেটাও দেখায়)
+  - "Order again" বাটন সরিয়ে দেওয়া হয়েছে, শুধু single full-width লাল "Track order" বাটন থাকে
+  - Non-cancelled orders-এর জন্য আগের UI (progress bar, ৬-step, দুইটা side-by-side বাটন) অপরিবর্তিত
+- Build verify: `✓ built in 8.40s`। `tsc --noEmit` error বৃদ্ধি (18→22) শুধু pre-existing loosely-typed `safeArray`/`o: unknown` pattern-এর বেশি occurrence (নতুন `o.cancelReason` reference-এর কারণে) — কোনো নতুন category-র error না, build ঠিকই pass করেছে।
+
+### Touched files:
+- `src/components/ChatBot.tsx`
+- `src/App.tsx`
+- `src/screens/OrdersScreen.tsx`
+
+### Commit:
+- (pending — user local এ ZIP apply করে push করবে: `bas-chatbot-modal-orders-cancelled-070626.zip`)
+
+### এখনো Pending:
+- কিছু না
+
+### পরবর্তী Agent এর জন্য নোট:
+- `ChatBot` কম্পোনেন্ট এখন দুই মোডে কাজ করে: `<ChatBot embedded />` (ProfileScreen-এর ভেতরে inline, সবসময় visible) এবং `<ChatBot />` (global, `chatOpen` state দিয়ে toggle হওয়া full-screen modal, `App.tsx`-এ mount করা)। নতুন কোনো screen থেকে chat খুলতে চাইলে শুধু `useUI().setChatOpen(true)` কল করলেই হবে — আলাদা করে `<ChatBot>` mount করার দরকার নেই, `App.tsx`-এর global instance-ই কাজ করবে।
+- `OrdersScreen.tsx`/`TrackingScreen.tsx` দুই জায়গাতেই এখন cancelled order-এর জন্য একই pattern: timeline/progress hide, single red action button, `cancelReason` দেখানো। ভবিষ্যতে cancelled UI বদলাতে হলে দুই ফাইলেই consistency রাখা উচিত।
+
+---
+
 ## Session: 2026-07-06 (Order cancel-reason modal, cancelled-tracking cleanup, chatbot cancel awareness)
 **Agent/Tool:** Claude (claude.ai)
 **Feature worked on:** Admin order cancellation now requires a reason; customer-facing tracking + chatbot surface that reason

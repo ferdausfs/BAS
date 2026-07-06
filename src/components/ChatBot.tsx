@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { Phone, Send, Cake } from 'lucide-react';
-import { useAuthStore, useOrders, useSettingsStore } from '../lib/store';
+import { Phone, Send, Cake, X } from 'lucide-react';
+import { useAuthStore, useOrders, useSettingsStore, useUI } from '../lib/store';
 import { useProducts } from '../hooks/useProducts';
 import { waLink } from '../lib/utils';
 
@@ -47,6 +47,7 @@ export function ChatBot({ embedded = false }: Props) {
   const { products } = useProducts();
   const { orders } = useOrders();
   const { user } = useAuthStore();
+  const { chatOpen, setChatOpen } = useUI();
   const geminiKey = import.meta.env.VITE_GEMINI_API_KEY || settings.geminiApiKey || '';
 
   useEffect(() => {
@@ -64,8 +65,8 @@ export function ChatBot({ embedded = false }: Props) {
   }, [user?.id]);
 
   useEffect(() => {
-    if (embedded) setTimeout(() => inputRef.current?.focus(), 200);
-  }, [embedded]);
+    if (embedded || chatOpen) setTimeout(() => inputRef.current?.focus(), 200);
+  }, [embedded, chatOpen]);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -398,18 +399,27 @@ ${productList}
     }
   };
 
-  if (!embedded) return null;
+  if (!embedded && !chatOpen) return null;
 
-  return (
-    <div className="flex flex-col overflow-hidden rounded-2xl bg-white" style={{ height: 420, boxShadow: '0 1px 2px rgba(26,19,17,.02), 0 8px 24px -16px rgba(26,19,17,.16)' }}>
+  const panel = (
+    <div className={`flex flex-col overflow-hidden bg-white ${embedded ? 'rounded-2xl' : 'h-full'}`} style={embedded ? { height: 420, boxShadow: '0 1px 2px rgba(26,19,17,.02), 0 8px 24px -16px rgba(26,19,17,.16)' } : undefined}>
       <div className="flex flex-shrink-0 items-center gap-2 bg-coral px-4 py-3 text-white">
         <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20">
           <Cake size={18} strokeWidth={1.75} />
         </div>
-        <div>
+        <div className="flex-1">
           <p className="text-sm font-bold">BAS can support/help</p>
           <p className="text-[10px] text-white/70">কেক, অর্ডার, tracking বা সাধারণ প্রশ্ন করুন</p>
         </div>
+        {!embedded && (
+          <button
+            onClick={() => setChatOpen(false)}
+            className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-white/15 active:scale-90"
+            aria-label="Close chat"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        )}
       </div>
 
       <div className="flex-1 space-y-2 overflow-y-auto p-3">
@@ -483,6 +493,22 @@ ${productList}
       >
         <Phone className="h-3.5 w-3.5" /> সরাসরি WhatsApp-এ কথা বলুন
       </a>
+    </div>
+  );
+
+  if (embedded) return panel;
+
+  return (
+    <div
+      className="fixed inset-0 z-[300] flex items-end justify-center bg-black/50 backdrop-blur-sm sm:items-center"
+      onClick={() => setChatOpen(false)}
+    >
+      <div
+        className="h-[82vh] w-full overflow-hidden rounded-t-3xl bg-white sm:h-[600px] sm:max-w-sm sm:rounded-3xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {panel}
+      </div>
     </div>
   );
 }
