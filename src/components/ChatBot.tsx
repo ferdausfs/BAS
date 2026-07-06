@@ -20,24 +20,17 @@ const QUICK_REPLIES = [
 ];
 
 const formatBDT = (n: number) => `৳${n.toLocaleString('en-BD')}`;
-const chatHistoryKey = (userId?: string) => `bakeart-chat-history-${userId || 'guest'}`;
+const chatHistoryKey = (userId?: string, orderId?: string | null) =>
+  orderId ? `bakeart-chat-order-${orderId}` : `bakeart-chat-history-${userId || 'guest'}`;
 
 interface Props {
   embedded?: boolean;
 }
 
 export function ChatBot({ embedded = false }: Props) {
-  const [messages, setMessages] = useState<Message[]>(() => {
-    try {
-      const userId = useAuthStore.getState().user?.id;
-      const raw = localStorage.getItem(chatHistoryKey(userId));
-      if (!raw) return [];
-      const parsed = JSON.parse(raw) as Array<{ role: 'user' | 'bot'; text: string; time: string }>;
-      return Array.isArray(parsed) ? parsed.map((m) => ({ ...m, time: new Date(m.time) })) : [];
-    } catch {
-      return [];
-    }
-  });
+  // মূল history load এখন নিচের useEffect-এ হয় ([user?.id, chatOrderContext] অনুযায়ী) —
+  // এখানে খালি রাখা হলো যাতে order-context থেকে খোলা হলে পুরনো general history flash না করে
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [showQuick, setShowQuick] = useState(true);
@@ -47,14 +40,20 @@ export function ChatBot({ embedded = false }: Props) {
   const { products } = useProducts();
   const { orders } = useOrders();
   const { user } = useAuthStore();
-  const { chatOpen, setChatOpen } = useUI();
+  const { chatOpen, setChatOpen, chatOrderContext } = useUI();
   const geminiKey = import.meta.env.VITE_GEMINI_API_KEY || settings.geminiApiKey || '';
 
   useEffect(() => {
     try {
-      const raw = localStorage.getItem(chatHistoryKey(user?.id));
+      const raw = localStorage.getItem(chatHistoryKey(user?.id, chatOrderContext));
       if (!raw) {
-        setMessages([]);
+        if (chatOrderContext) {
+          // নির্দিষ্ট order থেকে chat খোলা হয়েছে — পুরনো general history এখানে দেখানো হবে না,
+          // এই order নিয়ে fresh conversation শুরু হবে
+          setMessages([{ role: 'bot', text: orderStatusText(chatOrderContext), time: new Date() }]);
+        } else {
+          setMessages([]);
+        }
         return;
       }
       const parsed = JSON.parse(raw) as Array<{ role: 'user' | 'bot'; text: string; time: string }>;
@@ -62,7 +61,7 @@ export function ChatBot({ embedded = false }: Props) {
     } catch {
       setMessages([]);
     }
-  }, [user?.id]);
+  }, [user?.id, chatOrderContext]);
 
   useEffect(() => {
     if (embedded || chatOpen) setTimeout(() => inputRef.current?.focus(), 200);
@@ -74,11 +73,11 @@ export function ChatBot({ embedded = false }: Props) {
 
   useEffect(() => {
     try {
-      localStorage.setItem(chatHistoryKey(user?.id), JSON.stringify(messages));
+      localStorage.setItem(chatHistoryKey(user?.id, chatOrderContext), JSON.stringify(messages));
     } catch {
       // ignore storage failures
     }
-  }, [messages, user?.id]);
+  }, [messages, user?.id, chatOrderContext]);
 
   const addBot = (text: string) => {
     setMessages((m) => [...m, { role: 'bot', text, time: new Date() }]);
@@ -91,7 +90,13 @@ export function ChatBot({ embedded = false }: Props) {
       .replace(/\s+/g, ' ')
       .trim();
 
-  const has = (text: string, words: string[]) => words.some((w) => text.includes(w));
+  const has = (text: string, words: string[]) =>
+    words.some((w) => {
+      const escaped = w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      // word-boundary aware: 'kha' এখন আর 'opekkha'-এর ভিতরের substring হিসেবে match করবে না
+      const re = new RegExp(`(^|[^a-z0-9\\u0980-\\u09FF])${escaped}([^a-z0-9\\u0980-\\u09FF]|$)`, 'i');
+      return re.test(text);
+    });
 
   const supportText = () => {
     const digits = settings.whatsappNumber.replace(/\D/g, '');
@@ -185,7 +190,7 @@ export function ChatBot({ embedded = false }: Props) {
 
   const orderStatusText = (rawQuestion: string) => {
     const normalizedQuestion = rawQuestion.toLowerCase();
-    const idMatch = normalizedQuestion.match(/bas[-\s]?\d{3,}/i);
+    const idMatch = normalizedQuestion.match(/bas[-\s]?\d{3,}[a-z0-9]{0,4}/i);
     const cleanId = idMatch?.[0]?.replace(/[-\s]/g, '').toUpperCase();
 
     const list = cleanId
@@ -214,6 +219,12 @@ export function ChatBot({ embedded = false }: Props) {
 
   const ruleBasedReply = (question: string): { text: string; matched: boolean } => {
     const q = normalize(question);
+
+    // Order-ID-এর মতো টেক্সট (যেমন BAS616606J7Z) দেখলেই সরাসরি real data দিয়ে answer —
+    // কখনো Gemini-কে fabricate করতে দেওয়া যাবে না (keyword match লাগবে না)
+    if (/bas[-\s]?\d{3,}[a-z0-9]{0,4}/i.test(question)) {
+      return { text: orderStatusText(question), matched: true };
+    }
 
     if (has(q, ['hi', 'hello', 'hey', 'হাই', 'হ্যালো', 'সালাম', 'আসসালামু', 'salam', 'assalamu', 'helo', 'helo', 'helllo', 'ki obostha', 'ki khobor', 'ki korcho'])) {
       return { text: 'হ্যালো! আমি BAS। কেক অর্ডার, দাম, ডেলিভারি, tracking বা app ব্যবহার নিয়ে যা জানতে চান বলুন।', matched: true };

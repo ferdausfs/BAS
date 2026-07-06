@@ -171,7 +171,7 @@ export default function TrackingScreen() {
                       <RefreshCw className="h-3.5 w-3.5" /> পুনরায় অর্ডার করুন
                     </button>
                     <button
-                      onClick={() => setChatOpen(true)}
+                      onClick={() => setChatOpen(true, match.id)}
                       className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-xl glass-strong border border-red-200 text-[12px] font-bold text-red-600"
                     >
                       <MessageCircle className="h-3.5 w-3.5" /> সাপোর্ট
@@ -290,7 +290,7 @@ export default function TrackingScreen() {
       </div>
       {match && match.status !== 'delivered' && match.status !== 'cancelled' && (
         <button
-          onClick={() => setChatOpen(true)}
+          onClick={() => setChatOpen(true, match.id)}
           className="fixed bottom-24 right-5 z-40 flex items-center gap-2 rounded-2xl bg-ink px-4 py-2.5 shadow-lg transition active:scale-95"
           style={{ boxShadow: '0 4px 20px -4px rgba(26,19,19,.35)' }}
           // lastUpdated is tracked for battery-friendly polling: {lastUpdated}
