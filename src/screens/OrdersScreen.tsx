@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
-import { Check, Package, ChefHat, Truck, Receipt, Search, RefreshCw, ShoppingCart } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Check, Package, ChefHat, Truck, Receipt, Search, RefreshCw, ShoppingCart, ChevronDown, ChevronUp } from 'lucide-react';
 import { useUI, formatINR, useAuthStore, useCart, useUser } from '../lib/store';
 import { useOrdersHook } from '../hooks/useOrders';
 import { safeArray } from '../lib/utils';
@@ -18,12 +18,21 @@ export default function OrdersScreen() {
   const user = useAuthStore((s) => s.user);
   const { setTab, go } = useUI();
   const { wishlist } = useUser();
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (user) {
       fetchMyOrders();
     }
   }, [fetchMyOrders, user]);
+
+  const toggleExpand = (id: string) => {
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
 
   return (
     <div className="flex h-full flex-col">
@@ -77,17 +86,26 @@ export default function OrdersScreen() {
             </button>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-4">
             {safeArray(orders).filter(Boolean).map((o) => {
               const currentIdx = STATUSES.findIndex((s) => s.key === o.status);
+              const isDelivered = o.status === 'delivered';
+              const items = safeArray(o.items);
+              const isExpanded = expanded.has(o.id);
+              const visibleItems = isExpanded ? items : items.slice(0, 2);
+              const progressPct = STATUSES.length > 1 ? (Math.max(currentIdx, 0) / (STATUSES.length - 1)) * 100 : 0;
+
               return (
                 <article
                   key={o.id}
                   className="overflow-hidden rounded-3xl glass-strong anim-up"
-                  style={{ boxShadow: '0 1px 2px rgba(26,19,17,.02), 0 8px 24px -16px rgba(26,19,17,.16)' }}
+                  style={{ boxShadow: '0 1px 2px rgba(26,19,17,.03), 0 14px 32px -18px rgba(26,19,17,.20)' }}
                 >
+                  {/* Premium top accent — coral to gold, like a wax-seal ribbon */}
+                  <div className="h-[3px] w-full" style={{ background: 'linear-gradient(90deg, var(--color-coral) 0%, var(--color-gold) 100%)' }} />
+
                   {/* Header */}
-                  <div className="flex items-center justify-between border-b border-ink-50 px-4 py-3.5">
+                  <div className="flex items-start justify-between px-4 pt-3.5 pb-3">
                     <div>
                       <div className="text-[10px] font-bold tracking-wider text-ink-200 uppercase">
                         Order #{o.id}
@@ -96,38 +114,60 @@ export default function OrdersScreen() {
                         {new Date(o.createdAt).toLocaleDateString('en-BD', { day: 'numeric', month: 'short', year: 'numeric' })}
                       </div>
                     </div>
-                    <div className="font-display text-[18px] font-bold tabular text-ink">
-                      {formatINR(o.total)}
+                    <div className="text-right">
+                      <div className="font-display text-[18px] font-bold tabular text-ink">
+                        {formatINR(o.total)}
+                      </div>
+                      <span
+                        className="mt-1 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9.5px] font-bold uppercase tracking-wide"
+                        style={{
+                          background: isDelivered ? 'rgba(28,17,18,.07)' : 'var(--color-coral-50)',
+                          color: isDelivered ? 'var(--color-ink)' : 'var(--color-coral-700)',
+                        }}
+                      >
+                        {isDelivered && <Check className="h-2.5 w-2.5" strokeWidth={3} />}
+                        {STATUSES[currentIdx]?.label || 'Placed'}
+                      </span>
                     </div>
                   </div>
 
                   {/* Items */}
-                  <div className="space-y-2.5 px-4 py-3.5">
-                    {safeArray(o.items).slice(0, 2).map((it, i) => (
+                  <div className="space-y-2.5 px-4 pb-2">
+                    {visibleItems.map((it, i) => (
                       <div key={i} className="flex items-center gap-3">
-                        <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-xl bg-cream">
+                        <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-2xl bg-cream ring-1 ring-ink-50">
                           <img src={it.image} alt="" className="h-full w-full object-cover" />
                         </div>
                         <div className="flex-1">
-                          <div className="line-clamp-1 text-[12.5px] font-bold text-ink">
+                          <div className="line-clamp-1 text-[13px] font-bold text-ink">
                             {it.name}
                           </div>
-                          <div className="text-[10.5px] text-ink-200">
+                          <div className="text-[11px] text-ink-200">
                             {it.size} · ×{it.quantity}
                           </div>
                         </div>
                       </div>
                     ))}
-                    {safeArray(o.items).length > 2 && (
-                      <div className="text-center text-[11px] font-medium text-ink-200">
-                        +{o.items.length - 2} more items
-                      </div>
+                    {items.length > 2 && (
+                      <button
+                        onClick={() => toggleExpand(o.id)}
+                        className="flex w-full items-center justify-center gap-1 py-1 text-[11.5px] font-bold text-coral"
+                      >
+                        {isExpanded ? (
+                          <>Show less <ChevronUp className="h-3.5 w-3.5" /></>
+                        ) : (
+                          <>+{items.length - 2} more items <ChevronDown className="h-3.5 w-3.5" /></>
+                        )}
+                      </button>
                     )}
                   </div>
 
+                  {/* Ticket-stub perforation */}
+                  <div className="mx-4 border-t border-dashed border-ink-100" />
+
                   {/* Progress */}
-                  <div className="border-t border-ink-50 px-4 py-3.5">
-                    <div className="mb-2 flex items-center justify-between">
+                  <div className="px-4 pt-3.5 pb-4">
+                    <div className="mb-2.5 flex items-center justify-between">
                       <span className="text-[10px] font-bold tracking-wider text-ink-200 uppercase">
                         Live status
                       </span>
@@ -135,58 +175,62 @@ export default function OrdersScreen() {
                         {STATUSES[currentIdx]?.label || 'Placed'}
                       </span>
                     </div>
-                    <div className="flex items-center gap-1">
-                      {STATUSES.map((s, i) => {
-                        const done = i <= currentIdx;
-                        return (
-                          <div
-                            key={s.key}
-                            className={`h-1 flex-1 rounded-full transition-all ${
-                              done ? 'bg-coral' : 'bg-ink-50'
-                            }`}
-                          />
-                        );
-                      })}
+
+                    {/* Single continuous progress track with gradient fill */}
+                    <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-ink-50">
+                      <div
+                        className="h-full rounded-full transition-all duration-700 ease-out"
+                        style={{
+                          width: `${progressPct}%`,
+                          background: 'linear-gradient(90deg, var(--color-gold) 0%, var(--color-coral) 100%)',
+                        }}
+                      />
                     </div>
-                    <div className="mt-2 flex items-center gap-0.5">
+
+                    <div className="mt-2.5 flex items-center gap-0.5">
                       {STATUSES.map((s, i) => {
-                        const done = i <= currentIdx;
+                        const isPast = i < currentIdx;
+                        const isCurrent = i === currentIdx;
                         return (
                           <div key={s.key} className="flex flex-1 flex-col items-center gap-1">
                             <div
                               className={`flex h-5 w-5 items-center justify-center rounded-full transition ${
-                                done ? 'bg-coral text-white' : 'bg-ink-50 text-ink-200'
-                              }`}
+                                isPast || isCurrent ? 'bg-coral text-white' : 'bg-ink-50 text-ink-200'
+                              } ${isCurrent && !isDelivered ? 'anim-ring' : ''}`}
                             >
                               <s.icon className="h-3 w-3" strokeWidth={2.5} />
                             </div>
-                            <span className={`text-[9px] font-semibold ${done ? 'text-ink' : 'text-ink-200'}`}>
+                            <span className={`text-[9px] font-semibold ${isPast || isCurrent ? 'text-ink' : 'text-ink-200'}`}>
                               {s.label}
                             </span>
                           </div>
                         );
                       })}
                     </div>
-                    <button
-                      onClick={() => go({ name: 'tracking', orderId: o.id })}
-                      className="mt-3 flex h-10 w-full items-center justify-center gap-2 rounded-2xl bg-ink-50 text-[12px] font-bold text-ink transition active:scale-[.98]"
-                    >
-                      <Search className="h-4 w-4" /> Open tracking
-                    </button>
-                    <button
-                      onClick={() => {
-                        const safeItems = safeArray(o.items);
-                        safeItems.forEach((item) => useCart.getState().add({ ...item }));
-                        useUI.getState().addNotification(
-                          'Added to cart!',
-                          `${safeItems.length} item${safeItems.length > 1 ? 's' : ''} from Order #${o.id} added to cart.`
-                        );
-                        setTimeout(() => go({ name: 'cart' }), 600);
-                      }}
-                      className="mt-2 flex h-10 w-full items-center justify-center gap-2 rounded-2xl bg-ink text-[12px] font-bold text-white transition active:scale-[.98]"
-                    >
-                      <RefreshCw className="h-4 w-4" /> Order Again
-                    </button>
+
+                    {/* Side-by-side actions */}
+                    <div className="mt-3.5 grid grid-cols-2 gap-2">
+                      <button
+                        onClick={() => go({ name: 'tracking', orderId: o.id })}
+                        className="flex h-11 items-center justify-center gap-1.5 rounded-2xl border border-ink-100 bg-white text-[12px] font-bold text-ink transition active:scale-[.98]"
+                      >
+                        <Search className="h-3.5 w-3.5" /> Track order
+                      </button>
+                      <button
+                        onClick={() => {
+                          const safeItems = safeArray(o.items);
+                          safeItems.forEach((item) => useCart.getState().add({ ...item }));
+                          useUI.getState().addNotification(
+                            'Added to cart!',
+                            `${safeItems.length} item${safeItems.length > 1 ? 's' : ''} from Order #${o.id} added to cart.`
+                          );
+                          setTimeout(() => go({ name: 'cart' }), 600);
+                        }}
+                        className="flex h-11 items-center justify-center gap-1.5 rounded-2xl bg-ink text-[12px] font-bold text-white transition active:scale-[.98]"
+                      >
+                        <RefreshCw className="h-3.5 w-3.5" /> Order again
+                      </button>
+                    </div>
                   </div>
                 </article>
               );

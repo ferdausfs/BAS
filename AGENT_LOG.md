@@ -7,6 +7,38 @@
 
 ---
 
+## Session: 2026-07-06 (OrdersScreen premium redesign — ticket-style card, expandable items, side-by-side buttons)
+**Agent/Tool:** Claude (claude.ai)
+**Feature worked on:** `src/screens/OrdersScreen.tsx` visual premium pass
+
+### কী হয়েছে:
+- User চেয়েছিল: "+N more items" ক্লিক করলে full order details দেখাবে, "Open tracking"/"Order Again" বাটন পাশাপাশি (নিচে নিচে না), আর overall আরো premium দেখাক
+- **Expandable items:** `useState<Set<string>>` দিয়ে per-order expand state track করা হয় (`expanded` set-এ order.id থাকলে expanded)। আগে item list hard-coded `slice(0, 2)` ছিল — এখন `+N more items` বাটনে ক্লিক করলে (ChevronDown/ChevronUp সহ) পুরো item list দেখায়, আবার ক্লিক করলে "Show less" হয়ে ফিরে যায়
+- **বাটন side-by-side:** "Open tracking" আর "Order Again" আগে stacked (`mt-3`/`mt-2` দিয়ে দুইটা আলাদা full-width বাটন) ছিল, এখন `grid grid-cols-2 gap-2` দিয়ে পাশাপাশি — "Track order" (outline style) আর "Order again" (solid ink)
+- **Premium visual touches (নতুন, brand token-এর মধ্যেই থেকে — কোনো off-brand রং যোগ করা হয়নি):**
+  - প্রতিটা order card-এর উপরে ৩px coral→gold gradient accent strip (wax-seal ribbon এর মতো)
+  - Header-এ total-এর নিচে ছোট status pill/chip (Delivered হলে ink-tinted + checkmark, বাকি সব coral-tinted) — বিস্তারিত progress bar দেখার আগেই এক নজরে status বোঝা যায়
+  - Item thumbnail ৪৮px থেকে ৫৬px করা হলো, subtle ring border যোগ
+  - Item list আর progress section-এর মাঝে dashed "ticket-stub" perforation divider (বেকারির order-slip/receipt vibe)
+  - Progress bar পুরোপুরি redesign: আগে প্রতি step-এর জন্য আলাদা আলাদা segment bar ছিল, এখন একটাই continuous track + coral→gold gradient fill যেটা progress percentage অনুযায়ী animate করে (`transition-all duration-700`)। Current active step-এর icon-এ `.anim-ring` (আগে থেকেই index.css-এ থাকা pulseRing keyframe) দিয়ে pulsing halo — "tracked live" copy-র সাথে মানানসই। Past step vs current step visually আলাদা করা হয়েছে (আগে সব done step একই রকম দেখাতো)
+- Build verify করা হয়েছে: `✓ built in 10.03s`। `tsc --noEmit`-এ কিছু `TS18046 'o'/'it' is of type unknown` error আছে কিন্তু এগুলো **pre-existing** (এই screen-এর আগে থেকেই loosely-typed `useOrdersHook()` return value-র কারণে, AGENT_LOG-এর আগের entry-তেও উল্লেখ আছে এই screen-এ pre-existing error ignore করার কথা) — নতুন কোনো error টাইপ যোগ হয়নি।
+
+### Touched files:
+- `src/screens/OrdersScreen.tsx`
+
+### Commit:
+- (pending — user local এ ZIP apply করে push করবে: `bas-orders-premium-redesign-070626.zip`)
+
+### এখনো Pending:
+- কিছু না, এই feature সম্পূর্ণ
+
+### পরবর্তী Agent এর জন্য নোট:
+- Ticket-stub perforation effect ইচ্ছাকৃতভাবে simple রাখা হয়েছে (শুধু dashed border, কোনো cutout/notch circle না) — কারণ card-এর background `glass-strong` (translucent blur), তাই cutout circle বানাতে গেলে outer page background-এর সাথে exact রং মেলাতে হতো, যেটা background পরিবর্তন হলেই ভেঙে যেত। ভবিষ্যতে যদি সত্যিকারের cutout notch দরকার হয়, page-এর actual bg color/gradient জেনে সেটার সাথে match করে বানাতে হবে।
+- `.anim-ring` class আগে থেকেই `index.css`-এ ছিল (pulseRing keyframe) কিন্তু কোথাও ব্যবহৃত হচ্ছিল না — এখানেই প্রথম ব্যবহার হলো। ভবিষ্যতে অন্য "live"/"active" indicator দরকার হলে এই একই class reuse করা যাবে।
+- Brand-এ শুধু coral/blush/cream/ink/gold টোকেন আছে (`src/index.css` দ্রষ্টব্য) — future status-color কাজে (যেমন multi-color status badges) নতুন off-brand রং (নীল/সবুজ) যোগ করার আগে এই constraint মাথায় রাখা উচিত; এই session-এ ইচ্ছাকৃতভাবে শুধু বিদ্যমান ২টা accent (coral+gold) দিয়েই কাজ করা হয়েছে।
+
+---
+
 ## Session: 2026-07-06 (Phone OTP + Email magic-link + Facebook gated as "coming soon")
 **Agent/Tool:** Claude (claude.ai)
 **Feature worked on:** Login overhaul — Phone OTP, Email magic-link (passwordless), Facebook button UX fix, visual polish
