@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import type { CSSProperties } from 'react';
-import { ArrowLeft, Heart, Star, ShoppingBag, Check, Share2, Sparkles, Cake, Pencil, CheckCircle2, Camera, X, AlertTriangle, Bell, Eye, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Heart, Star, ShoppingBag, Check, Share2, Sparkles, Cake, Pencil, CheckCircle2, Camera, X, AlertTriangle, Bell, Eye, Clock, ChevronLeft, ChevronRight, Plus, Minus, Flame, MessageSquare, Gift, UtensilsCrossed } from 'lucide-react';
 import { useUI, formatINR, useCart, useUser, useAuthStore, useSettingsStore } from '../lib/store';
 import { useProducts } from '../hooks/useProducts';
 import { useReviews } from '../hooks/useReviews';
@@ -9,11 +9,16 @@ import { ls, safeArray } from '../lib/utils';
 import type { Product, Review } from '../types';
 
 const ADDONS = [
-  { id: 'candles', name: 'Birthday candles', price: 20 },
-  { id: 'message', name: 'Custom message', price: 50 },
-  { id: 'card', name: 'Greeting card', price: 30 },
-  { id: 'knife', name: 'Cake knife set', price: 80 },
+  { id: 'candles', name: 'Birthday candles', price: 20, icon: Flame },
+  { id: 'message', name: 'Custom message', price: 50, icon: MessageSquare },
+  { id: 'card', name: 'Greeting card', price: 30, icon: Gift },
+  { id: 'knife', name: 'Cake knife set', price: 80, icon: UtensilsCrossed },
 ];
+
+// Quick preset chips for weight-based (per-unit priced) products — tapping is
+// easier than typing a decimal, especially for less tech-savvy/older users.
+// Manual input stays available underneath for anything outside these presets.
+const WEIGHT_PRESETS = ['0.5', '1', '1.5', '2'];
 
 export default function ProductScreen() {
   const { view, back, go } = useUI();
@@ -179,6 +184,7 @@ export default function ProductScreen() {
   const [cakeMessage, setCakeMessage] = useState('');
   const [customWeight, setCustomWeight] = useState('1');
   const [weightError, setWeightError] = useState('');
+  const [quantity, setQuantity] = useState(1);
 
   // Product loads async — on first mount `product` is often still null, so the
   // useState initial values above may have locked in the fallback defaults.
@@ -239,7 +245,7 @@ export default function ProductScreen() {
         topping: selectedAddons.length ? selectedAddons.join(', ') : undefined,
         message: cakeMessage || undefined,
         price: total,
-        quantity: 1,
+        quantity,
       });
     } else {
       add({
@@ -251,7 +257,7 @@ export default function ProductScreen() {
         topping: selectedAddons.length ? selectedAddons.join(', ') : undefined,
         message: cakeMessage || undefined,
         price: total,
-        quantity: 1,
+        quantity,
       });
     }
     go({ name: 'cart' });
@@ -444,7 +450,7 @@ export default function ProductScreen() {
                     <button
                       key={f}
                       onClick={() => setSelectedFlavor(f)}
-                      className={`rounded-full border-2 px-4 py-2 text-[12.5px] font-bold transition active:scale-95 ${
+                      className={`min-h-[44px] rounded-full border-2 px-4 py-2.5 text-[13.5px] font-bold transition active:scale-95 ${
                         active ? 'border-coral bg-coral-50 text-coral' : 'border-white/40 glass-strong text-ink'
                       }`}
                     >
@@ -460,29 +466,47 @@ export default function ProductScreen() {
           <section className="mt-7">
             <div className="flex items-center justify-between">
               <h3 className="font-display text-[15px] font-bold tracking-tight text-ink">Select size</h3>
-              <span className="text-[11px] text-ink-200">{product.pricePerUnit ? 'Weight-based' : 'Serves 8-12'}</span>
+              <span className="text-[12.5px] text-ink-200">{product.pricePerUnit ? 'Weight-based' : 'Serves 8-12'}</span>
             </div>
             {product.pricePerUnit ? (
-              /* Dynamic weight-based pricing */
+              /* Dynamic weight-based pricing — preset chips first (easier to tap
+                 than typing a decimal, especially for less tech-savvy/older users),
+                 manual input stays underneath as an override for anything else. */
               <div className="mt-3 space-y-3">
+                <div className="grid grid-cols-4 gap-2">
+                  {WEIGHT_PRESETS.map((w) => {
+                    const active = customWeight === w;
+                    return (
+                      <button
+                        key={w}
+                        onClick={() => { setCustomWeight(w); setWeightError(''); }}
+                        className={`min-h-[48px] rounded-2xl border-2 text-[13.5px] font-bold transition active:scale-95 ${
+                          active ? 'border-coral bg-coral-50 text-coral' : 'border-ink-50 bg-white text-ink'
+                        }`}
+                      >
+                        {w} {product.priceUnit ?? 'kg'}
+                      </button>
+                    );
+                  })}
+                </div>
                 <div className="flex items-center gap-3">
                   <input
                     type="number"
                     min="0.25"
                     step="0.25"
-                    placeholder={`Enter weight in ${product.priceUnit ?? 'kg'}`}
-                    className="flex-1 px-3 py-2.5 rounded-xl border-2 border-ink/10 bg-cream text-sm font-bold text-ink focus:border-coral focus:outline-none"
+                    placeholder={`Or enter custom weight in ${product.priceUnit ?? 'kg'}`}
+                    className="flex-1 min-h-[44px] px-3 py-2.5 rounded-xl border-2 border-ink/10 bg-cream text-sm font-bold text-ink focus:border-coral focus:outline-none"
                     value={customWeight}
                     onChange={(e) => setCustomWeight(e.target.value)}
                   />
                   <span className="text-sm font-bold text-ink/50">{product.priceUnit ?? 'kg'}</span>
                 </div>
                 {weightError && (
-                  <div className="text-[11px] text-red-500 font-semibold">{weightError}</div>
+                  <div className="text-[12.5px] text-red-500 font-semibold">{weightError}</div>
                 )}
                 {customWeight && +customWeight > 0 && (
                   <div className="mt-2 rounded-xl bg-ink-50 px-3 py-2 flex items-center justify-between">
-                    <span className="text-[11px] text-ink/60">{customWeight} {product.priceUnit ?? 'kg'} × ৳{product.pricePerUnit}</span>
+                    <span className="text-[12.5px] text-ink/60">{customWeight} {product.priceUnit ?? 'kg'} × ৳{product.pricePerUnit}</span>
                     <span className="font-display text-base font-bold text-ink">৳{(+customWeight * (product.pricePerUnit ?? 0)).toLocaleString()}</span>
                   </div>
                 )}
@@ -503,8 +527,8 @@ export default function ProductScreen() {
                           : 'border-ink-50 text-ink'
                       }`}
                     >
-                      <span className="text-[13px] font-bold">{w.size}</span>
-                      <span className="mt-0.5 text-[11px] font-semibold tabular opacity-70">
+                      <span className="text-[13.5px] font-bold">{w.size}</span>
+                      <span className="mt-0.5 text-[12.5px] font-semibold tabular opacity-70">
                         {formatINR(fullPrice)}
                       </span>
                     </button>
@@ -514,21 +538,61 @@ export default function ProductScreen() {
             )}
           </section>
 
+          {/* Quantity stepper — lets the user set quantity right here instead of
+              always adding 1 and adjusting later in Cart. */}
+          <section className="mt-7">
+            <div className="flex items-center justify-between">
+              <h3 className="font-display text-[15px] font-bold tracking-tight text-ink">Quantity</h3>
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                  disabled={quantity <= 1}
+                  className="flex h-11 w-11 items-center justify-center rounded-full border-2 border-ink-50 bg-white text-ink transition active:scale-90 disabled:opacity-40"
+                  aria-label="Decrease quantity"
+                >
+                  <Minus className="h-4 w-4" strokeWidth={2.5} />
+                </button>
+                <span className="min-w-[20px] text-center font-display text-[16px] font-bold text-ink tabular">
+                  {quantity}
+                </span>
+                <button
+                  onClick={() => setQuantity((q) => q + 1)}
+                  className="flex h-11 w-11 items-center justify-center rounded-full border-2 border-coral bg-coral-50 text-coral transition active:scale-90"
+                  aria-label="Increase quantity"
+                >
+                  <Plus className="h-4 w-4" strokeWidth={2.5} />
+                </button>
+              </div>
+            </div>
+          </section>
+
           {/* Add-ons */}
           <section className="mt-7">
             <h3 className="font-display text-[15px] font-bold tracking-tight text-ink">Add-ons</h3>
-            <div className="mt-3 space-y-1.5">
+            <div className="mt-3 space-y-2">
               {ADDONS.map((a) => {
                 const active = !!addons[a.id];
+                const Icon = a.icon;
                 return (
                   <button
                     key={a.id}
                     onClick={() => setAddons((s) => ({ ...s, [a.id]: !s[a.id] }))}
-                    className={`flex w-full items-center gap-3 rounded-2xl glass-strong p-3 text-left transition active:scale-[.99] ${
+                    className={`flex min-h-[56px] w-full items-center gap-3 rounded-2xl glass-strong p-3 text-left transition active:scale-[.99] ${
                       active ? 'ring-2 ring-coral/40 bg-coral-50' : ''
                     }`}
                     style={{ boxShadow: '0 1px 2px rgba(26,19,17,.02), 0 4px 16px -10px rgba(26,19,17,.18)' }}
                   >
+                    <div
+                      className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl transition ${
+                        active ? 'bg-coral-100' : 'bg-ink-50'
+                      }`}
+                    >
+                      <Icon className={`h-4 w-4 ${active ? 'text-coral' : 'text-ink-200'}`} strokeWidth={2} />
+                    </div>
+                    <span className="flex-1 text-[14.5px] font-bold text-ink">{a.name}</span>
+                    <span className="text-[14px] font-extrabold text-ink tabular">
+                      {formatINR(a.price)}
+                    </span>
                     <div
                       className={`flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-lg border-2 transition ${
                         active ? 'border-coral bg-coral' : 'border-ink-50 bg-white'
@@ -536,10 +600,6 @@ export default function ProductScreen() {
                     >
                       {active && <Check className="h-3.5 w-3.5 text-white" strokeWidth={3} />}
                     </div>
-                    <span className="flex-1 text-[14px] font-bold text-ink">{a.name}</span>
-                    <span className="text-[13.5px] font-extrabold text-ink tabular">
-                      {formatINR(a.price)}
-                    </span>
                   </button>
                 );
               })}
@@ -573,8 +633,7 @@ export default function ProductScreen() {
         </div>
 
         {/* Reviews Section inside scroll container */}
-        <div className="px-5 mt-6 pb-4">
-      <section className="px-5 mt-6 pb-4">
+        <section className="px-5 mt-6 pb-4">
         <div className="flex items-center justify-between mb-3">
           <h2 className="font-display text-[17px] font-bold text-ink">Reviews</h2>
           {!showReviewForm && (
@@ -701,8 +760,6 @@ export default function ProductScreen() {
           </div>
         )}
       </section>
-
-        </div>
       </div>
 
       {/* Sticky floating controls at top — visible above image, with pointer-events-auto on each button */}
@@ -743,14 +800,15 @@ export default function ProductScreen() {
       <div className="absolute right-0 bottom-0 left-0 z-30 border-t border-white/40 glass-strong px-5 pt-3 pb-6">
         <div className="flex items-center gap-3">
           <div>
-            <div className="text-[10px] font-bold tracking-wider text-ink-200 uppercase">
+            <div className="text-[11px] font-bold tracking-wider text-ink-200 uppercase">
               Total
             </div>
             <div className="font-display text-[22px] font-bold text-coral tabular">
-              {formatINR(total)}
+              {formatINR(total * quantity)}
             </div>
-            <div className="text-[10.5px] text-ink-200 mt-0.5">
+            <div className="text-[12px] text-ink-200 mt-0.5">
               {product.pricePerUnit ? `${customWeight} ${product.priceUnit ?? 'kg'}` : size} · {selectedFlavor}
+              {quantity > 1 ? ` · ×${quantity}` : ''}
             </div>
           </div>
           {(product.inStock ?? true) ? (

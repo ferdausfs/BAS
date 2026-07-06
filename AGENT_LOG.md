@@ -7,6 +7,40 @@
 
 ---
 
+## Session: 2026-07-06 (Round 5 — ProductScreen premium/accessibility pass)
+**Agent/Tool:** Claude (claude.ai)
+**Feature worked on:** `src/screens/ProductScreen.tsx` — premium-feel + all-ages accessibility improvements, one real bug fix
+
+### Review cycle followed:
+User bola "product screen niya function niya sontosto na, r o premium r o unique, sokol boyoser jonno smooth hote hobe." Full review report (in-chat, not a repo file) covered 8 checks; user approved a mockup (Visualizer) first, then approved the coral/card-style direction, then approved applying it to real code.
+
+### কী হয়েছে:
+- **Bug fix:** Reviews section-এ একটা duplicate wrapper `<div className="px-5 mt-6 pb-4">` ছিল যেটা ভেতরের `<section>`-এর সাথে identical padding/margin repeat করছিল (double horizontal padding + double top margin) — outer div সরিয়ে শুধু `<section>` রাখা হয়েছে, matching closing tag-ও সরানো হয়েছে।
+- **Quantity stepper** যোগ হলো (নতুন `quantity` state) — আগে সবসময় `quantity: 1` hardcoded ছিল, cart-এ গিয়ে adjust করতে হতো। এখন Size selector-এর নিচে একটা নতুন "Quantity" section-এ −/+ button (44×44px, coral accent on +), `handleAdd()`-এর দুটো branch-এই hardcoded `1` এর বদলে state ব্যবহার হচ্ছে। Sticky bottom CTA-র Total এখন `total * quantity` দেখায়, quantity > 1 হলে meta line-এ `×N` যোগ হয়।
+- **Weight preset chips** (weight-based/per-unit priced products-এর জন্য) — নতুন `WEIGHT_PRESETS = ['0.5','1','1.5','2']` constant, 4-col grid button আগে দেখানো হয় (500g/1kg/1.5kg/2kg style), তারপর manual number input থাকে override হিসেবে নিচে। আগে শুধু raw number input ছিল — decimal type করা elderly/less tech-savvy user-দের জন্য কঠিন ছিল।
+- **Tap target বৃদ্ধি:** flavor chip (`py-2` → `py-2.5` + `min-h-[44px]`), add-on row `p-3` থেকে `min-h-[56px]`, নতুন quantity buttons সরাসরি ৪৪×৪৪px।
+- **Font size bump (secondary/meta text):** ১০–১২.৫px range-এর অনেক জায়গায় ১২.৫–১৪px এ upgrade — flavor chip label, size-selector subtitle, weight error/hint text, static weight chip price/label, add-on name/price, sticky-bottom Total label ও meta line।
+- **Add-on icons:** `ADDONS` array-তে প্রতি item-এ `icon` field যোগ (Flame/MessageSquare/Gift/UtensilsCrossed from lucide-react), প্রতিটা add-on row-এ এখন একটা 36×36px coral-tinted (active) বা ink-tinted (inactive) icon circle দেখায় — Cart-এর emoji→Lucide-icon fix (আগের session)-এর সাথে visual language match করানো হলো।
+- Build verify: `✓ built in 8.77s`। `tsc --noEmit` error count অপরিবর্তিত (১৬২টা, সব pre-existing), `ProductScreen.tsx`-এ কোনো নতুন error নেই।
+
+### Touched files:
+- `src/screens/ProductScreen.tsx`
+
+### Commit:
+- (pending — user local এ ZIP apply করে push করবে: `bas-product-screen-premium-070626.zip`)
+
+### এখনো Pending (deliberately not done this cycle, scope-mixing এড়াতে):
+- Reviews section "see all" / pagination (5-এর বেশি review invisible, `reviews.slice(0, 5)`)
+- Related/upsell products section after Reviews (page currently dead-ends after reviews)
+- User দুইটা alternative "more minimal" mockup দেখেছিল (ink-monochrome accent) কিন্তু শেষে original coral card-style-ই approve করেছে — future agent যেন এই minimal direction আবার নিজে থেকে propose না করে, যদি না explicitly চাওয়া হয়।
+
+### পরবর্তী Agent এর জন্য নোট:
+- `WEIGHT_PRESETS` constant top-level, `ADDONS`-এর ঠিক নিচে — নতুন preset যোগ করতে হলে এখানে।
+- `quantity` state শুধু ProductScreen-local; Cart-এর quantity edit logic আগে থেকেই ছিল, touched হয়নি — এটা শুধু প্রথমবার `add()`-এ কী quantity পাঠানো হচ্ছে সেটা বদলেছে।
+- Total display এখন `total * quantity` — ভবিষ্যতে অন্য কোথাও per-unit `total` reuse করলে quantity multiply মনে রাখতে হবে যাতে double-count না হয়।
+
+---
+
 ## Session: 2026-07-06 (Round 4 — ChatBot image upload for reference cakes)
 **Agent/Tool:** Claude (claude.ai)
 **Feature worked on:** `src/components/ChatBot.tsx` — user এখন chat-এ reference cake ছবি পাঠাতে পারবে
