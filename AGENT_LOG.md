@@ -7,6 +7,38 @@
 
 ---
 
+## Session: 2026-07-06 (Round 6 — Home occasion-row zoom transition)
+**Agent/Tool:** Claude (claude.ai)
+**Feature worked on:** Home screen occasion row — matched user's approved mockup (`bas_home_banner_occasion_transition_mockup.html`): bottom-nav-style icon coloring + zoom-in page transition into Categories, plus a thinner promo banner.
+
+### কী হয়েছে:
+- **New global transition primitive:** `useUI` store-এ `occasionZoom` state + `setOccasionZoom` action যোগ হলো (`top/left/width/height/radius/color/stage`)। নতুন `src/components/OccasionZoomOverlay.tsx` component App root-এ (fixed, `z-[200]`) render হয় — এটা HomeScreen-এর বাইরে থাকে বলে screen swap-এর মাঝেও animation টিকে থাকে (HomeScreen unmount হয়ে গেলেও timers/global store চলতেই থাকে)।
+- **HomeScreen occasion tap flow (`openOccasion`):** ট্যাপ করা chip-এর `getBoundingClientRect()` capture → overlay ঐ exact position/size/color-এ বসে (`stage:'start'`) → ২৬০ms পরে fullscreen-এ grow করে (৬৮০ms, cubic-bezier) → grow শেষে `go({tab:'categories', categoryId})` কল হয় + overlay fade শুরু (৩০০ms) → শেষে state clear। Mockup-এর exact timing (260/680/300ms) মেনে করা হয়েছে।
+- **Occasion icon color/motion — bottom nav-এর সাথে ভাষা মিলিয়ে:** আগে icon সবসময় coral ছিল; এখন default `#9A8E8E` (ink-200, BottomTabBar-এর inactive color-এর সাথে exact match) আর tap হলে coral (`#E8526A`) + lift (`translate3d(0,-4px,0) scale(.92)`) + drop-shadow — ঠিক `BottomTabBar.tsx`-এর active-tab treatment-এর মতো।
+- **`OccasionIcon` component:** নতুন optional `style` prop যোগ হলো (আগে শুধু `className` নিতো, তাই dynamic color/transform পাঠানো যেতো না) — `CSSProperties` import করে `common` object-এ spread করা হয়েছে।
+- **Banner thinner করা হলো:** `aspect-[16/9]` → `aspect-[2.5/1]` (mockup-এর ~2.55/1-এর কাছাকাছি), carousel logic/dots/arrows অপরিবর্তিত।
+- Build verify: `✓ built in 10.15s`। `tsc --noEmit` error count অপরিবর্তিত (১৬২টা, সব pre-existing — কোনো নতুন error touched files-এ যোগ হয়নি, diff করে confirm করা হয়েছে)।
+
+### Touched files:
+- `src/lib/store.ts`
+- `src/App.tsx`
+- `src/components/OccasionZoomOverlay.tsx` (new)
+- `src/components/OccasionIcon.tsx`
+- `src/screens/HomeScreen.tsx`
+
+### Commit:
+- (pending — user local এ ZIP apply করে push করবে: `bas-home-occasion-zoom-transition-070626.zip`)
+
+### এখনো Pending:
+- Mockup-এ category screen-টা ছিল শুধু একটা simplified demo (২টা static card) — এখানে real `CategoriesScreen.tsx` already exists এবং `categoryId` prop নেয়, তাই সেটা touch করা হয়নি, শুধু transition-টাই যোগ হয়েছে।
+
+### পরবর্তী Agent এর জন্য নোট:
+- `occasionZoom` overlay `z-[200]` এ বসে — `BottomTabBar` (`z-[100]`) আর অন্য সব fixed layer-এর উপরে থাকে ইচ্ছাকৃতভাবে, যাতে transition চলাকালীন কিছু bleed through না করে।
+- Timing constants (`GROW_DELAY=260`, `GROW_DURATION=680`) HomeScreen.tsx-এর `openOccasion`-এর ঠিক উপরে — future adjust করতে হলে এখানেই।
+- এই একই `occasionZoom` primitive future-এ অন্য কোনো icon-tap-to-fullscreen transition-এও reuse করা যাবে (শুধু rect + color পাঠালেই হবে)।
+
+---
+
 ## Session: 2026-07-06 (Round 5 — ProductScreen premium/accessibility pass)
 **Agent/Tool:** Claude (claude.ai)
 **Feature worked on:** `src/screens/ProductScreen.tsx` — premium-feel + all-ages accessibility improvements, one real bug fix

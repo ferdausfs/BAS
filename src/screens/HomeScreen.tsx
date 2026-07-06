@@ -47,6 +47,7 @@ export default function HomeScreen({
   const isNonLatin = /[^\u0000-\u007F]/.test(firstName);
 
   const [bannerIdx, setBannerIdx] = useState(0);
+  const [pressedOccasion, setPressedOccasion] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebounce(search, 300);
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -71,6 +72,58 @@ export default function HomeScreen({
   const clearRecent = () => {
     setRecentSearches([]);
     localStorage.removeItem('bas-recent-searches');
+  };
+
+  // Zoom-in page transition: the tapped occasion chip's color grows from its
+  // on-screen position to fill the viewport, then the Categories tab (filtered
+  // to that occasion) fades in underneath and the overlay fades out.
+  const GROW_DELAY = 260;
+  const GROW_DURATION = 680;
+  const openOccasion = (c: (typeof categories)[number], btn: HTMLButtonElement) => {
+    if (pressedOccasion) return;
+    setPressedOccasion(c.id);
+    const rect = btn.getBoundingClientRect();
+    const { setOccasionZoom, go } = useUI.getState();
+
+    setOccasionZoom({
+      top: rect.top,
+      left: rect.left,
+      width: rect.width,
+      height: rect.height,
+      radius: 16,
+      color: c.color,
+      stage: 'start',
+    });
+
+    setTimeout(() => {
+      setOccasionZoom({
+        top: 0,
+        left: 0,
+        width: window.innerWidth,
+        height: window.innerHeight,
+        radius: 0,
+        color: c.color,
+        stage: 'grow',
+      });
+    }, GROW_DELAY);
+
+    setTimeout(() => {
+      go({ name: 'tabs', tab: 'categories', categoryId: c.id });
+      setOccasionZoom({
+        top: 0,
+        left: 0,
+        width: window.innerWidth,
+        height: window.innerHeight,
+        radius: 0,
+        color: c.color,
+        stage: 'fadeout',
+      });
+    }, GROW_DELAY + GROW_DURATION);
+
+    setTimeout(() => {
+      setOccasionZoom(null);
+      setPressedOccasion(null);
+    }, GROW_DELAY + GROW_DURATION + 300);
   };
 
   const trending = useMemo(
@@ -164,21 +217,45 @@ export default function HomeScreen({
         </div>
 
         <div className="no-scrollbar -mt-1 flex gap-3 overflow-x-auto px-5 pb-1 anim-up delay-1">
-          {categories.map((c) => (
-            <button
-              key={c.id}
-              onClick={() => go({ name: 'tabs', tab: 'categories', categoryId: c.id })}
-              className="flex flex-shrink-0 flex-col items-center gap-1.5"
-            >
-              <div
-                className="flex items-center justify-center rounded-2xl"
-                style={{ width: 52, height: 52, background: c.color }}
+          {categories.map((c) => {
+            const active = pressedOccasion === c.id;
+            return (
+              <button
+                key={c.id}
+                onClick={(e) => openOccasion(c, e.currentTarget)}
+                className="flex flex-shrink-0 flex-col items-center gap-1.5"
               >
-                <OccasionIcon id={c.id} size={22} className="text-coral" />
-              </div>
-              <span className="text-[10px] font-medium text-ink-200">{c.name}</span>
-            </button>
-          ))}
+                <div
+                  className="flex items-center justify-center rounded-2xl transition-transform duration-300"
+                  style={{
+                    width: 52,
+                    height: 52,
+                    background: c.color,
+                    transform: active ? 'translate3d(0,-4px,0) scale(.92)' : 'translate3d(0,0,0)',
+                    transitionTimingFunction: 'cubic-bezier(.34,1.56,.64,1)',
+                  }}
+                >
+                  <OccasionIcon
+                    id={c.id}
+                    size={22}
+                    className="transition-all duration-300"
+                    style={{
+                      color: active ? '#E8526A' : '#9A8E8E',
+                      filter: active ? 'drop-shadow(0 4px 8px rgba(232,82,106,.45))' : 'none',
+                      transform: active ? 'scale(1.08)' : 'scale(1)',
+                      transitionTimingFunction: 'cubic-bezier(.34,1.56,.64,1)',
+                    }}
+                  />
+                </div>
+                <span
+                  className="text-[10px] font-semibold transition-colors duration-200"
+                  style={{ color: active ? '#E8526A' : '#9A8E8E' }}
+                >
+                  {c.name}
+                </span>
+              </button>
+            );
+          })}
         </div>
 
         {!user && (
@@ -229,7 +306,7 @@ export default function HomeScreen({
               className="relative overflow-hidden rounded-[28px] bg-white"
               style={{ boxShadow: '0 1px 2px rgba(26,19,17,.03), 0 18px 50px -28px rgba(26,19,17,.18)' }}
             >
-              <div className="relative aspect-[16/9] w-full overflow-hidden">
+              <div className="relative aspect-[2.5/1] w-full overflow-hidden">
                 {activeBanners.map((b, i) => (
                   <div
                     key={b.id}

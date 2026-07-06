@@ -1,12 +1,15 @@
+import type { CSSProperties } from 'react';
+
 type OccasionId = 'all' | 'birthday' | 'anniversary' | 'wedding' | 'cupcakes' | 'gift' | 'premium';
 
 type OccasionIconProps = {
   id: string;
   size?: number;
   className?: string;
+  style?: CSSProperties;
 };
 
-export default function OccasionIcon({ id, size = 24, className = '' }: OccasionIconProps) {
+export default function OccasionIcon({ id, size = 24, className = '', style }: OccasionIconProps) {
   const iconId = id as OccasionId;
 
   const common = {
@@ -19,6 +22,7 @@ export default function OccasionIcon({ id, size = 24, className = '' }: Occasion
     strokeLinecap: 'round' as const,
     strokeLinejoin: 'round' as const,
     className,
+    style,
     'aria-hidden': true,
     shapeRendering: 'geometricPrecision' as const,
   };

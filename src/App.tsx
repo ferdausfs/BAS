@@ -20,6 +20,7 @@ import AdminScreen from './screens/AdminScreen';
 import AppErrorBoundary from './components/AppErrorBoundary';
 import { ChatBot } from './components/ChatBot';
 import QuickBar from './components/QuickBar';
+import OccasionZoomOverlay from './components/OccasionZoomOverlay';
 
 export default function App() {
   const { view, tab, chatOpen, modalDepth } = useUI();
@@ -134,6 +135,7 @@ export default function App() {
         <NotificationsSheet open={notificationsOpen} onClose={() => setNotificationsOpen(false)} />
         <AuthSheet open={authOpen} onClose={() => setAuthOpen(false)} />
         <ChatBot />
+        <OccasionZoomOverlay />
       </div>
     </AppErrorBoundary>
   );

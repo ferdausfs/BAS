@@ -92,6 +92,17 @@ type UIState = {
   modalDepth: number;
   openModal: () => void;
   closeModal: () => void;
+  // Occasion-icon zoom-in page transition (Home screen occasion row → Categories)
+  occasionZoom: {
+    top: number;
+    left: number;
+    width: number;
+    height: number;
+    radius: number;
+    color: string;
+    stage: 'start' | 'grow' | 'fadeout';
+  } | null;
+  setOccasionZoom: (v: UIState['occasionZoom']) => void;
 };
 
 export const useUI = create<UIState>((set, get) => ({
@@ -105,6 +116,8 @@ export const useUI = create<UIState>((set, get) => ({
   chatOpen: false,
   chatOrderContext: null,
   modalDepth: 0,
+  occasionZoom: null,
+  setOccasionZoom: (v) => set({ occasionZoom: v }),
   setView: (v) =>
     set({
       view: v,
