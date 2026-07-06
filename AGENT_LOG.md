@@ -7,6 +7,38 @@
 
 ---
 
+## Session: 2026-07-06 (Phone OTP + Email magic-link + Facebook gated as "coming soon")
+**Agent/Tool:** Claude (claude.ai)
+**Feature worked on:** Login overhaul — Phone OTP, Email magic-link (passwordless), Facebook button UX fix, visual polish
+
+### কী হয়েছে:
+- **Facebook button "coming soon" gating:** Facebook App এখনো Business Verification/Publish process এ থাকায়, customer রা "Continue with Facebook" চাপলে Facebook-এর নিজের raw error page ("Sorry, something went wrong") দেখতো — খারাপ experience। `AuthSheet.tsx`-এ একটা `FACEBOOK_LOGIN_LIVE = false` constant যোগ করা হলো — false থাকলে বাটনের বদলে dashed-border disabled state দেখায় "Facebook — শীঘ্রই আসছে"। **App Publish হয়ে গেলে শুধু এই constant `true` করে দিলেই আসল বাটন ফিরে আসবে** — কোনো বড় change লাগবে না।
+- **Phone OTP login (নতুন):** `useAuth.ts`-এ Firebase `RecaptchaVerifier` (invisible) + `signInWithPhoneNumber` দিয়ে `sendPhoneOtp(phoneNumber, containerId)` আর `confirmPhoneOtp(confirmation, code)` যোগ হলো। `AuthSheet.tsx`-এ নতুন "Phone" method tab — Bangladesh number ফরম্যাট (`01XXXXXXXXX` → `+8801XXXXXXXXX`, `toE164Bangladesh()` helper দিয়ে validate) → OTP পাঠানো → ৬-ডিজিট verify screen। Invisible reCAPTCHA mount point (`<div id="auth-recaptcha-container" />`) সবসময় DOM-এ থাকে (conditionally render করা যাবে না, reCAPTCHA-র জন্য দরকার)।
+  - **⚠️ গুরুত্বপূর্ণ constraint:** Firebase Console-এর screenshot অনুযায়ী নতুন project-এ **SMS quota দিনে ১০টা** (billing account যোগ না করা পর্যন্ত)। বেশি testing/customer traffic হলে এই quota শেষ হয়ে গিয়ে OTP পাঠানো বন্ধ হয়ে যাবে — তখন Firebase Console-এ billing account (Blaze plan, pay-as-you-go) যোগ করতে হবে।
+- **Email magic-link login (নতুন, password ছাড়া):** সত্যিকারের ৬-ডিজিট email OTP এর জন্য Cloud Function + email-sending service (SendGrid/Mailgun ইত্যাদি) লাগতো — এই project-এ এখনো কোনো Cloud Functions/backend নাই (শুধু Firestore + client), তাই সেটা নতুন infra হতো। এর বদলে Firebase-এর নিজস্ব **passwordless email link** (magic link) ব্যবহার করা হলো — কোনো backend/Blaze plan লাগে না, Firebase নিজেই email পাঠায়। `useAuth.ts`-এ `sendMagicLink(email)` (Firebase `sendSignInLinkToEmail`) আর app load-এ automatic completion (Firebase `isSignInWithEmailLink`/`signInWithEmailLink`, `useAuth`-এর mount effect-এ, module-level `magicLinkChecked` flag দিয়ে guard করা যাতে একাধিক component-এ `useAuth()` call হলেও link একবারই consume হয়)। Link-এ ক্লিক করলে account না থাকলে **automatically তৈরি হয়ে যায়** (Firebase-এর built-in behavior)।
+  - Email method-এর ভেতরে password login-এর নিচে "Password ছাড়া, email-এ login link পাঠান" লিংক — click করলে magic-link mode-এ toggle হয়, back button দিয়ে password mode-এ ফেরত যাওয়া যায়।
+- **UI polish ("premium" touch):** Header title-এ `font-display` (Fraunces serif, বাকি app-এর brand token অনুযায়ী) যোগ করা হলো, বাটনগুলোতে subtle shadow + `active:scale-[0.98]` press animation, input focus-এ smooth transition। বড় redesign না করে existing coral/ink brand system-এর মধ্যেই refine করা হয়েছে।
+- Build verify করা হয়েছে: `✓ built in 10.09s`, `tsc --noEmit`-এ `AuthSheet.tsx`/`useAuth.ts`-এ কোনো error নেই।
+
+### Touched files:
+- `src/hooks/useAuth.ts`
+- `src/components/AuthSheet.tsx`
+
+### Commit:
+- (pending — user local এ ZIP apply করে push করবে: `bas-phone-otp-magiclink-login-070626.zip`)
+
+### এখনো Pending:
+- **Firebase Console → Authentication → Settings → Authorized domains** এ deploy domain (`bas.umuhammadiswa.workers.dev`) যোগ করা আছে কিনা confirm করা — Google login already কাজ করছে মানে সম্ভবত আগে থেকেই আছে, কিন্তু magic-link এই একই check-এর উপর নির্ভর করে, তাই যদি link পাঠাতে গিয়ে `auth/unauthorized-continue-uri` error আসে, এই list-এ domain যোগ করতে হবে
+- SMS quota (দিনে ১০টা) শেষ হলে Firebase billing (Blaze plan) enable করা লাগবে
+- Facebook App Business Verification/Publish শেষ হলে `AuthSheet.tsx`-এর `FACEBOOK_LOGIN_LIVE` constant `true` করে দেওয়া
+
+### পরবর্তী Agent এর জন্য নোট:
+- `FACEBOOK_LOGIN_LIVE` constant — `AuthSheet.tsx`-এর টপে, Facebook button আসল না placeholder দেখাবে সেটা control করে। App Publish হওয়ার আগে এটা true করলে customer রা আবার broken Facebook error page দেখবে।
+- Phone আর magic-link দুটোই `mapFirebaseUser()` reuse করে (Google/Facebook/email-password-এর মতোই), তাই profile hydration, referral reward auto-claim ইত্যাদি সব provider-এই এক পথেই কাজ করে — নতুন provider যোগ করলে এই pattern-ই follow করা উচিত।
+- `auth-recaptcha-container` div-টা conditionally render করা যাবে না (এমনকি phone method select না করলেও DOM-এ থাকতে হবে) — RecaptchaVerifier lazily মাউন্ট হয় শুধু `sendPhoneOtp()` কল হওয়ার সময়, কিন্তু container আগে থেকেই থাকা লাগবে।
+
+---
+
 ## Session: 2026-07-05 (Privacy Policy page — for Facebook App publish requirement)
 **Agent/Tool:** Claude (claude.ai)
 **Feature worked on:** Static Privacy Policy page, needed to publish/go-Live the Facebook App used for Facebook Login

@@ -3,11 +3,17 @@ import {
   createUserWithEmailAndPassword,
   FacebookAuthProvider,
   GoogleAuthProvider,
+  isSignInWithEmailLink,
   onAuthStateChanged,
+  RecaptchaVerifier,
+  sendSignInLinkToEmail,
   signInWithEmailAndPassword,
+  signInWithEmailLink,
+  signInWithPhoneNumber,
   signInWithPopup,
   signOut as firebaseSignOut,
   updateProfile,
+  type ConfirmationResult,
   type User as FirebaseUser,
 } from 'firebase/auth';
 import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
@@ -31,6 +37,12 @@ type ProfileDoc = {
 };
 
 const profileRef = (id: string) => doc(db, 'profiles', id);
+
+// Shared across every useAuth() call so we only ever create one invisible
+// reCAPTCHA widget, and only ever try to consume a magic-link URL once.
+let recaptchaVerifier: RecaptchaVerifier | null = null;
+let magicLinkChecked = false;
+const MAGIC_LINK_EMAIL_KEY = 'bas_emailForSignIn';
 
 const mapFirebaseUser = async (authUser: FirebaseUser): Promise<User> => {
   const fallbackName = authUser.displayName || authUser.email?.split('@')[0] || 'User';
@@ -98,6 +110,26 @@ export function useAuth() {
 
   useEffect(() => {
     let active = true;
+
+    // One-time: if the user opened this app from an email magic-link,
+    // complete the sign-in. Guarded at module scope so it only runs once
+    // even though useAuth() is called from more than one component.
+    if (!magicLinkChecked) {
+      magicLinkChecked = true;
+      if (isSignInWithEmailLink(auth, window.location.href)) {
+        const storedEmail = window.localStorage.getItem(MAGIC_LINK_EMAIL_KEY);
+        const email = storedEmail || window.prompt('কনফার্ম করতে আপনার email address দিন:');
+        if (email) {
+          signInWithEmailLink(auth, email, window.location.href)
+            .then(async (cred) => {
+              window.localStorage.removeItem(MAGIC_LINK_EMAIL_KEY);
+              if (active) login(await mapFirebaseUser(cred.user));
+              window.history.replaceState({}, document.title, window.location.pathname);
+            })
+            .catch((error) => console.warn('Magic-link sign-in failed:', error));
+        }
+      }
+    }
 
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
       if (!firebaseUser) {
@@ -187,5 +219,33 @@ export function useAuth() {
     logout();
   }, [logout]);
 
-  return { user, loading, signUp, signIn, signOut, signInWithGoogle, signInWithFacebook };
+  // Phone OTP — `containerId` must be an element already present in the DOM
+  // (an invisible reCAPTCHA still needs somewhere to mount to).
+  const sendPhoneOtp = useCallback(async (phoneNumber: string, containerId: string): Promise<ConfirmationResult> => {
+    if (!recaptchaVerifier) {
+      recaptchaVerifier = new RecaptchaVerifier(auth, containerId, { size: 'invisible' });
+    }
+    return await signInWithPhoneNumber(auth, phoneNumber, recaptchaVerifier);
+  }, []);
+
+  const confirmPhoneOtp = useCallback(async (confirmation: ConfirmationResult, code: string) => {
+    const cred = await confirmation.confirm(code);
+    login(await mapFirebaseUser(cred.user));
+  }, [login]);
+
+  // Email magic-link — no password, no Cloud Function needed. Firebase sends
+  // the email itself; clicking the link (handled above, on mount) creates the
+  // account automatically if it doesn't exist yet.
+  const sendMagicLink = useCallback(async (email: string) => {
+    await sendSignInLinkToEmail(auth, email, {
+      url: window.location.origin + window.location.pathname,
+      handleCodeInApp: true,
+    });
+    window.localStorage.setItem(MAGIC_LINK_EMAIL_KEY, email);
+  }, []);
+
+  return {
+    user, loading, signUp, signIn, signOut, signInWithGoogle, signInWithFacebook,
+    sendPhoneOtp, confirmPhoneOtp, sendMagicLink,
+  };
 }
