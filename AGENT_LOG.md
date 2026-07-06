@@ -7,6 +7,44 @@
 
 ---
 
+## Session: 2026-07-06 (Round 3 — ChatBot intent-matching gaps, 5 new intents)
+**Agent/Tool:** Claude (claude.ai)
+**Feature worked on:** `src/components/ChatBot.tsx` rule-based intent matching — fixed screenshot bug ("kintu ami to payment koresi" got generic payment-process reply) + 4 more common online-store complaint intents
+
+### বাগ রিপোর্ট (screenshot দিয়ে):
+User লিখেছিল "kintu ami to payment koresi" (আমি তো payment করে ফেলেছি) — bot generic `paymentText()` (payment process explanation) দিয়েছিল, যেটা ভুল উত্তর কারণ user process জানতে চাইছিল না, already করে ফেলা payment নিয়ে বলছিল।
+
+### Root cause:
+`ruleBasedReply()`-এর price/payment keyword block (`payment`, `taka`, `bkash` ইত্যাদি) শুধু topic-level keyword ধরে, completed-action ("koresi", "diyechi") বনাম process-question ("kivabe", "koto") আলাদা করে না — ফলে দুটোই একই generic response পায়।
+
+### একটা পূর্ণ Review Report (`CHATBOT-INTENT-REVIEW.md`) বানিয়ে ৬টা check করা হয়েছিল, user সবগুলো approve করেছে:
+
+### কী হয়েছে (৫টা নতুন intent যোগ হলো, `paymentText()`-এর keyword block-এর আগে/আশেপাশে বসানো হয়েছে যাতে overlapping keyword-এ আগে match করে):
+- **Payment already done** (screenshot bug): নতুন `paymentDoneText()` হেল্পার — "payment/taka/bkash" + "koresi/diyechi/already/hoye gese" ইত্যাদি combo ধরে, generic process বলার বদলে user-এর real latest order status দেখায় + verify-তে সময় লাগতে পারে বলে + WhatsApp fallback দেয়।
+- **Delivery delay complaint** ("deri hocche", "ashe nai" ইত্যাদি): আগে generic zone/delivery-estimate text পেত, এখন real order status + empathy line + support link দেখায়।
+- **Wrong/damaged item complaint** ("vul cake", "damage", "নষ্ট", "vanga" ইত্যাদি): আগে কোনো intent-ই ছিল না, fallback ("হুম বুঝলাম না") এ পড়ে যেত — এখন সরাসরি sympathetic message + support link।
+- **Promo code not working** ("promo/discount/code" + "kaj korche na/hocche na/invalid"): আগে generic payment info পেত, এখন promo-specific answer (active থাকলে spelling-check suggestion, না থাকলে জানিয়ে দেওয়া)।
+- **Cancel-request vs cancel-reason split**: "cancel korte chai / cancel korbo" (future, নিজে cancel করতে চাওয়া) এখন আলাদা branch — আগের cancel/refund block (যেটা assume করতো order already cancelled) ভুল context দিচ্ছিল এই ক্ষেত্রে।
+- Build verify: `✓ built in 12.81s`। `tsc --noEmit` error count আগে/পরে অপরিবর্তিত (১৬২টা, সব pre-existing) — stash করে diff confirm করা হয়েছে।
+
+### Touched files:
+- `src/components/ChatBot.tsx`
+
+### Commit:
+- (pending — user local এ ZIP apply করে push করবে: `bas-chatbot-intent-fixes-070626.zip`)
+
+### এখনো Pending:
+- User আরও দুইটা feature চেয়েছে যেগুলো ইচ্ছাকৃতভাবে এই cycle-এ মেশানো হয়নি (scope-mixing এড়াতে), **পরবর্তী দুই আলাদা cycle-এ (review→approve→fix) করতে হবে:**
+  1. **ChatBot-এ image upload** (রেফারেন্স cake ছবির জন্য) — Cloudinary integration লাগবে, message type বদলাতে হবে (`Message` interface-এ শুধু `text` আছে, image support নেই)।
+  2. **Chat history AdminPanel-এর Orders-এ visible করা** (admin আগে থেকে conversation পড়ে সরাসরি কথা বলতে পারে) — এটা বড় architecture change: এখন chat শুধু per-device `localStorage`-এ থাকে (`chatHistoryKey()` ফাংশন দেখুন, line ~23), কোনো Firestore sync নেই। Admin থেকে দেখতে হলে chat messages Firestore-এ order-এর সাথে persist করতে হবে + Firestore rules বদলাতে হবে + `AdminPanel.tsx`-এ নতুন UI section লাগবে।
+
+### পরবর্তী Agent এর জন্য নোট:
+- নতুন intent block-গুলো keyword-overlap এড়াতে **নির্দিষ্ট ক্রমে বসানো হয়েছে** — যেমন `paymentDoneText()` intent অবশ্যই generic `paymentText()` price/payment block-এর **আগে** থাকতে হবে (নাহলে "payment" শব্দ generic block-এ আগেই match করে ফেলবে)। একইভাবে নতুন "cancel korte chai" future-intent block পুরনো cancel/refund block-এর আগে বসানো হয়েছে। ভবিষ্যতে নতুন intent যোগ করার সময় এই ordering-sensitivity মাথায় রাখতে হবে।
+- `has()` ফাংশন word-boundary-aware, কিন্তু শুধু literal token/phrase match করে — Bangla word-এর suffix-variation (যেমন "পাঠিয়েছি" এর ভেতরে "পাঠ") ধরবে না। তাই keyword list-এ পুরো common variation গুলো আলাদা করে লিখতে হয়, prefix ধরে নেওয়া যাবে না।
+- Review report `CHATBOT-INTENT-REVIEW.md` repo root-এ যোগ করা হয়েছে ইতিহাস হিসেবে রাখার জন্য।
+
+---
+
 ## Session: 2026-07-06 (Round 2 — Chatbot modal broken, OrdersScreen cancelled display)
 **Agent/Tool:** Claude (claude.ai)
 **Feature worked on:** Fixed non-functional support/chat buttons; fixed OrdersScreen showing "Placed" for cancelled orders

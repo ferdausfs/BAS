@@ -217,6 +217,25 @@ export function ChatBot({ embedded = false }: Props) {
     return `আপনার latest order status\n\nOrder #${latest.id} — ${statusMap[latest.status] ?? latest.status}${cancelLine}\nItems: ${itemText}\nTotal: ${formatBDT(latest.total)}\nDelivery: ${latest.delivery.date} · ${latest.delivery.time}\n\nআরও detail দেখতে Orders tab → Open tracking চাপুন।`;
   };
 
+  // "payment koresi / diyechi" জাতীয় completed-action message-এর জন্য —
+  // paymentText()-এর মতো process আবার না বলে, বরং user-এর real order status দেখানো হয়
+  const paymentDoneText = () => {
+    const latest = myOrders()[0];
+    const statusMap: Record<string, string> = {
+      placed: 'অর্ডার প্লেস হয়েছে',
+      confirmed: 'অর্ডার confirm হয়েছে',
+      baking: 'কেক bake হচ্ছে',
+      ready: 'কেক ready',
+      out: 'ডেলিভারির জন্য বের হয়েছে',
+      delivered: 'ডেলিভারি complete হয়েছে',
+      cancelled: 'অর্ডার cancel হয়েছে',
+    };
+    if (!latest) {
+      return `Payment পাঠানোর জন্য ধন্যবাদ! 🙏\n\nতবে আপনার নামে এখনো কোনো order খুঁজে পাচ্ছি না — Order ID (যেমন BAS123456) লিখুন, খুঁজে বের করি।\n\nScreenshot verify হতে কিছুক্ষণ সময় লাগতে পারে। জলদি দরকার হলে সরাসরি WhatsApp-এ screenshot পাঠান:\n\n${supportText()}`;
+    }
+    return `বুঝলাম, আপনি payment পাঠিয়ে দিয়েছেন 🙏\n\nআপনার latest order #${latest.id} এখন "${statusMap[latest.status] ?? latest.status}" অবস্থায় আছে।\n\nPayment পাঠানোর পরেও status আপডেট না হলে screenshot verify হতে কিছুক্ষণ সময় লাগতে পারে (admin manually check করেন)। জলদি দরকার হলে সরাসরি WhatsApp-এ screenshot পাঠিয়ে জানান:\n\n${supportText()}`;
+  };
+
   const ruleBasedReply = (question: string): { text: string; matched: boolean } => {
     const q = normalize(question);
 
@@ -287,6 +306,46 @@ export function ChatBot({ embedded = false }: Props) {
       return { text: `ডেলিভারি estimate: ${settings.deliveryEstimate}\n\nসময় এলাকা, অর্ডার rush এবং cake customization অনুযায়ী বদলাতে পারে। Same-day order চাইলে যত দ্রুত সম্ভব checkout করুন।`, matched: true };
     }
 
+    // Delay complaint — "deri hocche", "ashe nai" ইত্যাদি generic delivery/zone info-এর বদলে
+    // real order status + empathy + support দেখাবে
+    if (has(q, ['deri', 'দেরি', 'delay', 'ashe nai', 'asheni', 'আসেনি', 'ekhono ashe nai', 'koto deri', 'onek deri', 'late hoye gese', 'time shesh hoye gese', 'ekhono pai nai'])) {
+      return {
+        text: `${orderStatusText('')}\n\nদেরির জন্য দুঃখিত 🙏 উপরের status অনুযায়ী থাকার পরেও যদি অনেক দেরি মনে হয়, সরাসরি WhatsApp-এ জানান — আমরা দ্রুত check করে জানাবো।\n\n${supportText()}`,
+        matched: true,
+      };
+    }
+
+    // "payment koresi / diyechi / already dise" — user বলছে টাকা পাঠিয়ে দিয়েছে,
+    // এটা payment-process জানতে চাওয়া না — তাই paymentText()-এর আগেই ধরতে হবে
+    if (
+      has(q, ['payment', 'পেমেন্ট', 'taka', 'টাকা', 'bkash', 'bikash', 'nagad', 'send', 'money']) &&
+      has(q, ['koresi', 'kore disi', 'diyechi', 'diye disi', 'dise', 'disi', 'already', 'hoye gese', 'kore fellsi', 'দিয়েছি', 'হয়ে গেছে', 'send korsi', 'pathaisi', 'pathiye disi', 'screenshot dise', 'screenshot disi'])
+    ) {
+      return { text: paymentDoneText(), matched: true };
+    }
+
+    // Wrong/damaged item complaint — এখন পর্যন্ত এই intent ধরার কোনো branch ছিল না,
+    // fallback message-এ চলে যেত যেটা food-damage complaint-এর জন্য একদম উপযুক্ত না
+    if (has(q, ['wrong item', 'ভুল কেক', 'vul cake', 'vul order eshe', 'damage', 'damaged', 'নষ্ট', 'noshto', 'vanga', 'bhanga', 'pocha', 'pochano', 'kharap ese', 'kharap cake', 'expired cake'])) {
+      return {
+        text: `দুঃখিত এই সমস্যার জন্য! 🙏\n\nCake ভুল আসা বা damage হয়ে যাওয়া হলে যত দ্রুত সম্ভব ছবিসহ জানানো ভালো, যাতে দ্রুত ব্যবস্থা নেওয়া যায়।\n\n${supportText()}`,
+        matched: true,
+      };
+    }
+
+    // Promo code not working — price/payment block-এ পড়ে গিয়ে generic info পেত আগে
+    if (
+      has(q, ['promo', 'discount', 'ডিসকাউন্ট', 'কুপন', 'coupon', 'code']) &&
+      has(q, ['kaj korche na', 'hocche na', 'kore na', 'na hocche', 'invalid', 'error', 'কাজ করছে না', 'হচ্ছে না'])
+    ) {
+      return {
+        text: settings.promoEnabled
+          ? `Promo code "${settings.promoCode}" দিলে ${settings.promoPercent}% discount পাওয়ার কথা — checkout screen-এ বানান ঠিক আছে কিনা (case অনুযায়ী) check করুন।\n\nতাও কাজ না করলে সরাসরি জানান:\n\n${supportText()}`
+          : `এই মুহূর্তে কোনো promo code active নেই। নতুন offer এলে app-এ জানিয়ে দেওয়া হবে।`,
+        matched: true,
+      };
+    }
+
     if (has(q, ['price', 'দাম', 'tk', 'টাকা', 'payment', 'পেমেন্ট', 'bkash', 'bikash', 'nagad', 'cash', 'koto taka', 'koto dam', 'daam', 'dam', 'taka koto', 'cost', 'charge', 'fee', 'koye taka', 'koto koye'])) {
       return { text: paymentText(), matched: true };
     }
@@ -301,6 +360,15 @@ export function ChatBot({ embedded = false }: Props) {
 
     if (has(q, ['support', 'help', 'সাহায্য', 'মানুষ', 'human', 'whatsapp', 'contact', 'যোগাযোগ', 'problem', 'somossa', 'shomossha', 'issue', 'help lagbe', 'help koro', 'darkar', 'dorkar'])) {
       return { text: supportText(), matched: true };
+    }
+
+    // User নিজে order cancel করতে চাইছে (future intent) — এটা "কেন cancel হলো" প্রশ্নের থেকে আলাদা,
+    // নিচের block-টা ধরে নেয় order ইতিমধ্যে cancelled, তাই আগে এখানেই ধরতে হবে
+    if (has(q, ['cancel korte chai', 'cancel korbo', 'order cancel korte', 'বাতিল করতে চাই', 'বাতিল করব', 'ami cancel korbo', 'cancel dite chai'])) {
+      return {
+        text: `Order cancel করতে চাইলে —\n\nCake preparation এখনো শুরু না হয়ে থাকলে সরাসরি WhatsApp-এ Order ID দিয়ে জানান, আমরা cancel করে দেবো।\n\nBaking শুরু হয়ে গেলে cancel নাও করা যেতে পারে (ingredient/prep নষ্ট হয়ে যায় বলে) — তাই যত দ্রুত সম্ভব জানানো ভালো।\n\n${supportText()}`,
+        matched: true,
+      };
     }
 
     if (has(q, ['cancel', 'refund', 'বাতিল', 'রিফান্ড'])) {
