@@ -1,13 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
-import { Phone, Send, Cake, X } from 'lucide-react';
+import { Phone, Send, Cake, X, Camera, Loader2 } from 'lucide-react';
 import { useAuthStore, useOrders, useSettingsStore, useUI } from '../lib/store';
 import { useProducts } from '../hooks/useProducts';
 import { waLink } from '../lib/utils';
+import { uploadToCloudinary } from '../lib/firebase';
 
 interface Message {
   role: 'user' | 'bot';
   text: string;
   time: Date;
+  image?: string;
 }
 
 const QUICK_REPLIES = [
@@ -34,8 +36,11 @@ export function ChatBot({ embedded = false }: Props) {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [showQuick, setShowQuick] = useState(true);
+  const [imageUploading, setImageUploading] = useState(false);
+  const [imageError, setImageError] = useState<string | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { settings } = useSettingsStore();
   const { products } = useProducts();
   const { orders } = useOrders();
@@ -81,6 +86,37 @@ export function ChatBot({ embedded = false }: Props) {
 
   const addBot = (text: string) => {
     setMessages((m) => [...m, { role: 'bot', text, time: new Date() }]);
+  };
+
+  // Reference cake ছবি পাঠানো — user শুধু ছবি পাঠাতে পারবে (Cloudinary-তে upload),
+  // bot নিজে থেকে ছবি বুঝে respond করে না, শুধু acknowledgment + support route দেয়
+  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      setImageError('শুধু image file পাঠানো যাবে।');
+      return;
+    }
+    if (file.size > 8 * 1024 * 1024) {
+      setImageError('ছবির size ৮MB-এর কম হতে হবে।');
+      return;
+    }
+
+    setImageError(null);
+    setImageUploading(true);
+    setShowQuick(false);
+    try {
+      const url = await uploadToCloudinary(file, 'bake-art-style/chat-references');
+      setMessages((m) => [...m, { role: 'user', text: '', image: url, time: new Date() }]);
+      await new Promise((r) => setTimeout(r, 250));
+      addBot('ছবিটা পেয়েছি! রেফারেন্স হিসেবে রাখা হলো — অর্ডার করার সময় Customize-এ message-এ mention করে দিতে পারেন, বা সরাসরি WhatsApp-এ পাঠিয়ে দিলে team দ্রুত দেখতে পারবে।');
+    } catch {
+      setImageError('ছবি upload করা যায়নি, আবার চেষ্টা করুন।');
+    } finally {
+      setImageUploading(false);
+    }
   };
 
   const normalize = (text: string) =>
@@ -510,12 +546,26 @@ ${productList}
         {messages.map((m, i) => (
           <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
             <div className={`max-w-[85%] rounded-2xl px-3 py-2 text-xs leading-relaxed ${m.role === 'user' ? 'rounded-br-sm bg-coral text-white' : 'rounded-bl-sm bg-cream text-ink'}`}>
+              {m.image && (
+                <img
+                  src={m.image}
+                  alt="Reference"
+                  className="mb-1 max-h-40 w-full rounded-xl object-cover"
+                />
+              )}
               {m.text.split('\n').map((line, j, arr) => (
                 <span key={j}>{line}{j < arr.length - 1 && <br />}</span>
               ))}
             </div>
           </div>
         ))}
+        {imageUploading && (
+          <div className="flex justify-end">
+            <div className="flex items-center gap-1.5 rounded-2xl rounded-br-sm bg-coral/70 px-3 py-2 text-xs text-white">
+              <Loader2 className="h-3 w-3 animate-spin" /> ছবি পাঠানো হচ্ছে...
+            </div>
+          </div>
+        )}
         {loading && (
           <div className="flex justify-start">
             <div className="flex gap-1 rounded-2xl rounded-bl-sm bg-cream px-3 py-2">
@@ -542,7 +592,27 @@ ${productList}
         </div>
       )}
 
+      {imageError && (
+        <div className="flex-shrink-0 px-3 pb-1 text-[10px] font-bold text-red-600">{imageError}</div>
+      )}
+
       <div className="flex flex-shrink-0 items-center gap-2 border-t border-ink/8 px-3 py-2">
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleImageSelect}
+          className="hidden"
+        />
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          disabled={imageUploading}
+          className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-ink/5 text-ink/60 disabled:opacity-40"
+          aria-label="Send reference image"
+          title="রেফারেন্স ছবি পাঠান"
+        >
+          <Camera className="h-3.5 w-3.5" />
+        </button>
         <input
           ref={inputRef}
           type="text"

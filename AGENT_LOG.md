@@ -7,6 +7,34 @@
 
 ---
 
+## Session: 2026-07-06 (Round 4 — ChatBot image upload for reference cakes)
+**Agent/Tool:** Claude (claude.ai)
+**Feature worked on:** `src/components/ChatBot.tsx` — user এখন chat-এ reference cake ছবি পাঠাতে পারবে
+
+### কী হয়েছে:
+- `Message` interface-এ optional `image?: string` (Cloudinary URL) যোগ হলো।
+- Input bar-এ নতুন 📷 (Camera icon) বাটন — চাপলে hidden `<input type="file" accept="image/*">` trigger করে।
+- Image select হলে client-side validation (শুধু image type, max ৮MB), তারপর `uploadToCloudinary(file, 'bake-art-style/chat-references')` দিয়ে upload — এই helper আগে থেকেই ছিল (`src/lib/firebase.ts`), product/gallery/review/payment-screenshot upload-এ যেভাবে ব্যবহার হয় ঠিক সেভাবেই reuse করা হয়েছে, নতুন কোনো Cloudinary config লাগেনি।
+- Upload চলাকালীন "ছবি পাঠানো হচ্ছে..." spinner bubble দেখায়, সফল হলে user bubble-এ thumbnail (max-height ১৬০px, rounded) + bot একটা acknowledgment reply দেয় (রেফারেন্স রাখা হয়েছে, Customize/WhatsApp-এ mention করতে বলে)।
+- Upload fail বা invalid file হলে ছোট red error text input bar-এর উপরে দেখায়, chat bubble-এ কিছু যোগ হয় না।
+- এই scope-এ bot নিজে থেকে ছবি বুঝে respond করে না (কোনো AI vision analysis না) — শুধু visual reference store/acknowledge করা হয়। Gemini-কে image পাঠানো এই cycle-এ করা হয়নি (future scope হলে আলাদা)।
+- Build verify: `✓ built in 13.65s`। `tsc --noEmit` error count অপরিবর্তিত (১৬২টা, সব pre-existing), `ChatBot.tsx`-এ কোনো নতুন error নেই।
+
+### Touched files:
+- `src/components/ChatBot.tsx`
+
+### Commit:
+- (pending — user local এ ZIP apply করে push করবে: `bas-chatbot-image-upload-070626.zip`)
+
+### এখনো Pending:
+- **Admin panel-এ chat history (two-way reply, Option 2)** — এই session-এর পরের অংশে আলাদা ZIP-এ করা হবে (বড় feature, নিজস্ব review cycle প্রয়োজন)।
+
+### পরবর্তী Agent এর জন্য নোট:
+- Chat image message local-only (localStorage-based history-তেই save হয়, Firestore-এ না) — Admin chat-history feature implement করার সময় এই image field-ও Firestore doc-এ carry করতে হবে যদি admin-কে reference ছবি দেখাতে হয়।
+- `uploadToCloudinary` folder convention অনুসরণ করা হয়েছে: `bake-art-style/chat-references` (অন্যান্য upload-এর মতোই `bake-art-style/{feature}` pattern)।
+
+---
+
 ## Session: 2026-07-06 (Round 3 — ChatBot intent-matching gaps, 5 new intents)
 **Agent/Tool:** Claude (claude.ai)
 **Feature worked on:** `src/components/ChatBot.tsx` rule-based intent matching — fixed screenshot bug ("kintu ami to payment koresi" got generic payment-process reply) + 4 more common online-store complaint intents
