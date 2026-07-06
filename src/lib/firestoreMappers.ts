@@ -138,6 +138,7 @@ export const mapOrderDoc = (id: string, o: any): Order => ({
   locationAddress: o.location_address ?? o.locationAddress ?? undefined,
   locationVerified: !!(o.location_verified ?? o.locationVerified),
   status: normalizeStatus(o.status),
+  cancelReason: o.cancel_reason ?? o.cancelReason ?? undefined,
   createdAt: toMillis(o.created_at ?? o.createdAt),
   gift: o.gift,
 });
@@ -161,6 +162,7 @@ export const orderToDoc = (o: Order) => ({
   delivery_fee: o.deliveryFee,
   total: o.total,
   status: toDbOrderStatus(o.status),
+  cancel_reason: o.cancelReason ?? null,
   promo_code: o.promoCode ?? null,
   loyaltyPointsRedeemed: o.loyaltyPointsRedeemed ?? null,
   gps_lat: o.gpsLat ?? null,

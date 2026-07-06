@@ -207,7 +207,8 @@ export function ChatBot({ embedded = false }: Props) {
       cancelled: 'অর্ডার cancel হয়েছে',
     };
 
-    return `আপনার latest order status\n\nOrder #${latest.id} — ${statusMap[latest.status] ?? latest.status}\nItems: ${itemText}\nTotal: ${formatBDT(latest.total)}\nDelivery: ${latest.delivery.date} · ${latest.delivery.time}\n\nআরও detail দেখতে Orders tab → Open tracking চাপুন।`;
+    const cancelLine = latest.status === 'cancelled' && latest.cancelReason ? `\nবাতিলের কারণ: ${latest.cancelReason}` : '';
+    return `আপনার latest order status\n\nOrder #${latest.id} — ${statusMap[latest.status] ?? latest.status}${cancelLine}\nItems: ${itemText}\nTotal: ${formatBDT(latest.total)}\nDelivery: ${latest.delivery.date} · ${latest.delivery.time}\n\nআরও detail দেখতে Orders tab → Open tracking চাপুন।`;
   };
 
   const ruleBasedReply = (question: string): { text: string; matched: boolean } => {
@@ -291,6 +292,17 @@ export function ChatBot({ embedded = false }: Props) {
     }
 
     if (has(q, ['cancel', 'refund', 'বাতিল', 'রিফান্ড'])) {
+      const cancelled = myOrders().filter((o) => o.status === 'cancelled');
+      const latestCancelled = cancelled[0];
+      if (latestCancelled) {
+        const reasonLine = latestCancelled.cancelReason
+          ? `কারণ: ${latestCancelled.cancelReason}`
+          : 'কারণ এখনো লেখা হয়নি — সরাসরি জানতে সাপোর্টে যোগাযোগ করুন।';
+        return {
+          text: `Order #${latestCancelled.id} বাতিল হয়েছে।\n\n${reasonLine}\n\nআপনার পেমেন্ট ওয়ালেটে ফেরত দেওয়া হয়েছে বা দেওয়া হবে। আবার অর্ডার করতে চাইলে Tracking screen থেকে "পুনরায় অর্ডার করুন" চাপুন।\n\nকিছু জিজ্ঞাসা থাকলে:\n${supportText()}`,
+          matched: true,
+        };
+      }
       return { text: `Order cancel/refund বিষয়ে দ্রুত support-এ কথা বলাই ভালো। Cake preparation শুরু হয়ে গেলে cancel policy আলাদা হতে পারে।\n\n${supportText()}`, matched: true };
     }
 

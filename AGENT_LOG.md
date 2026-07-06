@@ -7,6 +7,43 @@
 
 ---
 
+## Session: 2026-07-06 (Order cancel-reason modal, cancelled-tracking cleanup, chatbot cancel awareness)
+**Agent/Tool:** Claude (claude.ai)
+**Feature worked on:** Admin order cancellation now requires a reason; customer-facing tracking + chatbot surface that reason
+
+### কী হয়েছে:
+- **`Order.cancelReason?: string`** যোগ হলো (`types/index.ts`), Firestore-এ `cancel_reason` field হিসেবে map হয় (`firestoreMappers.ts` — `mapOrderDoc`/`orderToDoc` দুই দিকেই)।
+- **Admin cancel flow বদলে গেছে:** আগে status dropdown/quick-button-এ "Cancelled" ক্লিক করলেই সাথে সাথে cancel হয়ে যেত। এখন `AdminPanel.tsx`-এ `requestStatusChange(o, status)` intercept করে — status `cancelled` হলে সরাসরি `updateStatus` না ডেকে একটা modal খোলে (preset reason chips + custom textarea, `cancelReasonInput` state)। "বাতিল নিশ্চিত করুন" চাপলে তবেই `updateStatus(id, 'cancelled', reason)` কল হয় (button reason খালি থাকলে disabled)। WhatsApp customer লিংকেও (`waLink`) cancelled অবস্থায় reason auto-include হয়।
+- **`updateStatus`/`setOrderStatus` এখন optional 3rd param `reason` নেয়** (`useOrders.ts`, `store.ts`) — local state-এ order-এ `cancelReason` বসে, Firestore doc-এ `cancel_reason` লেখা হয়, আর wallet-refund notification-এর পাশাপাশি একটা `❌ Order cancelled` notification-ও reason সহ যোগ হয়।
+- **`TrackingScreen.tsx`:**
+  - Cancelled card-এ এখন `cancelReason` থাকলে "কারণ: ..." লাইন দেখায়।
+  - **পুরো ৬-step "LIVE STATUS" timeline এখন cancelled order-এ hide** — `match.status !== 'cancelled'` দিয়ে পুরো block wrap করা হয়েছে, শুধু cancelled card-ই দেখা যায়।
+  - **Duplicate floating "সাহায্য দরকার?" বাটন** এখন cancelled-এও hide হয় (আগে শুধু `delivered`-এ hide হতো) — কারণ cancelled card-এর ভেতরেই নিজস্ব "সাপোর্ট" বাটন আছে, দুইটা একই কাজ করছিল।
+- **`ChatBot.tsx`:** cancel/refund intent match হলে এখন user-এর সবচেয়ে recent cancelled order খুঁজে বের করে exact `cancelReason` বলে দেয় (admin যা লিখেছিল), reason না থাকলে আগের generic support-redirect fallback থাকে। `orderStatusText()`-এও (নির্দিষ্ট order ID জিজ্ঞেস করলে) cancelled হলে reason line যোগ হয়েছে। WhatsApp bottom bar আগে থেকেই ছিল (human-agent hand-off), নতুন কিছু বানানো লাগেনি।
+- Build verify: `✓ built in 6.61s`। `tsc --noEmit` error count touched files-এ পরিবর্তনের আগে/পরে সমান (২৪টা) — সব pre-existing (loosely-typed hooks, unrelated pre-existing `Product` type mismatch ইত্যাদি), নতুন কোনো error যোগ হয়নি (stash করে diff করে confirm করা হয়েছে)।
+
+### Touched files:
+- `src/types/index.ts`
+- `src/lib/firestoreMappers.ts`
+- `src/lib/store.ts`
+- `src/hooks/useOrders.ts`
+- `src/components/AdminPanel.tsx`
+- `src/screens/TrackingScreen.tsx`
+- `src/components/ChatBot.tsx`
+
+### Commit:
+- (pending — user local এ ZIP apply করে push করবে: `bas-cancel-reason-tracking-chatbot-070626.zip`)
+
+### এখনো Pending:
+- কিছু না, এই feature সম্পূর্ণ
+
+### পরবর্তী Agent এর জন্য নোট:
+- Cancel reason চাওয়া মানেই এখন `updateStatus(id, status, reason?)` — 3rd param শুধু `cancelled`-এর জন্যই মানে রাখে, অন্য status-এ পাস করলে কোনো effect নেই (harmless)।
+- `AdminPanel.tsx`-এ কখনো সরাসরি `updateStatus(o.id, s)` কল না করে `requestStatusChange(o, s)` ব্যবহার করা উচিত (dropdown আর quick-buttons দুই জায়গাতেই) — নাহলে cancel modal bypass হয়ে যাবে।
+- `TrackingScreen.tsx`-এ timeline-এর ভেতরের `match.status !== 'delivered' && match.status !== 'cancelled'` চেক সরিয়ে শুধু `!== 'delivered'` করা হয়েছে, কারণ বাইরের block-ই ইতিমধ্যে `cancelled` বাদ দিয়ে দেয় (TS narrowing এই duplicate check-এ TS2367 error দিচ্ছিল)।
+
+---
+
 ## Session: 2026-07-06 (OrdersScreen premium redesign — ticket-style card, expandable items, side-by-side buttons)
 **Agent/Tool:** Claude (claude.ai)
 **Feature worked on:** `src/screens/OrdersScreen.tsx` visual premium pass

@@ -85,10 +85,14 @@ export function useOrdersHook() {
     return () => unsub();
   }, [setOrders, user?.isAdmin]);
 
-  const updateStatus = useCallback(async (id: string, status: Order['status']) => {
-    setOrderStatus(id, status);
+  const updateStatus = useCallback(async (id: string, status: Order['status'], reason?: string) => {
+    setOrderStatus(id, status, reason);
     try {
-      await updateDoc(doc(db, 'orders', id), { status: toDbOrderStatus(status), updated_at: new Date().toISOString() });
+      await updateDoc(doc(db, 'orders', id), {
+        status: toDbOrderStatus(status),
+        updated_at: new Date().toISOString(),
+        ...(reason ? { cancel_reason: reason } : {}),
+      });
     } catch (error) {
       console.error('Status update error:', error);
     }

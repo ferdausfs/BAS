@@ -73,6 +73,7 @@ export type Order = {
   locationAddress?: string;
   locationVerified?: boolean;
   status: 'placed' | 'confirmed' | 'baking' | 'ready' | 'out' | 'delivered' | 'cancelled';
+  cancelReason?: string;
   createdAt: number;
   gift?: {
     message: string;

@@ -214,7 +214,7 @@ type OrderState = {
   orders: Order[];
   setOrders: (orders: Order[]) => void;
   placeOrder: (order: Omit<Order, 'id' | 'createdAt' | 'status'>) => Order;
-  setOrderStatus: (id: string, status: Order['status']) => void;
+  setOrderStatus: (id: string, status: Order['status'], reason?: string) => void;
 };
 
 export const useOrders = create<OrderState>((set) => ({
@@ -264,9 +264,9 @@ export const useOrders = create<OrderState>((set) => ({
         return o;
       },
 
-      setOrderStatus: (id, status) => {
+      setOrderStatus: (id, status, reason) => {
         set((s) => ({
-          orders: s.orders.map((o) => (o.id === id ? { ...o, status } : o)),
+          orders: s.orders.map((o) => (o.id === id ? { ...o, status, ...(reason ? { cancelReason: reason } : {}) } : o)),
         }));
 
         useUI.getState().addNotification('📦 Order updated', `Order #${id} status changed to ${status}.`);
@@ -283,6 +283,9 @@ export const useOrders = create<OrderState>((set) => ({
           if (redeemed > 0) {
             useWallet.getState().refundRedeem(id, redeemed);
             useUI.getState().addNotification('Wallet refund', `৳${redeemed} refunded to your wallet for cancelled order #${id}.`);
+          }
+          if (reason) {
+            useUI.getState().addNotification('❌ Order cancelled', `Order #${id}: ${reason}`);
           }
         }
 

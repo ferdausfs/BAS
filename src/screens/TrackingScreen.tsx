@@ -152,6 +152,11 @@ export default function TrackingScreen() {
                   </div>
                 </div>
                 <div className="px-4 py-3 space-y-2">
+                  {match.cancelReason && (
+                    <p className="text-[12px] text-red-700">
+                      <span className="font-bold">কারণ:</span> {match.cancelReason}
+                    </p>
+                  )}
                   <p className="text-[12px] text-red-700">
                     আপনার পেমেন্ট ওয়ালেটে ফেরত দেওয়া হয়েছে বা দেওয়া হবে।
                   </p>
@@ -176,6 +181,7 @@ export default function TrackingScreen() {
               </div>
             )}
 
+            {match.status !== 'cancelled' && (
             <div className="border-t border-ink-50 px-4 py-3.5">
               <div className="mb-2 flex items-center justify-between">
                 <span className="text-[10px] font-bold tracking-wider text-ink-200 uppercase">Live status</span>
@@ -220,7 +226,7 @@ export default function TrackingScreen() {
                   );
                 })}
               </div>
-              {match.status !== 'delivered' && match.status !== 'cancelled' && (
+              {match.status !== 'delivered' && (
                 <div className="mt-3 mx-1 flex items-center justify-between rounded-xl bg-coral/8 px-3 py-2.5">
                   <div className="flex items-center gap-2">
                     <Clock className="h-4 w-4 text-coral" />
@@ -245,6 +251,7 @@ export default function TrackingScreen() {
                 </div>
               )}
             </div>
+            )}
           </article>
         ) : query.trim() ? (
           <div className="mt-8 text-center">
@@ -281,7 +288,7 @@ export default function TrackingScreen() {
           </div>
         )}
       </div>
-      {match && match.status !== 'delivered' && (
+      {match && match.status !== 'delivered' && match.status !== 'cancelled' && (
         <button
           onClick={() => setChatOpen(true)}
           className="fixed bottom-24 right-5 z-40 flex items-center gap-2 rounded-2xl bg-ink px-4 py-2.5 shadow-lg transition active:scale-95"

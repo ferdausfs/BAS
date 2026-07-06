@@ -75,6 +75,8 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
   const [newZone, setNewZone] = useState('');
   const [orderFilter, setOrderFilter] = useState<'all' | Order['status']>('all');
   const [viewImage, setViewImage] = useState<string | null>(null);
+  const [cancelModal, setCancelModal] = useState<Order | null>(null);
+  const [cancelReasonInput, setCancelReasonInput] = useState('');
   const productImgRef = useRef<HTMLInputElement>(null);
   const productGalleryRefs = useRef<HTMLInputElement>(null);
   const bannerImgRef = useRef<HTMLInputElement>(null);
@@ -149,6 +151,35 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
 
   const ORDER_STATUSES: Order['status'][] = ['placed', 'confirmed', 'baking', 'ready', 'out', 'delivered', 'cancelled'];
   const filteredOrders = orderFilter === 'all' ? safeOrders.filter(Boolean) : safeOrders.filter((o) => o && o.status === orderFilter);
+
+  const CANCEL_REASON_PRESETS = [
+    'গ্রাহক নিজে বাতিল চেয়েছেন',
+    'পেমেন্ট যাচাই করা যায়নি',
+    'ডেলিভারি জোনের বাইরে',
+    'সময়মতো তৈরি করা সম্ভব না',
+    'উপকরণ/স্টক নেই',
+    'ভুল/ডুপ্লিকেট অর্ডার',
+  ];
+
+  // Cancel দেওয়া মানেই এখন থেকে সরাসরি status change হবে না — reason modal খুলবে,
+  // Confirm করলে তবেই updateStatus('cancelled', reason) call হবে।
+  const requestStatusChange = (o: Order, status: Order['status']) => {
+    if (status === 'cancelled') {
+      setCancelReasonInput('');
+      setCancelModal(o);
+      return;
+    }
+    updateStatus(o.id, status);
+  };
+
+  const confirmCancel = () => {
+    if (!cancelModal) return;
+    const reason = cancelReasonInput.trim();
+    if (!reason) return;
+    updateStatus(cancelModal.id, 'cancelled', reason);
+    setCancelModal(null);
+    setCancelReasonInput('');
+  };
 
   const openPaymentScreenshot = async (pathOrUrl?: string) => {
     if (!pathOrUrl) return;
@@ -380,7 +411,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                   <label className="text-[10px] font-bold uppercase text-ink/40">Change order status</label>
                   <select
                     value={o.status || 'placed'}
-                    onChange={(e) => updateStatus(o.id, e.target.value as Order['status'])}
+                    onChange={(e) => requestStatusChange(o, e.target.value as Order['status'])}
                     className="mt-1 h-10 w-full rounded-xl border border-ink/10 bg-white px-3 text-xs font-bold text-ink focus:outline-none"
                   >
                     {ORDER_STATUSES.map((s) => <option key={s} value={s}>{STATUS_LABELS[s]}</option>)}
@@ -390,7 +421,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   {ORDER_STATUSES.map((s) => (
                     <button key={s}
-                      onClick={() => updateStatus(o.id, s)}
+                      onClick={() => requestStatusChange(o, s)}
                       className={`px-2 py-1 rounded-lg text-[10px] font-bold inline-flex items-center gap-1 ${o.status === s ? 'bg-coral text-white' : 'bg-ink/5 text-ink/45'}`}>
                       <StatusPill status={s} />
                     </button>
@@ -399,7 +430,9 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
 
                 <div className="mt-3 flex gap-2 flex-wrap">
                   <a
-                    href={waLink(o.customer?.phone || safeSettings.whatsappNumber, `Hello ${o.customer?.name || 'Customer'}, your Bake Art Style order #${o.id || 'N/A'} is now ${o.status || 'placed'}.`)}
+                    href={waLink(o.customer?.phone || safeSettings.whatsappNumber, o.status === 'cancelled' && o.cancelReason
+                      ? `Hello ${o.customer?.name || 'Customer'}, your Bake Art Style order #${o.id || 'N/A'} has been cancelled. Reason: ${o.cancelReason}`
+                      : `Hello ${o.customer?.name || 'Customer'}, your Bake Art Style order #${o.id || 'N/A'} is now ${o.status || 'placed'}.`)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex-1 rounded-xl bg-green-50 py-2 text-center text-xs font-bold text-green-700"
@@ -1271,6 +1304,65 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
             <p className="mt-3 text-center text-[11px] text-white/55">
               Tap outside to close
             </p>
+          </div>
+        </div>
+      )}
+
+      {/* Cancel-reason modal — must fill a reason before an order can be marked Cancelled */}
+      {cancelModal && (
+        <div
+          className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm"
+          onClick={() => setCancelModal(null)}
+        >
+          <div
+            className="w-full max-w-sm rounded-t-3xl sm:rounded-3xl bg-white p-5"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-red-100">
+                <X className="h-5 w-5 text-red-500" strokeWidth={2} />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-ink">অর্ডার বাতিল করবেন?</p>
+                <p className="text-[11px] text-ink/45">Order #{cancelModal.id} — কারণ লিখুন, customer এটা দেখতে পাবে</p>
+              </div>
+            </div>
+
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              {CANCEL_REASON_PRESETS.map((r) => (
+                <button
+                  key={r}
+                  onClick={() => setCancelReasonInput(r)}
+                  className={`px-2.5 py-1.5 rounded-full text-[11px] font-bold border ${cancelReasonInput === r ? 'bg-coral text-white border-coral' : 'bg-ink/5 text-ink/60 border-transparent'}`}
+                >
+                  {r}
+                </button>
+              ))}
+            </div>
+
+            <textarea
+              value={cancelReasonInput}
+              onChange={(e) => setCancelReasonInput(e.target.value)}
+              placeholder="বাতিলের কারণ লিখুন..."
+              rows={3}
+              className="mt-3 w-full rounded-2xl border border-ink/10 bg-cream/50 px-3 py-2.5 text-[13px] text-ink outline-none focus:border-coral"
+            />
+
+            <div className="mt-4 flex gap-2">
+              <button
+                onClick={() => setCancelModal(null)}
+                className="flex-1 rounded-2xl bg-ink/5 py-3 text-[13px] font-bold text-ink/60"
+              >
+                রাখুন
+              </button>
+              <button
+                onClick={confirmCancel}
+                disabled={!cancelReasonInput.trim()}
+                className="flex-1 rounded-2xl bg-red-500 py-3 text-[13px] font-bold text-white disabled:opacity-40"
+              >
+                বাতিল নিশ্চিত করুন
+              </button>
+            </div>
           </div>
         </div>
       )}
