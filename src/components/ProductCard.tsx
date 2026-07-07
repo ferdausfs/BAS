@@ -1,13 +1,7 @@
 import { useState } from 'react';
 import { Heart, Plus, Star, Check, Award, Sparkles, ZoomIn } from 'lucide-react';
 import { useCart, formatINR } from '../lib/store';
-import { categories } from '../lib/data';
 import type { Product } from '../types';
-
-// Thin per-occasion accent color — subtle category cue, doesn't touch the
-// Best/New badge system (those stay gold/coral as-is).
-const occasionAccent = (occasion?: string) =>
-  categories.find((c) => c.id === occasion)?.fg ?? '#E8526A';
 
 type Props = {
   product: Product;
@@ -35,7 +29,7 @@ export default function ProductCard({ product, wished, onOpen, onWish, variant =
   const handleWish = (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
-    setHeartKey(k => k + 1);
+    setHeartKey((k) => k + 1);
     onWish(product.id);
   };
 
@@ -51,269 +45,100 @@ export default function ProductCard({ product, wished, onOpen, onWish, variant =
       price: product.price,
       quantity: 1,
     });
-    // confirmation state
     setAdded(true);
     setTimeout(() => setAdded(false), 1200);
   };
 
-  const AddButton = ({ size = 32 }: { size?: number }) => (
+  const AddButton = ({ size = 30 }: { size?: number }) =>
     (product.inStock ?? true) ? (
       <button
         onClick={handleAdd}
-        className="flex items-center justify-center rounded-full text-white transition-all active:scale-90 hover:brightness-105"
+        className="flex items-center justify-center rounded-full text-white transition-all active:scale-90"
         style={{
           width: size,
           height: size,
-          background: added
-            ? 'linear-gradient(135deg, #1baf7a 0%, #0e8f63 100%)'
-            : 'linear-gradient(135deg, #EE6279 0%, #DC3E58 100%)',
+          background: added ? '#1baf7a' : '#E8526A',
           boxShadow: added
-            ? '0 6px 16px -4px rgba(27,175,122,0.55)'
-            : '0 6px 16px -4px rgba(232,82,106,0.55)',
-          transition: 'background 0.3s ease, box-shadow 0.3s ease',
+            ? '0 6px 16px -4px rgba(27,175,122,.5)'
+            : '0 6px 16px -4px rgba(232,82,106,.5)',
+          transition: 'background .3s ease, box-shadow .3s ease',
         }}
         aria-label="Add to cart"
       >
-        {added
-          ? <Check key="check" className="h-3.5 w-3.5 anim-pop" strokeWidth={2.5} />
-          : <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
-        }
+        {added ? <Check className="h-3.5 w-3.5 anim-pop" strokeWidth={2.5} /> : <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />}
       </button>
-    ) : null
-  );
+    ) : null;
 
-  if (variant === 'grid') {
-    return (
-      <article
-        onClick={onOpen}
-        className="group relative cursor-pointer overflow-hidden rounded-3xl glass-strong transition-all duration-200 active:scale-[.97]"
-        style={{ boxShadow: '0 1px 2px rgba(26,19,17,.03), 0 14px 32px -18px rgba(26,19,17,.22)' }}
-      >
-        {/* Occasion accent strip — subtle category cue */}
-        <div className="absolute inset-x-0 top-0 z-10 h-[3px]" style={{ background: occasionAccent(product.occasion) }} />
+  const Badges = () =>
+    !zoomed ? (
+      <div className="absolute top-2.5 left-2.5 flex flex-col gap-1">
+        {product.bestseller && (
+          <span className="flex items-center gap-1 rounded-full bg-white/80 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-coral backdrop-blur-md">
+            <Award className="h-2.5 w-2.5" strokeWidth={2.5} /> Best
+          </span>
+        )}
+        {product.newArrival && (
+          <span className="flex items-center gap-1 rounded-full bg-coral/90 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white backdrop-blur-md">
+            <Sparkles className="h-2.5 w-2.5" strokeWidth={2.5} /> New
+          </span>
+        )}
+      </div>
+    ) : null;
 
-        {/* Image — taller, more immersive photo */}
-        <div className="relative aspect-[4/5] overflow-hidden">
-          <img
-            src={product.image}
-            alt={product.name}
-            loading="lazy"
-            decoding="async"
-            onError={(e) => {
-              (e.target as HTMLImageElement).src = '/cakes/logo-cake.png';
-            }}
-            onClick={handleImageTap}
-            className={`h-full w-full object-cover transition-transform duration-300 ${
-              zoomed ? 'scale-[1.7]' : 'group-hover:scale-[1.05]'
-            }`}
-          />
-          {/* Scrim for floating price/add legibility */}
-          {!zoomed && (
-            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
-          )}
-          {!zoomed && (
-            <span className="pointer-events-none absolute bottom-2 left-1/2 -translate-x-1/2 flex h-5 w-5 items-center justify-center rounded-full bg-black/35">
-              <ZoomIn className="h-2.5 w-2.5 text-white/85" strokeWidth={2.2} />
-            </span>
-          )}
-
-          {/* Wishlist */}
-          {!zoomed && (
-          <button
-            onClick={handleWish}
-            className="absolute top-2.5 right-2.5 flex h-7 w-7 items-center justify-center rounded-full bg-white/90 backdrop-blur-md transition-all active:scale-90"
-            style={{
-              boxShadow: '0 2px 10px rgba(0,0,0,0.12)',
-              color: wished ? '#E8526A' : 'rgba(28,17,18,0.4)',
-            }}
-            aria-label={wished ? 'Remove from wishlist' : 'Add to wishlist'}
-          >
-            <Heart
-              key={heartKey}
-              className={`h-3 w-3 ${wished ? 'anim-pop' : ''}`}
-              style={{
-                fill: wished ? '#E8526A' : 'none',
-                transition: 'fill 0.2s ease, color 0.2s ease',
-              }}
-              strokeWidth={2}
-            />
-          </button>
-          )}
-
-          {/* Badges */}
-          {!zoomed && (
-          <div className="absolute top-3 left-3 flex flex-col gap-1.5">
-            {product.bestseller && (
-              <span className="badge-premium flex items-center gap-1 rounded-full px-2 py-1 text-[9px] font-bold uppercase tracking-wide">
-                <Award className="h-2.5 w-2.5" strokeWidth={2.5} />
-                Bestseller
-              </span>
-            )}
-            {product.newArrival && (
-              <span
-                className="flex items-center gap-1 rounded-full px-2 py-1 text-[9px] font-bold uppercase tracking-wide text-white"
-                style={{ background: 'linear-gradient(135deg, #EE6279 0%, #DC3E58 100%)' }}
-              >
-                <Sparkles className="h-2.5 w-2.5" strokeWidth={2.5} />
-                New
-              </span>
-            )}
-            {/* Sold count badge */}
-            {product.soldCount && product.soldCount > 0 && (
-              <span className="rounded-full bg-black/50 backdrop-blur-sm px-2 py-0.5 text-[9px] font-bold text-white/90 uppercase tracking-wide">
-                {product.soldCount >= 1000
-                  ? `${(product.soldCount / 1000).toFixed(1)}k+ বিক্রি`
-                  : `${product.soldCount}+ বিক্রি`}
-              </span>
-            )}
-          </div>
-          )}
-
-          {/* Floating price + add — sits directly on the photo, thumb-reachable */}
-          {!zoomed && (
-          <div className="absolute inset-x-3 bottom-3 flex items-center justify-between">
-            <span
-              className="glass-dark rounded-full px-3 py-1.5 font-display text-[15px] font-bold tabular text-white"
-            >
-              {formatINR(product.price)}
-            </span>
-            <AddButton size={34} />
-          </div>
-          )}
-        </div>
-
-        {/* Content — name + rating only, photo now carries price */}
-        <div className="p-4 pt-3">
-          {/* Low stock urgency */}
-          {product.inStock !== false && (product.lowStock || (product.stockCount !== undefined && product.stockCount <= 5)) && (
-            <div className="mb-1.5 flex items-center gap-1">
-              <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-[9.5px] font-bold text-red-500">
-                <span className="h-1.5 w-1.5 rounded-full bg-red-400 animate-pulse inline-block" />
-                {product.stockCount !== undefined && product.stockCount <= 5
-                  ? `মাত্র ${product.stockCount}টি বাকি!`
-                  : 'মাত্র কয়েকটি বাকি!'}
-              </span>
-            </div>
-          )}
-          <div className="flex items-center gap-1.5 text-[11px]">
-            <Star className="h-3 w-3 fill-gold text-gold" />
-            <span className="font-bold text-ink">{product.rating}</span>
-            <span className="text-ink-200">({product.reviews.toLocaleString()})</span>
-          </div>
-          <h3 className="mt-1.5 line-clamp-1 font-display text-[15.5px] font-bold tracking-tight text-ink">
-            {product.name}
-          </h3>
-        </div>
-      </article>
-    );
-  }
+  const isGrid = variant === 'grid';
+  const wrapCls = isGrid
+    ? 'group relative cursor-pointer overflow-hidden rounded-[22px] glass p-2 transition-all duration-200 active:scale-[.97]'
+    : 'group relative flex w-[168px] flex-shrink-0 cursor-pointer flex-col overflow-hidden rounded-[22px] glass p-2 transition-all duration-200 active:scale-[.97]';
 
   return (
-    <article
-      onClick={onOpen}
-      className="group relative flex w-[170px] flex-shrink-0 cursor-pointer flex-col overflow-hidden rounded-3xl glass-strong transition-all duration-200 active:scale-[.97]"
-      style={{ boxShadow: '0 1px 2px rgba(26,19,17,.03), 0 12px 28px -16px rgba(26,19,17,.22)' }}
-    >
-      {/* Occasion accent strip — subtle category cue */}
-      <div className="absolute inset-x-0 top-0 z-10 h-[3px]" style={{ background: occasionAccent(product.occasion) }} />
-
-      {/* Image — taller, more immersive photo */}
-      <div className="relative aspect-[4/5] overflow-hidden">
+    <article onClick={onOpen} className={wrapCls}>
+      <div className="relative aspect-square overflow-hidden rounded-[16px]">
         <img
           src={product.image}
           alt={product.name}
           loading="lazy"
           decoding="async"
-          onError={(e) => {
-            (e.target as HTMLImageElement).src = '/cakes/logo-cake.png';
-          }}
+          onError={(e) => { (e.target as HTMLImageElement).src = '/cakes/logo-cake.png'; }}
           onClick={handleImageTap}
-          className={`h-full w-full object-cover transition-transform duration-300 ${
-            zoomed ? 'scale-[1.7]' : 'group-hover:scale-[1.05]'
-          }`}
+          className={`h-full w-full object-cover transition-transform duration-300 ${zoomed ? 'scale-[1.7]' : 'group-hover:scale-[1.05]'}`}
         />
-        {/* Scrim for floating price/add legibility */}
+        <Badges />
         {!zoomed && (
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
+          <button
+            onClick={handleWish}
+            className="absolute top-2.5 right-2.5 flex h-7 w-7 items-center justify-center rounded-full bg-white/80 backdrop-blur-md transition-all active:scale-90"
+            style={{ color: wished ? '#E8526A' : 'rgba(59,37,48,.4)' }}
+            aria-label={wished ? 'Remove from wishlist' : 'Add to wishlist'}
+          >
+            <Heart key={heartKey} className={`h-3.5 w-3.5 ${wished ? 'anim-pop' : ''}`} style={{ fill: wished ? '#E8526A' : 'none' }} strokeWidth={2} />
+          </button>
         )}
         {!zoomed && (
-          <span className="pointer-events-none absolute bottom-2 left-1/2 -translate-x-1/2 flex h-5 w-5 items-center justify-center rounded-full bg-black/35">
+          <span className="pointer-events-none absolute bottom-2 left-1/2 -translate-x-1/2 flex h-5 w-5 items-center justify-center rounded-full bg-black/30">
             <ZoomIn className="h-2.5 w-2.5 text-white/85" strokeWidth={2.2} />
           </span>
         )}
-
-        {!zoomed && (
-        <button
-          onClick={handleWish}
-          className="absolute top-3 right-3 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 backdrop-blur-md transition-all active:scale-90"
-          style={{
-            boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
-            color: wished ? '#E8526A' : 'rgba(28,17,18,0.4)',
-          }}
-          aria-label={wished ? 'Remove from wishlist' : 'Add to wishlist'}
-        >
-          <Heart
-            key={heartKey}
-            className={`h-3.5 w-3.5 ${wished ? 'anim-pop' : ''}`}
-            style={{
-              fill: wished ? '#E8526A' : 'none',
-              transition: 'fill 0.2s ease, color 0.2s ease',
-            }}
-            strokeWidth={2}
-          />
-        </button>
-        )}
-
-        {!zoomed && (
-        <div className="absolute top-3 left-3 flex flex-col gap-1">
-          {product.bestseller && (
-            <span className="badge-premium rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider">
-              Best
-            </span>
-          )}
-          {product.newArrival && (
-            <span
-              className="rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white"
-              style={{ background: 'linear-gradient(135deg, #EE6279 0%, #DC3E58 100%)' }}
-            >
-              New
-            </span>
-          )}
-        </div>
-        )}
-
-        {/* Floating price + add — sits directly on the photo, thumb-reachable */}
-        {!zoomed && (
-        <div className="absolute inset-x-2.5 bottom-2.5 flex items-center justify-between">
-          <span
-            className="glass-dark rounded-full px-2.5 py-1 font-display text-[13.5px] font-bold tabular text-white"
-          >
-            {formatINR(product.price)}
-          </span>
-          <AddButton size={30} />
-        </div>
-        )}
       </div>
 
-      {/* Content — name + rating only, photo now carries price */}
-      <div className="flex flex-1 flex-col p-3 pt-2.5">
-        {/* Low stock urgency */}
+      <div className="px-1.5 pt-2.5 pb-1">
         {product.inStock !== false && (product.lowStock || (product.stockCount !== undefined && product.stockCount <= 5)) && (
           <div className="mb-1 flex items-center gap-1">
-            <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-1.5 py-0.5 text-[9px] font-bold text-red-500">
+            <span className="inline-flex items-center gap-1 rounded-full bg-red-50/80 px-1.5 py-0.5 text-[9px] font-bold text-red-500">
               <span className="h-1.5 w-1.5 rounded-full bg-red-400 animate-pulse inline-block" />
               {product.stockCount ? `মাত্র ${product.stockCount}টি!` : 'কম বাকি!'}
             </span>
           </div>
         )}
-        <div className="flex items-center gap-1 text-[10px]">
+        <div className="flex items-center gap-1 text-[10.5px]">
           <Star className="h-2.5 w-2.5 fill-gold text-gold" />
           <span className="font-bold text-ink">{product.rating}</span>
           <span className="text-ink-200">({product.reviews.toLocaleString()})</span>
         </div>
-        <h3 className="mt-1 line-clamp-1 font-display text-[14.5px] font-bold tracking-tight text-ink">
-          {product.name}
-        </h3>
+        <h3 className="mt-1 line-clamp-1 font-display text-[15px] font-bold tracking-tight text-ink">{product.name}</h3>
+        <div className="mt-2 flex items-center justify-between">
+          <span className="font-display text-[16px] font-bold tabular text-coral">{formatINR(product.price)}</span>
+          <AddButton size={isGrid ? 32 : 30} />
+        </div>
       </div>
     </article>
   );

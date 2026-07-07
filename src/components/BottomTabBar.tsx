@@ -6,8 +6,8 @@ export default React.memo(function BottomTabBar() {
   const { tab, setTab } = useUI();
 
   const tabs = [
-    { id: 'home'       as const, icon: Home,       label: 'Home'    },
-    { id: 'categories' as const, icon: CakeSlice,  label: 'Cake'    },
+    { id: 'home'       as const, icon: Home,        label: 'Home'    },
+    { id: 'categories' as const, icon: CakeSlice,   label: 'Cake'    },
     { id: 'orders'     as const, icon: ShoppingBag, label: 'Orders'  },
     { id: 'profile'    as const, icon: User,        label: 'Profile' },
   ];
@@ -17,25 +17,20 @@ export default React.memo(function BottomTabBar() {
   return (
     <nav
       className="fixed bottom-0 left-0 right-0 z-[100]"
-      style={{
-        paddingBottom: 'env(safe-area-inset-bottom)',
-        transform: 'translateZ(0)',
-        willChange: 'transform',
-      }}
+      style={{ paddingBottom: 'env(safe-area-inset-bottom)', transform: 'translateZ(0)', willChange: 'transform' }}
     >
-      {/* Floating detached pill — fully opaque, zero alpha (070426 regression: 0.78 alpha
-          at the bottom edge let high-contrast product cards bleed through; fixed to 100%
-          opaque so this can't happen regardless of what scrolls underneath). */}
+      {/* Frosted pill. Strong .72-alpha white + blur (NOT the old .78 bleed regression):
+          high opacity keeps contrast safe while still showing the pink canvas softly. */}
       <div
         className="relative mx-4 mb-3 rounded-3xl p-2"
         style={{
-          background: 'linear-gradient(180deg, #FFFFFF 0%, #FFF8FA 100%)',
-          border: '0.5px solid rgba(255,255,255,0.9)',
-          boxShadow:
-            'inset 0 1px 0 rgba(255,255,255,0.9), 0 18px 34px -18px rgba(74,27,12,0.35), 0 4px 12px -6px rgba(74,27,12,0.15)',
+          background: 'rgba(255,255,255,0.72)',
+          WebkitBackdropFilter: 'blur(22px)',
+          backdropFilter: 'blur(22px)',
+          border: '1px solid rgba(255,255,255,0.85)',
+          boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.7), 0 14px 34px -16px rgba(138,74,102,0.4)',
         }}
       >
-        {/* Sliding active indicator — matches approved mockup proportions exactly */}
         <div
           className="absolute top-2 left-2 rounded-[18px] transition-transform duration-300 ease-out pointer-events-none"
           style={{
@@ -43,12 +38,10 @@ export default React.memo(function BottomTabBar() {
             height: 'calc(100% - 16px)',
             transform: `translate3d(${activeIndex * 100}%, 0, 0)`,
             willChange: 'transform',
-            background:
-              'radial-gradient(circle at 50% 20%, rgba(232,82,106,0.16), rgba(232,82,106,0.06))',
+            background: 'radial-gradient(circle at 50% 20%, rgba(232,82,106,0.18), rgba(232,82,106,0.06))',
             transitionTimingFunction: 'cubic-bezier(.34,1.56,.64,1)',
           }}
         />
-
         <div className="relative flex items-end justify-around h-[52px]">
           {tabs.map((t, i) => {
             const Icon = t.icon;
@@ -63,7 +56,7 @@ export default React.memo(function BottomTabBar() {
                 <Icon
                   className="h-[21px] w-[21px] transition-all duration-300"
                   style={{
-                    color: active ? '#E8526A' : '#9A8E8E',
+                    color: active ? '#E8526A' : '#9C8791',
                     transform: active ? 'translate3d(0,-5px,0)' : 'translate3d(0,0,0)',
                     willChange: 'transform',
                     filter: active ? 'drop-shadow(0 6px 10px rgba(232,82,106,0.45))' : 'none',
@@ -71,10 +64,7 @@ export default React.memo(function BottomTabBar() {
                   }}
                   strokeWidth={active ? 2.4 : 1.6}
                 />
-                <span
-                  className="text-[10px] font-semibold leading-none transition-colors duration-200"
-                  style={{ color: active ? '#E8526A' : '#9A8E8E' }}
-                >
+                <span className="text-[10px] font-semibold leading-none transition-colors duration-200" style={{ color: active ? '#E8526A' : '#9C8791' }}>
                   {t.label}
                 </span>
               </button>

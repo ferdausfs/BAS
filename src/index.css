@@ -397,3 +397,60 @@ button { -webkit-tap-highlight-color: transparent; }
 .anim-confetti {
   animation: confetti-fall linear forwards;
 }
+
+/* ═══════════════════════════════════════════════════════════
+   LUXURY GLASS LAYER (2026-07-07) — soft pink canvas + real frosted glass.
+   Appended so it overrides the earlier opaque .glass-* defs. Single source
+   of truth for the redesign; every screen inherits this.
+   ═══════════════════════════════════════════════════════════ */
+
+:root{
+  /* softer, pinker luxury palette (ink warms toward plum) */
+  --color-cream:  #FCE3EC;
+  --color-ink:     #3B2530;
+  --color-ink-200: #9C8791;
+  --color-ink-300: #6E5560;
+
+  /* frosted-glass surface tokens */
+  --glass:        rgba(255,255,255,.55);
+  --glass-strong: rgba(255,255,255,.72);
+  --glass-line:   rgba(255,255,255,.85);
+  --glass-shadow: 0 10px 34px -14px rgba(138,74,102,.3);
+}
+
+/* full-screen soft-pink gradient base (was flat #F4EDE7) */
+html, body{
+  background:
+    radial-gradient(ellipse at 15% 0%,  #f6e6df 0%, transparent 45%),
+    radial-gradient(ellipse at 90% 100%,#f2dfe6 0%, transparent 40%),
+    linear-gradient(165deg,#FFF1F4 0%,#FCE3EC 42%,#F6D9E4 100%);
+  background-attachment: fixed;
+}
+
+/* fixed gradient canvas + blurred glow orbs (rendered by App.tsx) */
+.lux-canvas{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;
+  background:linear-gradient(165deg,#FFF1F4 0%,#FCE3EC 42%,#F6D9E4 100%);}
+.lux-orb{position:absolute;border-radius:9999px;filter:blur(34px)}
+.lux-orb.a{width:190px;height:190px;background:#FFB3C9;opacity:.55;top:-40px;right:-30px}
+.lux-orb.b{width:160px;height:160px;background:#E9A6C7;opacity:.40;bottom:12%;left:-46px}
+.lux-orb.c{width:130px;height:130px;background:#FFD0A6;opacity:.35;top:42%;right:-34px}
+
+/* real frosted glass — same class names, now actually translucent + blurred */
+.glass-strong{
+  background:var(--glass-strong);
+  -webkit-backdrop-filter:blur(22px);backdrop-filter:blur(22px);
+  border:1px solid var(--glass-line);
+  box-shadow:var(--glass-shadow), inset 0 1px 1px rgba(255,255,255,.7);
+}
+.glass, .glass-subtle{
+  background:var(--glass);
+  -webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);
+  border:1px solid var(--glass-line);
+  box-shadow:0 8px 30px -12px rgba(138,74,102,.26), inset 0 1px 1px rgba(255,255,255,.6);
+}
+.glass-deep{
+  background:var(--glass-strong);
+  -webkit-backdrop-filter:blur(24px);backdrop-filter:blur(24px);
+  border-top:1px solid var(--glass-line);
+  box-shadow:0 -12px 40px -12px rgba(138,74,102,.28), inset 0 1px 1px rgba(255,255,255,.7);
+}
