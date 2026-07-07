@@ -1,16 +1,18 @@
 import { X, Bell, CheckCheck } from 'lucide-react';
 import { useUI } from '../lib/store';
 import { useModalDepth } from '../hooks/useModalDepth';
+import { useSheetTransition } from '../hooks/useSheetTransition';
 
 export default function NotificationsSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { notifications, markAllRead } = useUI();
 
-  useModalDepth(open);
+  const { mounted, closing } = useSheetTransition(open);
+  useModalDepth(mounted);
 
-  if (!open) return null;
+  if (!mounted) return null;
 
   return (
-    <div className="absolute inset-0 z-[65] flex items-end justify-center anim-fade">
+    <div className={`absolute inset-0 z-[65] flex items-end justify-center ${closing ? 'anim-fade-out' : 'anim-fade'}`}>
       <button
         type="button"
         aria-label="Close notifications"
@@ -18,7 +20,7 @@ export default function NotificationsSheet({ open, onClose }: { open: boolean; o
         onClick={onClose}
       />
       <div
-        className="relative max-h-[76%] w-full overflow-hidden rounded-t-[28px] glass-strong anim-up"
+        className={`relative max-h-[76%] w-full overflow-hidden rounded-t-[28px] glass-strong ${closing ? 'anim-down' : 'anim-up'}`}
         style={{ boxShadow: '0 -20px 60px -20px rgba(26,19,17,.25)' }}
       >
         <header className="flex items-center justify-between glass-subtle px-5 py-4">

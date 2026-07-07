@@ -1,6 +1,7 @@
 import { X, Wallet, Users, Gift, ArrowDownLeft, RefreshCw } from 'lucide-react';
 import { useWallet, type WalletTx } from '../lib/store';
 import { useModalDepth } from '../hooks/useModalDepth';
+import { useSheetTransition } from '../hooks/useSheetTransition';
 
 interface Props {
   open: boolean;
@@ -62,12 +63,13 @@ function formatDate(ts: number): string {
 export default function WalletHistoryModal({ open, onClose }: Props) {
   const { balance, totalEarned, txns } = useWallet();
 
-  useModalDepth(open);
+  const { mounted, closing } = useSheetTransition(open);
+  useModalDepth(mounted);
 
-  if (!open) return null;
+  if (!mounted) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-white flex flex-col">
+    <div className={`fixed inset-0 z-50 bg-white flex flex-col ${closing ? 'anim-right-out' : 'anim-right'}`}>
       {/* Header */}
       <header className="flex-shrink-0 flex items-center justify-between px-5 pt-4 pb-3 border-b border-ink/5">
         <h1 className="font-display text-[18px] font-bold tracking-tight text-ink">Wallet History</h1>

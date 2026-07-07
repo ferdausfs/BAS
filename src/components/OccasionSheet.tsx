@@ -3,6 +3,7 @@ import { categories } from '../lib/data';
 import type { Category } from '../types';
 import OccasionIcon from './OccasionIcon';
 import { useModalDepth } from '../hooks/useModalDepth';
+import { useSheetTransition } from '../hooks/useSheetTransition';
 
 type Props = {
   open: boolean;
@@ -14,12 +15,13 @@ type Props = {
 };
 
 export default function OccasionSheet({ open, onClose, onSelect }: Props) {
-  useModalDepth(open);
+  const { mounted, closing } = useSheetTransition(open);
+  useModalDepth(mounted);
 
-  if (!open) return null;
+  if (!mounted) return null;
 
   return (
-    <div className="absolute inset-0 z-[65] flex items-end justify-center anim-fade">
+    <div className={`absolute inset-0 z-[65] flex items-end justify-center ${closing ? 'anim-fade-out' : 'anim-fade'}`}>
       <button
         type="button"
         aria-label="Close occasions"
@@ -27,7 +29,7 @@ export default function OccasionSheet({ open, onClose, onSelect }: Props) {
         onClick={onClose}
       />
       <div
-        className="relative max-h-[72%] w-full overflow-hidden rounded-t-[28px] glass-strong anim-up"
+        className={`relative max-h-[72%] w-full overflow-hidden rounded-t-[28px] glass-strong ${closing ? 'anim-down' : 'anim-up'}`}
         style={{ boxShadow: '0 -20px 60px -20px rgba(26,19,17,.25)' }}
       >
         <header className="flex items-center justify-between glass-subtle px-5 py-4">

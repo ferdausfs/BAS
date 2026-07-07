@@ -1,5 +1,48 @@
 # Agent Log — BAS (Bake Art Style 2)
 
+## Session: 2026-07-07 (Site-wide animation system — Phase 1 + 2)
+**Agent/Tool:** Claude (claude.ai)
+**Feature worked on:** Implementing both approved phases from `tasks/review-animation-system-070726.md` together — (1) unify entrance-animation easing with the existing spring/tap feel, (2) give every sheet/modal a real close (exit) animation instead of instant unmount.
+
+### কী হয়েছে:
+
+**Phase 1 — `src/index.css`:**
+- Added 3 shared easing tokens to `:root`: `--ease-premium` (`cubic-bezier(.16,1,.3,1)` — smooth weighty decel, no overshoot), `--ease-spring` (`cubic-bezier(.34,1.56,.64,1)` — same character as the occasion-chip tap animation), `--ease-exit` (`cubic-bezier(.4,0,1,1)` — accelerating, for closes).
+- `.anim-up`, `.anim-rise`, `.anim-right` now use `var(--ease-premium)` instead of the old flat `cubic-bezier(.22,.7,.22,1)`.
+- `.anim-scale` now uses `var(--ease-spring)` (small pop-in elements get the same bounce character as chip taps).
+- `.anim-fade` left untouched (pure opacity fades don't benefit from a directional curve change).
+- New exit keyframes + classes: `fadeOut`/`.anim-fade-out`, `slideDown`/`.anim-down`, `slideOutRight`/`.anim-right-out` — all `var(--ease-exit)`, shorter duration (~0.2-0.22s) than their entrance counterparts (close feels snappier than open, standard premium-UI convention).
+
+**Phase 2 — new hook + 4 components:**
+- **`src/hooks/useSheetTransition.ts`** (নতুন) — `{ mounted, closing }` returns; keeps a sheet mounted for ~220ms after `open` flips false so the exit animation can actually play, then unmounts. One shared hook, reused everywhere instead of duplicating the same timeout logic 4 times.
+- **`src/components/OccasionSheet.tsx`**, **`NotificationsSheet.tsx`**, **`AuthSheet.tsx`** — swapped `useModalDepth(open)` + `if (!open) return null` → `useSheetTransition(open)` + `useModalDepth(mounted)` + `if (!mounted) return null`; backdrop/sheet className now conditionally swaps `anim-fade`/`anim-up` → `anim-fade-out`/`anim-down` while `closing`. `AuthSheet.tsx` has two separate return branches (logged-in view vs signin/signup view) — both updated identically.
+- **`src/components/WalletHistoryModal.tsx`** — this one previously had **zero** animation at all (neither open nor close). Since it's a full-screen "drill-down" page rather than a bottom sheet, gave it the already-defined-but-unused `.anim-right` (slide-in from right) / new `.anim-right-out` (slide-out to right) pair instead of the up/down treatment — matches its full-screen-push feel better than a bottom-sheet slide would.
+
+### Build verify:
+- `tsc --noEmit`: 162 (unchanged — no new errors in any touched/new file)
+- `npm run build`: `✓ built in 10.12s`
+
+### Touched files:
+- `src/index.css`
+- `src/hooks/useSheetTransition.ts` (new)
+- `src/components/OccasionSheet.tsx`
+- `src/components/NotificationsSheet.tsx`
+- `src/components/AuthSheet.tsx`
+- `src/components/WalletHistoryModal.tsx`
+- `tasks/review-animation-system-070726.md` (review report, no code)
+
+### Commit:
+- (pending — user local এ ZIP apply করে push করবে)
+
+### এখনো Pending:
+- Check 3 from the review (screen/tab transition is a flat fade only, `App.tsx` line 97) — flagged as low-priority/optional, not touched this session. Separate session if wanted.
+- `AuthSheet.tsx`'s form-reset effect (`useEffect(() => { if (!open) reset(); }, [open])`) still fires the instant the sheet starts closing, so form fields clear while the ~220ms close animation is still playing. Not fixed — very minor, flagging for awareness only, not actionable without a product decision on whether that's even undesired.
+
+### পরবর্তী Agent এর জন্য নোট:
+- Any new sheet/modal going forward should use `useSheetTransition` from the start (see `OccasionSheet.tsx` for the shortest example) instead of the old `if (!open) return null` pattern — keeps the exit-animation behavior consistent app-wide.
+
+---
+
 ## Session: 2026-07-07 (Concept A — occasion → search popup + bigger banner)
 **Agent/Tool:** Claude (claude.ai)
 **Feature worked on:** Implementing the previously-reviewed Concept A (checks A1–A5 in `tasks/review-occasion-popup-and-card-contrast-070726.md`) — moved the inline occasion chip row into a bottom-sheet triggered from inside the search bar, and enlarged the banner into the freed-up space.
