@@ -61,3 +61,22 @@ Approved direction from AGENT_LOG.md 07-07 session, refined after review + user 
 - [ ] ZIP only touched files, unique filename
 
 ## Review (fill in after implementation)
+
+---
+
+# Follow-up: "still feels flat" fix (2026-07-07, same day)
+
+User feedback after the color pass: page overall still felt flat despite the
+new per-category colors. Root cause: occasion chips were the only element on
+the page with zero depth (flat solid color square, no shadow/gradient/border)
+while everything else (search bar, cards, banner) already has layered shadows.
+
+## Fix
+- `src/screens/HomeScreen.tsx` — occasion chip background changed from flat
+  `c.color` to a subtle gradient (`c.color` → white) + tinted layered box-shadow
+  (using `c.fg` at low alpha) + hairline border, active state gets a stronger
+  tinted shadow. No layout/behavior change, purely visual depth.
+
+## Verify
+- `tsc --noEmit`: 162 (unchanged)
+- `npm run build`: `✓ built in 9.84s`

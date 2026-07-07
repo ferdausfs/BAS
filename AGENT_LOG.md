@@ -7,6 +7,35 @@
 
 ---
 
+## Session: 2026-07-07 (follow-up — "still feels flat" after color pass)
+**Agent/Tool:** Claude (claude.ai)
+**Feature worked on:** Same-day follow-up. User sent a screenshot after applying the color-pass ZIP and said the page still felt flat overall (not any single specific area — picked "পুরো page-টাই overall flat লাগছে" when asked to narrow down).
+
+### Root cause:
+Occasion chips (`HomeScreen.tsx` occasion row) were the only visible element with **zero depth** — flat solid `c.color` square, no shadow, no gradient, no border — while every other surface on the page (SearchBar, `.glass-strong` cards, banner) already carries a layered shadow treatment. Adding 5 distinct hues didn't fix "premium feel" because the actual visual language gap was depth, not hue count.
+
+### Fix:
+- `src/screens/HomeScreen.tsx` — occasion chip background: flat `c.color` → `linear-gradient(160deg, c.color 0%, #FFFFFF 130%)` + tinted layered `box-shadow` (built from `c.fg` at low alpha, stronger when active/tapped) + 1px hairline border (`c.fg` at ~12% alpha). Same size/position/tap-lift animation — purely a depth/material change, no layout or behavior touched.
+
+### Lesson captured (`tasks/lessons.md`):
+"Premium" feedback after a color-only pass usually means depth is missing, not more hues — check the flat element's CSS against a working reference (`.glass-strong`, SearchBar's `shadow-[...]`) before adding color.
+
+### Build verify:
+- `tsc --noEmit`: 162 (unchanged, pre-existing only)
+- `npm run build`: `✓ built in 9.84s`
+
+### Touched files:
+- `src/screens/HomeScreen.tsx`
+- `tasks/todo.md`, `tasks/lessons.md` (session log only)
+
+### Commit:
+- (pending — user local এ ZIP apply করে push করবে)
+
+### এখনো Pending:
+- Reorder card (ticket-stub) didn't appear in the user's screenshot at all — likely no past order on that account/session, so that specific premium touch is currently unverified in the wild. Not actionable without a real order to test against; flagging for awareness only.
+
+---
+
 ## Session: 2026-07-07 (Home screen premium color pass — implemented)
 **Agent/Tool:** Claude (claude.ai)
 **Feature worked on:** Implementing the previous planning session's approved plan (Occasion category color-coding, reorder card ticket-stub, banner wax-seal, product-card accent).

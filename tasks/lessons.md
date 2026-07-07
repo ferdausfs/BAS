@@ -47,3 +47,13 @@ competing header elements (carried over from prior sessions).
 ## cart vs checkout routes
 The `cart` route leads to the "My Cart" review page, while `checkout` leads
 to the final payment page — these are distinct and must not be conflated.
+
+## "Premium" feedback = depth, not just hue variety
+When user says a screen "still doesn't feel premium" after a color-differentiation
+pass, don't assume more/different hues are the fix. Check whether the element in
+question actually has shadow/gradient/border depth like the rest of the app's
+`glass-strong`/`shadow-*` treatment — a flat solid-color square (no shadow, no
+gradient, no border) will read as flat regardless of how many distinct hues it
+uses. Compare the flat element's CSS against a working reference (e.g. SearchBar's
+`shadow-[...]`, `.glass-strong`'s layered box-shadow + gradient) before proposing
+a new color-only fix.

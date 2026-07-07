@@ -226,11 +226,15 @@ export default function HomeScreen({
                 className="flex flex-shrink-0 flex-col items-center gap-1.5"
               >
                 <div
-                  className="flex items-center justify-center rounded-2xl transition-transform duration-300"
+                  className="flex items-center justify-center rounded-2xl transition-all duration-300"
                   style={{
                     width: 52,
                     height: 52,
-                    background: c.color,
+                    background: `linear-gradient(160deg, ${c.color} 0%, #FFFFFF 130%)`,
+                    border: `1px solid ${c.fg}1F`,
+                    boxShadow: active
+                      ? `0 6px 16px -5px ${c.fg}66, inset 0 1px 0 rgba(255,255,255,.8)`
+                      : `0 1px 2px rgba(26,19,17,.03), 0 4px 10px -5px ${c.fg}40, inset 0 1px 0 rgba(255,255,255,.8)`,
                     transform: active ? 'translate3d(0,-4px,0) scale(.92)' : 'translate3d(0,0,0)',
                     transitionTimingFunction: 'cubic-bezier(.34,1.56,.64,1)',
                   }}
