@@ -1,5 +1,36 @@
 # Agent Log — BAS (Bake Art Style 2)
 
+## Session: 2026-07-07 (Concept B — background canvas color + product card depth)
+**Agent/Tool:** Claude (claude.ai)
+**Feature worked on:** User proposed two ideas: (A) move occasion row into a search-bar popup + enlarge banner, (B) product cards "না দেখা যাওয়া" (poor visual contrast) + trying a different background color. Both reviewed together in one report; user approved via "reviews tumi koro" and asked for a background-color opinion — this session implements **Concept B only** (Concept A — search popup — still pending, separate session).
+
+### Root cause (from review):
+`.glass-strong` card background (`#FFFFFF`→`#FFF8FA`) and page canvas (`--color-cream: #F9F9F7`) were nearly identical near-white tones, so ProductCard edges disappeared into the page — especially in the "Popular this week" row which has no `.mesh-warm` backdrop behind it. ProductCard also had no extra inline shadow (unlike the reorder ticket-stub card, which does and looks fine).
+
+### কী হয়েছে:
+1. **`src/index.css`** — `--color-cream` token `#F9F9F7` → `#F4EDE7` (warm linen, deliberately a shade deeper so white cards read as raised surfaces). Updated the 3 other hardcoded `#F9F9F7` spots that needed to match: `:root` background, `html, body` background, and `.mesh-warm`'s gradient fallback base.
+2. **`src/components/ProductCard.tsx`** — added an explicit inline `boxShadow` to both the `grid` variant article and the horizontal (`Popular this week`) variant article — same treatment style as the reorder card (`HomeScreen.tsx` line ~483), scaled down slightly for these smaller cards. No layout, badge, or behavior changes.
+
+### Build verify:
+- `npm run build`: `✓ built in 10.08s`
+
+### Touched files:
+- `src/index.css`
+- `src/components/ProductCard.tsx`
+- `tasks/review-occasion-popup-and-card-contrast-070726.md` (review report, no code)
+
+### Commit:
+- (pending — user local এ ZIP apply করে push করবে)
+
+### এখনো Pending:
+- **Concept A (occasion → search popup + bigger banner)** — reviewed (see `tasks/review-occasion-popup-and-card-contrast-070726.md`, checks A1-A5) but not yet fixed. Needs: new prop on `SearchBar.tsx` for a trigger button, a new bottom-sheet component reusing the `NotificationsSheet.tsx` pattern, and a decision on exact new banner height once the occasion row is removed from the main flow.
+- Since `bg-cream` is used in ~50+ places app-wide (inputs, modals, chat bubbles), the canvas change is global by design — user should eyeball a few other screens (AdminPanel forms, ChatBot) after applying, in case the deeper tone needs a touch more contrast tuning against `border-ink/10` inputs.
+
+### পরবর্তী Agent এর জন্য নোট:
+- New canvas hex is `#F4EDE7` — if user wants it lighter/darker later, this is the single token to change (`src/index.css` line ~23), it cascades everywhere via `--color-cream`.
+
+---
+
 **Repo:** https://github.com/ferdausfs/BAS
 **Stack:** React 19 + TypeScript + Tailwind v4 + Vite + Zustand + Firebase/Firestore
 **Deploy:** Cloudflare Pages — https://bas.umuhammadiswa.workers.dev

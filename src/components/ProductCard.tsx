@@ -87,6 +87,7 @@ export default function ProductCard({ product, wished, onOpen, onWish, variant =
       <article
         onClick={onOpen}
         className="group relative cursor-pointer overflow-hidden rounded-3xl glass-strong transition-all duration-200 active:scale-[.97]"
+        style={{ boxShadow: '0 1px 2px rgba(26,19,17,.03), 0 14px 32px -18px rgba(26,19,17,.22)' }}
       >
         {/* Occasion accent strip — subtle category cue */}
         <div className="absolute inset-x-0 top-0 z-10 h-[3px]" style={{ background: occasionAccent(product.occasion) }} />
@@ -211,6 +212,7 @@ export default function ProductCard({ product, wished, onOpen, onWish, variant =
     <article
       onClick={onOpen}
       className="group relative flex w-[170px] flex-shrink-0 cursor-pointer flex-col overflow-hidden rounded-3xl glass-strong transition-all duration-200 active:scale-[.97]"
+      style={{ boxShadow: '0 1px 2px rgba(26,19,17,.03), 0 12px 28px -16px rgba(26,19,17,.22)' }}
     >
       {/* Occasion accent strip — subtle category cue */}
       <div className="absolute inset-x-0 top-0 z-10 h-[3px]" style={{ background: occasionAccent(product.occasion) }} />

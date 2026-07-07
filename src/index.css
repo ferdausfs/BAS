@@ -19,8 +19,10 @@
   --color-blush-200: #FFCCD5;
   --color-blush-300: #FFAAB9;
 
-  /* === Canvas (near-white, barely warm — NOT cream, NOT stark white) === */
-  --color-cream:  #F9F9F7;
+  /* === Canvas — warm linen tone, deliberately a shade deeper than card
+     white so glass-strong cards read as raised surfaces instead of
+     blending into the page. === */
+  --color-cream:  #F4EDE7;
   --color-paper:  #FFFFFF;
 
   /* === Ink (warmer near-black) === */
@@ -52,7 +54,7 @@
 :root {
   font-family: "Inter", "Hind Siliguri", system-ui, -apple-system, sans-serif;
   color: #1C1112;
-  background: #F9F9F7;
+  background: #F4EDE7;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
@@ -62,7 +64,7 @@
 html, body {
   margin: 0;
   padding: 0;
-  background: #F9F9F7;
+  background: #F4EDE7;
   overflow-x: hidden;
 }
 
@@ -265,7 +267,7 @@ button { -webkit-tap-highlight-color: transparent; }
     radial-gradient(ellipse at 82% 82%, #FFCCD5 0%, transparent 35%),
     radial-gradient(ellipse at 55% 45%, rgba(200,148,74,0.12) 0%, transparent 38%),
     radial-gradient(ellipse at 8%  75%, #FFE4E9 0%, transparent 28%),
-    #F9F9F7;
+    #F4EDE7;
 }
 
 /* ===== Gradient text ===== */
