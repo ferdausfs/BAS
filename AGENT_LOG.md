@@ -1,5 +1,38 @@
 # Agent Log — BAS (Bake Art Style 2)
 
+## Session: 2026-07-07 (Concept A — occasion → search popup + bigger banner)
+**Agent/Tool:** Claude (claude.ai)
+**Feature worked on:** Implementing the previously-reviewed Concept A (checks A1–A5 in `tasks/review-occasion-popup-and-card-contrast-070726.md`) — moved the inline occasion chip row into a bottom-sheet triggered from inside the search bar, and enlarged the banner into the freed-up space.
+
+### কী হয়েছে:
+1. **`src/components/OccasionSheet.tsx`** (নতুন file) — bottom-sheet, `NotificationsSheet.tsx`-এর একই shell pattern (glass-strong, `useModalDepth`, backdrop button) reuse করে। 3-column grid-এ সব occasion category চিপ দেখায়, একই color/gradient/icon treatment যা আগে inline row-এ ছিল। `onSelect(c, btn)` prop — signature হুবহু `HomeScreen`-এর `openOccasion(c, btn)`-এর মতো, তাই zoom-transition অপরিবর্তিত কাজ করে (button-এর rect click মুহূর্তেই capture হয়, sheet বন্ধ হওয়ার আগেই — `OccasionZoomOverlay` app-root-এ `z-[200]`-এ থাকে, sheet-এর `z-[65]`-এর অনেক উপরে, তাই sheet বন্ধ হলেও zoom animation-এ কোনো visual glitch হয় না)।
+2. **`src/components/SearchBar.tsx`** — নতুন optional prop `onOpenOccasions`। Input-এ কিছু না থাকলে right slot-এ একটা `LayoutGrid` icon button দেখায় (coral/blush-100), typing শুরু হলে সেটা clear (X) button দিয়ে swap হয়ে যায় — একই slot reuse, নতুন layout shift নাই।
+3. **`src/screens/HomeScreen.tsx`**:
+   - Inline occasion row (আগে line ~219-263) সরানো হয়েছে — এখন `<OccasionSheet open={occasionSheetOpen} onClose={...} onSelect={openOccasion} />` render হয় শুধু।
+   - `occasionSheetOpen` state যোগ, `SearchBar`-এ `onOpenOccasions={() => setOccasionSheetOpen(true)}` pass করা হয়েছে।
+   - Banner: `aspect-[2.5/1]` → `aspect-[1.7/1]` (উল্লেখযোগ্য বড়), top margin `mt-5` → `mt-4`।
+   - Unused `OccasionIcon` import সরানো হয়েছে (শুধু inline row-এই ব্যবহার হতো, এখন `OccasionSheet.tsx`-এর নিজের import)।
+
+### Build verify:
+- `tsc --noEmit`: 162 (touch করা আগের session-এর মতোই, নতুন কোনো error নেই — `OccasionSheet.tsx`/`SearchBar.tsx`-এ zero error)
+- `npm run build`: `✓ built in 7.32s`
+
+### Touched files:
+- `src/components/OccasionSheet.tsx` (new)
+- `src/components/SearchBar.tsx`
+- `src/screens/HomeScreen.tsx`
+
+### Commit:
+- (pending — user local এ ZIP apply করে push করবে)
+
+### এখনো Pending:
+- কিছুই urgent না। Sheet-এর grid columns (3) বা icon size — user actual device-এ দেখে ছোট/বড় adjust চাইলে জানাবে।
+
+### পরবর্তী Agent এর জন্য নোট:
+- Occasion zoom-transition (`openOccasion` in `HomeScreen.tsx`) এখনো `HomeScreen`-এই থাকে, `OccasionSheet` শুধু trigger — state/logic duplicate করা হয়নি।
+
+---
+
 ## Session: 2026-07-07 (Concept B — background canvas color + product card depth)
 **Agent/Tool:** Claude (claude.ai)
 **Feature worked on:** User proposed two ideas: (A) move occasion row into a search-bar popup + enlarge banner, (B) product cards "না দেখা যাওয়া" (poor visual contrast) + trying a different background color. Both reviewed together in one report; user approved via "reviews tumi koro" and asked for a background-color opinion — this session implements **Concept B only** (Concept A — search popup — still pending, separate session).

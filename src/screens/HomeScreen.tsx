@@ -10,7 +10,7 @@ import SearchBar from '../components/SearchBar';
 import ProductCard from '../components/ProductCard';
 import SectionHeader from '../components/SectionHeader';
 import BrandLogo from '../components/BrandLogo';
-import OccasionIcon from '../components/OccasionIcon';
+import OccasionSheet from '../components/OccasionSheet';
 import { useModalDepth } from '../hooks/useModalDepth';
 import type { Banner, SpecialDate } from '../types';
 
@@ -48,6 +48,7 @@ export default function HomeScreen({
 
   const [bannerIdx, setBannerIdx] = useState(0);
   const [pressedOccasion, setPressedOccasion] = useState<string | null>(null);
+  const [occasionSheetOpen, setOccasionSheetOpen] = useState(false);
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebounce(search, 300);
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -212,55 +213,16 @@ export default function HomeScreen({
               suggestions={suggestions}
               recentSearches={recentSearches}
               onClearRecent={clearRecent}
+              onOpenOccasions={() => setOccasionSheetOpen(true)}
             />
           </div>
         </div>
 
-        <div className="no-scrollbar -mt-1 flex gap-3 overflow-x-auto px-5 pb-1 anim-up delay-1">
-          {categories.map((c) => {
-            const active = pressedOccasion === c.id;
-            return (
-              <button
-                key={c.id}
-                onClick={(e) => openOccasion(c, e.currentTarget)}
-                className="flex flex-shrink-0 flex-col items-center gap-1.5"
-              >
-                <div
-                  className="flex items-center justify-center rounded-2xl transition-all duration-300"
-                  style={{
-                    width: 52,
-                    height: 52,
-                    background: `linear-gradient(160deg, ${c.color} 0%, #FFFFFF 130%)`,
-                    border: `1px solid ${c.fg}1F`,
-                    boxShadow: active
-                      ? `0 6px 16px -5px ${c.fg}66, inset 0 1px 0 rgba(255,255,255,.8)`
-                      : `0 1px 2px rgba(26,19,17,.03), 0 4px 10px -5px ${c.fg}40, inset 0 1px 0 rgba(255,255,255,.8)`,
-                    transform: active ? 'translate3d(0,-4px,0) scale(.92)' : 'translate3d(0,0,0)',
-                    transitionTimingFunction: 'cubic-bezier(.34,1.56,.64,1)',
-                  }}
-                >
-                  <OccasionIcon
-                    id={c.id}
-                    size={22}
-                    className="transition-all duration-300"
-                    style={{
-                      color: c.fg,
-                      filter: active ? `drop-shadow(0 4px 8px ${c.fg}73)` : 'none',
-                      transform: active ? 'scale(1.08)' : 'scale(1)',
-                      transitionTimingFunction: 'cubic-bezier(.34,1.56,.64,1)',
-                    }}
-                  />
-                </div>
-                <span
-                  className="text-[10px] font-semibold transition-colors duration-200"
-                  style={{ color: c.fg }}
-                >
-                  {c.name}
-                </span>
-              </button>
-            );
-          })}
-        </div>
+        <OccasionSheet
+          open={occasionSheetOpen}
+          onClose={() => setOccasionSheetOpen(false)}
+          onSelect={(c, btn) => openOccasion(c, btn)}
+        />
 
         {!user && (
           <div
@@ -305,7 +267,7 @@ export default function HomeScreen({
         )}
 
         {!search.trim() && activeBanners.length > 0 && (
-          <div className="mt-5 px-5 anim-up delay-1">
+          <div className="mt-4 px-5 anim-up delay-1">
             <div
               className="relative overflow-hidden rounded-[28px] bg-white"
               style={{ boxShadow: '0 1px 2px rgba(26,19,17,.03), 0 18px 50px -28px rgba(26,19,17,.18)' }}
@@ -322,7 +284,7 @@ export default function HomeScreen({
                 <span className="text-[8px] font-extrabold tracking-tight">2018</span>
               </div>
 
-              <div className="relative aspect-[2.5/1] w-full overflow-hidden">
+              <div className="relative aspect-[1.7/1] w-full overflow-hidden">
                 {activeBanners.map((b, i) => (
                   <div
                     key={b.id}
