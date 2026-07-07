@@ -1,7 +1,13 @@
 import { useState } from 'react';
 import { Heart, Plus, Star, Check, Award, Sparkles, ZoomIn } from 'lucide-react';
 import { useCart, formatINR } from '../lib/store';
+import { categories } from '../lib/data';
 import type { Product } from '../types';
+
+// Thin per-occasion accent color — subtle category cue, doesn't touch the
+// Best/New badge system (those stay gold/coral as-is).
+const occasionAccent = (occasion?: string) =>
+  categories.find((c) => c.id === occasion)?.fg ?? '#E8526A';
 
 type Props = {
   product: Product;
@@ -82,6 +88,9 @@ export default function ProductCard({ product, wished, onOpen, onWish, variant =
         onClick={onOpen}
         className="group relative cursor-pointer overflow-hidden rounded-3xl glass-strong transition-all duration-200 active:scale-[.97]"
       >
+        {/* Occasion accent strip — subtle category cue */}
+        <div className="absolute inset-x-0 top-0 z-10 h-[3px]" style={{ background: occasionAccent(product.occasion) }} />
+
         {/* Image — taller, more immersive photo */}
         <div className="relative aspect-[4/5] overflow-hidden">
           <img
@@ -203,6 +212,9 @@ export default function ProductCard({ product, wished, onOpen, onWish, variant =
       onClick={onOpen}
       className="group relative flex w-[170px] flex-shrink-0 cursor-pointer flex-col overflow-hidden rounded-3xl glass-strong transition-all duration-200 active:scale-[.97]"
     >
+      {/* Occasion accent strip — subtle category cue */}
+      <div className="absolute inset-x-0 top-0 z-10 h-[3px]" style={{ background: occasionAccent(product.occasion) }} />
+
       {/* Image — taller, more immersive photo */}
       <div className="relative aspect-[4/5] overflow-hidden">
         <img

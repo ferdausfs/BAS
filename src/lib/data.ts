@@ -1,11 +1,11 @@
 import type { Product, Category, Banner } from '../types';
 
 export const categories: Category[] = [
-  { id: 'birthday',    name: 'Birthday',    icon: 'cake', color: '#FFE2E7' },
-  { id: 'anniversary', name: 'Anniversary', icon: 'heart', color: '#FFE2E7' },
-  { id: 'wedding',     name: 'Wedding',     icon: 'heart', color: '#FFE2E7' },
-  { id: 'cupcakes',    name: 'Cupcakes',    icon: 'cupcake', color: '#FFE2E7' },
-  { id: 'gift',        name: 'Custom',      icon: 'gift', color: '#FFE2E7' },
+  { id: 'birthday',    name: 'Birthday',    icon: 'cake',    color: '#FFE4E9',           fg: '#E8526A' },
+  { id: 'anniversary', name: 'Anniversary', icon: 'heart',   color: '#F5E7EC',           fg: '#6E2A45' },
+  { id: 'wedding',     name: 'Wedding',     icon: 'heart',   color: 'rgba(200,148,74,0.16)', fg: '#C8944A' },
+  { id: 'cupcakes',    name: 'Cupcakes',    icon: 'cupcake', color: '#ECF1E9',           fg: '#5F7556' },
+  { id: 'gift',        name: 'Custom',      icon: 'gift',    color: '#F3F1F1',           fg: '#3D2D2C' },
 ];
 
 const weights = [

@@ -35,3 +35,29 @@
 
 ## Review (Round 2)
 সব item সম্পূর্ণ। `npm run build` → `✓ built in 8.40s`। Root cause দুটোই confirm করা হয়েছে code পড়ে (dead `if (!embedded) return null` branch, আর `STATUSES` array-তে `'cancelled'` না থাকা) — guess করে fix করা হয়নি। বিস্তারিত `AGENT_LOG.md`-এর সর্বশেষ entry-তে।
+
+---
+
+# Home Screen Premium Color Pass (2026-07-07 session, implemented)
+
+Approved direction from AGENT_LOG.md 07-07 session, refined after review + user decisions:
+
+## Decisions locked in this session
+- Occasion icon (idle AND tap state) now uses category `fg` color — not just background. (User confirmed.)
+- ProductCard badges: keep existing Best=gold / New=coral as-is (don't touch — original plan's "Best=plum/Fresh=sage" assumed a state that doesn't exist in code). Add category color only as a small, low-risk accent — a thin top strip — not a badge rework.
+
+## Tasks
+- [ ] `src/types/index.ts` — add `fg: string` to `Category` type
+- [ ] `src/lib/data.ts` — replace 5x `color: '#FFE2E7'` with approved bg/fg pairs
+- [ ] `src/index.css` — add `--color-plum`, `--color-plum-tint`, `--color-sage`, `--color-sage-tint` tokens (gold already exists)
+- [ ] `src/screens/HomeScreen.tsx`
+  - [ ] occasion icon idle + active color → `c.fg`
+  - [ ] reorder card → ticket-stub treatment (gold→plum top strip + perforation notches)
+  - [ ] banner → small wax-seal "Est. 2018" badge, top-right, decorative only
+- [ ] `src/components/ProductCard.tsx` — thin top accent strip color-mapped to `product.occasion` (both `grid` and `horizontal` variants)
+- [ ] `tsc --noEmit` — diff error count vs baseline (162, all pre-existing per log)
+- [ ] `npm run build` — confirm `✓ built`
+- [ ] Update `AGENT_LOG.md`
+- [ ] ZIP only touched files, unique filename
+
+## Review (fill in after implementation)

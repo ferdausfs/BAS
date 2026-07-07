@@ -35,6 +35,14 @@
   /* === Gold accent (warmer, richer) === */
   --color-gold: #C8944A;
 
+  /* === Plum (Anniversary category — romantic) === */
+  --color-plum:      #6E2A45;
+  --color-plum-tint: #F5E7EC;
+
+  /* === Sage (Cupcakes category — fresh/ingredient) === */
+  --color-sage:      #5F7556;
+  --color-sage-tint: #ECF1E9;
+
   /* === Typography === */
   --font-display: "Fraunces", "Georgia", serif;
   --font-body:    "Inter", "Hind Siliguri", system-ui, -apple-system, sans-serif;

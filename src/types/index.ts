@@ -106,6 +106,7 @@ export type Category = {
   name: string;
   icon: string;
   color: string;
+  fg: string;
 };
 
 export interface DbProduct {

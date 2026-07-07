@@ -3,7 +3,95 @@
 **Repo:** https://github.com/ferdausfs/BAS
 **Stack:** React 19 + TypeScript + Tailwind v4 + Vite + Zustand + Firebase/Firestore
 **Deploy:** Cloudflare Pages — https://bas.umuhammadiswa.workers.dev
-**Design tokens:** Fraunces serif (`font-display`), coral (`#E8526A`), blush, gold, ink — `@theme` directive in `src/index.css`
+**Design tokens:** Fraunces serif (`font-display`), coral (`#E8526A`), blush, gold, ink, plum, sage — `@theme` directive in `src/index.css`
+
+---
+
+## Session: 2026-07-07 (Home screen premium color pass — implemented)
+**Agent/Tool:** Claude (claude.ai)
+**Feature worked on:** Implementing the previous planning session's approved plan (Occasion category color-coding, reorder card ticket-stub, banner wax-seal, product-card accent).
+
+### Review findings before fixing (২টা জিনিস approved plan থেকে আলাদা ছিল, confirm করে নেওয়া হয়েছে):
+- `HomeScreen.tsx`-এ occasion icon color আগে থেকেই category-driven ছিল না — শুধু background chip color category-specific হওয়ার প্ল্যান ছিল, icon glyph সবসময় hardcoded `#9A8E8E`(idle)/coral(tap) ছিল। **User confirm করেছে:** idle + tap দুটোই এখন category `fg` color ব্যবহার করবে।
+- `ProductCard.tsx`-এ Best badge already gold ছিল (plan-এ ভুলভাবে ধরে নেওয়া হয়েছিল black/generic), আর "Fresh" নামে কোনো badge/field আদৌ নেই। User এই conflict-এ specific option না বেছে "log-এ যা প্ল্যান আছে সেটা করো" বলেছে — তাই সবচেয়ে minimal-impact interpretation নেওয়া হলো: Best/New badge system অপরিবর্তিত রেখে শুধু একটা পাতলা (3px) category-tint accent strip card-এর উপরে যোগ হয়েছে।
+
+### কী হয়েছে:
+1. **`src/types/index.ts`** — `Category` type-এ নতুন `fg: string` field যোগ।
+2. **`src/lib/data.ts`** — ৫টা category-র color আলাদা করা হলো (আগে সব `#FFE2E7`):
+   - Birthday: bg `#FFE4E9` / fg `#E8526A` (coral, অপরিবর্তিত identity color)
+   - Anniversary: bg `#F5E7EC` / fg `#6E2A45` (plum)
+   - Wedding: bg `rgba(200,148,74,0.16)` / fg `#C8944A` (gold — token আগে থেকেই ছিল)
+   - Cupcakes: bg `#ECF1E9` / fg `#5F7556` (sage)
+   - Custom: bg `#F3F1F1` / fg `#3D2D2C` (ink-500)
+3. **`src/index.css`** — `@theme`-এ `--color-plum`/`--color-plum-tint` আর `--color-sage`/`--color-sage-tint` নতুন named token যোগ (আগের session-এর note অনুযায়ী raw hex না ছড়িয়ে)।
+4. **`src/screens/HomeScreen.tsx`:**
+   - Occasion row icon (idle + active উভয় state) এখন `c.fg` ব্যবহার করে (আগে hardcoded ink-200/coral ছিল)।
+   - Reorder card ("Tap to reorder") এখন ticket-stub স্টাইল — উপরে gold→plum gradient accent strip (3px) + বাম/ডান পাশে page-bg (`var(--color-cream)`) রঙের perforation-notch cutout circle।
+   - Banner carousel-এ ছোট "EST. 2018" wax-seal badge (coral radial-gradient circle, top-right, `z-30`, `pointer-events-none`) — carousel logic/dots/arrows/CTA অপরিবর্তিত।
+5. **`src/components/ProductCard.tsx`** — নতুন `occasionAccent()` helper (`lib/data.ts`-এর `categories` থেকে `fg` lookup করে) দিয়ে card-এর উপরে ৩px accent strip (`grid` আর `horizontal` দুটো variant-এই) — Best/New badge system অপরিবর্তিত।
+
+### Build verify:
+- `tsc --noEmit`: touched files-এ error count আগে ও পরে **একই** (diff করে শুধু line-number shift, কোনো নতুন error নেই)।
+- `npm run build`: `✓ built in 8.78s`।
+
+### Touched files:
+- `src/types/index.ts`
+- `src/lib/data.ts`
+- `src/index.css`
+- `src/screens/HomeScreen.tsx`
+- `src/components/ProductCard.tsx`
+- `tasks/todo.md` (session log only)
+
+### Commit:
+- (pending — user local এ ZIP apply করে push করবে)
+
+### এখনো Pending:
+- কিছুই urgent না। ভবিষ্যতে সত্যিকারের "Fresh" badge concept চালু করতে হলে (cupcakes-এর জন্য নতুন product field), সেটা আলাদা deliberate session-এ করা উচিত।
+
+### পরবর্তী Agent এর জন্য নোট:
+- `occasionAccent()` helper `ProductCard.tsx`-এর top-এ আছে, `lib/data.ts`-এর `categories` array থেকে সরাসরি `fg` lookup করে — কোনো নতুন hardcoded color duplicate হয়নি।
+- `plum`/`sage` এখন named CSS token (`--color-plum`, `--color-sage` + `-tint` variants) — raw hex আর ছড়ানো নেই।
+- Category color-coding শুধু Home screen occasion row + ProductCard accent strip-এ প্রযোজ্য — `CategoriesScreen.tsx`-এর filter chip (`chip`/`chip-active` class) ইচ্ছাকৃতভাবে touch করা হয়নি (scope-এর বাইরে, ওখানে সবসময় coral active state)।
+
+---
+
+## Session: 2026-07-07 (Home screen premium color pass — planning only, no code yet)
+**Agent/Tool:** Claude (claude.ai)
+**Feature worked on:** Planning/review only — no code changes this session. Full review + Visualizer mockups approved; actual implementation done in the following session (see entry above).
+
+### Review কী পাওয়া গেছে:
+User complained Home screen ("What cake are we celebrating today?") premium লাগছে না। Full review-এ পাওয়া findings:
+- **Real bug:** `src/lib/data.ts`-এর `categories` array — সব ৫টা occasion (Birthday/Anniversary/Wedding/Cupcakes/Custom)-এর `color` field হুবহু same hex (`#FFE2E7`)। এই কারণে Round 6-এ বানানো per-category zoom-transition color system আসলে কাজেই লাগছে না — সব chip দেখতে carbon-copy লাগে।
+- Reorder card ("Rose Garden +6 more") একদম flat সাদা row — OrdersScreen-এর ticket-stub/ribbon premium treatment-এর সাথে inconsistent।
+- Occasion icon row generic delivery-app category-row টেমপ্লেটের মতো লাগে (flat outline icon + solid pastel square)।
+- Banner card-এ কোনো BAS-নির্দিষ্ট signature touch নেই।
+- User আরও বলেছে: পুরো app এখন "শুধু পিংক" (coral/blush family) — monotonous লাগছে, আরেকটু attractive করতে অন্য color add করা যায় কিনা।
+
+### Approved direction (২টা Visualizer mockup দেখানো হয়েছে, দ্বিতীয়টা approved):
+- **Occasion category color-coding (meaning অনুযায়ী, rainbow না):**
+  - Birthday → coral (`#E8526A` on `#FFE4E9`) — energetic, brand-primary অপরিবর্তিত
+  - Anniversary → deep plum/wine (`#6E2A45` on `#F5E7EC`) — romantic
+  - Wedding → gold (`#C8944A` on `rgba(200,148,74,0.16)`) — luxury/elegant
+  - Cupcakes → sage green (`#5F7556` on `#ECF1E9`) — fresh/ingredient feel
+  - Custom → neutral ink (`#3D2D2C` on `#F3F1F1`) — blank-canvas concept
+- **Reorder card:** OrdersScreen-স্টাইল ticket-stub — top accent strip gold→plum gradient (`linear-gradient(90deg,#C8944A,#6E2A45)`) + left/right perforation notch (14px circle, page-bg color cutout)।
+- **Trending card badges:** category-অনুযায়ী color ("Best" = plum tint/text, "New" = gold tint/text, "Fresh" = sage tint/text) — আগে সব black/generic tag ছিল।
+- **Banner:** ছোট "Est. 2018" wax-seal style badge (coral-gradient circle, top-right corner) — signature touch, purely decorative, existing carousel logic/dots/arrows অপরিবর্তিত।
+- **Explicitly NOT changing:** primary hero elements (search bar, greeting text, "Popular this week"/section eyebরo, CTA buttons) থাকবে coral — নতুন color শুধু category-differentiation আর accent badge-এ ব্যবহার হবে, pure identity color হিসেবে coral-ই থাকছে।
+
+### Touched files this session:
+- `AGENT_LOG.md` (log only, কোনো source code touch হয়নি)
+
+### Commit:
+- (pending — implemented in following session, see entry above)
+
+### এখনো Pending (পরবর্তী session-এর কাজ):
+- সবকিছু implement হয়ে গেছে পরের session-এ (উপরের entry দেখুন), except badge-color-mapping — সেটা conflict থাকায় minimal accent-strip approach-এ redirect করা হয়েছে।
+
+### পরবর্তী Agent এর জন্য নোট:
+- নতুন color token হিসেবে plum (`#6E2A45`/tint `#F5E7EC`) আর sage (`#5F7556`/tint `#ECF1E9`) এই session-এ প্রথম প্রস্তাবিত হয় — পরের session-এ `index.css`-এ named token আকারে যোগ হয়েছে।
+- User-এর explicit constraint: primary brand identity (coral) সরানো/dilute করা যাবে না — নতুন color শুধু secondary/category-differentiation role-এ, coral এখনো app-এর প্রধান accent থাকবে।
+- Mockup reference (এই চ্যাটেই বানানো, repo-তে file আকারে সেভ করা হয়নি): `bas_home_multicolor_mockup` — approved version। আগের `bas_home_premium_fullpass_mockup` (single-color coral+gold version) rejected হয়েছে user-এর "আরও color add করা যায়?" feedback-এর কারণে।
 
 ---
 

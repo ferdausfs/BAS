@@ -240,8 +240,8 @@ export default function HomeScreen({
                     size={22}
                     className="transition-all duration-300"
                     style={{
-                      color: active ? '#E8526A' : '#9A8E8E',
-                      filter: active ? 'drop-shadow(0 4px 8px rgba(232,82,106,.45))' : 'none',
+                      color: c.fg,
+                      filter: active ? `drop-shadow(0 4px 8px ${c.fg}73)` : 'none',
                       transform: active ? 'scale(1.08)' : 'scale(1)',
                       transitionTimingFunction: 'cubic-bezier(.34,1.56,.64,1)',
                     }}
@@ -249,7 +249,7 @@ export default function HomeScreen({
                 </div>
                 <span
                   className="text-[10px] font-semibold transition-colors duration-200"
-                  style={{ color: active ? '#E8526A' : '#9A8E8E' }}
+                  style={{ color: c.fg }}
                 >
                   {c.name}
                 </span>
@@ -306,6 +306,18 @@ export default function HomeScreen({
               className="relative overflow-hidden rounded-[28px] bg-white"
               style={{ boxShadow: '0 1px 2px rgba(26,19,17,.03), 0 18px 50px -28px rgba(26,19,17,.18)' }}
             >
+              {/* Wax-seal signature badge — purely decorative */}
+              <div
+                className="pointer-events-none absolute top-3 right-3 z-30 flex h-9 w-9 flex-col items-center justify-center rounded-full text-center leading-none text-white"
+                style={{
+                  background: 'radial-gradient(circle at 35% 30%, #FF8EA3, #E8526A 55%, #B02D44)',
+                  boxShadow: '0 3px 10px -2px rgba(176,45,68,.55), inset 0 1px 1px rgba(255,255,255,.35)',
+                }}
+              >
+                <span className="text-[6px] font-bold tracking-wide">EST.</span>
+                <span className="text-[8px] font-extrabold tracking-tight">2018</span>
+              </div>
+
               <div className="relative aspect-[2.5/1] w-full overflow-hidden">
                 {activeBanners.map((b, i) => (
                   <div
@@ -464,9 +476,23 @@ export default function HomeScreen({
                     safeArray(lastOrder.items).forEach((item) => useCart.getState().add({ ...item }));
                     go({ name: 'cart' });
                   }}
-                  className="group flex w-full items-center gap-3 rounded-2xl border border-white/40 glass-strong p-3.5 text-left transition active:scale-[.98]"
+                  className="group relative flex w-full items-center gap-3 overflow-hidden rounded-2xl border border-white/40 glass-strong p-3.5 pt-4 text-left transition active:scale-[.98]"
                   style={{ boxShadow: '0 1px 2px rgba(26,19,17,.02), 0 8px 24px -18px rgba(26,19,17,.18)' }}
                 >
+                  {/* Ticket-stub accent strip */}
+                  <div
+                    className="absolute inset-x-0 top-0 h-[3px]"
+                    style={{ background: 'linear-gradient(90deg, #C8944A, #6E2A45)' }}
+                  />
+                  {/* Perforation notches (page-bg cutout circles) */}
+                  <div
+                    className="absolute top-0 -left-1.5 h-3.5 w-3.5 rounded-full"
+                    style={{ background: 'var(--color-cream)' }}
+                  />
+                  <div
+                    className="absolute top-0 -right-1.5 h-3.5 w-3.5 rounded-full"
+                    style={{ background: 'var(--color-cream)' }}
+                  />
                   {firstItem?.image ? (
                     <img src={firstItem.image} alt="" className="h-11 w-11 flex-shrink-0 rounded-xl object-cover" />
                   ) : (
