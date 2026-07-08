@@ -31,7 +31,6 @@ export default function App() {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [settingsLoading, setSettingsLoading] = useState(true);
 
-  // Capture ?ref= referral code from deep link and store for CheckoutScreen
   useEffect(() => {
     try {
       const params = new URLSearchParams(window.location.search);
@@ -43,7 +42,6 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    
     useSettingsStore.getState().loadRemoteSettings().finally(() => setSettingsLoading(false));
   }, []);
 
@@ -70,7 +68,6 @@ export default function App() {
 
   const activeTab = view.name === 'tabs' ? view.tab : tab;
 
-  // Expose tab for debug
   useEffect(() => {
     (window as any).__BAKEART_TAB__ = activeTab;
   }, [activeTab]);
@@ -89,8 +86,13 @@ export default function App() {
 
   return (
     <AppErrorBoundary>
-      <div className="h-[100dvh] w-full flex flex-col bg-cream overflow-hidden">
-        <main className="flex-1 min-h-0 relative overflow-hidden">
+      <div className="h-[100dvh] w-full flex flex-col overflow-hidden relative">
+        <div className="lux-canvas" aria-hidden="true">
+          <span className="lux-orb a" />
+          <span className="lux-orb b" />
+          <span className="lux-orb c" />
+        </div>
+        <main className="flex-1 min-h-0 relative z-[1] overflow-hidden">
           {view.name === 'splash'
             ? <SplashScreen />
             : (
