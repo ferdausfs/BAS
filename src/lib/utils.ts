@@ -40,6 +40,62 @@ export const isValidPhone = (p: string): boolean => {
 export const waLink = (number: string, msg: string): string =>
   `https://wa.me/${number.replace(/\D/g, '')}?text=${encodeURIComponent(msg)}`;
 
+// Copy text to clipboard. Returns true on success. Falls back to a hidden
+// textarea + execCommand for older/in-app WebViews where navigator.clipboard
+// may be unavailable or blocked.
+export const copyText = async (text: string): Promise<boolean> => {
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+    throw new Error('clipboard API unavailable');
+  } catch {
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      const ok = document.execCommand('copy');
+      document.body.removeChild(ta);
+      return ok;
+    } catch {
+      return false;
+    }
+  }
+};
+
+// bKash/Nagad app deep-link schemes + Play Store fallback. Deep link scheme
+// is undocumented/unofficial for both apps, so it may silently fail on some
+// devices — the `document.hidden` check + timeout ensures we only fall back
+// to Play Store if the app did NOT actually open (tab didn't lose focus).
+const PAYMENT_APP_LINKS: Record<'bkash' | 'nagad', { deepLink: string; playStore: string }> = {
+  bkash: {
+    deepLink: 'bkash://',
+    playStore: 'https://play.google.com/store/apps/details?id=com.bKash.customerapp',
+  },
+  nagad: {
+    deepLink: 'nagad://',
+    playStore: 'https://play.google.com/store/apps/details?id=com.konasl.nagad',
+  },
+};
+
+export const openPaymentApp = (method: 'bkash' | 'nagad'): void => {
+  const { deepLink, playStore } = PAYMENT_APP_LINKS[method];
+  const fallbackTimer = window.setTimeout(() => {
+    if (document.hidden) return; // app opened successfully, tab lost focus
+    window.location.href = playStore;
+  }, 1500);
+  const onVisibilityChange = () => {
+    if (document.hidden) window.clearTimeout(fallbackTimer);
+  };
+  document.addEventListener('visibilitychange', onVisibilityChange, { once: true });
+  window.location.href = deepLink;
+};
+
 // Format price BDT
 export const formatBDT = (n: number): string => `৳${n.toLocaleString('en-BD')}`;
 // Backward-compatible alias: existing admin/components still import formatINR.

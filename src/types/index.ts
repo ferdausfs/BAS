@@ -228,6 +228,8 @@ export interface SiteSettings {
   geminiApiKey: string;
   whatsappNumber: string;
   upiId: string;
+  bkashNumber: string;
+  nagadNumber: string;
   promoTitle: string;
   deliveryEstimate: string;
   coupons: Coupon[];

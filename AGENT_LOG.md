@@ -1,5 +1,47 @@
 # Agent Log — BAS (Bake Art Style 2)
 
+## Session: 2026-07-08 (Checkout — bKash/Nagad number reveal + copy + app-open popup)
+**Agent/Tool:** Claude (claude.ai)
+**Feature worked on:** Implementing `tasks/review-payment-number-reveal-070826.md` — customer previously had no way to see which bKash/Nagad number to send the advance payment to on the Checkout screen; only a screenshot-upload box existed with no number shown anywhere.
+
+### কী হয়েছে:
+1. **`src/types/index.ts`** — added `bkashNumber: string` and `nagadNumber: string` to `SiteSettings`. Existing `upiId` field left untouched/unused (was previously a single shared field for both — user chose to split it during review Q&A).
+2. **`src/lib/data.ts`** — added matching defaults (`'01XXXXXXXXX'`) for both new fields in `DEFAULT_SETTINGS`.
+3. **`src/components/AdminPanel.tsx`** (line ~1176) — replaced the single `{ label: 'bKash/Nagad Number', field: 'upiId' }` settings-tab row with two separate rows: `bKash Number` → `bkashNumber`, `Nagad Number` → `nagadNumber`. Same existing input-map pattern, no new logic.
+4. **`src/lib/utils.ts`** — added `copyText(text)` (clipboard API with a hidden-textarea/`execCommand` fallback for WebViews where `navigator.clipboard` may be blocked) and `openPaymentApp(method)` (tries `bkash://` / `nagad://` deep link, falls back to the respective Play Store listing after 1.5s **only if** `document.hidden` is still false — i.e. only if the deep link did NOT actually switch away from the browser).
+5. **`src/components/PaymentAppPopup.tsx`** (new) — small centered dialog shown right after a successful copy. Uses the existing `useSheetTransition` + `useModalDepth` shell (same pattern as `OccasionSheet.tsx`/`NotificationsSheet.tsx`), `.anim-scale` entrance (spring-easing token from the animation-system session) / `.anim-fade-out` exit. Shows the copied number + "[Method] অ্যাপ খুলুন" button (calls `openPaymentApp`) + "এখানেই থাকুন" dismiss button. `z-[85]`, `fixed inset-0` (above `LocationGate`'s `z-[80]`, below nothing else currently in the stack).
+6. **`src/screens/CheckoutScreen.tsx`**:
+   - Imported `copyText` and `PaymentAppPopup`.
+   - New state: `numberCopied`, `appPopupOpen`.
+   - `ADVANCE_METHODS.map(...)` block (Step 2, "অগ্রিম পেমেন্ট" section): each method card is now a `<div>` wrapping the existing selector `<button>` (unchanged) plus a conditionally-rendered expansion panel (only when that method is selected) showing `settings.bkashNumber` / `settings.nagadNumber` in a read-only row with a Copy button. Copy button calls `copyText()`; on success sets `appPopupOpen(true)`.
+   - `<PaymentAppPopup>` rendered once, right after the method list, driven by `appPopupOpen` / `advancePayment`.
+   - Existing "Payment screenshot" upload box (below) is untouched — customer now sees the number to pay to right above it instead of having to know it from elsewhere.
+
+### Build verify:
+- `tsc --noEmit`: 160 (down from the 162 baseline noted in the previous session — pre-existing, unrelated errors in `HomeScreen.tsx`/`OrdersScreen.tsx`/`TrackingScreen.tsx`/`WishlistScreen.tsx`; zero errors in any touched/new file)
+- `npm run build`: `✓ built in 8.00s`
+
+### Touched files:
+- `src/types/index.ts`
+- `src/lib/data.ts`
+- `src/lib/utils.ts`
+- `src/components/AdminPanel.tsx`
+- `src/components/PaymentAppPopup.tsx` (new)
+- `src/screens/CheckoutScreen.tsx`
+- `tasks/review-payment-number-reveal-070826.md` (review report, no code)
+
+### Commit:
+- (pending — user local এ ZIP apply করে push করবে)
+
+### এখনো Pending:
+- `bkash://` / `nagad://` deep link schemes are unofficial/undocumented — not guaranteed to work on every Android device/OS version. The `document.hidden` fallback to Play Store is a safety net, but real-device testing on the user's own phone is recommended before relying on it.
+- Admin needs to actually fill in real `bkashNumber` / `nagadNumber` values in the admin panel — currently both default to the placeholder `'01XXXXXXXXX'` inherited from the old `upiId` default.
+
+### পরবর্তী Agent এর জন্য নোট:
+- `PaymentAppPopup.tsx` is a good short reference for the `useSheetTransition` shell applied to a centered dialog (rather than a bottom sheet) — uses `.anim-scale`/`.anim-fade-out` instead of `.anim-up`/`.anim-down`.
+
+---
+
 ## Session: 2026-07-07 (Site-wide animation system — Phase 1 + 2)
 **Agent/Tool:** Claude (claude.ai)
 **Feature worked on:** Implementing both approved phases from `tasks/review-animation-system-070726.md` together — (1) unify entrance-animation easing with the existing spring/tap feel, (2) give every sheet/modal a real close (exit) animation instead of instant unmount.

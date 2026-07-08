@@ -15,8 +15,9 @@ import {
 } from '../lib/store';
 import { doc, setDoc } from 'firebase/firestore';
 import { db, isFirebaseConfigured, uploadToCloudinary } from '../lib/firebase';
-import { safeArray, isValidPhone } from '../lib/utils';
+import { safeArray, isValidPhone, copyText } from '../lib/utils';
 import { LocationGate } from '../components/LocationGate';
+import PaymentAppPopup from '../components/PaymentAppPopup';
 import { BD_DISTRICTS } from '../lib/zones';
 import type { CartItem, Order } from '../types';
 
@@ -147,6 +148,8 @@ export default function CheckoutScreen({ onBack }: Props) {
   // `paymentScreenshotFile`/`paymentScreenshotPreview` (declared above) hold the
   // proof-of-payment image for this advance amount.
   const [advancePayment, setAdvancePayment] = useState<typeof ADVANCE_METHODS[number]['id']>('bkash');
+  const [numberCopied, setNumberCopied] = useState(false);
+  const [appPopupOpen, setAppPopupOpen] = useState(false);
 
   const [form, setForm] = useState({
     name: '',
@@ -1018,35 +1021,75 @@ export default function CheckoutScreen({ onBack }: Props) {
           <div className="space-y-2">
             {ADVANCE_METHODS.map((method) => {
               const isSelected = advancePayment === method.id;
+              const methodNumber = method.id === 'bkash' ? settings.bkashNumber : settings.nagadNumber;
               return (
-                <button
+                <div
                   key={method.id}
-                  onClick={() => setAdvancePayment(method.id)}
-                  className={`flex w-full items-center gap-3 rounded-2xl border-2 p-3.5 transition ${
+                  className={`overflow-hidden rounded-2xl border-2 transition ${
                     isSelected ? 'border-coral bg-coral-50' : 'border-ink-50 bg-white'
                   }`}
                 >
-                  <div
-                    className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl text-[13px] font-bold text-white"
-                    style={{ background: method.color }}
+                  <button
+                    type="button"
+                    onClick={() => { setAdvancePayment(method.id); setNumberCopied(false); }}
+                    className="flex w-full items-center gap-3 p-3.5"
                   >
-                    {method.name.slice(0, 2)}
-                  </div>
-                  <div className="flex-1 text-left">
-                    <p className="text-[13.5px] font-bold text-ink">{method.name}</p>
-                    <p className="text-[12px] text-ink-200">{method.desc}</p>
-                  </div>
-                  <div
-                    className={`flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full border-2 ${
-                      isSelected ? 'border-coral' : 'border-ink-100'
-                    }`}
-                  >
-                    {isSelected && <div className="h-2.5 w-2.5 rounded-full bg-coral" />}
-                  </div>
-                </button>
+                    <div
+                      className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl text-[13px] font-bold text-white"
+                      style={{ background: method.color }}
+                    >
+                      {method.name.slice(0, 2)}
+                    </div>
+                    <div className="flex-1 text-left">
+                      <p className="text-[13.5px] font-bold text-ink">{method.name}</p>
+                      <p className="text-[12px] text-ink-200">{method.desc}</p>
+                    </div>
+                    <div
+                      className={`flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full border-2 ${
+                        isSelected ? 'border-coral' : 'border-ink-100'
+                      }`}
+                    >
+                      {isSelected && <div className="h-2.5 w-2.5 rounded-full bg-coral" />}
+                    </div>
+                  </button>
+
+                  {isSelected && (
+                    <div className="border-t border-coral/20 px-3.5 pb-3.5 pt-3 anim-fade">
+                      <p className="mb-1.5 text-[11px] text-ink-200">এই নাম্বারে Send Money করুন</p>
+                      <div className="flex items-center gap-2 rounded-xl bg-white px-3 py-2.5">
+                        <span className="flex-1 font-display text-[15px] font-bold tabular tracking-wide text-ink">
+                          {methodNumber}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            const ok = await copyText(methodNumber);
+                            if (ok) {
+                              setNumberCopied(true);
+                              setAppPopupOpen(true);
+                            }
+                          }}
+                          className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[11.5px] font-bold text-white active:scale-95"
+                          style={{ background: method.color }}
+                        >
+                          {numberCopied ? 'Copied' : 'Copy'}
+                        </button>
+                      </div>
+                      <p className="mt-1.5 text-[10.5px] text-ink/40">Personal number · Send Money অপশন ব্যবহার করুন</p>
+                    </div>
+                  )}
+                </div>
               );
             })}
           </div>
+
+          <PaymentAppPopup
+            open={appPopupOpen}
+            onClose={() => setAppPopupOpen(false)}
+            method={advancePayment}
+            number={advancePayment === 'bkash' ? settings.bkashNumber : settings.nagadNumber}
+          />
 
           <div className="mt-4 rounded-2xl border border-white/40 glass-strong p-3">
             <div className="mb-2 text-[12.5px] font-bold text-ink">Payment screenshot</div>

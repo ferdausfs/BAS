@@ -150,6 +150,8 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   geminiApiKey: '',
   whatsappNumber: '8801XXXXXXXXX',
   upiId: '01XXXXXXXXX',
+  bkashNumber: '01XXXXXXXXX',
+  nagadNumber: '01XXXXXXXXX',
   promoTitle: 'Special offer! Order today',
   deliveryEstimate: '2–4 ঘণ্টা',
   coupons: [],
