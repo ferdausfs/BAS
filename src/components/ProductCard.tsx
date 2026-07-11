@@ -23,7 +23,7 @@ export default function ProductCard({ product, wished, onOpen, onWish, variant =
     setZoomed((z) => !z);
   };
 
-  const safeWeights = product.weights?.length ? product.weights : [{ size: '1 kg', price: product.price }];
+  const safeWeights = product.weights?.length ? product.weights : [{ size: '1 lb', price: product.price }];
   const safeFlavors = product.flavors?.length ? product.flavors : ['Chocolate'];
 
   const handleWish = (e: React.MouseEvent) => {
@@ -40,7 +40,7 @@ export default function ProductCard({ product, wished, onOpen, onWish, variant =
       productId: product.id,
       name: product.name,
       image: product.image,
-      size: safeWeights[0]?.size ?? '1 kg',
+      size: safeWeights[0]?.size ?? '1 lb',
       flavor: safeFlavors[0] ?? 'Chocolate',
       price: product.price,
       quantity: 1,

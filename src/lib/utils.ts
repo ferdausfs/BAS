@@ -101,6 +101,51 @@ export const formatBDT = (n: number): string => `৳${n.toLocaleString('en-BD')}
 // Backward-compatible alias: existing admin/components still import formatINR.
 export const formatINR = formatBDT;
 
+// ── ওজন → "কত জনের জন্য" (serving-size) helpers ─────────────────────────────
+// মালিকের নিশ্চিত করা হিসাব (2026-07-11): 0.5 পাউন্ড → 2-3 জন, 1 → 4-6,
+// 1.5 → 8-10, 2 → 12-15 জন। এর বাইরের ওজনের জন্য প্রতি পাউন্ডে ~6-7 জন ধরে
+// একটা আনুমানিক range দেখাই।
+const SERVING_PRESETS: { lb: number; label: string }[] = [
+  { lb: 0.5, label: '2-3 জন' },
+  { lb: 1, label: '4-6 জন' },
+  { lb: 1.5, label: '8-10 জন' },
+  { lb: 2, label: '12-15 জন' },
+];
+
+// যেকোনো ওজন (পাউন্ডে) → "কত জনের জন্য" text। preset হলে হুবহু, নাহলে আনুমানিক।
+export const servingForPounds = (lb: number): string => {
+  if (!Number.isFinite(lb) || lb <= 0) return '';
+  const preset = SERVING_PRESETS.find((p) => Math.abs(p.lb - lb) < 0.001);
+  if (preset) return preset.label;
+  const low = Math.max(2, Math.round(lb * 6));
+  const high = Math.max(low + 1, Math.round(lb * 7.5));
+  return `${low}-${high} জন`;
+};
+
+// "1 lb" / "0.5 lb" / "1 kg" → পাউন্ডে সংখ্যা (kg হলে convert করে দেয়)।
+export const sizeToPounds = (size: string): number => {
+  const m = String(size).match(/([\d.]+)\s*(kg|kilo|lb|pound|পাউন্ড|কেজি)?/i);
+  if (!m) return 0;
+  const val = parseFloat(m[1]);
+  if (!Number.isFinite(val)) return 0;
+  const unit = (m[2] || 'lb').toLowerCase();
+  if (unit.startsWith('kg') || unit.startsWith('kilo') || unit === 'কেজি') return val / 0.45359237;
+  return val;
+};
+
+// size string → "কত জনের জন্য"
+export const servingFor = (size: string): string => servingForPounds(sizeToPounds(size));
+
+// ওজন সহজ বাংলায়: "1 lb" → "1 পাউন্ড", "0.5 lb" → "0.5 পাউন্ড", "1 kg" → "1 কেজি"।
+export const formatWeight = (size: string): string => {
+  const m = String(size).match(/([\d.]+)\s*(kg|kilo|lb|pound|পাউন্ড|কেজি)?/i);
+  if (!m) return size;
+  const num = m[1];
+  const unit = (m[2] || 'lb').toLowerCase();
+  const word = unit.startsWith('kg') || unit.startsWith('kilo') || unit === 'কেজি' ? 'কেজি' : 'পাউন্ড';
+  return `${num} ${word}`;
+};
+
 // Generate order ID
 export const genOrderId = (): string =>
   'BAS-' + Math.floor(10000 + Math.random() * 90000);

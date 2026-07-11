@@ -5,7 +5,7 @@ import { useUI, formatINR, useCart, useUser, useAuthStore, useSettingsStore } fr
 import { useProducts } from '../hooks/useProducts';
 import { useReviews } from '../hooks/useReviews';
 import { useDominantColor } from '../hooks/useDominantColor';
-import { ls, safeArray } from '../lib/utils';
+import { ls, safeArray, servingFor, servingForPounds, formatWeight } from '../lib/utils';
 import type { Product, Review } from '../types';
 
 const ADDONS = [
@@ -175,7 +175,7 @@ export default function ProductScreen() {
 
   const productWeights = safeArray<{ size: string; price: number }>(product?.weights);
   const productFlavors = safeArray<string>(product?.flavors);
-  const safeWeights = productWeights.length ? productWeights : [{ size: '1 kg', price: product?.price ?? 0 }];
+  const safeWeights = productWeights.length ? productWeights : [{ size: '1 lb', price: product?.price ?? 0 }];
   const safeFlavors = productFlavors.length ? productFlavors : ['Chocolate'];
 
   const [size, setSize] = useState(safeWeights[1]?.size ?? safeWeights[0]?.size);
@@ -240,7 +240,7 @@ export default function ProductScreen() {
         productId: product.id,
         name: product.name,
         image: product.image,
-        size: `${customWeight} ${product.priceUnit ?? 'kg'}`,
+        size: `${customWeight} ${product.priceUnit ?? 'lb'}`,
         flavor: selectedFlavor,
         topping: selectedAddons.length ? selectedAddons.join(', ') : undefined,
         message: cakeMessage || undefined,
@@ -465,8 +465,14 @@ export default function ProductScreen() {
           {/* Size selector */}
           <section className="mt-7">
             <div className="flex items-center justify-between">
-              <h3 className="font-display text-[15px] font-bold tracking-tight text-ink">Select size</h3>
-              <span className="text-[12.5px] text-ink-200">{product.pricePerUnit ? 'Weight-based' : 'Serves 8-12'}</span>
+              <h3 className="font-display text-[15px] font-bold tracking-tight text-ink">সাইজ বেছে নিন</h3>
+              <span className="text-[12.5px] font-semibold text-coral">
+                {product.pricePerUnit
+                  ? (customWeight && +customWeight > 0 && servingForPounds(+customWeight)
+                      ? `≈ ${servingForPounds(+customWeight)} এর জন্য`
+                      : 'ওজন অনুযায়ী দাম')
+                  : (servingFor(size) ? `≈ ${servingFor(size)} এর জন্য` : '')}
+              </span>
             </div>
             {product.pricePerUnit ? (
               /* Dynamic weight-based pricing — preset chips first (easier to tap
@@ -476,15 +482,18 @@ export default function ProductScreen() {
                 <div className="grid grid-cols-4 gap-2">
                   {WEIGHT_PRESETS.map((w) => {
                     const active = customWeight === w;
+                    const unitWord = product.priceUnit === 'kg' ? 'কেজি' : 'পাউন্ড';
+                    const serves = servingForPounds(+w);
                     return (
                       <button
                         key={w}
                         onClick={() => { setCustomWeight(w); setWeightError(''); }}
-                        className={`min-h-[48px] rounded-2xl border-2 text-[13.5px] font-bold transition active:scale-95 ${
+                        className={`flex min-h-[60px] flex-col items-center justify-center rounded-2xl border-2 transition active:scale-95 ${
                           active ? 'border-coral bg-coral-50 text-coral' : 'border-ink-50 bg-white text-ink'
                         }`}
                       >
-                        {w} {product.priceUnit ?? 'kg'}
+                        <span className="text-[13.5px] font-bold">{w} {unitWord}</span>
+                        {serves && <span className="mt-0.5 text-[10px] font-medium opacity-70">{serves}</span>}
                       </button>
                     );
                   })}
@@ -494,19 +503,19 @@ export default function ProductScreen() {
                     type="number"
                     min="0.25"
                     step="0.25"
-                    placeholder={`Or enter custom weight in ${product.priceUnit ?? 'kg'}`}
+                    placeholder={`অথবা নিজের ওজন লিখুন (${product.priceUnit === 'kg' ? 'কেজি' : 'পাউন্ড'})`}
                     className="flex-1 min-h-[44px] px-3 py-2.5 rounded-xl border-2 border-ink/10 bg-cream text-sm font-bold text-ink focus:border-coral focus:outline-none"
                     value={customWeight}
                     onChange={(e) => setCustomWeight(e.target.value)}
                   />
-                  <span className="text-sm font-bold text-ink/50">{product.priceUnit ?? 'kg'}</span>
+                  <span className="text-sm font-bold text-ink/50">{product.priceUnit === 'kg' ? 'কেজি' : 'পাউন্ড'}</span>
                 </div>
                 {weightError && (
                   <div className="text-[12.5px] text-red-500 font-semibold">{weightError}</div>
                 )}
                 {customWeight && +customWeight > 0 && (
                   <div className="mt-2 rounded-xl bg-ink-50 px-3 py-2 flex items-center justify-between">
-                    <span className="text-[12.5px] text-ink/60">{customWeight} {product.priceUnit ?? 'kg'} × ৳{product.pricePerUnit}</span>
+                    <span className="text-[12.5px] text-ink/60">{customWeight} {product.priceUnit === 'kg' ? 'কেজি' : 'পাউন্ড'} × ৳{product.pricePerUnit}</span>
                     <span className="font-display text-base font-bold text-ink">৳{(+customWeight * (product.pricePerUnit ?? 0)).toLocaleString()}</span>
                   </div>
                 )}
@@ -517,20 +526,24 @@ export default function ProductScreen() {
                 {safeWeights.map((w) => {
                   const fullPrice = product.price + w.price;
                   const active = size === w.size;
+                  const serves = servingFor(w.size);
                   return (
                     <button
                       key={w.size}
                       onClick={() => setSize(w.size)}
-                      className={`flex min-h-[64px] flex-col items-center justify-center rounded-2xl border-2 bg-white transition active:scale-95 ${
+                      className={`flex min-h-[76px] flex-col items-center justify-center rounded-2xl border-2 bg-white transition active:scale-95 ${
                         active
                           ? 'border-coral bg-coral-50 text-coral'
                           : 'border-ink-50 text-ink'
                       }`}
                     >
-                      <span className="text-[13.5px] font-bold">{w.size}</span>
+                      <span className="text-[13.5px] font-bold">{formatWeight(w.size)}</span>
                       <span className="mt-0.5 text-[12.5px] font-semibold tabular opacity-70">
                         {formatINR(fullPrice)}
                       </span>
+                      {serves && (
+                        <span className="mt-0.5 text-[10px] font-medium opacity-60">{serves}</span>
+                      )}
                     </button>
                   );
                 })}
@@ -807,7 +820,7 @@ export default function ProductScreen() {
               {formatINR(total * quantity)}
             </div>
             <div className="text-[12px] text-ink-200 mt-0.5">
-              {product.pricePerUnit ? `${customWeight} ${product.priceUnit ?? 'kg'}` : size} · {selectedFlavor}
+              {product.pricePerUnit ? formatWeight(`${customWeight} ${product.priceUnit ?? 'lb'}`) : formatWeight(size)} · {selectedFlavor}
               {quantity > 1 ? ` · ×${quantity}` : ''}
             </div>
           </div>
