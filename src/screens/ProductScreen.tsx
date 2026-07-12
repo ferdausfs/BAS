@@ -99,7 +99,7 @@ export default function ProductScreen() {
   };
 
   // Reviews state
-  const { reviews: rawReviews, saveReview, uploadReviewImage } = useReviews(product?.id);
+  const { reviews: rawReviews, saveReview, uploadReviewImage, avgRating } = useReviews(product?.id);
   const reviews = rawReviews as Review[];
   const { user } = useAuthStore();
   const [showReviewForm, setShowReviewForm] = useState(false);
@@ -214,6 +214,12 @@ export default function ProductScreen() {
   }
 
   const wished = wishlist.includes(product.id);
+
+  // Trust: header এ আসল customer রিভিউর গড় ও সংখ্যা দেখাই (থাকলে); না থাকলে
+  // seed data fallback — তাতে header আর নিচের রিভিউ list কখনো স্ববিরোধী হয় না।
+  const realReviewCount = reviews.length;
+  const displayRating = realReviewCount > 0 ? avgRating : Number(product.rating ?? 0);
+  const displayReviewCount = realReviewCount > 0 ? realReviewCount : Number(product.reviews ?? 0);
 
   const selectedWeight = safeWeights.find((w) => w.size === size);
   const addonsCost = ADDONS.reduce((s, a) => s + (addons[a.id] ? a.price : 0), 0);
@@ -374,13 +380,17 @@ export default function ProductScreen() {
               {[...Array(5)].map((_, i) => (
                 <Star
                   key={i}
-                  className={`h-3.5 w-3.5 ${i < Math.round(Number(product.rating ?? 0)) ? 'fill-current' : 'opacity-30'}`}
+                  className={`h-3.5 w-3.5 ${i < Math.round(Number(displayRating)) ? 'fill-current' : 'opacity-30'}`}
                   strokeWidth={0}
                 />
               ))}
             </div>
-            <span className="font-bold text-ink">{Number(product.rating ?? 0)}</span>
-            <span className="text-ink-200">({Number(product.reviews ?? 0).toLocaleString()} reviews)</span>
+            <span className="font-bold text-ink">{Number(displayRating).toFixed(1)}</span>
+            <span className="text-ink-200">
+              {displayReviewCount > 0
+                ? `(${Number(displayReviewCount).toLocaleString()} রিভিউ)`
+                : 'নতুন — এখনো রিভিউ নেই'}
+            </span>
           </div>
 
           {/* Social proof strip */}
@@ -648,14 +658,14 @@ export default function ProductScreen() {
         {/* Reviews Section inside scroll container */}
         <section className="px-5 mt-6 pb-4">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="font-display text-[17px] font-bold text-ink">Reviews</h2>
+          <h2 className="font-display text-[17px] font-bold text-ink">রিভিউ</h2>
           {!showReviewForm && (
             <button
               onClick={() => user && setShowReviewForm(true)}
               disabled={!user}
               className="rounded-xl bg-ink-50 px-3 py-1.5 text-[11px] font-bold text-ink disabled:opacity-50"
             >
-              {user ? '+ Write a review' : 'Sign in to review'}
+              {user ? '+ রিভিউ লিখুন' : 'রিভিউ দিতে সাইন ইন করুন'}
             </button>
           )}
         </div>
@@ -664,7 +674,7 @@ export default function ProductScreen() {
         {reviewSuccess && (
           <div className="mb-3 flex items-center gap-2 rounded-2xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-[12px] text-emerald-700 font-semibold">
             <CheckCircle2 className="h-4 w-4" />
-            Review submitted! It will appear after admin approval.
+            রিভিউ যুক্ত হয়েছে, ধন্যবাদ! 🎉
           </div>
         )}
 
@@ -673,7 +683,7 @@ export default function ProductScreen() {
           <div className="mb-4 rounded-2xl glass-strong p-4 space-y-3">
             {/* Star rating */}
             <div>
-              <div className="text-[11px] font-bold text-ink/50 mb-1">Rating</div>
+              <div className="text-[11px] font-bold text-ink/50 mb-1">রেটিং</div>
               <div className="flex gap-1">
                 {[1,2,3,4,5].map((s) => (
                   <button key={s} onClick={() => setReviewRating(s)}>
@@ -684,7 +694,7 @@ export default function ProductScreen() {
             </div>
             {/* Comment */}
             <textarea
-              placeholder="Share your experience... How was the taste, design, delivery?"
+              placeholder="আপনার অভিজ্ঞতা লিখুন... স্বাদ, ডিজাইন, ডেলিভারি কেমন ছিল?"
               rows={3}
               maxLength={500}
               className="w-full resize-none rounded-xl border border-ink/10 bg-cream px-3 py-2.5 text-[13px] text-ink placeholder:text-ink/30 focus:border-coral focus:outline-none"
@@ -693,7 +703,7 @@ export default function ProductScreen() {
             />
             {/* Photo upload */}
             <div>
-              <div className="text-[11px] font-bold text-ink/50 mb-1">Add photo (optional)</div>
+              <div className="text-[11px] font-bold text-ink/50 mb-1">ছবি যোগ করুন (ঐচ্ছিক)</div>
               {reviewImagePreview ? (
                 <div className="relative w-20 h-20">
                   <img loading="lazy" decoding="async" src={reviewImagePreview} alt="" className="w-20 h-20 rounded-xl object-cover" />
@@ -710,7 +720,7 @@ export default function ProductScreen() {
                   <input type="file" accept="image/*" className="hidden" onChange={(e) => {
                     const file = e.target.files?.[0];
                     if (!file) return;
-                    if (file.size > 2 * 1024 * 1024) { alert('Max 2MB'); return; }
+                    if (file.size > 2 * 1024 * 1024) { alert('সর্বোচ্চ ২MB'); return; }
                     setReviewImageFile(file);
                     const url = URL.createObjectURL(file);
                     setReviewImagePreview(url);
@@ -725,13 +735,13 @@ export default function ProductScreen() {
                 disabled={!reviewComment.trim() || submittingReview}
                 className="flex-1 py-2.5 rounded-xl bg-coral text-white text-[13px] font-bold disabled:opacity-50"
               >
-                {submittingReview ? 'Submitting...' : 'Submit Review'}
+                {submittingReview ? 'পাঠানো হচ্ছে...' : 'রিভিউ দিন'}
               </button>
               <button
                 onClick={() => setShowReviewForm(false)}
                 className="px-4 py-2.5 rounded-xl bg-ink/5 text-ink/60 text-[13px] font-bold"
               >
-                Cancel
+                বাতিল
               </button>
             </div>
           </div>
@@ -769,7 +779,7 @@ export default function ProductScreen() {
           </div>
         ) : (
           <div className="text-center py-6 text-[13px] text-ink/40">
-            No reviews yet. Be the first!
+            এখনো কোনো রিভিউ নেই। প্রথম রিভিউটা আপনিই দিন!
           </div>
         )}
       </section>
