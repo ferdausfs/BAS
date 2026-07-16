@@ -83,8 +83,8 @@ export default function ProductCard({ product, wished, onOpen, onWish, variant =
 
   const isGrid = variant === 'grid';
   const wrapCls = isGrid
-    ? 'group relative cursor-pointer overflow-hidden rounded-[22px] bg-white p-2 product-card-shadow transition-all duration-200 active:scale-[.97]'
-    : 'group relative flex w-[168px] flex-shrink-0 cursor-pointer flex-col overflow-hidden rounded-[22px] bg-white p-2 product-card-shadow transition-all duration-200 active:scale-[.97]';
+    ? 'group relative cursor-pointer overflow-hidden rounded-[22px] bg-white p-2 border border-ink-50/80 product-card-shadow transition-all duration-200 active:scale-[.97]'
+    : 'group relative flex w-[168px] flex-shrink-0 cursor-pointer flex-col overflow-hidden rounded-[22px] bg-white p-2 border border-ink-50/80 product-card-shadow transition-all duration-200 active:scale-[.97]';
 
   return (
     <article onClick={onOpen} className={wrapCls}>

@@ -133,23 +133,34 @@ export default function HomeScreen({ onAuthOpen, onNotificationsOpen }: { onAuth
           onNotificationsOpen={onNotificationsOpen}
         />
 
-        {/* Category icon row (bakery reference: colored circle + label) */}
-        <div className="no-scrollbar mt-5 flex gap-3 overflow-x-auto px-5 pb-1 anim-up delay-1">
-          {categories.map((c) => (
+        {/* Category icon row (bakery reference + grocery wireframe: colored circle + label) */}
+        <div className="mt-5 px-5 anim-up delay-1">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="font-display text-[16px] font-bold tracking-tight text-ink">Categories</h2>
             <button
-              key={c.id}
-              onClick={(e) => openOccasion(c, e.currentTarget)}
-              className="flex flex-shrink-0 flex-col items-center gap-2 transition active:scale-90"
+              onClick={() => go({ name: 'tabs', tab: 'categories' })}
+              className="text-[12px] font-bold text-coral hover:underline"
             >
-              <span
-                className="flex h-14 w-14 items-center justify-center rounded-full"
-                style={{ background: c.color, color: c.fg }}
-              >
-                <OccasionIcon id={c.icon} size={26} />
-              </span>
-              <span className="text-[11px] font-semibold text-ink-300">{c.name}</span>
+              See all
             </button>
-          ))}
+          </div>
+          <div className="no-scrollbar flex gap-3.5 overflow-x-auto pb-1">
+            {categories.map((c) => (
+              <button
+                key={c.id}
+                onClick={(e) => openOccasion(c, e.currentTarget)}
+                className="flex flex-shrink-0 flex-col items-center gap-2 transition active:scale-90"
+              >
+                <span
+                  className="flex h-14 w-14 items-center justify-center rounded-2xl border border-ink-50/60 shadow-sm"
+                  style={{ background: c.color, color: c.fg }}
+                >
+                  <OccasionIcon id={c.icon} size={26} />
+                </span>
+                <span className="text-[11.5px] font-bold text-ink">{c.name}</span>
+              </button>
+            ))}
+          </div>
         </div>
 
         <OccasionSheet open={occasionSheetOpen} onClose={() => setOccasionSheetOpen(false)} onSelect={(c, btn) => openOccasion(c, btn)} />
