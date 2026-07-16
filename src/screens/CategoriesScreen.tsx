@@ -232,7 +232,7 @@ export default function CategoriesScreen() {
                     key={opt.v}
                     onClick={() => setSortBy(opt.v)}
                     className={`flex items-center gap-2 rounded-2xl px-3 py-2.5 text-[12px] font-semibold transition ${
-                      sortBy === opt.v ? 'bg-coral text-white' : 'bg-ink-50 text-ink-300'
+                      sortBy === opt.v ? 'btn-primary' : 'bg-ink-50 text-ink-300'
                     }`}
                   >
                     <Icon className="h-[14px] w-[14px]" strokeWidth={2} />

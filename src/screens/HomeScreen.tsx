@@ -10,6 +10,7 @@ import HomeTopBar from '../components/HomeTopBar';
 import ProductCard from '../components/ProductCard';
 import SectionHeader from '../components/SectionHeader';
 import OccasionSheet from '../components/OccasionSheet';
+import OccasionIcon from '../components/OccasionIcon';
 import { useModalDepth } from '../hooks/useModalDepth';
 import type { Banner, SpecialDate } from '../types';
 
@@ -132,7 +133,7 @@ export default function HomeScreen({ onAuthOpen, onNotificationsOpen }: { onAuth
           onNotificationsOpen={onNotificationsOpen}
         />
 
-        {/* Category glass tiles */}
+        {/* Category icon row (bakery reference: colored circle + label) */}
         <div className="no-scrollbar mt-5 flex gap-3 overflow-x-auto px-5 pb-1 anim-up delay-1">
           {categories.map((c) => (
             <button
@@ -140,8 +141,11 @@ export default function HomeScreen({ onAuthOpen, onNotificationsOpen }: { onAuth
               onClick={(e) => openOccasion(c, e.currentTarget)}
               className="flex flex-shrink-0 flex-col items-center gap-2 transition active:scale-90"
             >
-              <span className="glass-strong flex h-14 w-14 items-center justify-center rounded-[20px]" style={{ color: c.fg }}>
-                <Cake className="h-6 w-6" strokeWidth={1.9} />
+              <span
+                className="flex h-14 w-14 items-center justify-center rounded-full"
+                style={{ background: c.color, color: c.fg }}
+              >
+                <OccasionIcon id={c.icon} size={26} />
               </span>
               <span className="text-[11px] font-semibold text-ink-300">{c.name}</span>
             </button>
@@ -176,7 +180,7 @@ export default function HomeScreen({ onAuthOpen, onNotificationsOpen }: { onAuth
           </div>
         )}
 
-        {/* Hero banner */}
+        {/* Hero banner — bakery reference: photo card + gold Shop Now pill */}
         {!search.trim() && activeBanners.length > 0 && (
           <div className="mt-5 px-5 anim-up delay-1">
             <div className="relative overflow-hidden rounded-[26px]">
@@ -192,11 +196,15 @@ export default function HomeScreen({ onAuthOpen, onNotificationsOpen }: { onAuth
                     className={`absolute inset-0 cursor-pointer transition-opacity duration-700 ${i === bannerIdx ? 'z-10 opacity-100' : 'z-0 opacity-0'}`}
                   >
                     <img src={b.image} alt={b.title} className="absolute inset-0 h-full w-full object-cover" />
-                    <div className="absolute inset-0 bg-gradient-to-r from-black/65 via-black/20 to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent" />
                     <div className="absolute inset-0 flex flex-col justify-center p-5">
-                      <span className="mb-2 inline-flex w-fit items-center gap-1 rounded-full bg-white/25 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white backdrop-blur-md">{b.tag}</span>
-                      <h3 className="max-w-[9ch] font-display text-[22px] font-semibold leading-tight tracking-tight text-white">{b.title}</h3>
-                      <p className="mt-1 max-w-[18ch] text-[12px] leading-snug text-white/85">{b.subtitle}</p>
+                      <span className="mb-2 inline-flex w-fit items-center gap-1 rounded-full bg-white px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-ink">
+                        {b.tag}
+                      </span>
+                      <h3 className="max-w-[16ch] font-display text-[26px] font-semibold leading-[1.1] tracking-tight text-white">
+                        {b.title}
+                      </h3>
+                      <p className="mt-1 max-w-[22ch] text-[12px] leading-snug text-white/85">{b.subtitle}</p>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -208,9 +216,9 @@ export default function HomeScreen({ onAuthOpen, onNotificationsOpen }: { onAuth
                           else if (b.link === 'categories') go({ name: 'tabs', tab: 'categories' });
                           else go({ name: 'product', productId: safeArray(products)[0]?.id || 'p1' });
                         }}
-                        className="mt-3 inline-flex h-9 w-fit items-center gap-1.5 rounded-full bg-white px-4 text-[12.5px] font-bold text-ink transition active:scale-95"
+                        className="mt-3 inline-flex h-9 w-fit items-center gap-1.5 rounded-full bg-gold px-4 text-[12.5px] font-bold text-white shadow-[0_6px_16px_-4px_rgba(201,150,60,.45)] transition active:scale-95"
                       >
-                        {b.type === 'discount' ? (copiedId === b.id ? 'Copied!' : `Copy: ${b.promoCode || 'CODE'}`) : (<>{b.tag || 'Order now'} <ArrowRight className="h-3.5 w-3.5" strokeWidth={2.5} /></>)}
+                        {b.type === 'discount' ? (copiedId === b.id ? 'Copied!' : `Copy: ${b.promoCode || 'CODE'}`) : (<>Shop Now <ArrowRight className="h-3.5 w-3.5" strokeWidth={2.5} /></>)}
                       </button>
                     </div>
                   </div>

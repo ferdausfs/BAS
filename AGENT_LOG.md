@@ -1,5 +1,37 @@
 # Agent Log — BAS (Bake Art Style 2)
 
+## Session: Phase 3 — Home + Categories + Product listing (2026-07-16)
+**Agent/Tool:** Arena.ai Agent Mode (Code Master protocol)
+**Feature worked on:** Phase 3 of the brown/gold redesign — home banner, category icons, product cards, categories filter sheet
+
+### কী হয়েছে:
+- **Home banner aligned with bakery reference** — `src/screens/HomeScreen.tsx`: replaced the frosted-white tag/button with a clean opaque tag chip, enlarged title (`max-w-[16ch]`, `text-[26px]`), and a gold `Shop Now` CTA pill (`bg-gold` + gold shadow). Left carousel arrows/dots untouched.
+- **Category row now uses per-category icons & colors** — `src/lib/data.ts`: updated `icon` field for each category to a valid `OccasionIcon` id (`birthday`, `anniversary`, `wedding`, `cupcakes`, `gift`). `src/screens/HomeScreen.tsx`: replaced the hardcoded `<Cake />` icon and `.glass-strong` circle with `<OccasionIcon id={c.icon} />` on a solid `c.color` circular background.
+- **ProductCard rating moved to image overlay** — `src/components/ProductCard.tsx`: added a white rating pill (star + rating + review count) overlay at the bottom-left of the image, removed the old below-image rating row, and cleaned up the card surface to `bg-white product-card-shadow` instead of `.glass`.
+- **Removed leftover pink shadow** — `src/components/ProductCard.tsx`: the add button had an inline `box-shadow: rgba(232,82,106,.5)` (Phase 1 rgba miss). Replaced with theme-based Tailwind classes: `bg-coral` + `shadow-[0_6px_16px_-4px_rgba(168,103,46,.5)]`; kept green confirmation state.
+- **Categories filter sheet active chips now cocoa** — `src/screens/CategoriesScreen.tsx`: active sort option uses `btn-primary` (dark-cocoa gradient) instead of `bg-coral`, matching app-wide CTA style.
+
+### Touched files:
+- `src/screens/HomeScreen.tsx`
+- `src/screens/CategoriesScreen.tsx`
+- `src/components/ProductCard.tsx`
+- `src/lib/data.ts`
+- `AGENT_LOG.md`
+
+### Review report:
+- `PHASE3-HOME-CATEGORIES-REVIEW-071626.md`
+
+### Verify:
+- `npx tsc --noEmit`: same pre-existing `unknown`-type errors in Home/Orders/Tracking/Wishlist as before; zero new errors in the touched files.
+- `npm run build`: **✓ built in 8.88s** cleanly.
+
+### এখনো Pending / পরবর্তী Agent এর জন্য নোট:
+- **ProductCard zoom indicator** (small bottom-center magnifier) was intentionally left; remove later if it conflicts with the reference.
+- **Home banner prev/next arrows** remain hidden on mobile and visible on `md:` — acceptable but can be removed if a simpler one-slide-per-view reference is desired.
+- **Next recommended phase:** Phase 4 — Product detail screen.
+
+---
+
 **Repo:** https://github.com/ferdausfs/BAS
 **Stack:** React 19 + TypeScript + Tailwind v4 + Vite + Zustand + Firebase/Firestore
 **Deploy:** Cloudflare Pages — https://bas.umuhammadiswa.workers.dev
