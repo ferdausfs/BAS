@@ -63,7 +63,7 @@ export default function SuccessScreen() {
           <span className="absolute inset-0 rounded-full anim-ring" />
           <div
             className="relative flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-coral-400 to-coral-600 text-white anim-pop"
-            style={{ boxShadow: '0 14px 30px -10px rgba(242,94,115,.5)' }}
+            style={{ boxShadow: '0 14px 30px -10px rgba(168,103,46,.45)' }}
           >
             <Check className="h-8 w-8" strokeWidth={2.5} />
           </div>
