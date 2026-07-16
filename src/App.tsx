@@ -98,7 +98,10 @@ export default function App() {
             : (
               <div key={screenKey} className="h-full w-full anim-fade">
                 {view.name === 'tabs' && activeTab === 'home' && (
-                  <HomeScreen onAuthOpen={() => setAuthOpen(true)} />
+                  <HomeScreen
+                    onAuthOpen={() => setAuthOpen(true)}
+                    onNotificationsOpen={() => setNotificationsOpen(true)}
+                  />
                 )}
                 {view.name === 'tabs' && activeTab === 'categories' && <CategoriesScreen />}
                 {view.name === 'tabs' && activeTab === 'orders' && (
@@ -130,7 +133,10 @@ export default function App() {
 
         {showTabBar && <BottomTabBar />}
 
-        {view.name !== 'splash' && view.name !== 'product' && (
+        {/* Floating QuickBar on every screen EXCEPT Home (the new brown HomeTopBar
+            carries cart/bell there) and splash/product. */}
+        {view.name !== 'splash' && view.name !== 'product' &&
+          !(view.name === 'tabs' && activeTab === 'home') && (
           <QuickBar onNotificationsOpen={() => setNotificationsOpen(true)} />
         )}
 

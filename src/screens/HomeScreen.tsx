@@ -6,7 +6,7 @@ import { ls, safeArray } from '../lib/utils';
 import { categories } from '../lib/data';
 import { useProducts } from '../hooks/useProducts';
 import { useBanners } from '../hooks/useBanners';
-import SearchBar from '../components/SearchBar';
+import HomeTopBar from '../components/HomeTopBar';
 import ProductCard from '../components/ProductCard';
 import SectionHeader from '../components/SectionHeader';
 import OccasionSheet from '../components/OccasionSheet';
@@ -29,7 +29,7 @@ const getUpcomingDate = (userId?: string): { name: string; daysLeft: number } | 
   return null;
 };
 
-export default function HomeScreen({ onAuthOpen }: { onAuthOpen?: () => void }) {
+export default function HomeScreen({ onAuthOpen, onNotificationsOpen }: { onAuthOpen?: () => void; onNotificationsOpen?: () => void }) {
   const { go } = useUI();
   const { wishlist, toggleWish } = useUser();
   const { orders } = useOrders();
@@ -38,8 +38,6 @@ export default function HomeScreen({ onAuthOpen }: { onAuthOpen?: () => void }) 
   const { banners } = useBanners();
   const activeBanners = useMemo(() => safeArray(banners).filter((b) => b.active !== false), [banners]);
   const upcoming = getUpcomingDate(user?.id);
-  const firstName = user?.name?.split(' ')[0] || 'friend';
-  const isNonLatin = /[^\u0000-\u007F]/.test(firstName);
 
   const [bannerIdx, setBannerIdx] = useState(0);
   const [pressedOccasion, setPressedOccasion] = useState<string | null>(null);
@@ -122,26 +120,17 @@ export default function HomeScreen({ onAuthOpen }: { onAuthOpen?: () => void }) 
   return (
     <div className="flex h-full flex-col">
       <div className="no-scrollbar flex-1 overflow-y-auto pb-32">
-        {/* Greeting */}
-        <div className="px-5 pt-6 anim-up">
-          <div className="text-[12px] font-semibold uppercase tracking-[0.2em] text-ink-200">
-            {user ? (isNonLatin ? 'Welcome back! 🌸' : `Welcome back, ${firstName} 🌸`) : 'Welcome to Bake Art Style'}
-          </div>
-          <h1 className="mt-2 font-display text-[30px] font-semibold leading-[1.05] tracking-tight text-ink">
-            What are we<br /><span className="italic text-coral">celebrating?</span>
-          </h1>
-          <div className="mt-4">
-            <SearchBar
-              value={search}
-              onChange={setSearch}
-              onSearch={saveSearch}
-              suggestions={suggestions}
-              recentSearches={recentSearches}
-              onClearRecent={clearRecent}
-              onOpenOccasions={() => setOccasionSheetOpen(true)}
-            />
-          </div>
-        </div>
+        {/* Brown/gold bakery home header (Phase 2 redesign) */}
+        <HomeTopBar
+          search={search}
+          onSearchChange={setSearch}
+          onSearch={saveSearch}
+          suggestions={suggestions}
+          recentSearches={recentSearches}
+          onClearRecent={clearRecent}
+          onOpenOccasions={() => setOccasionSheetOpen(true)}
+          onNotificationsOpen={onNotificationsOpen}
+        />
 
         {/* Category glass tiles */}
         <div className="no-scrollbar mt-5 flex gap-3 overflow-x-auto px-5 pb-1 anim-up delay-1">

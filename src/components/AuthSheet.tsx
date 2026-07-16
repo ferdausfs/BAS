@@ -365,7 +365,7 @@ export function AuthSheet({ open, onClose, onSuccess }: Props) {
                   )}
 
                   <button onClick={mode === 'signin' ? handleSignIn : handleSignUp} disabled={loading}
-                    className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-[var(--color-coral)] text-white font-bold text-sm shadow-[0_8px_20px_-8px_rgba(232,82,106,0.6)] active:scale-[0.98] transition-transform disabled:opacity-60">
+                    className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-[var(--color-coral)] text-white font-bold text-sm shadow-[0_8px_20px_-8px_rgba(168,103,46,0.55)] active:scale-[0.98] transition-transform disabled:opacity-60">
                     {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
                     {loading ? (mode === 'signin' ? 'Signing In...' : 'Creating Account...') : (mode === 'signin' ? 'Sign In' : 'Create Account')}
                   </button>
@@ -402,7 +402,7 @@ export function AuthSheet({ open, onClose, onSuccess }: Props) {
                         onKeyDown={(e) => e.key === 'Enter' && handleSendMagicLink()}
                       />
                       <button onClick={handleSendMagicLink}
-                        className="w-full py-3.5 rounded-2xl bg-[var(--color-coral)] text-white font-bold text-sm shadow-[0_8px_20px_-8px_rgba(232,82,106,0.6)] active:scale-[0.98] transition-transform">
+                        className="w-full py-3.5 rounded-2xl bg-[var(--color-coral)] text-white font-bold text-sm shadow-[0_8px_20px_-8px_rgba(168,103,46,0.55)] active:scale-[0.98] transition-transform">
                         Login Link পাঠান
                       </button>
                     </>
@@ -443,7 +443,7 @@ export function AuthSheet({ open, onClose, onSuccess }: Props) {
                     />
                   </div>
                   <button onClick={handleSendOtp} disabled={phoneBusy}
-                    className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-[var(--color-coral)] text-white font-bold text-sm shadow-[0_8px_20px_-8px_rgba(232,82,106,0.6)] active:scale-[0.98] transition-transform disabled:opacity-60">
+                    className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-[var(--color-coral)] text-white font-bold text-sm shadow-[0_8px_20px_-8px_rgba(168,103,46,0.55)] active:scale-[0.98] transition-transform disabled:opacity-60">
                     {phoneBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
                     {phoneBusy ? 'পাঠানো হচ্ছে...' : 'OTP পাঠান'}
                   </button>
@@ -466,7 +466,7 @@ export function AuthSheet({ open, onClose, onSuccess }: Props) {
                     onKeyDown={(e) => e.key === 'Enter' && handleVerifyOtp()}
                   />
                   <button onClick={handleVerifyOtp} disabled={phoneBusy}
-                    className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-[var(--color-coral)] text-white font-bold text-sm shadow-[0_8px_20px_-8px_rgba(232,82,106,0.6)] active:scale-[0.98] transition-transform disabled:opacity-60">
+                    className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-[var(--color-coral)] text-white font-bold text-sm shadow-[0_8px_20px_-8px_rgba(168,103,46,0.55)] active:scale-[0.98] transition-transform disabled:opacity-60">
                     {phoneBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
                     {phoneBusy ? 'যাচাই হচ্ছে...' : 'Verify & Continue'}
                   </button>

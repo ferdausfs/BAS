@@ -25,7 +25,7 @@ export default function SplashScreen() {
         <img
           src="/brand-logo-transparent-crop.png"
           alt="Bake Art Style"
-          className="h-auto w-[min(80vw,340px)] max-w-full select-none object-contain drop-shadow-[0_18px_40px_rgba(242,94,115,.22)]"
+          className="h-auto w-[min(80vw,340px)] max-w-full select-none object-contain drop-shadow-[0_18px_40px_rgba(107,58,24,.22)]"
           draggable={false}
         />
 

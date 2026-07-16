@@ -19,16 +19,15 @@ export default React.memo(function BottomTabBar() {
       className="fixed bottom-0 left-0 right-0 z-[100]"
       style={{ paddingBottom: 'env(safe-area-inset-bottom)', transform: 'translateZ(0)', willChange: 'transform' }}
     >
-      {/* Frosted pill. Strong .72-alpha white + blur (NOT the old .78 bleed regression):
-          high opacity keeps contrast safe while still showing the pink canvas softly. */}
+      {/* Solid warm bakery bar (Phase 2 redesign — de-glassed, no backdrop-filter).
+          Opaque ivory surface with a soft cocoa shadow, matching the reference's
+          solid navigation chrome. */}
       <div
         className="relative mx-4 mb-3 rounded-3xl p-2"
         style={{
-          background: 'rgba(255,255,255,0.72)',
-          WebkitBackdropFilter: 'blur(22px)',
-          backdropFilter: 'blur(22px)',
-          border: '1px solid rgba(255,255,255,0.85)',
-          boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.7), 0 14px 34px -16px rgba(138,74,102,0.4)',
+          background: 'linear-gradient(180deg, #FFFFFF 0%, #FBF6EF 100%)',
+          border: '1px solid rgba(107,58,24,0.10)',
+          boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.7), 0 14px 34px -16px rgba(107,58,24,0.4)',
         }}
       >
         <div
@@ -38,7 +37,7 @@ export default React.memo(function BottomTabBar() {
             height: 'calc(100% - 16px)',
             transform: `translate3d(${activeIndex * 100}%, 0, 0)`,
             willChange: 'transform',
-            background: 'radial-gradient(circle at 50% 20%, rgba(232,82,106,0.18), rgba(232,82,106,0.06))',
+            background: 'radial-gradient(circle at 50% 20%, rgba(168,103,46,0.16), rgba(168,103,46,0.05))',
             transitionTimingFunction: 'cubic-bezier(.34,1.56,.64,1)',
           }}
         />
@@ -59,7 +58,7 @@ export default React.memo(function BottomTabBar() {
                     color: active ? '#A8672E' : '#A8927F',
                     transform: active ? 'translate3d(0,-5px,0)' : 'translate3d(0,0,0)',
                     willChange: 'transform',
-                    filter: active ? 'drop-shadow(0 6px 10px rgba(232,82,106,0.45))' : 'none',
+                    filter: active ? 'drop-shadow(0 6px 10px rgba(168,103,46,0.40))' : 'none',
                     transitionTimingFunction: 'cubic-bezier(.34,1.56,.64,1)',
                   }}
                   strokeWidth={active ? 2.4 : 1.6}

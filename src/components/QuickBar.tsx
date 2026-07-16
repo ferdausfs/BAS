@@ -9,7 +9,7 @@ interface Props {
 // Shared "nav-bar recipe" — same opaque background/border/shadow as BottomTabBar's
 // floating pill, so the popup reads as one consistent surface family with the nav bar.
 const NAV_BAR_SURFACE = {
-  background: 'linear-gradient(180deg, #FFFFFF 0%, #FFF8FA 100%)',
+  background: 'linear-gradient(180deg, #FFFFFF 0%, #FBF6EF 100%)',
   border: '0.5px solid rgba(255,255,255,0.9)',
   boxShadow:
     'inset 0 1px 0 rgba(255,255,255,0.9), 0 18px 34px -18px rgba(74,27,12,0.35), 0 4px 12px -6px rgba(74,27,12,0.15)',
@@ -61,7 +61,7 @@ export default function QuickBar({ onNotificationsOpen }: Props) {
         className="flex items-center gap-1.5 rounded-full bg-gradient-to-br from-coral-400 to-coral-600 px-4 py-2.5 text-white transition active:scale-95"
         style={{
           boxShadow:
-            '0 6px 18px -4px rgba(212,60,86,0.55), 0 2px 6px -1px rgba(212,60,86,0.35), inset 0 1px 0 rgba(255,255,255,0.35)',
+            '0 6px 18px -4px rgba(107,58,24,0.50), 0 2px 6px -1px rgba(107,58,24,0.32), inset 0 1px 0 rgba(255,255,255,0.30)',
         }}
         aria-label="Quick actions"
       >

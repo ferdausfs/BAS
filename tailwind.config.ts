@@ -5,24 +5,27 @@ export default {
   darkMode: 'class',
   theme: {
     extend: {
-      // ── Brand Palette — coral pink (PRIMARY brand identity) ───────────
+      // ── Brand Palette — cocoa / caramel (PRIMARY brand identity) ──────
+      // Redesigned 2026-07-16 (Phase 2): was rose-pink, now mirrors the
+      // cocoa/caramel `--color-coral` scale in src/index.css @theme so
+      // `brand-*` classes render brown, not pink.
       // Note: ink.*, cream, paper, blush are defined in src/index.css @theme
       // Those take precedence in Tailwind v4 — don't redefine them here.
       colors: {
         brand: {
-          50:  '#FFF9EC',
-          100: '#FFF4F6',
-          200: '#FFE4E9',
-          300: '#FFB4C2',
-          400: '#F17186',
-          500: '#E8526A',   // ← PRIMARY
-          600: '#DC3E58',
-          700: '#C22E47',
-          800: '#8F2135',
-          900: '#5C1522',
+          50:  '#FBF3E7',
+          100: '#F3E1C4',
+          200: '#E8C68F',
+          300: '#D9A85E',
+          400: '#C68F3F',
+          500: '#A8672E',   // ← PRIMARY (cocoa/caramel base)
+          600: '#8A4F22',
+          700: '#6B3A18',
+          800: '#4E2A11',
+          900: '#33200F',
         },
         gold: {
-          DEFAULT: '#C8944A',
+          DEFAULT: '#C9963C',   // aligned with --color-gold in src/index.css
           light:   '#E8D3AC',
         },
         accent: {
@@ -46,7 +49,7 @@ export default {
         'card':       '0 2px 12px rgba(0,0,0,0.06)',
         'card-hover': '0 8px 24px rgba(0,0,0,0.12)',
         'float':      '0 -4px 20px rgba(0,0,0,0.08)',
-        'btn':        '0 4px 12px rgba(232,82,106,0.30)',
+        'btn':        '0 4px 12px rgba(168,103,46,0.30)',
       },
 
       // ── Fonts ─────────────────────────────────────────────────────────
