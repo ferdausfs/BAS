@@ -163,3 +163,139 @@ glass rollout: foundation → navigation → screens → cards).
 - `.glass-*` classes are **no longer glassmorphic** — they're solid opaque
   cards now. Don't add `backdrop-filter` back to them.
 - ZIP filenames must stay unique/descriptive (established rule, see above).
+
+## ═══════════════════════════════════════════════════════════
+## FULL REDESIGN ROADMAP — Brown/Gold Bakery Theme (all screens)
+## Written 2026-07-16. Read this whole section before doing any work
+## if you are picking this up as a fresh agent.
+## ═══════════════════════════════════════════════════════════
+
+### Reference material
+User supplied two reference images (not stored in this repo — describing
+them here so a fresh agent has the brief without needing the originals):
+
+1. **A bakery-shop UI kit** (primary reference — replicate this, not the
+   old glass theme): dark cocoa-brown + gold color scheme, warm ivory
+   canvas. Screens shown: splash (circular logo badge, "Bakery Shop" title
+   on white), onboarding carousel (phone mockup floating over a brown
+   header block, "Bookmark Your Bakery Favorites" / "Discover Delight"
+   copy), sign-in/sign-up (clean white form, circular dark-brown back
+   button, Apple/Google/Facebook social login row, solid dark-cocoa
+   "Sign Up" button), home (brown header with location dropdown + search +
+   cart/notification icons, a photo banner card with a gold "Shop Now"
+   pill button, a horizontal category icon row with peach/tan circular
+   backgrounds — Cup Cake / Cookies / Donuts / Breads, a featured-products
+   grid with a rating pill and heart-wishlist icon on each card), product
+   detail (full-bleed hero cake photo, floating back/heart/share circle
+   buttons over the photo, seller card with avatar + chat + call icons,
+   description with "Read more", weight-selector chip row 0.5kg–4kg,
+   sticky bottom bar with total price + solid dark "Add to Cart" button),
+   reviews (large "4.9" rating number + 5-row star breakdown bars, search
+   bar, filter chips "Verified / Latest / Detailed Reviews", review list
+   with avatar/stars/text/photo thumbnails, sticky "Write Review" button),
+   write-a-review (order summary card, tappable 5-star input, "How is your
+   order" prompt, detail textarea, "add photo", Cancel/Submit buttons),
+   checkout (Shipping Address list as selectable cards — Home/Office/
+   Parent's House/Friend's House, each with an icon + address + a "Add New"
+   dashed card; Order List with item thumbnails + prices; "Continue to
+   Payment" button), payment/add-card (Visa-style card input), order/
+   product photo screen with a bottom thumbnail filmstrip, and an
+   explore/map screen (map pins showing bakery distance, bottom nav
+   Home/Explore/Wishlist/Chat/Profile, bakery list cards with rating +
+   delivery time + free-delivery tag).
+2. A grocery-delivery wireframe — secondary reference, used only for
+   general layout/spacing inspiration, not colors.
+
+**Design rule for every phase below**: match the reference's actual layout
+structure (card shapes, icon placement, button style, spacing rhythm) —
+don't just recolor the existing glass-era layouts. Rule 0 from the
+frontend-design discipline applies: reference wins over invented style.
+
+### Status
+
+- **Phase 1 — Foundation: ✅ DONE** (see session entry above this one).
+  `src/index.css` palette + `.glass-*` → solid warm cards + all hardcoded
+  pink hex swept from components. Verified with `tsc --noEmit` (no new
+  errors) and `npm run build` (clean). This is committed/pushed by the
+  time you read this (confirm with `git log` if unsure).
+
+- **Phase 2 — Navigation & Chrome: not started.**
+  Files: `BottomTabBar.tsx`, `Header.tsx`, `HomeHeader.tsx` (currently
+  orphaned dead code per earlier architecture notes — decide whether to
+  wire it up for the new brown header-block look, or delete it),
+  `SearchBar.tsx`, `SplashScreen.tsx`, `AuthSheet.tsx`.
+  Target: brown header block on Home (location dropdown + search + cart/
+  bell icons), circular dark-brown back buttons app-wide (replace whatever
+  back-button style currently exists), bottom tab bar active-state icon
+  should use the new cocoa accent (already recolored in Phase 1, but the
+  tab bar's structural layout has not been touched — compare against the
+  reference's 5-icon bar: Home/Explore/Wishlist/Chat/Profile, and decide
+  if BAS's existing tab set should change to match).
+
+- **Phase 3 — Home + Categories + Product listing: not started.**
+  Files: `HomeScreen.tsx`, `CategoriesScreen.tsx`, `ProductCard.tsx`,
+  `OccasionSheet.tsx`, `OccasionIcon.tsx`, `QuickBar.tsx`.
+  Target: photo banner card with gold "Shop Now" pill (reference), circular
+  tan-background category icons in a horizontal row, product grid cards
+  with a rating pill + heart icon exactly like the reference (BAS already
+  has heart/rating on `ProductCard.tsx` — check spacing/pill-shape against
+  reference rather than rebuilding from scratch).
+
+- **Phase 4 — Product detail: not started.**
+  Files: `ProductScreen.tsx`, `CustomizeScreen.tsx`.
+  Target: full-bleed hero photo top with floating circular back/heart/share
+  buttons, seller info card (BAS doesn't have a "seller" concept currently
+  — confirm with user whether to add one or adapt the card to show bakery/
+  prep info instead), weight-selector chip row (BAS's `weights` array in
+  `data.ts` already has 0.5lb–2lb — just needs the chip UI treatment),
+  sticky bottom total-price + Add to Cart bar matching the reference style.
+
+- **Phase 5 — Cart + Checkout + Payment: not started.**
+  Files: `CartScreen.tsx`, `CheckoutScreen.tsx`, `PaymentAppPopup.tsx`.
+  Target: Shipping-address-as-selectable-cards layout (Home/Office/other,
+  each with icon + "Add New" dashed card), Order List with item thumbnails,
+  solid dark "Continue to Payment" button. BAS uses bKash/Nagad (not Visa
+  cards like the reference) — adapt the payment step's visual language
+  (card-style selector) to bKash/Nagad logos instead of literally copying
+  a Visa input field.
+
+- **Phase 6 — Orders + Tracking + Success: not started.**
+  Files: `OrdersScreen.tsx`, `TrackingScreen.tsx`, `SuccessScreen.tsx`,
+  `OrderTimeline.tsx`. Already recolored in Phase 1 (empty-state gradients,
+  confetti palette) but layout/structure untouched.
+
+- **Phase 7 — Reviews (NEW screens needed): not started.**
+  BAS has a working `useReviews(productId)` hook (`src/hooks/useReviews.ts`)
+  and reviews are currently rendered inline inside `ProductScreen.tsx` —
+  there is **no dedicated review-list screen or write-review screen yet**.
+  This phase means building two new screens from scratch, matching the
+  reference: (a) a review-list screen with the big rating number + 5-row
+  star breakdown bars + search + filter chips (Verified/Latest/Detailed) +
+  review cards with photo thumbnails; (b) a write-review screen with a
+  tappable 5-star input + detail textarea + add-photo + Cancel/Submit.
+  Confirm with the user before building whether these become full routed
+  screens (added to `App.tsx`'s screen stack / `useModalDepth.ts`) or
+  bottom sheets — check how other secondary flows (e.g. `OccasionSheet`)
+  are wired for the existing pattern to follow.
+
+- **Phase 8 — Profile, Wishlist, Auth polish: not started.**
+  Files: `ProfileScreen.tsx`, `WishlistScreen.tsx` (colors done, layout
+  not), `AuthSheet.tsx`. Reference sign-up/sign-in screens are clean white
+  forms with social-login icons — check if BAS's `AuthSheet` already has
+  social login or just email/password; don't add new auth providers
+  without asking, just restyle what exists.
+
+- **Phase 9 — Admin panel: explicitly OUT OF SCOPE** unless the user asks
+  otherwise — `AdminScreen.tsx`/`AdminPanel.tsx` are admin-only, not
+  customer-facing (this exclusion predates this redesign, see earlier log
+  entries).
+
+### How to proceed as a fresh agent
+1. Read this whole roadmap + the Phase 1 session entry above it.
+2. Clone the repo fresh, confirm Phase 1 is actually merged (`git log`,
+   check `src/index.css` for the cocoa palette / no `#E8526A`).
+3. Ask the user which phase number to do next if they haven't said —
+   don't assume; they've been choosing phase order interactively.
+4. Follow the same ZIP + AGENT_LOG.md update discipline as this session:
+   unique ZIP filename, only changed files, `tsc --noEmit` + `npm run
+   build` verification before delivering, append a session entry here.
