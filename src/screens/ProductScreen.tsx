@@ -1,12 +1,34 @@
 import { useState, useEffect, useRef } from 'react';
 import type { CSSProperties } from 'react';
-import { ArrowLeft, Heart, Star, ShoppingBag, Check, Share2, Sparkles, Cake, Pencil, CheckCircle2, Camera, X, AlertTriangle, Bell, Eye, Clock, ChevronLeft, ChevronRight, Plus, Minus, Flame, MessageSquare, Gift, UtensilsCrossed } from 'lucide-react';
+import { ArrowLeft, Heart, Star, ShoppingBag, Check, Share2, Sparkles, Cake, Pencil, CheckCircle2, Camera, X, AlertTriangle, Bell, Eye, Clock, ChevronLeft, ChevronRight, Plus, Minus, Flame, MessageSquare, Gift, UtensilsCrossed, Phone } from 'lucide-react';
 import { useUI, formatINR, useCart, useUser, useAuthStore, useSettingsStore } from '../lib/store';
 import { useProducts } from '../hooks/useProducts';
 import { useReviews } from '../hooks/useReviews';
 import { useDominantColor } from '../hooks/useDominantColor';
 import { ls, safeArray, servingFor, servingForPounds, formatWeight } from '../lib/utils';
 import type { Product, Review } from '../types';
+
+// Small reusable component for description Read more
+function DescriptionWithReadMore({ text }: { text: string }) {
+  const [expanded, setExpanded] = useState(false);
+  const shouldClamp = text.length > 140;
+
+  return (
+    <div className="mt-4">
+      <p className={`text-[13.5px] leading-relaxed text-ink-200 ${!expanded && shouldClamp ? 'line-clamp-3' : ''}`}>
+        {text}
+      </p>
+      {shouldClamp && (
+        <button
+          onClick={() => setExpanded(!expanded)}
+          className="mt-1 text-[12.5px] font-bold text-coral"
+        >
+          {expanded ? 'Show less' : 'Read more'}
+        </button>
+      )}
+    </div>
+  );
+}
 
 const ADDONS = [
   { id: 'candles', name: 'Birthday candles', price: 20, icon: Flame },
@@ -356,7 +378,7 @@ export default function ProductScreen() {
                     }`}
                     style={{
                       boxShadow: isActive
-                        ? '0 10px 20px -8px rgba(232,82,106,0.45), 0 2px 6px -2px rgba(26,19,17,0.12)'
+                        ? '0 10px 20px -8px rgba(168,103,46,0.45), 0 2px 6px -2px rgba(26,19,17,0.12)'
                         : '0 2px 8px -4px rgba(26,19,17,0.18)',
                     }}
                   >
@@ -437,8 +459,8 @@ export default function ProductScreen() {
             )}
           </div>
 
-          {/* Description */}
-          <p className="mt-4 text-[13.5px] leading-relaxed text-ink-200">{product.description}</p>
+          {/* Description with Read more */}
+          <DescriptionWithReadMore text={product.description} />
 
           {settings?.deliveryEstimate && (
             <div className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-green-50 px-3 py-1.5">
@@ -448,6 +470,35 @@ export default function ProductScreen() {
               </p>
             </div>
           )}
+
+          {/* Bake Art Style brand card (Check 1 Option 2) */}
+          <div className="mt-5 flex items-center justify-between rounded-2xl border border-ink-50 bg-white px-4 py-3">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-cocoa-100 text-xl font-bold text-cocoa-700">
+                🍞
+              </div>
+              <div>
+                <div className="font-bold text-ink">Bake Art Style</div>
+                <div className="text-[12px] text-ink-200">Official Bakery • Since 2018</div>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <a
+                href={`https://wa.me/${settings?.whatsappNumber?.replace(/\D/g, '') || '8801XXXXXXXXX'}?text=Hi%20Bake%20Art%20Style`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 active:scale-95"
+              >
+                <MessageSquare size={18} />
+              </a>
+              <a
+                href={`tel:${settings?.whatsappNumber || '+8801XXXXXXXXX'}`}
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-ink-50 text-ink active:scale-95"
+              >
+                <Phone size={18} />
+              </a>
+            </div>
+          </div>
 
           {/* Flavor selector */}
           {safeFlavors.length > 1 && (
@@ -485,75 +536,68 @@ export default function ProductScreen() {
               </span>
             </div>
             {product.pricePerUnit ? (
-              /* Dynamic weight-based pricing — preset chips first (easier to tap
-                 than typing a decimal, especially for less tech-savvy/older users),
-                 manual input stays underneath as an override for anything else. */
-              <div className="mt-3 space-y-3">
-                <div className="grid grid-cols-4 gap-2">
+              /* Dynamic weight-based pricing — horizontal chip row (reference style) */
+              <div className="mt-3">
+                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
                   {WEIGHT_PRESETS.map((w) => {
                     const active = customWeight === w;
-                    const unitWord = product.priceUnit === 'kg' ? 'কেজি' : 'পাউন্ড';
-                    const serves = servingForPounds(+w);
+                    const unitWord = product.priceUnit === 'kg' ? 'kg' : 'lb';
                     return (
                       <button
                         key={w}
                         onClick={() => { setCustomWeight(w); setWeightError(''); }}
-                        className={`flex min-h-[60px] flex-col items-center justify-center rounded-2xl border-2 transition active:scale-95 ${
-                          active ? 'border-coral bg-coral-50 text-coral' : 'border-ink-50 bg-white text-ink'
+                        className={`flex-shrink-0 rounded-full border px-4 py-1.5 text-sm font-bold transition active:scale-95 ${
+                          active
+                            ? 'border-cocoa-700 bg-cocoa-700 text-white'
+                            : 'border-ink-100 bg-white text-ink'
                         }`}
                       >
-                        <span className="text-[13.5px] font-bold">{w} {unitWord}</span>
-                        {serves && <span className="mt-0.5 text-[10px] font-medium opacity-70">{serves}</span>}
+                        {w} {unitWord}
                       </button>
                     );
                   })}
                 </div>
-                <div className="flex items-center gap-3">
+
+                <div className="mt-3 flex items-center gap-3">
                   <input
                     type="number"
                     min="0.25"
                     step="0.25"
-                    placeholder={`অথবা নিজের ওজন লিখুন (${product.priceUnit === 'kg' ? 'কেজি' : 'পাউন্ড'})`}
+                    placeholder={`Custom weight (${product.priceUnit === 'kg' ? 'kg' : 'lb'})`}
                     className="flex-1 min-h-[44px] px-3 py-2.5 rounded-xl border-2 border-ink/10 bg-cream text-sm font-bold text-ink focus:border-coral focus:outline-none"
                     value={customWeight}
                     onChange={(e) => setCustomWeight(e.target.value)}
                   />
-                  <span className="text-sm font-bold text-ink/50">{product.priceUnit === 'kg' ? 'কেজি' : 'পাউন্ড'}</span>
+                  <span className="text-sm font-bold text-ink/50">{product.priceUnit === 'kg' ? 'kg' : 'lb'}</span>
                 </div>
+
                 {weightError && (
-                  <div className="text-[12.5px] text-red-500 font-semibold">{weightError}</div>
+                  <div className="mt-1 text-[12.5px] text-red-500 font-semibold">{weightError}</div>
                 )}
                 {customWeight && +customWeight > 0 && (
                   <div className="mt-2 rounded-xl bg-ink-50 px-3 py-2 flex items-center justify-between">
-                    <span className="text-[12.5px] text-ink/60">{customWeight} {product.priceUnit === 'kg' ? 'কেজি' : 'পাউন্ড'} × ৳{product.pricePerUnit}</span>
+                    <span className="text-[12.5px] text-ink/60">{customWeight} {product.priceUnit === 'kg' ? 'kg' : 'lb'} × ৳{product.pricePerUnit}</span>
                     <span className="font-display text-base font-bold text-ink">৳{(+customWeight * (product.pricePerUnit ?? 0)).toLocaleString()}</span>
                   </div>
                 )}
               </div>
             ) : (
-              /* Existing static weight chips */
-              <div className="mt-3 grid grid-cols-4 gap-2">
+              /* Static weight selector — horizontal chip row */
+              <div className="mt-3 flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
                 {safeWeights.map((w) => {
                   const fullPrice = product.price + w.price;
                   const active = size === w.size;
-                  const serves = servingFor(w.size);
                   return (
                     <button
                       key={w.size}
                       onClick={() => setSize(w.size)}
-                      className={`flex min-h-[76px] flex-col items-center justify-center rounded-2xl border-2 bg-white transition active:scale-95 ${
+                      className={`flex-shrink-0 rounded-full border px-4 py-1.5 text-sm font-bold transition active:scale-95 whitespace-nowrap ${
                         active
-                          ? 'border-coral bg-coral-50 text-coral'
-                          : 'border-ink-50 text-ink'
+                          ? 'border-cocoa-700 bg-cocoa-700 text-white'
+                          : 'border-ink-100 bg-white text-ink'
                       }`}
                     >
-                      <span className="text-[13.5px] font-bold">{formatWeight(w.size)}</span>
-                      <span className="mt-0.5 text-[12.5px] font-semibold tabular opacity-70">
-                        {formatINR(fullPrice)}
-                      </span>
-                      {serves && (
-                        <span className="mt-0.5 text-[10px] font-medium opacity-60">{serves}</span>
-                      )}
+                      {formatWeight(w.size)} · {formatINR(fullPrice)}
                     </button>
                   );
                 })}
