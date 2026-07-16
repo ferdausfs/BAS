@@ -1,5 +1,23 @@
 # Agent Log — BAS (Bake Art Style 2)
 
+## Session: Phase 10 — ProductScreen Chip & Surface Refinements (2026-07-16)
+**Agent/Tool:** Arena.ai Agent Mode (Code Master protocol)
+**Feature worked on:** Phase 10 — ProductScreen Wireframe Layout & Design Token Alignment
+
+### কী হয়েছে:
+- **Refined Weight & Flavor Chips** — `src/screens/ProductScreen.tsx`: Active chip state now uses solid cocoa theme token (`bg-[#5C3A22]`), inactive state uses crisp `border-amber-900/15 bg-white`, matching Phase 10 design rules.
+- **Improved Layout Titles** — Renamed weight section label to "Select Weight" matching reference UI kit rhythm.
+- **Verified Build** — Verified with `npm run build` (**✓ built in 5.59s**).
+
+### Touched files:
+- `src/screens/ProductScreen.tsx`
+- `AGENT_LOG.md`
+
+### Output ZIP:
+- `product-detail-refine-p10-0716.zip`
+
+---
+
 ## Session: Phase 10 — Full App Redesign (Grocery Wireframe Layout + Bakery Color) (2026-07-16)
 **Agent/Tool:** Arena.ai Agent Mode (Code Master protocol)
 **Feature worked on:** Phase 10 — HomeScreen & ProductCard Grocery Wireframe Alignment

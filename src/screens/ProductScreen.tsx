@@ -511,8 +511,10 @@ export default function ProductScreen() {
                     <button
                       key={f}
                       onClick={() => setSelectedFlavor(f)}
-                      className={`min-h-[44px] rounded-full border-2 px-4 py-2.5 text-[13.5px] font-bold transition active:scale-95 ${
-                        active ? 'border-coral bg-coral-50 text-coral' : 'border-white/40 glass-strong text-ink'
+                      className={`min-h-[42px] rounded-full border px-4 py-2 text-[13px] font-bold transition active:scale-95 ${
+                        active
+                          ? 'border-[#5C3A22] bg-[#5C3A22] text-white shadow-sm'
+                          : 'border-amber-900/15 bg-white text-ink hover:border-amber-900/30'
                       }`}
                     >
                       {f}
@@ -526,13 +528,13 @@ export default function ProductScreen() {
           {/* Size selector */}
           <section className="mt-7">
             <div className="flex items-center justify-between">
-              <h3 className="font-display text-[15px] font-bold tracking-tight text-ink">সাইজ বেছে নিন</h3>
+              <h3 className="font-display text-[15px] font-bold tracking-tight text-ink">Select Weight</h3>
               <span className="text-[12.5px] font-semibold text-coral">
                 {product.pricePerUnit
                   ? (customWeight && +customWeight > 0 && servingForPounds(+customWeight)
-                      ? `≈ ${servingForPounds(+customWeight)} এর জন্য`
-                      : 'ওজন অনুযায়ী দাম')
-                  : (servingFor(size) ? `≈ ${servingFor(size)} এর জন্য` : '')}
+                      ? `≈ ${servingForPounds(+customWeight)} Servings`
+                      : 'Weight based')
+                  : (servingFor(size) ? `≈ ${servingFor(size)} Servings` : '')}
               </span>
             </div>
             {product.pricePerUnit ? (
@@ -548,8 +550,8 @@ export default function ProductScreen() {
                         onClick={() => { setCustomWeight(w); setWeightError(''); }}
                         className={`flex-shrink-0 rounded-full border px-4 py-1.5 text-sm font-bold transition active:scale-95 ${
                           active
-                            ? 'border-cocoa-700 bg-cocoa-700 text-white'
-                            : 'border-ink-100 bg-white text-ink'
+                            ? 'border-[#5C3A22] bg-[#5C3A22] text-white shadow-sm'
+                            : 'border-amber-900/15 bg-white text-ink hover:border-amber-900/30'
                         }`}
                       >
                         {w} {unitWord}
@@ -564,7 +566,7 @@ export default function ProductScreen() {
                     min="0.25"
                     step="0.25"
                     placeholder={`Custom weight (${product.priceUnit === 'kg' ? 'kg' : 'lb'})`}
-                    className="flex-1 min-h-[44px] px-3 py-2.5 rounded-xl border-2 border-ink/10 bg-cream text-sm font-bold text-ink focus:border-coral focus:outline-none"
+                    className="flex-1 min-h-[44px] px-3 py-2.5 rounded-xl border border-amber-900/15 bg-white text-sm font-bold text-ink focus:border-coral focus:outline-none"
                     value={customWeight}
                     onChange={(e) => setCustomWeight(e.target.value)}
                   />
@@ -593,8 +595,8 @@ export default function ProductScreen() {
                       onClick={() => setSize(w.size)}
                       className={`flex-shrink-0 rounded-full border px-4 py-1.5 text-sm font-bold transition active:scale-95 whitespace-nowrap ${
                         active
-                          ? 'border-cocoa-700 bg-cocoa-700 text-white'
-                          : 'border-ink-100 bg-white text-ink'
+                          ? 'border-[#5C3A22] bg-[#5C3A22] text-white shadow-sm'
+                          : 'border-amber-900/15 bg-white text-ink hover:border-amber-900/30'
                       }`}
                     >
                       {formatWeight(w.size)} · {formatINR(fullPrice)}
