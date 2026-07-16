@@ -130,6 +130,36 @@ export default function CartScreen() {
           </div>
         )}
 
+        {/* Address cards (Phase 5 - Check 1) */}
+        <div className="mb-5">
+          <div className="mb-2.5 px-1 text-[11px] font-bold tracking-wider text-ink-200 uppercase">ডেলিভারি ঠিকানা</div>
+          <div className="flex gap-2.5 overflow-x-auto pb-1 scrollbar-hide">
+            {[
+              { id: 'home', label: 'Home', icon: '🏠' },
+              { id: 'office', label: 'Office', icon: '🏢' },
+              { id: 'parents', label: "Parent's House", icon: '👨‍👩‍👧' },
+              { id: 'friend', label: "Friend's House", icon: '👥' },
+            ].map((addr) => (
+              <button
+                key={addr.id}
+                onClick={() => go({ name: 'checkout' })}
+                className="flex-shrink-0 w-[108px] rounded-2xl border border-ink-50 bg-white px-3 py-3 text-left active:scale-95 transition"
+              >
+                <div className="text-2xl mb-1.5">{addr.icon}</div>
+                <div className="font-bold text-[13px] text-ink">{addr.label}</div>
+                <div className="text-[10px] text-ink-200 mt-0.5">Tap to edit</div>
+              </button>
+            ))}
+            <button
+              onClick={() => go({ name: 'checkout' })}
+              className="flex-shrink-0 w-[108px] rounded-2xl border-2 border-dashed border-ink-200 px-3 py-3 text-left active:scale-95 transition"
+            >
+              <div className="text-2xl mb-1.5 text-ink-200">+</div>
+              <div className="font-bold text-[13px] text-ink-200">Add New</div>
+            </button>
+          </div>
+        </div>
+
         {/* Items */}
         <div className="space-y-3">
           {safeArray<CartItem>(items).map((item, idx) => (

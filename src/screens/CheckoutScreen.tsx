@@ -535,84 +535,50 @@ export default function CheckoutScreen({ onBack }: Props) {
           </div>
         </Section>
 
-        {/* Delivery address */}
+        {/* Delivery address — Card selector (Phase 5 - Check 2) */}
         <Section icon={MapPin} title="ডেলিভারি ঠিকানা">
-          <div className="space-y-2.5">
-            <div className="space-y-1.5">
-              <label htmlFor="checkout-name" className="text-[12px] font-bold tracking-wider text-ink-200 uppercase">
-                নাম
-              </label>
-              <input
-                id="checkout-name"
-                placeholder="আপনার নাম"
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                className="h-11 w-full rounded-xl border border-ink-50 bg-white px-3 text-[13px] font-medium text-ink outline-none focus:border-coral focus:ring-2 focus:ring-coral/15"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label htmlFor="checkout-phone" className="text-[12px] font-bold tracking-wider text-ink-200 uppercase">
-                মোবাইল নম্বর
-              </label>
-              <input
-                id="checkout-phone"
-                type="tel"
-                inputMode="numeric"
-                placeholder="মোবাইল নম্বর (01XXXXXXXXX)"
-                value={form.phone}
-                onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                className="h-11 w-full rounded-xl border border-ink-50 bg-white px-3 text-[13px] font-medium text-ink outline-none focus:border-coral focus:ring-2 focus:ring-coral/15"
-              />
-            </div>
-
-            {/* GPS Button */}
-            <div className="flex flex-col gap-1.5 pt-0.5">
+          <div className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-hide">
+            {[
+              { id: 'home', label: 'Home', sub: '123 Main Rd, Comilla' },
+              { id: 'office', label: 'Office', sub: 'Dhanmondi 27, Dhaka' },
+              { id: 'parents', label: "Parent's House", sub: 'Agrabad, Chittagong' },
+              { id: 'friend', label: "Friend's House", sub: 'Banani, Dhaka' },
+            ].map((addr) => (
               <button
-                type="button"
-                onClick={handleLocate}
-                disabled={locating}
-                className="flex items-center justify-center gap-1.5 self-start rounded-full bg-ink-50 px-3.5 py-1.5 text-[11px] font-bold text-ink transition hover:bg-ink-100 active:scale-95 disabled:opacity-50"
+                key={addr.id}
+                onClick={() => {
+                  setForm((prev) => ({ ...prev, address: addr.sub, district: 'Comilla' }));
+                }}
+                className="flex-shrink-0 w-[132px] rounded-2xl border border-ink-50 bg-white p-3 text-left active:scale-95 transition"
               >
-                {locating ? (
-                  <Loader2 className="h-3 w-3 animate-spin" />
-                ) : (
-                  <Navigation className="h-3 w-3" />
-                )}
-                {locating ? 'লোকেশন খোঁজা হচ্ছে...' : 'বর্তমান অবস্থান ব্যবহার করুন'}
+                <div className="font-bold text-[13px] text-ink mb-0.5">{addr.label}</div>
+                <div className="text-[11px] text-ink-200 line-clamp-2">{addr.sub}</div>
               </button>
-              {locateError && (
-                <span className="text-[11px] text-red-500 font-semibold px-1">{locateError}</span>
-              )}
-            </div>
+            ))}
+            <button
+              onClick={() => go({ name: 'profile' })}
+              className="flex-shrink-0 w-[132px] rounded-2xl border-2 border-dashed border-ink-200 p-3 text-left active:scale-95 transition"
+            >
+              <div className="font-bold text-[13px] text-ink-200 mb-0.5">+ Add New</div>
+              <div className="text-[11px] text-ink-200">New address</div>
+            </button>
+          </div>
 
-            <div className="space-y-1.5">
-              <label htmlFor="checkout-address" className="text-[12px] font-bold tracking-wider text-ink-200 uppercase">
-                ডেলিভারি ঠিকানা
-              </label>
-              <textarea
-                id="checkout-address"
-                placeholder="সম্পূর্ণ ঠিকানা (বাসা/রোড/এলাকা)"
-                value={form.address}
-                onChange={(e) => setForm({ ...form, address: e.target.value })}
-                rows={2}
-                className="w-full rounded-xl border border-ink-50 bg-white px-3 py-2.5 text-[13px] font-medium text-ink outline-none focus:border-coral focus:ring-2 focus:ring-coral/15 resize-none"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label htmlFor="checkout-district" className="text-[12px] font-bold tracking-wider text-ink-200 uppercase">
-                জেলা
-              </label>
-              <select
-                id="checkout-district"
-                value={form.district}
-                onChange={(e) => setForm({ ...form, district: e.target.value })}
-                className="h-11 w-full rounded-xl border border-ink-50 bg-white px-3 text-[13px] font-medium text-ink outline-none focus:border-coral focus:ring-2 focus:ring-coral/15"
-              >
-                {BD_DISTRICTS.map((d) => (
-                  <option key={d} value={d}>{d}</option>
-                ))}
-              </select>
-            </div>
+          {/* Keep minimal form fields for editing */}
+          <div className="mt-4 space-y-2.5">
+            <input
+              placeholder="আপনার নাম"
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              className="h-11 w-full rounded-xl border border-ink-50 bg-white px-3 text-[13px] font-medium text-ink outline-none focus:border-coral"
+            />
+            <input
+              type="tel"
+              placeholder="মোবাইল নম্বর"
+              value={form.phone}
+              onChange={(e) => setForm({ ...form, phone: e.target.value })}
+              className="h-11 w-full rounded-xl border border-ink-50 bg-white px-3 text-[13px] font-medium text-ink outline-none focus:border-coral"
+            />
           </div>
         </Section>
 
@@ -1190,9 +1156,9 @@ export default function CheckoutScreen({ onBack }: Props) {
           <button
             onClick={goNext}
             disabled={step === 2 ? (!form.name || !form.phone || !form.address || !paymentScreenshotFile || submitting) : false}
-            className="btn-primary ml-auto flex h-14 flex-1 items-center justify-center gap-2 rounded-2xl text-[14px] font-bold tracking-tight disabled:opacity-50"
+            className="ml-auto flex h-14 flex-1 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#5C3A22] via-[#3D2418] to-[#5C3A22] text-white text-[14px] font-bold tracking-tight shadow-[0_8px_20px_-6px_rgba(92,58,34,0.55)] active:scale-[0.985] disabled:opacity-50"
           >
-            {step < 2 ? 'পরবর্তী' : submitting ? 'Submitting...' : 'অর্ডার করুন'}
+            {step < 2 ? 'পরবর্তী' : submitting ? 'Submitting...' : 'Continue to Payment'}
             {step < 2 ? null : submitting ? <Loader2 className="h-[18px] w-[18px] animate-spin" strokeWidth={2.5} /> : <Check className="h-[18px] w-[18px]" strokeWidth={2.5} />}
           </button>
         </div>
