@@ -44,7 +44,7 @@ const EMPTY_PRODUCT = {
 };
 
 const EMPTY_BANNER = {
-  id: '', title: '', subtitle: '', image: '', tag: 'Shop Now', color: '#FFE4E9',
+  id: '', title: '', subtitle: '', image: '', tag: 'Shop Now', color: '#F3E4D0',
   type: 'new_item' as const, promoCode: '', productId: '', noticeText: '',
 };
 

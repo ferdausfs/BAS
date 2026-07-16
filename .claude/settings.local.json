@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pkg install *)",
+      "Bash(./install)",
+      "Bash(zip *)",
+      "Bash(python3 -c \"import zipfile; z=zipfile.ZipFile\\('ui-polish-070615.zip','w'\\); z.write\\('src/index.css'\\); z.write\\('src/components/ProductCard.tsx'\\); z.write\\('PREMIUM-UI-REVIEW-070726.md'\\); z.close\\(\\); print\\('ZIP created'\\)\")",
+      "Bash(unzip -l ui-polish-070615.zip)",
+      "Bash(npm run *)",
+      "Bash(npm install *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push *)"
+    ]
+  },
+  "outputStyle": "Proactive"
+}

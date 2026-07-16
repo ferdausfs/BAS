@@ -81,7 +81,7 @@ export function LocationGate({ onDismiss }: Props) {
 
   return (
     <div className="fixed inset-0 z-[80] flex items-center justify-center p-4"
-      style={{ background: 'linear-gradient(135deg, #FFF4F6 0%, #FFE4E9 55%, #FFB4C2 100%)' }}>
+      style={{ background: 'linear-gradient(135deg, #FDF8F1 0%, #F3E4D0 55%, #E8C68F 100%)' }}>
       <div className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl text-center relative">
         <button onClick={onDismiss} className="absolute top-4 right-4 w-8 h-8 rounded-full bg-black/5 flex items-center justify-center">
           <X className="w-4 h-4 text-black/40" />

@@ -61,7 +61,7 @@ export default function OrdersScreen() {
             <div
               className="mx-auto flex h-24 w-24 items-center justify-center rounded-3xl"
               style={{
-                background: 'linear-gradient(135deg, #FFF4F6 0%, #FFE4E9 100%)',
+                background: 'linear-gradient(135deg, #FDF8F1 0%, #F3E4D0 100%)',
                 boxShadow: '0 1px 2px rgba(26,19,17,.03), 0 12px 30px -18px rgba(232,82,106,.18)',
                 border: '1px solid rgba(232,82,106,0.1)',
               }}

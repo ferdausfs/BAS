@@ -1,43 +1,44 @@
 @import "tailwindcss";
 
 @theme {
-  /* === Brand Rose (richer, deeper coral) === */
-  --color-coral:     #E8526A;
-  --color-coral-50:  #FFF4F6;
-  --color-coral-100: #FFE4E9;
-  --color-coral-200: #FFCCD5;
-  --color-coral-300: #FFAAB9;
-  --color-coral-400: #FF8EA3;
-  --color-coral-500: #E8526A;
-  --color-coral-600: #D43C56;
-  --color-coral-700: #B02D44;
+  /* === Cocoa / Caramel — primary brand (was "coral" rose) ===
+     Warm chocolate-to-caramel scale pulled from the bakery reference:
+     dark espresso headers, caramel CTAs, gold highlights. */
+  --color-coral:     #A8672E;
+  --color-coral-50:  #FBF3E7;
+  --color-coral-100: #F3E1C4;
+  --color-coral-200: #E8C68F;
+  --color-coral-300: #D9A85E;
+  --color-coral-400: #C68F3F;
+  --color-coral-500: #A8672E;
+  --color-coral-600: #8A4F22;
+  --color-coral-700: #6B3A18;
 
-  /* === Blush surfaces (softer) === */
-  --color-blush:     #FFE4E9;
-  --color-blush-50:  #FFF4F6;
-  --color-blush-100: #FFE4E9;
-  --color-blush-200: #FFCCD5;
-  --color-blush-300: #FFAAB9;
+  /* === Latte surfaces (was "blush") — warm tan tints for chips/tags === */
+  --color-blush:     #F3E4D0;
+  --color-blush-50:  #FBF6EF;
+  --color-blush-100: #F3E4D0;
+  --color-blush-200: #E8CFAE;
+  --color-blush-300: #D9B183;
 
-  /* === Canvas — warm linen tone, deliberately a shade deeper than card
-     white so glass-strong cards read as raised surfaces instead of
-     blending into the page. === */
-  --color-cream:  #F4EDE7;
+  /* === Canvas — warm ivory, matches the reference's off-white bakery
+     backdrop. Cards sit on this as solid opaque surfaces, not glass. === */
+  --color-cream:  #FBF6EF;
   --color-paper:  #FFFFFF;
 
-  /* === Ink (warmer near-black) === */
-  --color-ink:     #1C1112;
-  --color-ink-50:  #F3F1F1;
-  --color-ink-100: #D0C8C8;
-  --color-ink-200: #9A8E8E;
-  --color-ink-300: #6E6060;
-  --color-ink-400: #2A1F1E;
-  --color-ink-500: #3D2D2C;
+  /* === Ink (warm espresso-black text) === */
+  --color-ink:     #2A1B12;
+  --color-ink-50:  #F4EFEA;
+  --color-ink-100: #D9CCC0;
+  --color-ink-200: #A8927F;
+  --color-ink-300: #7A6455;
+  --color-ink-400: #3D2A1E;
+  --color-ink-500: #4E3626;
 
-  /* === Gold accent (warmer, richer) === */
-  --color-gold: #C8944A;
+  /* === Gold accent (ratings, badges, price highlights) === */
+  --color-gold: #C9963C;
 
-  /* === Plum (Anniversary category — romantic) === */
+  /* === Plum (Anniversary category — kept as a romantic accent) === */
   --color-plum:      #6E2A45;
   --color-plum-tint: #F5E7EC;
 
@@ -53,19 +54,14 @@
 
 :root {
   font-family: "Inter", "Hind Siliguri", system-ui, -apple-system, sans-serif;
-  color: #1C1112;
-  background: #F4EDE7;
+  color: #2A1B12;
+  background: #FBF6EF;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
   font-feature-settings: "ss01", "cv11";
 
-  /* ===== Shared animation easing curves =====
-     One consistent "personality" instead of mixing a flat decelerate curve
-     for entrances with a springy one only on tap-feedback.
-     --ease-premium: smooth, weighty deceleration (no overshoot) — entrances.
-     --ease-spring:  gentle overshoot/settle — pops, chip taps, small scale-ins.
-     --ease-exit:    accelerating — closing/exit animations feel snappier. */
+  /* ===== Shared animation easing curves ===== */
   --ease-premium: cubic-bezier(.16,1,.3,1);
   --ease-spring:  cubic-bezier(.34,1.56,.64,1);
   --ease-exit:    cubic-bezier(.4,0,1,1);
@@ -74,7 +70,7 @@
 html, body {
   margin: 0;
   padding: 0;
-  background: #F4EDE7;
+  background: #FBF6EF;
   overflow-x: hidden;
 }
 
@@ -88,15 +84,15 @@ html { scroll-behavior: smooth; }
 /* === Scrollbar === */
 ::-webkit-scrollbar       { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(232,82,106,.18); border-radius: 999px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(232,82,106,.35); }
+::-webkit-scrollbar-thumb { background: rgba(168,103,46,.22); border-radius: 999px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(168,103,46,.4); }
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
 
 /* === Focus ring === */
 *:focus { outline: none; }
 *:focus-visible {
-  outline: 2px solid #E8526A;
+  outline: 2px solid #A8672E;
   outline-offset: 3px;
   border-radius: 10px;
 }
@@ -128,9 +124,9 @@ button { -webkit-tap-highlight-color: transparent; }
   100% { opacity: 0; transform: translateY(120vh) rotate(720deg); }
 }
 @keyframes pulseRing {
-  0%   { box-shadow: 0 0 0 0 rgba(232,82,106,.38); }
-  70%  { box-shadow: 0 0 0 10px rgba(232,82,106,0); }
-  100% { box-shadow: 0 0 0 0 rgba(232,82,106,0); }
+  0%   { box-shadow: 0 0 0 0 rgba(168,103,46,.38); }
+  70%  { box-shadow: 0 0 0 10px rgba(168,103,46,0); }
+  100% { box-shadow: 0 0 0 0 rgba(168,103,46,0); }
 }
 
 .anim-rise      { animation: riseIn .5s var(--ease-premium) both; }
@@ -153,157 +149,158 @@ button { -webkit-tap-highlight-color: transparent; }
 .delay-5 { animation-delay: .30s; }
 .delay-6 { animation-delay: .36s; }
 
-/* ===== Buttons ===== */
+/* ===== Buttons =====
+   Reference's CTAs are solid dark-cocoa buttons with white text
+   ("Add to Cart", "Sign Up", "Continue to Payment", "Write Review"). */
 .btn-primary {
-  background: linear-gradient(160deg, #EE6279 0%, #DC3E58 100%);
+  background: linear-gradient(160deg, #5C3A22 0%, #3D2418 100%);
   color: #fff;
-  box-shadow: 0 4px 20px -6px rgba(232,82,106,.48), inset 0 1px 0 rgba(255,255,255,.18);
+  box-shadow: 0 4px 20px -6px rgba(61,36,24,.45), inset 0 1px 0 rgba(255,255,255,.10);
   transition: transform .22s var(--ease-premium), box-shadow .22s var(--ease-premium), filter .22s var(--ease-premium);
 }
-.btn-primary:hover  { filter: brightness(1.05); box-shadow: 0 8px 26px -6px rgba(232,82,106,.62); }
-.btn-primary:active { transform: scale(.97); box-shadow: 0 2px 10px -4px rgba(232,82,106,.35); }
+.btn-primary:hover  { filter: brightness(1.08); box-shadow: 0 8px 26px -6px rgba(61,36,24,.58); }
+.btn-primary:active { transform: scale(.97); box-shadow: 0 2px 10px -4px rgba(61,36,24,.35); }
 
 .btn-secondary {
   background: #FFFFFF;
-  color: #1C1112;
-  border: 1.5px solid #EDE5E6;
+  color: #2A1B12;
+  border: 1.5px solid #EEE1D2;
   transition: all .22s var(--ease-premium);
 }
-.btn-secondary:hover { background: #FFF4F6; border-color: #DFCED1; }
+.btn-secondary:hover { background: #FBF3E7; border-color: #E8C68F; }
 .btn-secondary:active { transform: scale(.98); }
 
 .btn-ghost {
   background: transparent;
-  color: #E8526A;
+  color: #A8672E;
   transition: background .15s ease;
 }
-.btn-ghost:hover { background: rgba(232,82,106,.07); }
+.btn-ghost:hover { background: rgba(168,103,46,.08); }
 
 /* ===== Surfaces ===== */
 .card {
   background: #FFFFFF;
   border-radius: 24px;
-  border: 1.5px solid rgba(0,0,0,0.055);
+  border: 1.5px solid rgba(61,36,24,0.06);
   box-shadow:
-    0 1px 2px rgba(0,0,0,0.04),
-    0 6px 18px -8px rgba(0,0,0,0.10);
+    0 1px 2px rgba(61,36,24,0.05),
+    0 6px 18px -8px rgba(61,36,24,0.12);
   transition: transform .35s var(--ease-premium), box-shadow .35s var(--ease-premium);
 }
 .card:hover {
   transform: translateY(-3px);
   box-shadow:
-    0 2px 4px rgba(0,0,0,0.05),
-    0 14px 34px -12px rgba(0,0,0,0.14);
+    0 2px 4px rgba(61,36,24,0.06),
+    0 14px 34px -12px rgba(61,36,24,0.16);
 }
 
 .card-flat {
   background: #FFFFFF;
   border-radius: 20px;
-  border: 1.5px solid rgba(0,0,0,0.06);
+  border: 1.5px solid rgba(61,36,24,0.07);
   transition: transform .35s var(--ease-premium), box-shadow .35s var(--ease-premium);
 }
 .card-flat:hover {
   transform: translateY(-3px);
   box-shadow:
-    0 2px 4px rgba(0,0,0,0.05),
-    0 12px 28px -8px rgba(0,0,0,0.12);
+    0 2px 4px rgba(61,36,24,0.06),
+    0 12px 28px -8px rgba(61,36,24,0.14);
 }
 
 .card-elevated {
   background: #FFFFFF;
   border-radius: 28px;
-  border: 1.5px solid rgba(232,82,106,.06);
+  border: 1.5px solid rgba(168,103,46,.08);
   box-shadow:
-    0 2px 8px rgba(0,0,0,0.04),
-    0 20px 48px -20px rgba(0,0,0,0.13);
+    0 2px 8px rgba(61,36,24,0.05),
+    0 20px 48px -20px rgba(61,36,24,0.15);
 }
 
-/* ===== Premium Card System ===== */
-/* Layered gradient + shadow depth — no backdrop-filter dependency.
-   All glass-* class names preserved so zero JSX changes needed. */
+/* ===== Warm Surface System =====
+   Reference cards are solid/opaque, not frosted glass — so glass-* now
+   renders as solid warm-white cards with a soft cocoa-tinted shadow.
+   Class names preserved so zero JSX changes are needed anywhere. */
 
 .glass-subtle {
   /* nav / header */
-  background: rgba(255,252,253,0.97);
-  border: 1px solid rgba(232,82,106,0.08);
+  background: rgba(255,253,250,0.98);
+  border: 1px solid rgba(168,103,46,0.10);
   box-shadow:
-    0 2px 8px -2px rgba(0,0,0,0.06),
+    0 2px 8px -2px rgba(61,36,24,0.08),
     inset 0 1px 0 rgba(255,255,255,0.9);
 }
 
 .glass-strong {
-  /* cards / modals — warm white gradient + coral-tinted shadow */
-  background: linear-gradient(158deg, #FFFFFF 0%, #FFF8FA 100%);
-  border: 1px solid rgba(232,82,106,0.07);
+  /* cards / modals — warm white gradient + cocoa-tinted shadow */
+  background: linear-gradient(158deg, #FFFFFF 0%, #FDF8F1 100%);
+  border: 1px solid rgba(168,103,46,0.10);
   box-shadow:
-    0 1px 2px rgba(0,0,0,0.04),
-    0 6px 20px -6px rgba(0,0,0,0.08),
-    0 20px 48px -16px rgba(232,82,106,0.09),
+    0 1px 2px rgba(61,36,24,0.05),
+    0 6px 20px -6px rgba(61,36,24,0.10),
+    0 20px 48px -16px rgba(168,103,46,0.12),
     inset 0 1px 0 rgba(255,255,255,1);
 }
 
 .glass-deep {
   /* bottom sheets */
-  background: linear-gradient(180deg, #FFFFFF 0%, #FFF4F6 100%);
-  border: 1px solid rgba(232,82,106,0.10);
+  background: linear-gradient(180deg, #FFFFFF 0%, #FBF3E7 100%);
+  border: 1px solid rgba(168,103,46,0.12);
   box-shadow:
-    0 -4px 24px -4px rgba(0,0,0,0.07),
-    0 -16px 48px -12px rgba(232,82,106,0.08),
+    0 -4px 24px -4px rgba(61,36,24,0.09),
+    0 -16px 48px -12px rgba(168,103,46,0.10),
     inset 0 1px 0 rgba(255,255,255,1);
 }
 
 /* Legacy alias */
 .glass {
-  background: linear-gradient(158deg, #FFFFFF 0%, #FFF8FA 100%);
-  border: 1px solid rgba(232,82,106,0.07);
+  background: linear-gradient(158deg, #FFFFFF 0%, #FDF8F1 100%);
+  border: 1px solid rgba(168,103,46,0.10);
   box-shadow:
-    0 1px 2px rgba(0,0,0,0.04),
-    0 6px 20px -6px rgba(0,0,0,0.08);
+    0 1px 2px rgba(61,36,24,0.05),
+    0 6px 20px -6px rgba(61,36,24,0.10);
 }
 
 .glass-dark {
   /* Price chip on product images — keep dark, no change */
-  background: rgba(20,18,19,0.60);
+  background: rgba(20,14,10,0.62);
   border: 1px solid rgba(255,255,255,0.14);
   box-shadow: 0 2px 8px rgba(0,0,0,0.20);
 }
 
 .glass-tint {
   /* ProductScreen content panel — dominant color tint */
-  background: var(--tint, rgba(255,244,246,0.97));
+  background: var(--tint, rgba(251,246,239,0.98));
   border-top: 1px solid rgba(255,255,255,0.7);
-  box-shadow: 0 -4px 24px -6px rgba(0,0,0,0.07);
+  box-shadow: 0 -4px 24px -6px rgba(61,36,24,0.09);
   isolation: isolate;
 }
 
 /* ===== Confetti splash decoration ===== */
 .confetti-dots {
   background-image:
-    radial-gradient(circle at 12% 18%, #FFCCD5 1.2px, transparent 1.5px),
-    radial-gradient(circle at 88% 12%, #E8526A 1.4px, transparent 2px),
-    radial-gradient(circle at 90% 60%, #FFCCD5 1px, transparent 1.5px),
-    radial-gradient(circle at 8% 75%, #E8526A 1px, transparent 1.5px),
-    radial-gradient(circle at 50% 92%, #FFCCD5 1.2px, transparent 1.5px),
-    radial-gradient(circle at 25% 50%, #FFAAB9 .8px, transparent 1.2px),
-    radial-gradient(circle at 75% 40%, #FFCCD5 1px, transparent 1.5px);
+    radial-gradient(circle at 12% 18%, #E8C68F 1.2px, transparent 1.5px),
+    radial-gradient(circle at 88% 12%, #A8672E 1.4px, transparent 2px),
+    radial-gradient(circle at 90% 60%, #E8C68F 1px, transparent 1.5px),
+    radial-gradient(circle at 8% 75%, #A8672E 1px, transparent 1.5px),
+    radial-gradient(circle at 50% 92%, #E8C68F 1.2px, transparent 1.5px),
+    radial-gradient(circle at 25% 50%, #D9A85E .8px, transparent 1.2px),
+    radial-gradient(circle at 75% 40%, #E8C68F 1px, transparent 1.5px);
   background-size: 100% 100%;
 }
 
 /* ===== Premium mesh gradient ===== */
 .mesh-warm {
-  /* Stronger color stops so backdrop-filter blur has real contrast to show.
-     glass-strong (0.68 alpha) needs visible color variation behind it. */
   background:
-    radial-gradient(ellipse at 18% 8%,  #FFB4C2 0%, transparent 30%),
-    radial-gradient(ellipse at 82% 82%, #FFCCD5 0%, transparent 35%),
-    radial-gradient(ellipse at 55% 45%, rgba(200,148,74,0.12) 0%, transparent 38%),
-    radial-gradient(ellipse at 8%  75%, #FFE4E9 0%, transparent 28%),
-    #F4EDE7;
+    radial-gradient(ellipse at 18% 8%,  #F0D9B5 0%, transparent 30%),
+    radial-gradient(ellipse at 82% 82%, #E8C68F 0%, transparent 35%),
+    radial-gradient(ellipse at 55% 45%, rgba(168,103,46,0.14) 0%, transparent 38%),
+    radial-gradient(ellipse at 8%  75%, #F3E4D0 0%, transparent 28%),
+    #FBF6EF;
 }
 
 /* ===== Gradient text ===== */
 .text-gradient-coral {
-  background: linear-gradient(135deg, #EE6279 0%, #D43C56 100%);
+  background: linear-gradient(135deg, #C68F3F 0%, #6B3A18 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -318,18 +315,18 @@ button { -webkit-tap-highlight-color: transparent; }
   padding: 0 14px;
   border-radius: 999px;
   background: #FFFFFF;
-  border: 1.5px solid #EDE5E6;
-  color: #1C1112;
+  border: 1.5px solid #EEE1D2;
+  color: #2A1B12;
   font-size: 13px;
   font-weight: 600;
   transition: all .15s ease;
 }
-.chip:hover { background: #FFF4F6; border-color: #DFCED1; }
+.chip:hover { background: #FBF3E7; border-color: #E8C68F; }
 .chip-active {
-  background: linear-gradient(135deg, #EE6279 0%, #DC3E58 100%);
+  background: linear-gradient(160deg, #5C3A22 0%, #3D2418 100%);
   color: #fff;
   border-color: transparent;
-  box-shadow: 0 4px 14px -4px rgba(232,82,106,.42);
+  box-shadow: 0 4px 14px -4px rgba(61,36,24,.45);
 }
 
 /* ===== Section headings ===== */
@@ -338,7 +335,7 @@ button { -webkit-tap-highlight-color: transparent; }
   font-weight: 700;
   letter-spacing: .16em;
   text-transform: uppercase;
-  color: #E8526A;
+  color: #A8672E;
 }
 
 .section-title {
@@ -346,7 +343,7 @@ button { -webkit-tap-highlight-color: transparent; }
   font-weight: 700;
   font-size: 22px;
   letter-spacing: -0.02em;
-  color: #1C1112;
+  color: #2A1B12;
   line-height: 1.2;
 }
 
@@ -356,27 +353,27 @@ button { -webkit-tap-highlight-color: transparent; }
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.02em;
-  color: #1C1112;
+  color: #2A1B12;
 }
 
 /* ===== Hairline divider ===== */
 .hairline {
-  background: linear-gradient(to right, transparent, rgba(0,0,0,0.07) 20%, rgba(0,0,0,0.07) 80%, transparent);
+  background: linear-gradient(to right, transparent, rgba(61,36,24,0.09) 20%, rgba(61,36,24,0.09) 80%, transparent);
   height: 1px;
 }
 
 /* ===== Product card shadow ===== */
 .product-card-shadow {
   box-shadow:
-    0 1px 2px rgba(0,0,0,0.04),
-    0 8px 24px -10px rgba(0,0,0,0.12);
+    0 1px 2px rgba(61,36,24,0.05),
+    0 8px 24px -10px rgba(61,36,24,0.15);
 }
 
-/* ===== Premium badge ===== */
+/* ===== Premium badge (gold — ratings, "featured") ===== */
 .badge-premium {
-  background: linear-gradient(135deg, #C8944A 0%, #B47D38 100%);
+  background: linear-gradient(135deg, #C9963C 0%, #A8752C 100%);
   color: #fff;
-  box-shadow: 0 2px 8px -3px rgba(200,148,74,.42);
+  box-shadow: 0 2px 8px -3px rgba(201,150,60,.48);
 }
 
 /* ===== Tab active glow dot ===== */
@@ -388,8 +385,8 @@ button { -webkit-tap-highlight-color: transparent; }
   width: 4px;
   height: 4px;
   border-radius: 999px;
-  background: #E8526A;
-  box-shadow: 0 0 8px 2px rgba(232,82,106,.5);
+  background: #A8672E;
+  box-shadow: 0 0 8px 2px rgba(168,103,46,.5);
 }
 
 /* ===== Shimmer skeleton ===== */
@@ -398,7 +395,7 @@ button { -webkit-tap-highlight-color: transparent; }
   100% { background-position:  200% center; }
 }
 .shimmer {
-  background: linear-gradient(90deg, #F2EDED 25%, #FAF7F7 50%, #F2EDED 75%);
+  background: linear-gradient(90deg, #F0E9DE 25%, #FAF6EF 50%, #F0E9DE 75%);
   background-size: 200% 100%;
   animation: shimmerSlide 1.6s ease-in-out infinite;
 }
@@ -414,58 +411,54 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 
 /* ═══════════════════════════════════════════════════════════
-   LUXURY GLASS LAYER (2026-07-07) — soft pink canvas + real frosted glass.
-   Appended so it overrides the earlier opaque .glass-* defs. Single source
-   of truth for the redesign; every screen inherits this.
+   BAKERY WARM SURFACE LAYER (2026-07-16) — ivory canvas, solid cocoa/gold
+   cards, no frosted glass. Replaces the earlier pink frosted-glass layer.
+   Single source of truth for the redesign; every screen inherits this.
    ═══════════════════════════════════════════════════════════ */
 
 :root{
-  /* softer, pinker luxury palette (ink warms toward plum) */
-  --color-cream:  #FCE3EC;
-  --color-ink:     #3B2530;
-  --color-ink-200: #9C8791;
-  --color-ink-300: #6E5560;
+  --color-cream:  #FBF6EF;
+  --color-ink:     #2A1B12;
+  --color-ink-200: #A8927F;
+  --color-ink-300: #7A6455;
 
-  /* frosted-glass surface tokens */
-  --glass:        rgba(255,255,255,.55);
-  --glass-strong: rgba(255,255,255,.72);
-  --glass-line:   rgba(255,255,255,.85);
-  --glass-shadow: 0 10px 34px -14px rgba(138,74,102,.3);
+  /* solid warm-surface tokens (kept var names for back-compat, no blur now) */
+  --glass:        rgba(255,255,255,.98);
+  --glass-strong: #FFFFFF;
+  --glass-line:   rgba(168,103,46,.12);
+  --glass-shadow: 0 10px 34px -14px rgba(61,36,24,.28);
 }
 
-/* full-screen soft-pink gradient base (was flat #F4EDE7) */
+/* full-screen warm ivory gradient base (was pink) */
 html, body{
   background:
-    radial-gradient(ellipse at 15% 0%,  #f6e6df 0%, transparent 45%),
-    radial-gradient(ellipse at 90% 100%,#f2dfe6 0%, transparent 40%),
-    linear-gradient(165deg,#FFF1F4 0%,#FCE3EC 42%,#F6D9E4 100%);
+    radial-gradient(ellipse at 15% 0%,  #F6EBDD 0%, transparent 45%),
+    radial-gradient(ellipse at 90% 100%,#F2E4D0 0%, transparent 40%),
+    linear-gradient(165deg,#FDF9F3 0%,#FBF6EF 42%,#F6EBDD 100%);
   background-attachment: fixed;
 }
 
 /* fixed gradient canvas + blurred glow orbs (rendered by App.tsx) */
 .lux-canvas{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;
-  background:linear-gradient(165deg,#FFF1F4 0%,#FCE3EC 42%,#F6D9E4 100%);}
+  background:linear-gradient(165deg,#FDF9F3 0%,#FBF6EF 42%,#F6EBDD 100%);}
 .lux-orb{position:absolute;border-radius:9999px;filter:blur(34px)}
-.lux-orb.a{width:190px;height:190px;background:#FFB3C9;opacity:.55;top:-40px;right:-30px}
-.lux-orb.b{width:160px;height:160px;background:#E9A6C7;opacity:.40;bottom:12%;left:-46px}
-.lux-orb.c{width:130px;height:130px;background:#FFD0A6;opacity:.35;top:42%;right:-34px}
+.lux-orb.a{width:190px;height:190px;background:#E8C68F;opacity:.45;top:-40px;right:-30px}
+.lux-orb.b{width:160px;height:160px;background:#D9A85E;opacity:.30;bottom:12%;left:-46px}
+.lux-orb.c{width:130px;height:130px;background:#C9963C;opacity:.25;top:42%;right:-34px}
 
-/* real frosted glass — same class names, now actually translucent + blurred */
+/* solid warm cards — same class names as before, no backdrop-filter now */
 .glass-strong{
   background:var(--glass-strong);
-  -webkit-backdrop-filter:blur(22px);backdrop-filter:blur(22px);
   border:1px solid var(--glass-line);
   box-shadow:var(--glass-shadow), inset 0 1px 1px rgba(255,255,255,.7);
 }
 .glass, .glass-subtle{
   background:var(--glass);
-  -webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);
   border:1px solid var(--glass-line);
-  box-shadow:0 8px 30px -12px rgba(138,74,102,.26), inset 0 1px 1px rgba(255,255,255,.6);
+  box-shadow:0 8px 30px -12px rgba(61,36,24,.20), inset 0 1px 1px rgba(255,255,255,.6);
 }
 .glass-deep{
   background:var(--glass-strong);
-  -webkit-backdrop-filter:blur(24px);backdrop-filter:blur(24px);
   border-top:1px solid var(--glass-line);
-  box-shadow:0 -12px 40px -12px rgba(138,74,102,.28), inset 0 1px 1px rgba(255,255,255,.7);
+  box-shadow:0 -12px 40px -12px rgba(61,36,24,.22), inset 0 1px 1px rgba(255,255,255,.7);
 }

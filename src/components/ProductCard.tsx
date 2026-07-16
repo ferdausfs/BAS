@@ -57,7 +57,7 @@ export default function ProductCard({ product, wished, onOpen, onWish, variant =
         style={{
           width: size,
           height: size,
-          background: added ? '#1baf7a' : '#E8526A',
+          background: added ? '#1baf7a' : '#A8672E',
           boxShadow: added
             ? '0 6px 16px -4px rgba(27,175,122,.5)'
             : '0 6px 16px -4px rgba(232,82,106,.5)',
@@ -107,10 +107,10 @@ export default function ProductCard({ product, wished, onOpen, onWish, variant =
           <button
             onClick={handleWish}
             className="absolute top-2.5 right-2.5 flex h-7 w-7 items-center justify-center rounded-full bg-white/80 backdrop-blur-md transition-all active:scale-90"
-            style={{ color: wished ? '#E8526A' : 'rgba(59,37,48,.4)' }}
+            style={{ color: wished ? '#A8672E' : 'rgba(59,37,48,.4)' }}
             aria-label={wished ? 'Remove from wishlist' : 'Add to wishlist'}
           >
-            <Heart key={heartKey} className={`h-3.5 w-3.5 ${wished ? 'anim-pop' : ''}`} style={{ fill: wished ? '#E8526A' : 'none' }} strokeWidth={2} />
+            <Heart key={heartKey} className={`h-3.5 w-3.5 ${wished ? 'anim-pop' : ''}`} style={{ fill: wished ? '#A8672E' : 'none' }} strokeWidth={2} />
           </button>
         )}
         {!zoomed && (

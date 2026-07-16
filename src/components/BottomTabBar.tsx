@@ -56,7 +56,7 @@ export default React.memo(function BottomTabBar() {
                 <Icon
                   className="h-[21px] w-[21px] transition-all duration-300"
                   style={{
-                    color: active ? '#E8526A' : '#9C8791',
+                    color: active ? '#A8672E' : '#A8927F',
                     transform: active ? 'translate3d(0,-5px,0)' : 'translate3d(0,0,0)',
                     willChange: 'transform',
                     filter: active ? 'drop-shadow(0 6px 10px rgba(232,82,106,0.45))' : 'none',
@@ -64,7 +64,7 @@ export default React.memo(function BottomTabBar() {
                   }}
                   strokeWidth={active ? 2.4 : 1.6}
                 />
-                <span className="text-[10px] font-semibold leading-none transition-colors duration-200" style={{ color: active ? '#E8526A' : '#9C8791' }}>
+                <span className="text-[10px] font-semibold leading-none transition-colors duration-200" style={{ color: active ? '#A8672E' : '#A8927F' }}>
                   {t.label}
                 </span>
               </button>

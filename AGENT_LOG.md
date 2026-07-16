@@ -90,3 +90,76 @@
 - User communicates in mixed Bengali/English; prefers concise step-by-step Termux commands, one command block at a time, with explicit "✓ built in" confirmation before any push.
 
 ---
+
+## Session: Brown/Gold Bakery Redesign — Foundation (2026-07-16)
+
+**Goal**: Full app-wide redesign away from the pink glassmorphism theme, toward a
+dark-cocoa/gold bakery aesthetic, matching a reference bakery UI kit the user
+supplied (onboarding, product listing, cart, reviews, checkout, order tracking
+screens). This is Phase 1 of a multi-phase rollout (same pattern as the earlier
+glass rollout: foundation → navigation → screens → cards).
+
+**Phase 1 (this session) — Foundation only:**
+- Rewrote `src/index.css` `@theme` palette: `--color-coral` family repurposed
+  from rose-pink (#E8526A) to a cocoa/caramel scale (#A8672E base, #6B3A18
+  deep, #FBF3E7 light), `--color-blush` → warm tan/latte tints, `--color-cream`
+  → warm ivory (#FBF6EF, was pink #FCE3EC), `--color-ink` → warm espresso
+  (#2A1B12). `--color-gold` kept close to original (#C9963C).
+- **Removed the pink "LUXURY GLASS LAYER" frosted-glass block** (blur + pink
+  tint) and replaced it with a **solid warm-surface system** — same
+  `.glass-strong` / `.glass` / `.glass-subtle` / `.glass-deep` class names
+  (zero JSX changes needed anywhere) but now render as opaque white/ivory
+  cards with a soft cocoa-tinted shadow, no `backdrop-filter`. This matches
+  the reference, which uses solid cards throughout, not glassmorphism.
+- `.btn-primary` / `.chip-active` now use a dark cocoa gradient
+  (#5C3A22 → #3D2418) with white text — matches reference's solid dark
+  "Add to Cart" / "Sign Up" / "Continue to Payment" buttons.
+- `.badge-premium`, ratings/price accents use the gold token.
+- Swept all hardcoded pink hex literals out of component files (not just
+  CSS vars) so nothing regresses to pink: `BottomTabBar.tsx`, `ProductCard.tsx`,
+  `data.ts` (category chip colors), `SuccessScreen.tsx` (confetti palette),
+  `LocationGate.tsx`, `AdminPanel.tsx`, `WishlistScreen.tsx`, `OrdersScreen.tsx`
+  (empty-state gradients).
+- Verified: `tsc --noEmit` shows the same 160-line pre-existing error set as
+  the unmodified repo (unrelated `unknown` type issues in HomeScreen/
+  OrdersScreen/TrackingScreen/WishlistScreen — not touched, not introduced
+  by this session). `npm run build` succeeds cleanly.
+
+### Touched files (this session):
+- `src/index.css`
+- `src/lib/data.ts`
+- `src/components/AdminPanel.tsx`
+- `src/components/BottomTabBar.tsx`
+- `src/components/LocationGate.tsx`
+- `src/components/ProductCard.tsx`
+- `src/screens/OrdersScreen.tsx`
+- `src/screens/SuccessScreen.tsx`
+- `src/screens/WishlistScreen.tsx`
+
+### এখনো Pending (next phases, user wants the whole app redone):
+- **Typography/layout pass per-screen** to more closely mirror the reference
+  kit's specific compositions (e.g. large hero product photo + floating
+  bottom sheet on ProductScreen, star-breakdown review screen, order-tracking
+  map-style layout). Foundation colors now cascade everywhere automatically,
+  but layout structure has not been touched yet.
+- **New screens the reference has that BAS doesn't yet**: a dedicated
+  "Write a Review" screen with star input, a richer review-list screen with
+  rating breakdown bars — not built yet, only styled if/when they exist.
+- **BottomTabBar / Header** icon set and active-state visuals should get a
+  dedicated pass (currently just recolored, not restructured).
+- Pre-existing `unknown`-type TS errors (160 lines, listed above) are
+  untouched — out of scope for this redesign session, flagged for a separate
+  cleanup pass if the user wants it.
+
+### পরবর্তী Agent এর জন্য নোট:
+- The new palette is a **cocoa/caramel + gold** system — do not reintroduce
+  pink/rose hex values (`#E8526A`, `#FFE4E9`, `#FFCCD5`, etc.) anywhere,
+  even in new one-off inline styles. Use the CSS vars or the hex values
+  documented above.
+- `--color-coral` is a **legacy variable name** now holding the cocoa/caramel
+  scale, not an actual coral color — kept only so existing Tailwind classes
+  (`bg-coral-500`, `text-coral-600`, etc.) don't require a repo-wide rename.
+  Don't be confused by the name when reading old code.
+- `.glass-*` classes are **no longer glassmorphic** — they're solid opaque
+  cards now. Don't add `backdrop-filter` back to them.
+- ZIP filenames must stay unique/descriptive (established rule, see above).

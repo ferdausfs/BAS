@@ -40,7 +40,7 @@ export default function SuccessScreen() {
               style={{
                 left: `${5 + (i * 5.5) % 90}%`,
                 top: '-10px',
-                background: ['#E8526A','#C8944A','#FFE4E9','#1baf7a','#3B6D11','#E8526A','#C8944A'][i % 7],
+                background: ['#A8672E','#C9963C','#E8C68F','#1baf7a','#3B6D11','#A8672E','#C9963C'][i % 7],
                 animationDelay: `${(i * 0.12)}s`,
                 animationDuration: `${1.8 + (i % 4) * 0.3}s`,
               }}
