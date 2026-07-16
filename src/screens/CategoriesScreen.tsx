@@ -155,6 +155,40 @@ export default function CategoriesScreen() {
 
       {/* Grid */}
       <div className="no-scrollbar flex-1 overflow-y-auto px-5 pb-32">
+        {/* Nearby Bakeries reference card section */}
+        <div className="mb-5">
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="font-display text-[15px] font-bold text-ink">Bakeries Near You</h2>
+            <span className="text-[11px] font-semibold text-coral">Live Map 📍</span>
+          </div>
+          <div className="no-scrollbar flex gap-3 overflow-x-auto pb-1">
+            {[
+              { id: 'b1', name: 'Luscious Layers Bakery', rating: '4.9', reviews: '1k+', dist: '2.2 km', time: '14 min', free: true, tags: 'Cup Cake, Cookies, Donuts' },
+              { id: 'b2', name: 'Crave Cupcakes & Bakes', rating: '5.0', reviews: '850', dist: '1.8 km', time: '10 min', free: false, tags: 'Custom Cakes, Breads' },
+            ].map((bakery) => (
+              <div
+                key={bakery.id}
+                className="w-[220px] flex-shrink-0 rounded-2xl border border-ink-50 bg-white p-3 shadow-sm active:scale-95 transition"
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-cocoa-50 text-xl font-bold text-cocoa-700">
+                    🧁
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate font-bold text-[13px] text-ink">{bakery.name}</div>
+                    <div className="truncate text-[10px] text-ink-200">{bakery.tags}</div>
+                  </div>
+                </div>
+                <div className="mt-2.5 flex items-center justify-between text-[11px] font-semibold text-ink-300">
+                  <span className="flex items-center gap-0.5 text-gold font-bold">★ {bakery.rating}</span>
+                  <span>{bakery.time} • {bakery.dist}</span>
+                  {bakery.free && <span className="rounded bg-emerald-50 px-1.5 py-0.5 text-[9.5px] font-bold text-emerald-700">Free Delivery</span>}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
         <div className="mb-3 flex items-center justify-between">
           <p className="text-[12px] font-medium text-ink-200">
             <span className="font-bold text-ink">{filtered.length}</span> cakes

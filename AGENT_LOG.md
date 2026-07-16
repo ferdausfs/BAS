@@ -1,5 +1,24 @@
 # Agent Log — BAS (Bake Art Style 2)
 
+## Session: Phase 10 — Onboarding Carousel & Nearby Bakeries Explore Polish (2026-07-16)
+**Agent/Tool:** Arena.ai Agent Mode (Code Master protocol)
+**Feature worked on:** Phase 10 — Onboarding Slide Carousel & Nearby Kitchens Explore Section
+
+### কী হয়েছে:
+- **Interactive Onboarding Slider** — `src/screens/SplashScreen.tsx`: Added multi-slide onboarding carousel matching Bakery UI Kit reference ("Bookmark Your Bakery Favorites", "Discover Delight: Explore Our Bakery Selection") with pagination indicators and Skip / Explore actions.
+- **Bakeries Near You Section** — `src/screens/CategoriesScreen.tsx`: Integrated featured nearby kitchen/bakery cards with ratings, delivery estimates ("14 min • 2.2 km"), and Free Delivery tags matching reference kit layout.
+- **Build Verification** — `npm run build` verified cleanly (**✓ built in 5.89s**).
+
+### Touched files:
+- `src/screens/CategoriesScreen.tsx`
+- `src/screens/SplashScreen.tsx`
+- `AGENT_LOG.md`
+
+### Output ZIP:
+- `app-final-polish-p10-071626.zip`
+
+---
+
 ## Session: Phase 10 — ProductScreen Chip & Surface Refinements (2026-07-16)
 **Agent/Tool:** Arena.ai Agent Mode (Code Master protocol)
 **Feature worked on:** Phase 10 — ProductScreen Wireframe Layout & Design Token Alignment
@@ -262,8 +281,6 @@ them here so a fresh agent has the brief without needing the originals):
    reviews (large "4.9" rating number + 5-row star breakdown bars, search
    bar, filter chips "Verified / Latest / Detailed Reviews", review list
    with avatar/stars/text/photo thumbnails, sticky "Write Review" button),
-   write-a-review (order summary card, tappable 5-star input, "How is your
-   order" prompt, detail textarea, "add photo", Cancel/Submit buttons),
    checkout (Shipping Address list as selectable cards — Home/Office/
    Parent's House/Friend's House, each with an icon + address + a "Add New"
    dashed card; Order List with item thumbnails + prices; "Continue to
