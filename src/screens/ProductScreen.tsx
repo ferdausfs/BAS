@@ -704,13 +704,21 @@ export default function ProductScreen() {
         <div className="flex items-center justify-between mb-3">
           <h2 className="font-display text-[17px] font-bold text-ink">রিভিউ</h2>
           {!showReviewForm && (
+          <div className="flex gap-2">
             <button
-              onClick={() => user && setShowReviewForm(true)}
+              onClick={() => go({ name: 'reviews' })}
+              className="rounded-xl bg-ink-50 px-3 py-1.5 text-[11px] font-bold text-ink"
+            >
+              সব রিভিউ দেখুন
+            </button>
+            <button
+              onClick={() => user && go({ name: 'write-review', productId: product.id })}
               disabled={!user}
               className="rounded-xl bg-ink-50 px-3 py-1.5 text-[11px] font-bold text-ink disabled:opacity-50"
             >
               {user ? '+ রিভিউ লিখুন' : 'রিভিউ দিতে সাইন ইন করুন'}
             </button>
+          </div>
           )}
         </div>
 

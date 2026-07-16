@@ -17,6 +17,8 @@ import NotificationsSheet from './components/NotificationsSheet';
 import WishlistScreen from './screens/WishlistScreen';
 import TrackingScreen from './screens/TrackingScreen';
 import AdminScreen from './screens/AdminScreen';
+import ReviewsListScreen from './screens/ReviewsListScreen';
+import WriteReviewScreen from './screens/WriteReviewScreen';
 import AppErrorBoundary from './components/AppErrorBoundary';
 import { ChatBot } from './components/ChatBot';
 import QuickBar from './components/QuickBar';
@@ -126,6 +128,8 @@ export default function App() {
                 {view.name === 'wishlist' && <WishlistScreen onAuthOpen={() => setAuthOpen(true)} />}
                 {view.name === 'tracking' && <TrackingScreen />}
                 {view.name === 'admin' && <AdminScreen />}
+                {view.name === 'reviews' && <ReviewsListScreen />}
+                {view.name === 'write-review' && <WriteReviewScreen />}
               </div>
             )
           }
