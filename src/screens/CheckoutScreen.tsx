@@ -612,7 +612,7 @@ export default function CheckoutScreen({ onBack }: Props) {
                 onClick={() => setForm({ ...form, time: s.v })}
                 className={`relative h-11 rounded-xl border-2 text-[12px] font-semibold transition active:scale-95 ${
                   form.time === s.v
-                    ? 'border-coral bg-coral text-white shadow-[0_6px_16px_-8px_rgba(242,94,115,.5)]'
+                    ? 'border-coral bg-coral text-white shadow-[0_6px_16px_-8px_rgba(168,103,46,.45)]'
                     : 'border-ink-50 bg-white text-ink'
                 }`}
               >

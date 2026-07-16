@@ -58,7 +58,9 @@ export type View =
   | { name: 'success'; orderId: string }
   | { name: 'wishlist' }
   | { name: 'tracking'; orderId?: string }
-  | { name: 'admin'; tab?: string };
+  | { name: 'admin'; tab?: string }
+  | { name: 'reviews'; productId?: string }
+  | { name: 'write-review'; productId: string };
 
 type UIState = {
   view: View;
