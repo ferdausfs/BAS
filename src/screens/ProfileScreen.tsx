@@ -500,7 +500,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
         {/* Wallet Card */}
         {user && (
           <section className="px-4 pt-2 pb-1">
-            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-coral to-rose-500 px-4 py-3.5 text-white"
+            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#5C3A22] via-[#3D2418] to-[#5C3A22] px-4 py-3.5 text-white"
               style={{ boxShadow: '0 8px 24px -8px rgba(168,103,46,.45)' }}>
               <div className="pointer-events-none absolute -right-4 -top-4 h-20 w-20 rounded-full bg-white/10" />
               <div className="flex items-center justify-between">
