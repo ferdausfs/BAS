@@ -60,7 +60,8 @@ export type View =
   | { name: 'tracking'; orderId?: string }
   | { name: 'admin'; tab?: string }
   | { name: 'reviews'; productId?: string }
-  | { name: 'write-review'; productId: string };
+  | { name: 'write-review'; productId: string }
+  | { name: 'coupons' };
 
 type UIState = {
   view: View;

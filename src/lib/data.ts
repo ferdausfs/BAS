@@ -154,7 +154,11 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   nagadNumber: '01XXXXXXXXX',
   promoTitle: 'Special offer! Order today',
   deliveryEstimate: '2–4 ঘণ্টা',
-  coupons: [],
+  coupons: [
+    { id: 'save10', code: 'SAVE10', discount: 10, maxUses: 500, usedCount: 0, expiresAt: '2026-12-31', active: true },
+    { id: 'fresh15', code: 'FRESH15', discount: 15, maxUses: 300, usedCount: 0, expiresAt: '2026-12-31', active: true },
+    { id: 'bake25', code: 'BAKE25', discount: 25, maxUses: 100, usedCount: 0, expiresAt: '2026-09-30', active: true },
+  ],
   allowedZones: ['Comilla', 'Dhaka', 'Chittagong', 'Sylhet', 'Rajshahi', 'Khulna', 'Mymensingh', 'Barishal', 'Rangpur'],
   customAddons: [
     { id: 'candles',    emoji: '🕯️',  label: 'Candles',              price: 50,  category: 'extras' },

@@ -19,6 +19,7 @@ import TrackingScreen from './screens/TrackingScreen';
 import AdminScreen from './screens/AdminScreen';
 import ReviewsListScreen from './screens/ReviewsListScreen';
 import WriteReviewScreen from './screens/WriteReviewScreen';
+import CouponsScreen from './screens/CouponsScreen';
 import AppErrorBoundary from './components/AppErrorBoundary';
 import { ChatBot } from './components/ChatBot';
 import QuickBar from './components/QuickBar';
@@ -130,6 +131,7 @@ export default function App() {
                 {view.name === 'admin' && <AdminScreen />}
                 {view.name === 'reviews' && <ReviewsListScreen />}
                 {view.name === 'write-review' && <WriteReviewScreen />}
+                {view.name === 'coupons' && <CouponsScreen />}
               </div>
             )
           }

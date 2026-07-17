@@ -3,7 +3,7 @@ import {
   Heart, MapPin, CreditCard, Bell, HelpCircle, Settings, LogOut,
   ChevronRight, Star, Sparkles, LogIn, X, Save, Check, User, AlertTriangle,
   Cake, Gift, Wallet as WalletIcon,
-  Copy, Share2, Navigation, Loader2
+  Copy, Share2, Navigation, Loader2, Tag
 } from 'lucide-react';
 import { useUI, useUser, useOrders, useCart, useAuthStore, useWallet, getReferralCode, claimReferralRewards, WALLET_REFERRAL_BONUS } from '../lib/store';
 import { useProducts } from '../hooks/useProducts';
@@ -572,6 +572,24 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
               <ChevronRight className="h-4 w-4 text-ink/30" />
             </button>
           )}
+
+          {/* My Coupons */}
+          <button
+            onClick={() => go({ name: 'coupons' })}
+            className="mt-3 flex w-full items-center justify-between rounded-2xl glass-strong p-4 text-left transition active:scale-[.98]"
+            style={{ boxShadow: '0 1px 2px rgba(26,19,17,.02), 0 8px 24px -16px rgba(26,19,17,.16)' }}
+          >
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-coral/10 text-coral">
+                <Tag className="h-4 w-4" />
+              </div>
+              <div>
+                <div className="text-[13px] font-bold text-ink">My Coupons</div>
+                <div className="text-[11px] text-ink/50">Offers you can use at checkout</div>
+              </div>
+            </div>
+            <ChevronRight className="h-4 w-4 text-ink/30" />
+          </button>
         </div>
 
         {wishlistItems.length > 0 && (

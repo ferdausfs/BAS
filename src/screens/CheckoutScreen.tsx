@@ -813,12 +813,34 @@ export default function CheckoutScreen({ onBack }: Props) {
                         setPromoError('Wallet balance is active — remove it first');
                         return;
                       }
+                      const enteredCode = promoInput.trim().toUpperCase();
+
+                      // Check the multi-coupon list first (My Coupons screen), then
+                      // fall back to the legacy single admin promo code.
+                      const matchedCoupon = (settings.coupons ?? []).find((c) => {
+                        if (c.code.trim().toUpperCase() !== enteredCode) return false;
+                        if (!c.active) return false;
+                        if (c.maxUses > 0 && c.usedCount >= c.maxUses) return false;
+                        if (c.expiresAt) {
+                          const exp = new Date(c.expiresAt);
+                          exp.setHours(23, 59, 59, 999);
+                          if (!Number.isNaN(exp.getTime()) && exp.getTime() < Date.now()) return false;
+                        }
+                        return true;
+                      });
+
+                      if (matchedCoupon) {
+                        applyPromo(matchedCoupon.discount);
+                        setPromoError('');
+                        return;
+                      }
+
                       if (!settings.promoEnabled) {
                         setPromoError('No active promo right now');
                         clearPromo();
                         return;
                       }
-                      if (promoInput.trim().toUpperCase() === settings.promoCode.trim().toUpperCase()) {
+                      if (enteredCode === settings.promoCode.trim().toUpperCase()) {
                         applyPromo(settings.promoPercent);
                         setPromoError('');
                       } else {
@@ -837,7 +859,7 @@ export default function CheckoutScreen({ onBack }: Props) {
                 )}
                 {promoDiscount > 0 && !promoError && (
                   <p className="mt-1.5 px-3.5 text-emerald-600 text-[11.5px] font-semibold">
-                    Promo code "{settings.promoCode}" applied! ({settings.promoPercent}% discount)
+                    Promo code "{promoInput.trim().toUpperCase()}" applied! ({promoDiscount}% discount)
                   </p>
                 )}
                 {pendingLoyaltyRedeem > 0 && (

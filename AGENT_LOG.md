@@ -1,5 +1,45 @@
 # Agent Log — BAS (Bake Art Style 2)
 
+## Session: Wireframe Gap Review + Coupons Screen (2026-07-17)
+**Agent/Tool:** Claude (chat, Code Master protocol)
+**Feature worked on:** Item 1 of `WIREFRAME-GAP-REVIEW-071726.md` — "My Coupons" screen (Check 7: Offers/Promo/Coupon screens, previously entirely missing)
+
+### Context:
+- User handed a full grocery-delivery-app Figma wireframe kit to Arena.ai to redesign BAS against. A gap review (`WIREFRAME-GAP-REVIEW-071726.md`) was written comparing all wireframe screens against actual `src/App.tsx` routes + code — found only Home/Categories/ProductCard/ProductScreen/SplashScreen were touched (styling-level), most other wireframe screens untouched.
+- **Correction to that review:** on deeper read (this session), Check 3 (Search + Filter) and Check 4 (Address management) turned out to already be functionally implemented — `CategoriesScreen.tsx` already has debounced search, recent searches, suggestions, and a full filter/sort bottom sheet; `ProfileScreen.tsx` already has a full address-book modal (add/edit/delete/set-default/geolocate). Those two were incorrectly marked "missing" in the initial review from a shallow grep — flagging here so no one re-builds them from scratch.
+- Check 7 (Coupons) was confirmed genuinely missing: `SiteSettings.coupons: Coupon[]` type existed but was always `[]`, never rendered anywhere, no admin UI, no redemption logic beyond the single legacy `settings.promoCode` string.
+
+### কী হয়েছে:
+- **New `src/screens/CouponsScreen.tsx`** — full-screen "My Coupons" list (ticket-style cards: discount %, code, expiry countdown, "Copy code" button), matching the wireframe's Coupon screen intent. Empty state included.
+- **`src/lib/store.ts`** — added `{ name: 'coupons' }` to the `View` union so it's a real navigable route.
+- **`src/App.tsx`** — imported and routed `CouponsScreen` for `view.name === 'coupons'`.
+- **`src/screens/ProfileScreen.tsx`** — added a "My Coupons" row (same style as Address book / Special Dates rows) navigating to the new screen. Not gated behind `user` — coupons are viewable/copyable by guests too.
+- **`src/screens/CheckoutScreen.tsx`** — promo code Apply button now checks `settings.coupons[]` first (active + not expired + under maxUses), falling back to the legacy single `settings.promoCode`/`promoPercent`. Fixed the "applied" confirmation message to show whichever code/percent was actually applied instead of always showing the legacy admin promo code.
+- **`src/lib/data.ts`** — seeded `DEFAULT_SETTINGS.coupons` with 3 example coupons (`SAVE10`/10%, `FRESH15`/15%, `BAKE25`/25%) so the screen isn't empty out of the box.
+
+### Touched files:
+- `src/screens/CouponsScreen.tsx` (new)
+- `src/lib/store.ts`
+- `src/App.tsx`
+- `src/screens/ProfileScreen.tsx`
+- `src/screens/CheckoutScreen.tsx`
+- `src/lib/data.ts`
+
+### Verify:
+- `npm run build`: **✓ built in 13.50s**
+- `npx tsc --noEmit`: same pre-existing `unknown`-type errors in Home/Orders/Reviews/Tracking/Wishlist/WriteReview as before (all listed in this repo's own error baseline) — **zero new errors** in any of the 6 touched/new files.
+
+### Output ZIP:
+- `coupons-screen-071726.zip` — contains only the 6 files listed above, no top-level folder (starts at `src/`).
+
+### এখনো Pending / পরবর্তী Agent এর জন্য নোট:
+- **No admin UI to manage coupons yet** — `AdminScreen.tsx` was intentionally left untouched (out of scope for this task). The 3 seeded coupons are hardcoded in `data.ts` as a starting point; a real admin coupon-management tab (create/edit/deactivate/track usage) is a separate future task if wanted.
+- **`usedCount` is not incremented on order placement** — redemption validates `maxUses`/`usedCount`/`expiresAt`/`active` but doesn't write back usage count when an order is placed (would need a Firestore write in the order-creation path in `store.ts` — deliberately left out to keep this change low-risk/read-only-logic).
+- Remaining items from `WIREFRAME-GAP-REVIEW-071726.md` still open: Check 1 (onboarding slides — 2/4 done, wrong visual style), Check 2 (Login/Signup/OTP as dedicated screens vs current sheet), Check 5 (Payment methods management + Add Card screen), Check 9 (order tracking live map — needs a maps-SDK scoping decision first).
+- User's build/push environment: Android via Termux, GitHub for version control, Cloudflare Pages for auto-deploy on push to `main`.
+
+---
+
 ## Session: Phase 10 — Onboarding Carousel & Nearby Bakeries Explore Polish (2026-07-16)
 **Agent/Tool:** Arena.ai Agent Mode (Code Master protocol)
 **Feature worked on:** Phase 10 — Onboarding Slide Carousel & Nearby Kitchens Explore Section
