@@ -140,18 +140,31 @@ export default function CategoriesScreen() {
         </div>
       </header>
 
-      {/* Filter chips */}
-      <div className="no-scrollbar mt-3 flex flex-shrink-0 gap-2 overflow-x-auto px-5 pb-3">
+      {/* Explore Categories — icon grid (wireframe's dedicated category-grid
+          screen pattern: circle icon + label underneath, wraps to multiple
+          rows). Replaces the old single-line horizontal chip row so this
+          screen genuinely matches the wireframe's "Explore Categories" grid,
+          not just a reused Home-style chip strip. Same filter logic as
+          before (active/setActive) — only the visual shape changed. */}
+      <div className="mt-3 grid flex-shrink-0 grid-cols-4 gap-x-2 gap-y-3 px-5 pb-3">
         {[ALL_CAT, ...categories].map((c) => {
           const isActive = active === c.id;
           return (
             <button
               key={c.id}
               onClick={() => setActive(c.id)}
-              className={`chip flex-shrink-0 ${isActive ? 'chip-active' : ''}`}
+              className="flex flex-col items-center gap-1.5"
             >
-              <OccasionIcon id={c.id} size={15} />
-              <span>{c.name}</span>
+              <span
+                className={`flex h-14 w-14 items-center justify-center rounded-2xl transition active:scale-95 ${
+                  isActive ? 'bg-coral text-white' : 'bg-ink-50 text-ink-300'
+                }`}
+              >
+                <OccasionIcon id={c.id} size={22} />
+              </span>
+              <span className={`text-[10.5px] font-semibold ${isActive ? 'text-ink' : 'text-ink-200'}`}>
+                {c.name}
+              </span>
             </button>
           );
         })}

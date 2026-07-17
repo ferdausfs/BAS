@@ -1,5 +1,32 @@
 # Agent Log — BAS (Bake Art Style 2)
 
+## Session: Self-review follow-up — Categories icon-grid (2026-07-17)
+**Agent/Tool:** Claude (chat, Code Master protocol)
+**Feature worked on:** Follow-up fix after a self-review of the earlier wireframe pass (see `tasks/self-review-wireframe-pass-071726.md`). Screen: `CategoriesScreen.tsx`.
+
+### Review (gap found during self-review, before fix):
+- The earlier Categories redesign (see the "Wireframe Redesign Pass — Categories screen" entry below) kept the pre-existing single-line horizontal chip row for category selection and only assumed it was an adequate stand-in for the wireframe's dedicated "Explore Categories" screen.
+- On self-review, that assumption was flagged as wrong: the wireframe explicitly shows a **multi-row icon grid** (circle icon + label underneath each tile, wrapping across rows) as its own distinct category-browse screen — not a single-line chip strip. This was a genuine miss, not an intentional adaptation.
+
+### কী হয়েছে:
+- **`src/screens/CategoriesScreen.tsx`**: replaced the horizontal `.chip` row (All + 5 occasion categories) with a **wrapping icon-grid** — `grid-cols-4`, each tile a rounded-2xl circle icon (`OccasionIcon`, active = coral fill / inactive = ink-50) with the category label centered underneath. Same `active`/`setActive` filter logic reused untouched — only the visual shape changed from a horizontal strip to a grid, matching the wireframe's actual category-grid pattern. BAS only has 5 real categories (birthday/anniversary/wedding/cupcakes/custom) vs the wireframe's 20+ grocery departments — grid uses BAS's real category list, not fabricated extra categories, consistent with the "adapt, don't invent" principle used elsewhere in this pass (e.g. the Product screen's store-contact row).
+
+### Touched files:
+- `src/screens/CategoriesScreen.tsx`
+
+### Verify:
+- `npx tsc --noEmit`: 18 pre-existing errors in this file both before and after (confirmed via `git stash` diff, only line numbers shifted) — zero new errors.
+- `npm run build`: built in 12.89s
+
+### Output ZIP:
+- `categories-icon-grid-fix-071726.zip` — 1 file (`src/screens/CategoriesScreen.tsx`), no top-level folder.
+
+### এখনো Pending / পরবর্তী Agent এর জন্য নোট:
+- This was the one concrete gap surfaced by the self-review in `tasks/self-review-wireframe-pass-071726.md`. The other two items noted there (Product screen's store-contact being an adaptation not a literal copy, Cart's order-type/address selection staying in Checkout) were **intentional, reasoned adaptations**, not gaps — left as-is, not further action needed.
+- With this fix, the full wireframe layout pass (`tasks/todo.md`, STATUS: COMPLETE) plus this follow-up are both done. No further wireframe-alignment work is queued unless the user raises something new.
+
+---
+
 ## Session: Wireframe Pass — Splash/Onboarding COMPLETE (2026-07-17)
 **Agent/Tool:** Claude (chat, Code Master protocol)
 **Feature worked on:** Final item (13) of the all-screens wireframe layout pass (`tasks/todo.md`). Screen: `SplashScreen.tsx`. **This closes out the entire locked-in screen list from this session.**
