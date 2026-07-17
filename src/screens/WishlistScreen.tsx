@@ -1,8 +1,14 @@
+import { useState } from 'react';
 import { ArrowLeft, Heart } from 'lucide-react';
 import { useUI, useUser, useAuthStore } from '../lib/store';
 import { useProducts } from '../hooks/useProducts';
+import { categories } from '../lib/data';
 import { safeArray } from '../lib/utils';
+import type { Product } from '../types';
 import ProductCard from '../components/ProductCard';
+import OccasionIcon from '../components/OccasionIcon';
+
+const ALL_CAT = { id: 'all' as const, name: 'All' };
 
 export default function WishlistScreen({
   onAuthOpen,
@@ -13,7 +19,9 @@ export default function WishlistScreen({
   const { wishlist, toggleWish } = useUser();
   const { user } = useAuthStore();
   const { products } = useProducts();
-  const list = safeArray(products).filter((p) => (p.approved ?? true) && wishlist.includes(p.id));
+  const [activeCat, setActiveCat] = useState<string>('all');
+  const saved = safeArray<Product>(products).filter((p) => (p.approved ?? true) && wishlist.includes(p.id));
+  const list = activeCat === 'all' ? saved : saved.filter((p) => p.occasion === activeCat);
 
   return (
     <div className="flex h-full flex-col">
@@ -30,7 +38,29 @@ export default function WishlistScreen({
       </header>
 
       <div className="no-scrollbar flex-1 overflow-y-auto px-5 pb-32 pt-1">
-        {list.length === 0 ? (
+        {saved.length > 0 && (
+          <div className="no-scrollbar mb-3 flex gap-2 overflow-x-auto pb-1">
+            {[ALL_CAT, ...categories].map((c) => {
+              const isActive = activeCat === c.id;
+              return (
+                <button
+                  key={c.id}
+                  onClick={() => setActiveCat(c.id)}
+                  className={`chip flex-shrink-0 ${isActive ? 'chip-active' : ''}`}
+                >
+                  <OccasionIcon id={c.id} size={15} />
+                  <span>{c.name}</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {saved.length > 0 && list.length === 0 ? (
+          <div className="flex flex-col items-center justify-center pt-16 text-center anim-fade">
+            <p className="text-[13px] text-ink-200">এই ক্যাটেগরিতে কোনো saved cake নেই।</p>
+          </div>
+        ) : list.length === 0 ? (
           <div className="flex flex-col items-center justify-center pt-16 text-center anim-fade">
             <div
               className="mx-auto flex h-24 w-24 items-center justify-center rounded-3xl"

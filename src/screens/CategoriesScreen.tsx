@@ -54,6 +54,7 @@ export default function CategoriesScreen() {
   useModalDepth(filterOpen);
   const [sortBy, setSortBy] = useState<'popular' | 'newest' | 'price-asc' | 'price-desc'>('popular');
   const [priceMax, setPriceMax] = useState<number>(5000);
+  const [minRating, setMinRating] = useState<number>(0);
 
   const [recentSearches, setRecentSearches] = useState<string[]>(() => {
     try {
@@ -91,14 +92,17 @@ export default function CategoriesScreen() {
       .filter((p) =>
         debouncedSearch.trim() ? p.name.toLowerCase().includes(debouncedSearch.toLowerCase()) : true
       )
-      .filter((p) => (p.price ?? 0) <= priceMax);
+      .filter((p) => (p.price ?? 0) <= priceMax)
+      .filter((p) => (p.rating ?? 0) >= minRating);
 
     if (sortBy === 'newest') list = list.filter((p) => p.newArrival);
     if (sortBy === 'price-asc') list = [...list].sort((a, b) => (a.price ?? 0) - (b.price ?? 0));
     if (sortBy === 'price-desc') list = [...list].sort((a, b) => (b.price ?? 0) - (a.price ?? 0));
 
     return list;
-  }, [products, active, debouncedSearch, sortBy, priceMax]);
+  }, [products, active, debouncedSearch, sortBy, priceMax, minRating]);
+
+  const activeCategoryName = active === 'all' ? 'All Cakes' : (categories.find((c) => c.id === active)?.name ?? 'All Cakes');
 
   return (
     <div className="flex h-full flex-col">
@@ -108,7 +112,7 @@ export default function CategoriesScreen() {
           <div>
             <div className="section-eyebrow">Explore</div>
             <h1 className="mt-1 font-display text-[24px] font-bold tracking-tight text-ink">
-              All cakes
+              {debouncedSearch.trim() ? `Results for "${debouncedSearch.trim()}"` : activeCategoryName}
             </h1>
           </div>
           <button
@@ -117,7 +121,7 @@ export default function CategoriesScreen() {
             style={{ boxShadow: '0 1px 2px rgba(26,19,17,.03), 0 8px 24px -16px rgba(26,19,17,.16)' }}
           >
             <SlidersHorizontal className="h-[18px] w-[18px]" />
-            {(sortBy !== 'popular' || priceMax < 5000) && (
+            {(sortBy !== 'popular' || priceMax < 5000 || minRating > 0) && (
               <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-coral" />
             )}
           </button>
@@ -191,7 +195,7 @@ export default function CategoriesScreen() {
 
         <div className="mb-3 flex items-center justify-between">
           <p className="text-[12px] font-medium text-ink-200">
-            <span className="font-bold text-ink">{filtered.length}</span> cakes
+            <span className="font-bold text-ink">{filtered.length}</span> Results Found
           </p>
           <p className="text-[12px] font-medium text-ink-200">
             Sorted by {sortBy === 'popular' ? 'Popular' : sortBy === 'newest' ? 'Newest' : sortBy === 'price-asc' ? 'Price ↑' : 'Price ↓'}
@@ -276,6 +280,34 @@ export default function CategoriesScreen() {
               })}
             </div>
 
+            {/* Reviews (min rating) */}
+            <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-ink-200">Reviews</p>
+            <div className="mb-4 flex flex-col gap-1.5">
+              {[
+                { v: 4.5, label: '4.5 and above' },
+                { v: 4.0, label: '4.0 and above' },
+                { v: 3.5, label: '3.5 and above' },
+                { v: 0, label: 'Any rating' },
+              ].map((opt) => (
+                <button
+                  key={opt.v}
+                  onClick={() => setMinRating(opt.v)}
+                  className="flex items-center justify-between rounded-2xl px-3 py-2 text-[12px] font-semibold text-ink-300"
+                >
+                  <span className="flex items-center gap-1">
+                    <span className="text-gold">★★★★★</span>
+                    {opt.v > 0 && <span className="ml-0.5">{opt.label}</span>}
+                    {opt.v === 0 && <span className="ml-0.5">{opt.label}</span>}
+                  </span>
+                  <span
+                    className={`h-4 w-4 rounded-full border-2 ${
+                      minRating === opt.v ? 'border-coral bg-coral' : 'border-ink-100'
+                    }`}
+                  />
+                </button>
+              ))}
+            </div>
+
             {/* Price range */}
             <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-ink-200">
               Max price — ৳{priceMax.toLocaleString()}
@@ -302,27 +334,26 @@ export default function CategoriesScreen() {
               <span>৳5,000</span>
             </div>
 
-            {/* Apply button */}
-            <button
-              onClick={() => setFilterOpen(false)}
-              className="mt-5 flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-coral text-[13px] font-bold text-white"
-            >
-              <Cake className="h-4 w-4" strokeWidth={2} />
-              Show {filtered.length} cakes
-            </button>
-
-            {/* Reset */}
-            {(sortBy !== 'popular' || priceMax < 5000) && (
+            {/* Reset / Apply footer — matches wireframe's two-button filter footer */}
+            <div className="mt-5 flex gap-3">
               <button
                 onClick={() => {
                   setSortBy('popular');
                   setPriceMax(5000);
+                  setMinRating(0);
                 }}
-                className="mt-2 w-full text-center text-[12px] font-medium text-ink-200"
+                className="h-12 flex-1 rounded-2xl border border-ink-100 bg-white text-[13px] font-bold text-ink-300 transition active:scale-95"
               >
-                Reset filters
+                Reset Filter
               </button>
-            )}
+              <button
+                onClick={() => setFilterOpen(false)}
+                className="flex h-12 flex-1 items-center justify-center gap-2 rounded-2xl bg-coral text-[13px] font-bold text-white transition active:scale-95"
+              >
+                <Cake className="h-4 w-4" strokeWidth={2} />
+                Apply
+              </button>
+            </div>
           </div>
         </>
       )}

@@ -2,11 +2,17 @@ import { useState } from 'react';
 import { ArrowLeft, Star, Camera, X } from 'lucide-react';
 import { useUI, useAuthStore } from '../lib/store';
 import { useReviews } from '../hooks/useReviews';
+import { useProducts } from '../hooks/useProducts';
+import { safeArray } from '../lib/utils';
+import type { Product } from '../types';
 
 export default function WriteReviewScreen() {
   const { back, view } = useUI();
   const { user } = useAuthStore();
-  const { saveReview, uploadReviewImage } = useReviews(view.productId);
+  const productId = (view as any).productId as string | undefined;
+  const { saveReview, uploadReviewImage } = useReviews(productId);
+  const { products } = useProducts();
+  const product = safeArray<Product>(products).find((p) => p.id === productId);
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState('');
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -22,7 +28,7 @@ export default function WriteReviewScreen() {
 
       await saveReview({
         id: `r-${Date.now()}`,
-        product_id: view.productId || '',
+        product_id: productId || '',
         user_id: user.id,
         user_name: user.name || 'Anonymous',
         rating,
@@ -50,10 +56,18 @@ export default function WriteReviewScreen() {
       </header>
 
       <div className="flex-1 overflow-y-auto px-5 pt-6 pb-10">
-        {/* Order summary card */}
-        <div className="rounded-2xl glass-strong p-4 mb-6">
-          <div className="text-[11px] text-ink-200">আপনার অর্ডার</div>
-          <div className="font-bold mt-0.5">Product Review</div>
+        {/* Order summary card — real product, matches wireframe's thumbnail+name+price */}
+        <div className="rounded-2xl glass-strong p-4 mb-6 flex items-center gap-3">
+          {product?.image && (
+            <img src={product.image} className="h-14 w-14 flex-shrink-0 rounded-xl object-cover" />
+          )}
+          <div className="min-w-0">
+            <div className="text-[11px] text-ink-200">আপনার অর্ডার</div>
+            <div className="font-bold mt-0.5 truncate">{product?.name || 'Product Review'}</div>
+            {product?.price != null && (
+              <div className="text-[12px] text-ink-200 mt-0.5">৳{product.price}</div>
+            )}
+          </div>
         </div>
 
         {/* Star rating */}

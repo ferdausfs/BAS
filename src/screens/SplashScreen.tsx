@@ -17,6 +17,20 @@ const SLIDES = [
     tag: 'Fresh Daily',
     icon: '🧁',
   },
+  {
+    id: 3,
+    title: 'Your Preferred Cakes, Saved for You',
+    desc: 'Save your favorite items and access them anytime, making reordering quick and effortless.',
+    tag: 'Wishlist',
+    icon: '💖',
+  },
+  {
+    id: 4,
+    title: 'Stay Updated Every Step of the Way',
+    desc: 'Enjoy fast, reliable delivery with live tracking, bringing your order right to your doorstep.',
+    tag: 'Live Tracking',
+    icon: '🚴',
+  },
 ];
 
 export default function SplashScreen() {

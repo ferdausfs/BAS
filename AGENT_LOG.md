@@ -1,5 +1,276 @@
 # Agent Log — BAS (Bake Art Style 2)
 
+## Session: Wireframe Pass — Splash/Onboarding COMPLETE (2026-07-17)
+**Agent/Tool:** Claude (chat, Code Master protocol)
+**Feature worked on:** Final item (13) of the all-screens wireframe layout pass (`tasks/todo.md`). Screen: `SplashScreen.tsx`. **This closes out the entire locked-in screen list from this session.**
+
+### Review (before fix):
+- Wireframe's onboarding set has 4 slides: "Find fresh groceries anytime, anywhere" / "All Your Grocery Needs in One Place" / "Your Preferred Items, Saved for You" / "Stay Updated Every Step of the Way".
+- BAS's `SplashScreen.tsx` only had 2 of these adapted (bakery-favorites + explore-selection) — 2/4, as flagged in an older log entry.
+
+### কী হয়েছে:
+- **`src/screens/SplashScreen.tsx`**: added the remaining 2 slides, bakery-adapted from the wireframe's 3rd and 4th slides — "Your Preferred Cakes, Saved for You" (wishlist theme, 💖) and "Stay Updated Every Step of the Way" (live delivery tracking theme, 🚴). `SLIDES` array now has all 4. No structural change needed — pagination dots, Skip button, and the dynamic last-slide CTA (`slideIdx === SLIDES.length - 1`) all already handle an arbitrary slide count correctly.
+
+### Touched files:
+- `src/screens/SplashScreen.tsx`
+
+### Verify:
+- `npx tsc --noEmit`: 0 errors in this file, unchanged.
+- `npm run build`: built in 9.81s
+
+### Output ZIP:
+- `splash-onboarding-redesign-071726.zip` — 1 file (`src/screens/SplashScreen.tsx`), no top-level folder.
+
+---
+
+## ✅ ALL-SCREENS WIREFRAME PASS — SESSION SUMMARY (2026-07-17)
+
+Full locked-in list from `tasks/todo.md`, all resolved this session:
+
+| Screen | Result |
+|---|---|
+| Home | done (prior session) |
+| Categories | redesigned — dynamic results header, Reviews rating filter, Reset/Apply footer |
+| Product Detail | redesigned — added store-contact row (chat + WhatsApp) |
+| Customize | **skipped** — BAS-specific, no wireframe equivalent |
+| Cart | redesigned — reordered items→address→bill to match wireframe flow |
+| Checkout | reviewed, no change — already closely mirrors wireframe |
+| Success | reviewed, no change — already matches + richer |
+| Orders | redesigned — Active/Completed/Cancelled tabs + search |
+| Tracking | reviewed, no change — live map blocked on maps-SDK decision (Check 9, still open) |
+| Wishlist | redesigned — added category filter chips |
+| Profile | reviewed, no change — menu-row pattern already matches |
+| Reviews (list) | reviewed, no change |
+| Reviews (write) | redesigned — real product thumbnail/name/price instead of placeholder |
+| Coupons | reviewed, no change — ticket-card design already matches exactly |
+| Splash/Onboarding | redesigned — completed 4/4 slides (was 2/4) |
+| Admin | **skipped intentionally** — not in wireframe kit, internal tool |
+
+**All 8 ZIPs produced this session** (apply in any order, all touch different files):
+`categories-screen-redesign-071726.zip`, `product-screen-redesign-071726.zip`, `cart-screen-redesign-071726.zip`, `orders-screen-redesign-071726.zip`, `wishlist-screen-redesign-071726.zip`, `write-review-screen-redesign-071726.zip`, `splash-onboarding-redesign-071726.zip`.
+
+**Two open decisions surfaced but intentionally NOT auto-implemented** (genuine new features, not layout, flagged for the user to decide explicitly later):
+1. Real Pickup order-type support (BAS is currently delivery-only).
+2. Whether to build a dedicated card-based Payment Methods/Add Card screen, or keep the current inline bKash/Nagad/Wallet flow in Checkout step 2 (leaning toward keeping as-is — already functions well).
+
+### পরবর্তী Agent এর জন্য নোট:
+- The wireframe pass (`tasks/todo.md` from 2026-07-17) is now fully done. No further screens are pending from that plan.
+- If the user wants either of the two open decisions above implemented, that's a new feature-scoped task — start a fresh review→report→approve cycle for it, don't fold it into "layout redesign" scope.
+- Reminder carried forward: when diffing tsc errors before/after a change, run `git stash`, the tsc/grep command, and `git stash pop` as separate commands (not one `&&`-chained line) — a `grep` with no matches exits 1 and will abort a chain before the stash gets popped.
+
+---
+
+## Session: Wireframe Pass — Profile (no change) + Reviews screens (2026-07-17)
+**Agent/Tool:** Claude (chat, Code Master protocol)
+**Feature worked on:** Items 11 & 12 of the all-screens wireframe layout pass (`tasks/todo.md`). Screens: `ProfileScreen.tsx` (reviewed, no change), `ReviewsListScreen.tsx` (reviewed, no change), `WriteReviewScreen.tsx` (redesigned).
+
+### Profile screen — review (no fix applied):
+- Wireframe's Profile screen: avatar/name header, then a menu list of icon-box + label/sub-label + chevron rows (Your profile / Manage Address / Payment / Notification / Security / Help / Logout).
+- BAS's `ProfileScreen.tsx` (1217 lines) already has exactly this pattern (`menu.map(...)` rendering icon-box + label + sub + chevron rows for Wishlist / Delivery address / Payment methods / Notifications / Contact & Support / Settings), plus a wallet balance card, stats row (Orders/Wishlist/In cart), referral/invite modal, admin dashboard section for admin users. Already a strong match, richer than the wireframe. No changes made.
+
+### Reviews (list) screen — review (no fix applied):
+- Wireframe's Review screen: big average-rating number + star row + rating-breakdown bars, search + filter row, review cards (avatar, name, stars, comment, date).
+- BAS's `ReviewsListScreen.tsx` already has this exact structure end to end. One wireframe element not present — a bottom "Write Review" CTA on the list screen — was deliberately **not** added: BAS's reviews are per-product (`WriteReviewScreen` requires a `productId`), while this list screen is a shop-wide aggregate with no single product in context, so a generic CTA here would have nowhere correct to send the user. The real entry point (writing a review from the product page) already exists and was improved instead (see below). No changes made to this file.
+
+### কী হয়েছে (WriteReviewScreen):
+- **`src/screens/WriteReviewScreen.tsx`**: the "order summary" card at the top used to show a hardcoded placeholder ("Product Review") instead of anything real. Now fetches the actual product via `useProducts()` + the `productId` carried on the nav view, and renders its real thumbnail, name, and price — matching the wireframe's Write Review screen, which shows the actual product being reviewed.
+- Also cleaned up a pre-existing type issue: `view.productId` was accessed directly even though `productId` isn't on the base `View` union type (2 pre-existing `TS2339` errors). Introduced a single `const productId = (view as any).productId as string | undefined` and reused it everywhere instead of repeating the unsafe access — net result is 0 errors in this file now (was 2).
+
+### Touched files:
+- `src/screens/WriteReviewScreen.tsx`
+
+### Verify:
+- `npx tsc --noEmit`: before = 2 errors in this file, after = **0 errors** — net improvement, zero new errors (confirmed via `git stash` diff).
+- `npm run build`: built in 13.80s
+
+### Output ZIP:
+- `write-review-screen-redesign-071726.zip` — 1 file (`src/screens/WriteReviewScreen.tsx`), no top-level folder.
+
+### এখনো Pending / পরবর্তী Agent এর জন্য নোট:
+- Next in the locked order (`tasks/todo.md`): **Coupons (`CouponsScreen.tsx`)** — confirm-only pass (it was built new against the wireframe's Coupon ticket-style screen already, per the 2026-07 "My Coupons" session — just double-check it still lines up). Then **Splash/Onboarding (`SplashScreen.tsx`)** — the last item, remaining slides vs the wireframe's 4-slide onboarding set (2/4 done per an older log entry). After that, the entire locked-in screen list in `tasks/todo.md` is complete.
+
+---
+
+## Session: Wireframe Pass — Tracking (no change) + Wishlist category tabs (2026-07-17)
+**Agent/Tool:** Claude (chat, Code Master protocol)
+**Feature worked on:** Items 9 & 10 of the all-screens wireframe layout pass (`tasks/todo.md`). Screens: `TrackingScreen.tsx` (reviewed, no change), `WishlistScreen.tsx` (redesigned).
+
+### Tracking screen — review (no fix applied):
+- Wireframe's Track Order screen: item card + vertical "Order Status" timeline + estimated-arrival box — BAS's `TrackingScreen.tsx` already has exactly this (item card, 6-step vertical timeline with icons, live estimated-delivery box, cancelled-state red card). The wireframe's separate live-map/"Get Direction"/"You Have Arrived!" screens require an actual maps SDK — this is the same still-open "Check 9" decision noted in the older wireframe gap review, correctly left unimplemented rather than faked. No changes made.
+
+### Wishlist screen — review (before fix):
+- Wireframe's "Favorite" screen: header + search icon, **category tabs** (All/Fresh Produce/Beverages/Dairy...), 2-col product grid.
+- BAS's `WishlistScreen.tsx` had the header + grid but **no category filter tabs at all** — every saved item shown in one flat grid regardless of occasion. Genuine gap.
+
+### কী হয়েছে:
+- **`src/screens/WishlistScreen.tsx`**: added the same `.chip`/`OccasionIcon` category filter row already used on `CategoriesScreen.tsx` (reused per the established "reach for `.chip` before inventing new styles" lesson) — All + each occasion category, filtering the saved-products grid by `product.occasion`. Chips only render when there's at least one saved item (`saved.length > 0`) so the empty/sign-in states stay unchanged. Added a distinct lightweight "এই ক্যাটেগরিতে কোনো saved cake নেই" message for the case where items exist overall but none match the selected category (kept separate from the existing full illustrated empty-wishlist state).
+- Typed the products filter chain with `safeArray<Product>` (imported `Product` type) — fixed all 5 of the file's pre-existing `unknown`-type errors as a side effect, same pattern as the Orders screen fix.
+
+### Touched files:
+- `src/screens/WishlistScreen.tsx`
+
+### Verify:
+- `npx tsc --noEmit`: before = 5 errors in this file, after = **0 errors** — net improvement, zero new errors.
+- `npm run build`: built in 7.57s
+
+### Output ZIP:
+- `wishlist-screen-redesign-071726.zip` — 1 file (`src/screens/WishlistScreen.tsx`), no top-level folder.
+
+### এখনো Pending / পরবর্তী Agent এর জন্য নোট:
+- Next in the locked order (`tasks/todo.md`): **Profile (`ProfileScreen.tsx`)**. Then Reviews (`ReviewsListScreen.tsx` + `WriteReviewScreen.tsx`) -> Coupons (confirm-only) -> Splash/Onboarding.
+- Running total of screens done this session: Home (prior session), Categories, Product Detail, Cart, Orders, Wishlist redesigned; Customize skipped (no wireframe match); Checkout, Success, Tracking reviewed with no change needed (already well-aligned or blocked on a bigger feature decision).
+
+---
+
+## Session: Wireframe Pass — Success (no change) + Orders tabs (2026-07-17)
+**Agent/Tool:** Claude (chat, Code Master protocol)
+**Feature worked on:** Items 7 & 8 of the all-screens wireframe layout pass (`tasks/todo.md`). Screens: `SuccessScreen.tsx` (reviewed, no change), `OrdersScreen.tsx` (redesigned).
+
+### Success screen — review (no fix applied):
+- Wireframe's "Payment Successful!" screen: checkmark badge, headline, subtext, then "View Order" / "View E-Receipt" buttons — minimal, centered.
+- BAS's `SuccessScreen.tsx` already has this exact pattern plus richer additions (Order ID card w/ copy button, delivery-estimate card, item summary card, confetti) — a reasonable premium enhancement over the wireframe's minimalism, not a gap. No changes made.
+
+### Orders screen — review (before fix):
+- Wireframe's "My Orders" screen has a search icon in the header and three tabs — **Active / Completed / Cancelled** — each showing only orders in that bucket.
+- BAS's `OrdersScreen.tsx` showed all orders together in one continuous list with an inline status badge per card — no tab segmentation, no search. Genuine structural gap vs wireframe.
+
+### কী হয়েছে:
+- **`src/screens/OrdersScreen.tsx`**:
+  - Added **Active / Completed / Cancelled tabs** (underlined active-tab indicator, wireframe pattern) below the header. `categorize(status)`: `cancelled` -> Cancelled tab, `delivered` -> Completed tab, everything else (placed/confirmed/baking/ready/out) -> Active tab. No `Order` status values changed — purely a view-layer bucket.
+  - Added a **search toggle** icon in the header (matches wireframe) that reveals an inline text input filtering by Order ID or item name within the current tab.
+  - Added a **per-tab empty state** ("এই ট্যাবে কোনো অর্ডার নেই" + tab-specific subtext) distinct from the existing "no orders at all" empty state (kept unchanged, still shows for brand-new accounts).
+  - Render loop switched from mapping raw `orders` to the new `tabbedOrders` (tab + search filtered).
+  - Imported `Order` type and used `safeArray<Order>(orders)` for the new filter chain — this also happened to eliminate ~16 of the file's pre-existing `unknown`-type errors as a side effect (the old code's untyped `safeArray(orders).map((o) => ...)` is what caused most of them).
+
+### Touched files:
+- `src/screens/OrdersScreen.tsx`
+
+### Verify:
+- `npx tsc --noEmit`: before = 21 errors in this file, after = 5 errors — net improvement, zero new errors (confirmed message-by-message, not just count: the remaining 5 are a strict subset of the original 21, same `it`/spread-type issues untouched by this change).
+- `npm run build`: built in 9.56s
+
+### Output ZIP:
+- `orders-screen-redesign-071726.zip` — 1 file (`src/screens/OrdersScreen.tsx`), no top-level folder.
+
+### এখনো Pending / পরবর্তী Agent এর জন্য নোট:
+- Next in the locked order (`tasks/todo.md`): **Tracking (`TrackingScreen.tsx`)**. Then Wishlist -> Profile -> Reviews -> Coupons -> Splash/Onboarding.
+- Reminder: when running `git stash` / `git stash pop` around tsc-diff checks, run each command separately (not chained with `&&` after a `grep` that might exit 1 on no matches) — otherwise a stash can be left un-popped. Always confirm `git status` is clean of unexpected stash state before moving to the next screen.
+
+---
+
+## Session: Wireframe Review — Checkout screen, no change needed (2026-07-17)
+**Agent/Tool:** Claude (chat, Code Master protocol)
+**Feature worked on:** Item 6 of the all-screens wireframe layout pass (`tasks/todo.md`). Screen: `CheckoutScreen.tsx` (1299 lines, 3-step wizard).
+
+### Review (result: no fix applied):
+- Wireframe splits checkout into separate screens: Delivery Address, Order Type (Delivery/Pickup), Review Summary, Payment Methods, Add Card.
+- BAS's `CheckoutScreen.tsx` combines these into one 3-step wizard: **Step 0** (`ঠিকানা`) = items recap + address card-selector + date/time slots; **Step 1** (`নিশ্চিত`) = gift mode + wallet/promo/referral extras + read-only order summary with Edit buttons + bill breakdown; **Step 2** (`পেমেন্ট`) = advance payment method list (bKash/Nagad, icon-box + name/desc + radio, matches wireframe's Payment Methods row pattern almost exactly already) + payment screenshot upload + remaining-amount method choice. This is a deliberate, already-good architecture from earlier sessions — combining screens into a wizard rather than separate full-screen navigations.
+- Conclusion: layout/structure already closely mirrors the wireframe's intent (progress indicator, card-style sections, radio-select payment rows, Edit-to-go-back links). **No changes made** — rewriting a payment-critical, 1299-line flow for cosmetic parity would be needless risk for negligible visual gain (Simplicity First / Minimal Impact).
+- **Gap noted but NOT implemented:** wireframe's Order Type has a Delivery-vs-Pickup toggle; BAS is currently delivery-only with no pickup fulfillment option anywhere in the data model or checkout flow. Adding real pickup support (store address, no delivery fee, different confirmation copy) is a genuine new feature, not a layout tweak — same category as the still-open "Check 5" (Payment Methods/Add Card) decision from the older wireframe gap review. Left for a future explicit feature decision, not auto-implemented here.
+
+### Touched files:
+- none (review-only, no code changed)
+
+### Verify:
+- N/A — no code changed, no rebuild needed.
+
+### এখনো Pending / পরবর্তী Agent এর জন্য নোট:
+- Next in the locked order (`tasks/todo.md`): **Success (`SuccessScreen.tsx`)** — wireframe's "Payment Successful!" / "You Have Arrived!" states. Then Orders -> Tracking -> Wishlist -> Profile -> Reviews -> Coupons -> Splash/Onboarding.
+- Two now-explicit open decisions for the user to weigh in on eventually (not urgent, don't block the rest of the pass): (1) whether to build real Pickup order-type support, (2) how to adapt wireframe's card-based Payment Methods/Add Card screens onto BAS's real bKash/Nagad/Wallet model (currently already reasonably handled inline in Checkout step 2, may not need a dedicated screen at all).
+
+---
+
+## Session: Wireframe Redesign Pass — Cart screen (2026-07-17)
+**Agent/Tool:** Claude (chat, Code Master protocol)
+**Feature worked on:** Item 5 of the all-screens wireframe layout pass (`tasks/todo.md`). Screen: `CartScreen.tsx`.
+
+### Review (before fix):
+- Wireframe Cart order: item list (qty stepper + trash) -> "Order Type" card (Delivery/Pickup radio + time estimate) -> "Delivery/Pickup Address" summary card -> "Proceed to Checkout" button.
+- BAS's `CartScreen.tsx` deliberately handles order-type and address **selection** inside the existing `CheckoutScreen.tsx` 3-step wizard (an earlier, intentional architecture decision — confirmed in older `AGENT_LOG.md` entries about the checkout wizard). Cart itself only had a quick-access row of address chips (Home/Office/Parent's/Friend's) that all just jump to Checkout.
+- Gap found: layout **order** didn't match the wireframe — the address chips row was placed above the item list (free-delivery nudge -> address chips -> items -> add-ons -> bill), whereas the wireframe places item review first and the type/address summary near the bottom, right before the final CTA/bill.
+- Decision: reorder only (items -> add-ons -> delivery-address quick row -> bill -> CTA) to match the wireframe's visual flow, without touching the actual order-type/address **selection** logic — that stays in `CheckoutScreen.tsx` per the existing architecture, avoiding the risk of restructuring the checkout flow for a pass that's scoped to layout only.
+
+### কী হয়েছে:
+- **`src/screens/CartScreen.tsx`**: moved the "ডেলিভারি ঠিকানা" (delivery address) quick-access chip row from above the item list to below the items + suggested add-ons section, immediately before the bill breakdown — matching the wireframe's items -> address -> bill -> CTA order. No change to click behavior (still navigates to `checkout`), no change to any pricing/discount logic.
+
+### Touched files:
+- `src/screens/CartScreen.tsx`
+
+### Verify:
+- `npx tsc --noEmit`: **0 errors** in this file both before and after (confirmed via `git stash` diff) — zero new errors.
+- `npm run build`: built in 7.72s
+
+### Output ZIP:
+- `cart-screen-redesign-071726.zip` — 1 file (`src/screens/CartScreen.tsx`), no top-level folder.
+
+### এখনো Pending / পরবর্তী Agent এর জন্য নোট:
+- Next in the locked order (`tasks/todo.md`): **Checkout (`CheckoutScreen.tsx`, 1299 lines, 3-step wizard)** — compare against wireframe's Order Type / Delivery Address / Review Summary / Payment Methods / Add Card screens. Then Success -> Orders -> Tracking -> Wishlist -> Profile -> Reviews -> Coupons -> Splash/Onboarding.
+- Reminder for whoever continues: the wireframe literally has a "Payment Methods" screen with Cash/Wallet/Card/Paypal/Apple Pay/Google Pay options and an "Add Card" screen — BAS's real payment model is bKash/Nagad-number screenshot + in-app Wallet, so this will need the same "adapt, don't fabricate" treatment as the Product screen's store-contact row (Check 5 from the older `WIREFRAME-GAP-REVIEW-071726.md`, still open) — map wireframe's *layout* (list of payment method rows with icons + radio selection) onto BAS's *real* payment options, don't invent a literal credit-card entry flow BAS doesn't support.
+
+---
+
+## Session: Wireframe Redesign Pass — Product Detail screen (2026-07-17)
+**Agent/Tool:** Claude (chat, Code Master protocol)
+**Feature worked on:** Item 3 of the all-screens wireframe layout pass (`tasks/todo.md`). Screen: `ProductScreen.tsx`.
+
+### Review (before fix):
+- Wireframe product-detail screen order: image gallery -> product name -> store/manager contact row (avatar + name/role + chat icon + call icon) -> weight chips -> product details -> bottom bar (qty stepper + Add Item button).
+- BAS's `ProductScreen.tsx` (1013 lines) already closely matches most of this: gallery with swipe, title, rating+meta, social proof strip, price, Flavor chips, Select Weight chips (already refined in an earlier Phase 10 session), Quantity stepper, Add-ons, reviews section, sticky Add to Cart bar. The one structural piece genuinely missing was the wireframe's **store/manager contact row** — nothing between the rating row and the price/details let a customer reach the shop directly from the product page.
+- Constraint: BAS is a single-shop app, not a multi-vendor marketplace, so a literal "Sophia Mitchell, Manager" fabricated contact card would be dishonest UI. Used BAS's actual existing support channels instead (global ChatBot modal + `settings.whatsappNumber`) rather than inventing fake staff data.
+
+### কী হয়েছে:
+- **`src/screens/ProductScreen.tsx`**: added a **store contact row** right after the rating/meta line — shop icon + "Bake Art Style" / "দোকান সহায়তা" label on the left, two action buttons on the right: a chat icon that opens the existing global `ChatBot` (`setChatOpen(true)` from `useUI`), and a WhatsApp/phone icon (only rendered if `settings.whatsappNumber` is set) linking to `https://wa.me/<number>`. No new data model, no fabricated contact identity — reuses `useSettingsStore` (already imported) and `useUI` (added `setChatOpen` to the existing destructure).
+
+### Touched files:
+- `src/screens/ProductScreen.tsx`
+
+### Verify:
+- `npx tsc --noEmit`: **0 errors** in this file both before and after (confirmed via `git stash` diff) — zero new errors.
+- `npm run build`: built in 7.90s
+
+### Output ZIP:
+- `product-screen-redesign-071726.zip` — 1 file (`src/screens/ProductScreen.tsx`), no top-level folder.
+
+### এখনো Pending / পরবর্তী Agent এর জন্য নোট:
+- Next in the locked order (`tasks/todo.md`): **Customize (`CustomizeScreen.tsx`)** — need to first check whether it maps to any wireframe screen at all (it may be BAS-specific with no wireframe equivalent, in which case skip with a note, same treatment as `AdminScreen.tsx`). Then Cart -> Checkout -> Success -> Orders -> Tracking -> Wishlist -> Profile -> Reviews -> Coupons -> Splash/Onboarding.
+- Reminder: `git stash` / `git stash pop` around tsc-diff checks — if piping tsc output through `grep` with `&&` chains, a "no matches" grep (exit 1) will abort the chain **before** `git stash pop` runs, leaving changes stashed. Safer pattern: run each step as a separate command (or use `;` instead of `&&` after the grep), always confirm `git status` shows the stash was restored before moving on.
+
+---
+
+## Session: Wireframe Redesign Pass — Categories screen (2026-07-17)
+**Agent/Tool:** Claude (chat, Code Master protocol)
+**Feature worked on:** Item 2 of the all-screens wireframe layout pass (see `tasks/todo.md` for the full locked-in order — user explicitly said do all screens one by one without asking each time, just keep this log updated). Screen: `CategoriesScreen.tsx` (bottom-tab "Categories" — BAS's combined category-browse + product-results screen).
+
+### Review (before fix):
+- Wireframe's category/results flow has two relevant screens: a big 4-column category icon grid, and a "Results for 'Fruits'" search-results screen (header = query/category name, subtitle "56 Results Found", 2-col product grid with heart/discount/add-button — this already matches BAS's existing grid closely).
+- BAS's `CategoriesScreen.tsx` combines both roles in one screen (chips row for category select + grid for results) — this was already a reasonable pre-existing adaptation, so it was kept as-is (not rebuilt) per the `.chip` reuse lesson in `tasks/lessons.md`.
+- Gaps found: (1) header always said static "All cakes" regardless of active category/search — wireframe's header is dynamic ("Results for X"); (2) results count line said "N cakes" instead of wireframe's "N Results Found" wording; (3) Filter sheet was missing the wireframe's "Reviews" (min star rating) filter section entirely; (4) Filter sheet footer was a single "Show N cakes" button + a small text-link reset, whereas wireframe uses a two-button footer (outline "Reset Filter" + solid "Apply").
+
+### কী হয়েছে:
+- **`src/screens/CategoriesScreen.tsx`**:
+  - Header title now dynamic: shows `Results for "<search query>"` while searching, else the active category's display name (`activeCategoryName`, falls back to "All Cakes") — matches wireframe wording pattern.
+  - Results count line reworded from "N cakes" to **"N Results Found"**.
+  - Added a **Reviews (min rating)** filter section in the filter sheet (4.5+/4.0+/3.5+/Any rating, radio-style buttons with gold star icon) between Sort and Price Range, matching the wireframe's filter screen section order. Uses the existing `product.rating` field (already in `Product` type) — no data model change needed.
+  - Filter sheet footer replaced: single "Show N cakes" button + text-link reset → **two-button row**, outline "Reset Filter" + solid "Apply" (wireframe pattern). Reset now also clears `minRating`.
+  - Filter-active red-dot badge on the toolbar icon now also lights up when `minRating > 0`.
+
+### Touched files:
+- `src/screens/CategoriesScreen.tsx`
+
+### Verify:
+- `npx tsc --noEmit`: 17 pre-existing `unknown`-type errors in this file both before and after (confirmed via `git stash` diff, only line numbers shifted by +1 from the new `activeCategoryName` line) — zero new errors.
+- `npm run build`: built in 8.59s
+
+### Output ZIP:
+- `categories-screen-redesign-071726.zip` — 1 file (`src/screens/CategoriesScreen.tsx`), no top-level folder.
+
+### এখনো Pending / পরবর্তী Agent এর জন্য নোট:
+- Continuing the locked-in order in `tasks/todo.md` next: Product Detail (`ProductScreen.tsx`), then Customize -> Cart -> Checkout -> Success -> Orders -> Tracking -> Wishlist -> Profile -> Reviews -> Coupons -> Splash/Onboarding. `AdminScreen.tsx` is intentionally skipped (not in the wireframe kit).
+- User will not be re-asked which screen is next each time — just proceed down the locked order and log each one here.
+- `npm install` was needed once this session (fresh container/checkout had no `node_modules`) — `tsc`/`build` won't run without it if starting completely fresh.
+
+---
+
 ## Session: Home Screen Layout Redesign to match wireframe (2026-07-17)
 **Agent/Tool:** Claude (chat, Code Master protocol)
 **Feature worked on:** Redesign existing pages' UI layout to match the wireframe (user's follow-up direction after the gap review — building NEW missing screens is on hold; instead, existing screens get a layout pass against the wireframe reference). Started with Home screen per user's choice.

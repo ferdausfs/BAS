@@ -3,6 +3,7 @@ import { Check, Package, ChefHat, Truck, Receipt, Search, RefreshCw, ShoppingCar
 import { useUI, formatINR, useAuthStore, useCart, useUser } from '../lib/store';
 import { useOrdersHook } from '../hooks/useOrders';
 import { safeArray } from '../lib/utils';
+import type { Order } from '../types';
 
 const STATUSES: { key: string; label: string; icon: any }[] = [
   { key: 'placed',    label: 'Placed',    icon: Check },
@@ -19,6 +20,12 @@ export default function OrdersScreen() {
   const { setTab, go } = useUI();
   const { wishlist } = useUser();
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [activeTab, setActiveTab] = useState<'active' | 'completed' | 'cancelled'>('active');
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [query, setQuery] = useState('');
+
+  const categorize = (status: string) =>
+    status === 'cancelled' ? 'cancelled' : status === 'delivered' ? 'completed' : 'active';
 
   useEffect(() => {
     if (user) {
@@ -34,16 +41,70 @@ export default function OrdersScreen() {
     });
   };
 
+  const tabbedOrders = safeArray<Order>(orders)
+    .filter(Boolean)
+    .filter((o) => categorize(o.status) === activeTab)
+    .filter((o) => {
+      const q = query.trim().toLowerCase();
+      if (!q) return true;
+      if (o.id.toLowerCase().includes(q)) return true;
+      return safeArray(o.items).some((it: any) => it.name?.toLowerCase().includes(q));
+    });
+
   return (
     <div className="flex h-full flex-col">
       <header className="flex-shrink-0 px-5 pt-3 pb-3">
-        <div className="section-eyebrow">Activity</div>
-        <h1 className="mt-1 font-display text-[24px] font-bold tracking-tight text-ink">
-          Your orders
-        </h1>
+        <div className="flex items-end justify-between">
+          <div>
+            <div className="section-eyebrow">Activity</div>
+            <h1 className="mt-1 font-display text-[24px] font-bold tracking-tight text-ink">
+              Your orders
+            </h1>
+          </div>
+          <button
+            onClick={() => setSearchOpen((v) => !v)}
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-ink-200 transition active:scale-90"
+            style={{ boxShadow: '0 1px 2px rgba(26,19,17,.03), 0 8px 24px -16px rgba(26,19,17,.16)' }}
+            aria-label="Search orders"
+          >
+            <Search className="h-[18px] w-[18px]" />
+          </button>
+        </div>
         <p className="mt-0.5 text-[12.5px] text-ink-200">
           {orders.length} {orders.length === 1 ? 'order' : 'orders'} · tracked live
         </p>
+
+        {searchOpen && (
+          <input
+            autoFocus
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Order ID বা item name খুঁজুন…"
+            className="mt-3 h-11 w-full rounded-2xl border border-ink-50 bg-white px-4 text-[13px] font-medium text-ink outline-none focus:border-coral"
+          />
+        )}
+
+        {/* Active / Completed / Cancelled tabs — matches wireframe's My Orders tab bar */}
+        <div className="mt-3 flex gap-5 border-b border-ink-50">
+          {([
+            { v: 'active', label: 'Active' },
+            { v: 'completed', label: 'Completed' },
+            { v: 'cancelled', label: 'Cancelled' },
+          ] as const).map((t) => (
+            <button
+              key={t.v}
+              onClick={() => setActiveTab(t.v)}
+              className={`relative pb-2.5 text-[13px] font-bold transition ${
+                activeTab === t.v ? 'text-ink' : 'text-ink-200'
+              }`}
+            >
+              {t.label}
+              {activeTab === t.v && (
+                <span className="absolute inset-x-0 -bottom-px h-[2px] rounded-full bg-coral" />
+              )}
+            </button>
+          ))}
+        </div>
       </header>
 
       <div className="no-scrollbar flex-1 overflow-y-auto px-5 pb-32">
@@ -85,9 +146,25 @@ export default function OrdersScreen() {
               {wishlist.length > 0 ? 'View my wishlist' : 'Browse cakes'}
             </button>
           </div>
+        ) : tabbedOrders.length === 0 ? (
+          <div className="flex flex-col items-center justify-center pt-16 text-center anim-fade">
+            <div
+              className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-ink-50 text-ink-200"
+            >
+              <Search className="h-9 w-9" strokeWidth={1.6} />
+            </div>
+            <h2 className="mt-4 font-display text-[17px] font-bold tracking-tight text-ink">
+              এই ট্যাবে কোনো অর্ডার নেই
+            </h2>
+            <p className="mt-1 max-w-xs text-[12.5px] text-ink-200">
+              {activeTab === 'active' && 'এখন কোনো চলমান অর্ডার নেই।'}
+              {activeTab === 'completed' && 'এখনো কোনো অর্ডার সম্পন্ন হয়নি।'}
+              {activeTab === 'cancelled' && 'কোনো বাতিল অর্ডার নেই।'}
+            </p>
+          </div>
         ) : (
           <div className="space-y-4">
-            {safeArray(orders).filter(Boolean).map((o) => {
+            {tabbedOrders.map((o) => {
               const currentIdx = STATUSES.findIndex((s) => s.key === o.status);
               const isDelivered = o.status === 'delivered';
               const isCancelled = o.status === 'cancelled';
