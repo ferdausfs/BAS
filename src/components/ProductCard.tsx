@@ -69,7 +69,7 @@ export default function ProductCard({ product, wished, onOpen, onWish, variant =
     !zoomed ? (
       <div className="absolute top-2.5 left-2.5 flex flex-col gap-1">
         {product.bestseller && (
-          <span className="flex items-center gap-1 rounded-full bg-white/80 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-coral backdrop-blur-md">
+          <span className="flex items-center gap-1 rounded-full bg-ink/85 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white backdrop-blur-md">
             <Award className="h-2.5 w-2.5" strokeWidth={2.5} /> Best
           </span>
         )}

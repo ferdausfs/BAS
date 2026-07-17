@@ -1,5 +1,39 @@
 # Agent Log — BAS (Bake Art Style 2)
 
+## Session: Home — full A-Z pass vs reference wireframe (header/banner/badges) (2026-07-17)
+**Agent/Tool:** Claude (chat, Code Master protocol)
+**Feature worked on:** Follow-up to the section-reorder session below. User said the live Home screen still didn't match the reference (`Grocery-Delivery-App-Wireframe-Figma-Design.png`) and, when asked 3 specific yes/no questions (banner photo, header greeting, chip active-state), answered "look at the full screen, everything in it needs work, A to Z" for the first two and picked "keep uniform (no change)" for chips. Interpreted as: keep the real banner photo (explicit — "tumi banner-r photo niya aso", i.e. keep it), but do a comprehensive layout/detail pass on every other element of the screen to close the gap with the reference, not just the two items already fixed.
+
+### Review (before fix):
+- **Header**: still 3 rows (location+icons, "Welcome back 🎂" greeting, search) vs reference's 2 rows (location+icons, search directly below). Confirmed with user this greeting row should go.
+- **Banner**: real photo kept (explicit instruction), but the dark gradient overlay (`from-black/70 via-black/30`) was heavier/darker than the reference's light, airy card — adjusted the overlay to feel lighter while keeping the photo and all existing interaction logic (carousel, promo-code copy, notice modal, deep links).
+- **Section headers**: "Exclusive Offers" and "Featured Products" both had a small eyebrow line above them (`Today's picks`, `Handpicked`) that the reference doesn't have — reference goes straight from the big title into the "See All" row.
+- **Product badges**: reference's discount badge ("15% OFF") is a solid dark pill. BAS's "Best" badge was a light frosted pill (`bg-white/80`); "New" was already a solid coral pill. Restyled "Best" to a solid dark pill (`bg-ink/85`) to match the reference's uniform dark-badge treatment (BAS still shows "Best"/"New" text, not a fabricated percentage — no per-product discount field exists in the data model, confirmed in the previous review).
+- **Category chips**: user explicitly said keep the current uniform style, no active/selected state added — confirmed, not touched.
+
+### কী হয়েছে:
+- **`src/components/HomeTopBar.tsx`**: removed the "Welcome back" greeting `<h1>` entirely — search now sits directly under the location/icons row. Removed the now-unused `firstName`/`isNonLatin`/`greetingName` variables and the now-unused `useAuthStore`/`user` import+destructure (greeting was their only consumer in this file). Tightened header padding/curve slightly (`pb-5`→`pb-4`, `rounded-b-[26px]`→`rounded-b-[22px]`) now that the header is shorter. Cart/wishlist/notification icons were **not** removed — same standing reason as the earlier Home session: Home is the only screen carrying them since the bottom tab bar (kept as-is per user instruction) has no cart/wishlist tab.
+- **`src/screens/HomeScreen.tsx`**: lightened the banner's photo overlay gradient (`black/70,black/30` → `black/55,black/20`); removed the `eyebrow` prop from the "Exclusive Offers" and "Featured Products" `SectionHeader`s so both go straight from title to "See all", matching the reference.
+- **`src/components/ProductCard.tsx`**: "Best" badge restyled from `bg-white/80 text-coral` to `bg-ink/85 text-white` — now visually a solid dark pill like "New" and like the reference's badge.
+
+### Touched files:
+- `src/components/HomeTopBar.tsx`
+- `src/screens/HomeScreen.tsx`
+- `src/components/ProductCard.tsx`
+
+### Verify:
+- `npx tsc --noEmit`: 57 pre-existing `unknown`-type errors across `HomeScreen.tsx`/`ProductCard.tsx` both before and after (confirmed via `git stash` diff — same errors, only line numbers shifted from the header/eyebrow removals). `HomeTopBar.tsx`: 0 errors, unchanged. Zero new errors anywhere.
+- `npm run build`: ✓ built in 10.86s
+
+### Output ZIP:
+- See ZIP filename in the next log update from this same session (packaged after this entry was written, per protocol — ZIP includes this file).
+
+### এখনো Pending / পরবর্তী Agent এর জন্য নোট:
+- User is holding a separate, much larger draft — `BAS-redesign-plan.md` — proposing a full 21-screen wireframe redesign pass (Splash/Onboarding, Login/OTP, full Categories grid, Product Detail, Checkout, Order Confirmation, Notifications, etc.), with 6 open questions in its Section 3 still unanswered. User explicitly said: finish the current Home-only fix first, deal with that plan doc afterward. **Do not start executing that broader plan until the user brings it up again** — it's parked, not declined.
+- If the user asks for more Home-screen detail passes, keep checking the actual rendered result against the reference screenshot section-by-section rather than assuming the previous "wireframe pass" sessions already closed things out — this is now the second follow-up round on the same screen where earlier "done" claims turned out to have gaps (see the "Restyling ≠ reordering" lesson in `tasks/lessons.md`).
+
+---
+
 ## Session: Home layout — Exclusive Offers moved before Explore Categories + banner dots outside card (2026-07-17)
 **Agent/Tool:** Claude (chat, Code Master protocol)
 **Reported by:** user, unhappy with the live Home screen vs a grayscale reference wireframe screenshot (`Grocery-Delivery-App-Wireframe-Figma-Design.png` reference — same one used in the earlier "Home Screen Layout Redesign" session).

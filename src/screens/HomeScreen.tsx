@@ -137,7 +137,6 @@ export default function HomeScreen({ onAuthOpen, onNotificationsOpen }: { onAuth
         {!search.trim() && activeBanners.length > 0 && (
           <div className="mt-5 anim-up delay-1">
             <SectionHeader
-              eyebrow="Today's picks"
               title="Exclusive Offers"
               action={{ label: 'See all', onClick: () => go({ name: 'tabs', tab: 'categories' }) }}
             />
@@ -155,7 +154,7 @@ export default function HomeScreen({ onAuthOpen, onNotificationsOpen }: { onAuth
                       className={`absolute inset-0 cursor-pointer transition-opacity duration-700 ${i === bannerIdx ? 'z-10 opacity-100' : 'z-0 opacity-0'}`}
                     >
                       <img src={b.image} alt={b.title} className="absolute inset-0 h-full w-full object-cover" />
-                      <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent" />
+                      <div className="absolute inset-0 bg-gradient-to-r from-black/55 via-black/20 to-transparent" />
                       <div className="absolute inset-0 flex flex-col justify-center p-5">
                         <span className="mb-2 inline-flex w-fit items-center gap-1 rounded-full bg-white px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-ink">
                           {b.tag}
@@ -308,7 +307,7 @@ export default function HomeScreen({ onAuthOpen, onNotificationsOpen }: { onAuth
 
         {/* Featured Products — wireframe layout: 2-column grid instead of horizontal scroll */}
         <div className="mt-7 px-5 anim-up delay-3">
-          <SectionHeader eyebrow="Handpicked" title="Featured Products" action={{ label: 'See all', onClick: () => go({ name: 'tabs', tab: 'categories' }) }} />
+          <SectionHeader title="Featured Products" action={{ label: 'See all', onClick: () => go({ name: 'tabs', tab: 'categories' }) }} />
           <div className="mt-3 grid grid-cols-2 gap-3">
             {trending.slice(0, 6).map((p) => (
               <ProductCard

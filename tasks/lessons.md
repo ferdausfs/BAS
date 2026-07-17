@@ -48,6 +48,17 @@ competing header elements (carried over from prior sessions).
 The `cart` route leads to the "My Cart" review page, while `checkout` leads
 to the final payment page — these are distinct and must not be conflated.
 
+## Ambiguous shorthand answers to design questions need a stated interpretation, not silent guessing
+Asked the user 3 specific yes/no design questions (banner photo, header greeting,
+chip active-state). Two answers came back as terse Banglish shorthand ("full
+screen dekho", "sob kisu kaj korte hobe") instead of picking one of the given
+options. **Fix going forward:** when an answer to an elicitation question is
+ambiguous, don't silently pick an interpretation and just start coding — state
+the interpretation explicitly in the response before or while implementing
+("এটা আমি এভাবে বুঝলাম... তাই এই fix করছি"), so the user can correct course
+immediately if the reading was wrong, without waiting for a full ZIP+review
+cycle to discover a mismatch.
+
 ## Restyling a section is not the same as reordering it
 During an earlier Home-screen wireframe pass, "add the missing Exclusive
 Offers header" and "match the wireframe's section order" were treated as the

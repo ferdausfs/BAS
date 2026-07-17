@@ -1,6 +1,6 @@
 import { Bell, ShoppingBag, Heart, MapPin, ChevronDown } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
-import { useUI, useCart, useUser, useAuthStore, useLocation } from '../lib/store';
+import { useUI, useCart, useUser, useLocation } from '../lib/store';
 import SearchBar from './SearchBar';
 
 interface Props {
@@ -15,10 +15,13 @@ interface Props {
 }
 
 /**
- * Brown/gold bakery-style home header block (Phase 2 redesign).
- * Replaces the old orphaned Header.tsx / HomeHeader.tsx. Renders a solid cocoa
- * header panel with: location row + bell/cart icons, a greeting, and the search
- * field — mirroring the reference bakery UI kit's brown header composition.
+ * Brown/gold bakery-style home header block.
+ * Renders a solid cocoa header panel with two rows — location + bell/wishlist/
+ * cart icons, then the search field directly below — matching the reference
+ * wireframe's compact 2-row header. Cart/wishlist/notification icons are kept
+ * here (not dropped, even though the wireframe's top bar doesn't show them)
+ * because Home is the only screen carrying them: BAS's bottom tab bar has no
+ * cart/wishlist tab, so removing these would cut off navigation to both.
  */
 export default function HomeTopBar({
   search,
@@ -33,16 +36,11 @@ export default function HomeTopBar({
   const { go, setTab, notifications } = useUI();
   const { items } = useCart();
   const { wishlist } = useUser();
-  const { user } = useAuthStore();
   const district = useLocation((s) => s.district);
 
   const cartCount = items.reduce((s, i) => s + i.quantity, 0);
   const wishCount = wishlist.length;
   const unreadCount = notifications.filter((n) => !n.read).length;
-
-  const firstName = user?.name?.split(' ')[0] || '';
-  const isNonLatin = /[^\u0000-\u007F]/.test(firstName);
-  const greetingName = user ? (isNonLatin ? '' : `, ${firstName}`) : '';
 
   // Cart badge bounce when count grows (mirrors the old Header micro-interaction).
   const [badgeKey, setBadgeKey] = useState(0);
@@ -54,7 +52,7 @@ export default function HomeTopBar({
 
   return (
     <div
-      className="sticky top-0 z-20 rounded-b-[26px] px-5 pt-5 pb-5 anim-up"
+      className="sticky top-0 z-20 rounded-b-[22px] px-5 pt-5 pb-4 anim-up"
       style={{
         background: 'linear-gradient(160deg, #6B3A18 0%, #3D2418 100%)',
         boxShadow: '0 14px 30px -18px rgba(61,36,24,0.55)',
@@ -132,16 +130,7 @@ export default function HomeTopBar({
         </div>
       </div>
 
-      {/* Greeting */}
-      <h1 className="mt-4 font-display text-[24px] font-semibold leading-[1.15] tracking-tight text-white">
-        {user ? (
-          <>Welcome back{greetingName} <span className="text-gold">🎂</span></>
-        ) : (
-          <>What are we <span className="italic text-gold">celebrating?</span></>
-        )}
-      </h1>
-
-      {/* Search */}
+      {/* Search — reference layout: search row comes directly after location row, no greeting heading in between */}
       <div className="mt-4">
         <SearchBar
           value={search}
