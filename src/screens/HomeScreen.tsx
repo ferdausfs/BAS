@@ -133,10 +133,10 @@ export default function HomeScreen({ onAuthOpen, onNotificationsOpen }: { onAuth
           onNotificationsOpen={onNotificationsOpen}
         />
 
-        {/* Category icon row (bakery reference + grocery wireframe: colored circle + label) */}
+        {/* Category row — wireframe layout: horizontal pill chips (icon + label) */}
         <div className="mt-5 px-5 anim-up delay-1">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="font-display text-[16px] font-bold tracking-tight text-ink">Categories</h2>
+            <h2 className="font-display text-[16px] font-bold tracking-tight text-ink">Explore Categories</h2>
             <button
               onClick={() => go({ name: 'tabs', tab: 'categories' })}
               className="text-[12px] font-bold text-coral hover:underline"
@@ -144,20 +144,20 @@ export default function HomeScreen({ onAuthOpen, onNotificationsOpen }: { onAuth
               See all
             </button>
           </div>
-          <div className="no-scrollbar flex gap-3.5 overflow-x-auto pb-1">
+          <div className="no-scrollbar flex gap-2.5 overflow-x-auto pb-1">
             {categories.map((c) => (
               <button
                 key={c.id}
                 onClick={(e) => openOccasion(c, e.currentTarget)}
-                className="flex flex-shrink-0 flex-col items-center gap-2 transition active:scale-90"
+                className="chip flex-shrink-0"
               >
                 <span
-                  className="flex h-14 w-14 items-center justify-center rounded-2xl border border-ink-50/60 shadow-sm"
+                  className="flex h-6 w-6 items-center justify-center rounded-full"
                   style={{ background: c.color, color: c.fg }}
                 >
-                  <OccasionIcon id={c.icon} size={26} />
+                  <OccasionIcon id={c.icon} size={14} />
                 </span>
-                <span className="text-[11.5px] font-bold text-ink">{c.name}</span>
+                <span>{c.name}</span>
               </button>
             ))}
           </div>
@@ -191,9 +191,15 @@ export default function HomeScreen({ onAuthOpen, onNotificationsOpen }: { onAuth
           </div>
         )}
 
-        {/* Hero banner — bakery reference: photo card + gold Shop Now pill */}
+        {/* Hero banner — wireframe layout: "Exclusive Offers / See all" header above the carousel */}
         {!search.trim() && activeBanners.length > 0 && (
-          <div className="mt-5 px-5 anim-up delay-1">
+          <div className="mt-6 anim-up delay-1">
+            <SectionHeader
+              eyebrow="Today's picks"
+              title="Exclusive Offers"
+              action={{ label: 'See all', onClick: () => go({ name: 'tabs', tab: 'categories' }) }}
+            />
+            <div className="mt-3 px-5">
             <div className="relative overflow-hidden rounded-[26px]">
               <div className="relative aspect-[1.7/1] w-full overflow-hidden">
                 {activeBanners.map((b, i) => (
@@ -242,6 +248,7 @@ export default function HomeScreen({ onAuthOpen, onNotificationsOpen }: { onAuth
                   ))}
                 </div>
               </div>
+            </div>
             </div>
           </div>
         )}
@@ -296,14 +303,19 @@ export default function HomeScreen({ onAuthOpen, onNotificationsOpen }: { onAuth
           );
         })()}
 
-        {/* Popular */}
-        <div className="mt-7 anim-up delay-3">
-          <SectionHeader eyebrow="Trending now" title="Popular this week" action={{ label: 'See all', onClick: () => go({ name: 'tabs', tab: 'categories' }) }} />
-          <div className="no-scrollbar mt-3 flex gap-3 overflow-x-auto px-5 pb-2">
-            {trending.map((p, i) => (
-              <div key={p.id} className={`anim-up flex-shrink-0 ${STAGGER_DELAYS[i % STAGGER_DELAYS.length]}`}>
-                <ProductCard product={p} wished={wishlist.includes(p.id)} onWish={toggleWish} onOpen={() => go({ name: 'product', productId: p.id })} />
-              </div>
+        {/* Featured Products — wireframe layout: 2-column grid instead of horizontal scroll */}
+        <div className="mt-7 px-5 anim-up delay-3">
+          <SectionHeader eyebrow="Handpicked" title="Featured Products" action={{ label: 'See all', onClick: () => go({ name: 'tabs', tab: 'categories' }) }} />
+          <div className="mt-3 grid grid-cols-2 gap-3">
+            {trending.slice(0, 6).map((p) => (
+              <ProductCard
+                key={p.id}
+                product={p}
+                wished={wishlist.includes(p.id)}
+                onWish={toggleWish}
+                onOpen={() => go({ name: 'product', productId: p.id })}
+                variant="grid"
+              />
             ))}
           </div>
         </div>

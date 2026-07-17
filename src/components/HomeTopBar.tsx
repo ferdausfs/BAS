@@ -64,17 +64,17 @@ export default function HomeTopBar({
       <div className="flex items-center justify-between">
         <button
           onClick={() => setTab('profile')}
-          className="flex items-center gap-1.5 text-left transition active:scale-95"
+          className="flex items-center gap-2.5 text-left transition active:scale-95"
           aria-label="Delivery location"
         >
-          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/12">
-            <MapPin className="h-4 w-4 text-gold" strokeWidth={2} />
+          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white/15 text-white">
+            <MapPin className="h-4 w-4" strokeWidth={2} />
           </span>
           <span className="leading-tight">
-            <span className="block text-[10px] font-semibold uppercase tracking-[0.14em] text-white/55">
-              Deliver to
+            <span className="block text-[10px] font-semibold text-white/55">
+              Location
             </span>
-            <span className="flex items-center gap-0.5 text-[13px] font-bold text-white">
+            <span className="flex items-center gap-0.5 text-[13.5px] font-bold text-white">
               {district || 'Set your location'}
               <ChevronDown className="h-3.5 w-3.5 text-white/70" strokeWidth={2.5} />
             </span>

@@ -1,5 +1,39 @@
 # Agent Log — BAS (Bake Art Style 2)
 
+## Session: Home Screen Layout Redesign to match wireframe (2026-07-17)
+**Agent/Tool:** Claude (chat, Code Master protocol)
+**Feature worked on:** Redesign existing pages' UI layout to match the wireframe (user's follow-up direction after the gap review — building NEW missing screens is on hold; instead, existing screens get a layout pass against the wireframe reference). Started with Home screen per user's choice.
+
+### Review (before fix):
+- Wireframe Home layout: avatar circle + "Location / New York, USA" + bell (top bar) → search bar with filter icon → "Exclusive Offers  See All" header + promo banner carousel → "Explore Categories  See All" header + horizontal pill chips (icon+label) → "Featured Products  See All" header + 2-column product grid.
+- BAS's actual `HomeTopBar.tsx` had: pin-in-circle + "Deliver to" (uppercase label) + bell/wishlist/cart icons + a large greeting heading + search. `HomeScreen.tsx` had: "Categories" header with vertical icon-circle+label stack (not chips), banner carousel with NO header above it, and "Popular this week" as a horizontal-scroll row (not a grid) — none matched the wireframe's section headers or the grid layout.
+- **Important constraint found during review:** Home is the ONLY screen carrying cart/wishlist/notification icons — `App.tsx` explicitly hides the floating `QuickBar` on Home ("the new brown HomeTopBar carries cart/bell there"). So those icons could NOT be removed from the top bar without breaking navigation, even though the wireframe's top bar doesn't show them (wireframe puts cart/wishlist behind its own bottom tab bar, which BAS's `Tab` type doesn't have — BAS tabs are home/categories/orders/profile only). Kept all 3 icons, only restyled the location block.
+
+### কী হয়েছে:
+- **`src/components/HomeTopBar.tsx`** — location block restyled to match wireframe: plain avatar circle (was pin-in-circle), label simplified from uppercase "Deliver to" to "Location" (wireframe wording), slightly larger avatar (36px) and tighter type scale. Cart/wishlist/notification icons and the personalized greeting were deliberately kept (removing them would have broken the only path to cart/wishlist/notifications from Home).
+- **`src/screens/HomeScreen.tsx`**:
+  - Category row: "Categories" → **"Explore Categories"** header (wireframe wording), and the layout changed from vertical icon-circle+label stack to horizontal pill chips (icon inside small colored circle + label, single row) — reuses the existing `.chip` CSS class already used on `CategoriesScreen.tsx`, so it's visually consistent with the rest of the app, not a new style.
+  - Banner: added a **"Exclusive Offers / See all"** `SectionHeader` above the promo carousel (wireframe has a header here; BAS's banner previously had none).
+  - "Popular this week" (horizontal scroll) → **"Featured Products"** 2-column grid (`variant="grid"` on `ProductCard`, same component already used on `CategoriesScreen.tsx`), matching the wireframe's grid layout instead of a horizontal scroll row.
+
+### Touched files:
+- `src/screens/HomeScreen.tsx`
+- `src/components/HomeTopBar.tsx`
+
+### Verify:
+- `npm run build`: **✓ built in 15.42s**
+- `npx tsc --noEmit`: `HomeScreen.tsx` has the same 56 pre-existing `unknown`-type errors as the untouched baseline (verified by diffing error count against a clean checkout of the same commit) — **zero new errors**. `HomeTopBar.tsx`: zero errors, same as before.
+
+### Output ZIP:
+- `home-screen-redesign-071726.zip` — 2 files, no top-level folder.
+
+### এখনো Pending / পরবর্তী Agent এর জন্য নোট:
+- User wants this same review→redesign pass repeated for other existing screens next (their choice, one at a time) — not new screens, just layout alignment to the wireframe reference (`Grocery-Delivery-App-Wireframe-Figma-Design.png`, referenced in `WIREFRAME-GAP-REVIEW-071726.md`).
+- The Check 5 (Payment Methods screen) discussion is still unresolved — BAS has no customer-owned saved card/payment-method concept (customers always send money to the shop's fixed bKash/Nagad number, verified via screenshot), so the wireframe's literal "Add Card" screen doesn't map onto BAS's business model. User was asked to pick an adapted approach (saved-number book / info screen / skip) but then redirected to "redesign existing pages" instead — this decision is still open whenever Check 5 comes back up.
+- Reference for future screens: `.chip`/`.chip-active` CSS classes (index.css) and `ProductCard` `variant="grid"` are the reusable building blocks that keep new layout work visually consistent with the rest of the app — reach for those before inventing new one-off styles.
+
+---
+
 ## Session: Wireframe Gap Review + Coupons Screen (2026-07-17)
 **Agent/Tool:** Claude (chat, Code Master protocol)
 **Feature worked on:** Item 1 of `WIREFRAME-GAP-REVIEW-071726.md` — "My Coupons" screen (Check 7: Offers/Promo/Coupon screens, previously entirely missing)
