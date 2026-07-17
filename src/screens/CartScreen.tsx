@@ -134,7 +134,7 @@ export default function CartScreen() {
         <div className="space-y-3">
           {safeArray<CartItem>(items).map((item, idx) => (
             <article
-              key={idx}
+              key={item.productId + "-" + idx}
               className="flex gap-3 rounded-2xl glass-strong p-3 anim-up"
             >
               <div className="h-24 w-24 flex-shrink-0 overflow-hidden rounded-2xl glass-strong">
