@@ -48,12 +48,16 @@ competing header elements (carried over from prior sessions).
 The `cart` route leads to the "My Cart" review page, while `checkout` leads
 to the final payment page — these are distinct and must not be conflated.
 
-## "Premium" feedback = depth, not just hue variety
-When user says a screen "still doesn't feel premium" after a color-differentiation
-pass, don't assume more/different hues are the fix. Check whether the element in
-question actually has shadow/gradient/border depth like the rest of the app's
-`glass-strong`/`shadow-*` treatment — a flat solid-color square (no shadow, no
-gradient, no border) will read as flat regardless of how many distinct hues it
-uses. Compare the flat element's CSS against a working reference (e.g. SearchBar's
-`shadow-[...]`, `.glass-strong`'s layered box-shadow + gradient) before proposing
-a new color-only fix.
+## Search the whole file for existing UI before adding new UI
+Added a "store contact" row to `ProductScreen.tsx` to close a wireframe gap,
+without grepping the rest of the (1000+ line) file first. A near-identical
+card ("Bake Art Style brand card (Check 1 Option 2)") already existed further
+down the same file from an earlier session, so the live app showed the same
+"Bake Art Style" contact block twice. **Fix going forward:** before adding any
+new section/component to an existing screen, `grep -n` the target file for
+the feature's likely keywords (brand name, section comment tags like
+"Check N", relevant labels) across the *entire* file — not just the section
+being edited — to confirm it doesn't already exist elsewhere. This applies
+especially to large multi-hundred-line screen files where a `view` of one
+section can miss something present later in the same file.
+

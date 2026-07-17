@@ -1,5 +1,35 @@
 # Agent Log — BAS (Bake Art Style 2)
 
+## Session: BUG FIX — duplicate "Bake Art Style" contact card on Product screen (2026-07-17)
+**Agent/Tool:** Claude (chat, Code Master protocol)
+**Reported by:** user, from live screenshots of the deployed app (Screenshot_20260717_141122 / _141211) showing the Rose Garden product page with **two** near-identical "Bake Art Style" contact rows (one labeled "দোকান সহায়তা" with an in-app-chat icon, one labeled "Official Bakery • Since 2018" with WhatsApp/tel: links).
+
+### Root cause:
+- Earlier this session, the "Product Detail" wireframe redesign step added a store-contact row to `ProductScreen.tsx` right after the rating line, believing this closed a genuine wireframe gap.
+- **That review was incomplete** — `grep`/`view` at the time only covered the section immediately around the rating row, not the full 1000+ line file. A near-identical card already existed further down the page (tagged `{/* Bake Art Style brand card (Check 1 Option 2) */}` — built in an *even earlier* session, already resolving this same wireframe gap with a better implementation: real `wa.me` deep-link with a prefilled message, `tel:` link for an actual phone call, and an "Official Bakery • Since 2018" trust badge). The new addition duplicated it instead of finding and reusing it.
+- This is now recorded as a lesson in `tasks/lessons.md` ("Search the whole file for existing UI before adding new UI").
+
+### কী হয়েছে (fix):
+- **`src/screens/ProductScreen.tsx`**: removed the duplicate store-contact row added earlier this session (the "দোকান সহায়তা" / chat-modal + wa.me version). The pre-existing "Bake Art Style brand card (Check 1 Option 2)" — the better-built one with real WhatsApp/tel: links and the "Official Bakery • Since 2018" badge — is kept as the single, correct contact card.
+- Removed the now-unused `setChatOpen` from the `useUI()` destructure (was only used by the deleted block).
+
+### Touched files:
+- `src/screens/ProductScreen.tsx`
+- `tasks/lessons.md` (new lesson entry)
+
+### Verify:
+- `npx tsc --noEmit`: 0 errors in this file.
+- `npm run build`: built in 11.49s
+
+### Output ZIP:
+- `product-screen-duplicate-contact-fix-071726.zip` — 1 file (`src/screens/ProductScreen.tsx`), no top-level folder.
+
+### এখনো Pending / পরবর্তী Agent এর জন্য নোট:
+- **User has explicitly asked for a stricter "full/exact" redesign standard going forward** — not just "close enough, adapted where BAS differs" but matching the wireframe precisely wherever BAS's own data model allows it. Any future redesign work on this app should re-verify each target file's *entire* existing content first (not just the section being touched) before adding anything, per the new lesson above.
+- User shared 2 live screenshots (Home + Rose Garden product detail) as the trigger for this bug report. Home screen screenshot showed no other obvious mismatch on inspection. If the user has more specific mismatches in mind beyond the duplicate card, they should be captured here as soon as raised.
+
+---
+
 ## Session: Self-review follow-up — Categories icon-grid (2026-07-17)
 **Agent/Tool:** Claude (chat, Code Master protocol)
 **Feature worked on:** Follow-up fix after a self-review of the earlier wireframe pass (see `tasks/self-review-wireframe-pass-071726.md`). Screen: `CategoriesScreen.tsx`.

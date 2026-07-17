@@ -43,7 +43,7 @@ const ADDONS = [
 const WEIGHT_PRESETS = ['0.5', '1', '1.5', '2'];
 
 export default function ProductScreen() {
-  const { view, back, go, setChatOpen } = useUI();
+  const { view, back, go } = useUI();
   const { add } = useCart();
   const { wishlist, toggleWish } = useUser();
   const { products } = useProducts();
@@ -413,41 +413,6 @@ export default function ProductScreen() {
                 ? `(${Number(displayReviewCount).toLocaleString()} রিভিউ)`
                 : 'নতুন — এখনো রিভিউ নেই'}
             </span>
-          </div>
-
-          {/* Store contact — wireframe's manager-contact row, grounded in BAS's real support channels */}
-          <div className="mt-3 flex items-center justify-between rounded-2xl bg-ink-50/60 px-3 py-2.5">
-            <div className="flex items-center gap-2.5">
-              <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-cocoa-50 font-display text-[13px] font-bold text-cocoa-700">
-                🧁
-              </div>
-              <div className="min-w-0">
-                <div className="truncate text-[12.5px] font-bold text-ink">Bake Art Style</div>
-                <div className="text-[10.5px] text-ink-200">দোকান সহায়তা</div>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setChatOpen(true)}
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-ink-300 transition active:scale-90"
-                style={{ boxShadow: '0 1px 2px rgba(26,19,17,.06)' }}
-                aria-label="Chat with shop"
-              >
-                <MessageSquare className="h-[15px] w-[15px]" strokeWidth={2} />
-              </button>
-              {settings.whatsappNumber && (
-                <a
-                  href={`https://wa.me/${settings.whatsappNumber.replace(/[^0-9]/g, '')}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-ink-300 transition active:scale-90"
-                  style={{ boxShadow: '0 1px 2px rgba(26,19,17,.06)' }}
-                  aria-label="Call shop on WhatsApp"
-                >
-                  <Phone className="h-[15px] w-[15px]" strokeWidth={2} />
-                </a>
-              )}
-            </div>
           </div>
 
           {/* Social proof strip */}
