@@ -48,6 +48,17 @@ competing header elements (carried over from prior sessions).
 The `cart` route leads to the "My Cart" review page, while `checkout` leads
 to the final payment page — these are distinct and must not be conflated.
 
+## Restyling a section is not the same as reordering it
+During an earlier Home-screen wireframe pass, "add the missing Exclusive
+Offers header" and "match the wireframe's section order" were treated as the
+same task and only the first was actually done — the banner kept its original
+position below Explore Categories instead of moving above it, even though the
+log entry described the work as matching the reference layout. **Fix going
+forward:** when a review report calls out a layout/order gap, verify the
+*position* of the JSX block in the file, not just whether its internal
+content/labels match the reference. A section can be pixel-perfect on its own
+and still be in the wrong place in the page flow.
+
 ## Search the whole file for existing UI before adding new UI
 Added a "store contact" row to `ProductScreen.tsx` to close a wireframe gap,
 without grepping the rest of the (1000+ line) file first. A near-identical

@@ -1,5 +1,36 @@
 # Agent Log — BAS (Bake Art Style 2)
 
+## Session: Home layout — Exclusive Offers moved before Explore Categories + banner dots outside card (2026-07-17)
+**Agent/Tool:** Claude (chat, Code Master protocol)
+**Reported by:** user, unhappy with the live Home screen vs a grayscale reference wireframe screenshot (`Grocery-Delivery-App-Wireframe-Figma-Design.png` reference — same one used in the earlier "Home Screen Layout Redesign" session).
+
+### Review (before fix):
+- The earlier Home wireframe pass (see session below, same date) added an "Exclusive Offers" `SectionHeader` above the banner and reshaped the category row into pill chips, but **kept the original section order**: Explore Categories first, then Exclusive Offers banner below it.
+- Re-checked against the reference: the reference shows Exclusive Offers **first**, Explore Categories **second** — order was never actually flipped in that earlier pass, only the individual sections were restyled in place.
+- Banner pagination dots were absolute-positioned *inside* the image (`absolute right-0 bottom-3 left-0`), overlaid on the photo. Reference shows the dots as a separate row **below/outside** the framed banner card.
+- Header (avatar+location, bell/wishlist/cart icons), category chip style, and the Featured Products 2-column grid were re-verified against the same reference and already match — not touched again (per the existing decision logged in the prior Home session: cart/wishlist/notification icons must stay in the header because the bottom tab bar — kept as-is per user instruction — has no cart/wishlist tab).
+- Product card's discount badge in the reference reads "15% OFF" (a percentage). BAS's `Product` type has no per-product discount-percentage field (only coupon-level/order-level discount exists) — kept the existing "BEST"/"NEW" badges rather than fabricate a percentage; flagged to the user as an intentional adaptation, not a gap.
+
+### কী হয়েছে (fix):
+- **`src/screens/HomeScreen.tsx`**: moved the entire "Hero banner / Exclusive Offers" block to render **before** the "Category row / Explore Categories" block (pure JSX reorder, no logic changes — `bannerIdx`, `activeBanners`, category `.map`, `openOccasion` etc. all untouched).
+- Removed the pagination-dot `<div className="absolute ... bottom-3 ...">` that overlaid the banner image; added a new dot row **outside** the image container, inside the same `px-5` wrapper, styled `bg-coral`/`bg-ink-100` (was `bg-white`/`bg-white/50`, which only worked visually against the photo — now sits on the cream page background so needed the app's ink/coral tokens instead).
+
+### Touched files:
+- `src/screens/HomeScreen.tsx`
+
+### Verify:
+- `npx tsc --noEmit`: 56 pre-existing `unknown`-type errors in this file both before and after (confirmed via `git stash` diff) — zero new errors.
+- `npm run build`: ✓ built in 9.41s
+
+### Output ZIP:
+- `home-offers-before-categories-0717-1832.zip` — 1 file (`src/screens/HomeScreen.tsx`), no top-level folder.
+
+### এখনো Pending / পরবর্তী Agent এর জন্য নোট:
+- User said they'll give further layout-change instructions after this one is applied — expect a follow-up request in the same thread, likely still Home-screen-scoped. Don't assume the reference wireframe pass is "done" again just because this reorder is in — ask what's next rather than closing this out unprompted.
+- Banner photo itself was deliberately **kept** (reference shows a flat text-only promo card, BAS uses real uploaded promo photos) — this is a live open point the user may still want changed; if they ask for the banner to drop the photo entirely, that's a new, larger UI change (removes real content, not just layout) and should get its own review before implementing.
+
+---
+
 ## Session: BUG FIX — duplicate "Bake Art Style" contact card on Product screen (2026-07-17)
 **Agent/Tool:** Claude (chat, Code Master protocol)
 **Reported by:** user, from live screenshots of the deployed app (Screenshot_20260717_141122 / _141211) showing the Rose Garden product page with **two** near-identical "Bake Art Style" contact rows (one labeled "দোকান সহায়তা" with an in-app-chat icon, one labeled "Official Bakery • Since 2018" with WhatsApp/tel: links).

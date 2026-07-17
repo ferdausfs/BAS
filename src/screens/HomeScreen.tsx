@@ -133,8 +133,73 @@ export default function HomeScreen({ onAuthOpen, onNotificationsOpen }: { onAuth
           onNotificationsOpen={onNotificationsOpen}
         />
 
-        {/* Category row — wireframe layout: horizontal pill chips (icon + label) */}
-        <div className="mt-5 px-5 anim-up delay-1">
+        {/* Hero banner — reference layout: "Exclusive Offers / See all" header + carousel BEFORE Explore Categories, pagination dots OUTSIDE/below the card */}
+        {!search.trim() && activeBanners.length > 0 && (
+          <div className="mt-5 anim-up delay-1">
+            <SectionHeader
+              eyebrow="Today's picks"
+              title="Exclusive Offers"
+              action={{ label: 'See all', onClick: () => go({ name: 'tabs', tab: 'categories' }) }}
+            />
+            <div className="mt-3 px-5">
+              <div className="relative overflow-hidden rounded-[26px]">
+                <div className="relative aspect-[1.7/1] w-full overflow-hidden">
+                  {activeBanners.map((b, i) => (
+                    <div
+                      key={b.id}
+                      onClick={() => {
+                        if (b.productId) go({ name: 'product', productId: b.productId });
+                        else if (b.link === 'customize') go({ name: 'customize' });
+                        else if (b.link === 'categories') go({ name: 'tabs', tab: 'categories' });
+                      }}
+                      className={`absolute inset-0 cursor-pointer transition-opacity duration-700 ${i === bannerIdx ? 'z-10 opacity-100' : 'z-0 opacity-0'}`}
+                    >
+                      <img src={b.image} alt={b.title} className="absolute inset-0 h-full w-full object-cover" />
+                      <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent" />
+                      <div className="absolute inset-0 flex flex-col justify-center p-5">
+                        <span className="mb-2 inline-flex w-fit items-center gap-1 rounded-full bg-white px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-ink">
+                          {b.tag}
+                        </span>
+                        <h3 className="max-w-[16ch] font-display text-[26px] font-semibold leading-[1.1] tracking-tight text-white">
+                          {b.title}
+                        </h3>
+                        <p className="mt-1 max-w-[22ch] text-[12px] leading-snug text-white/85">{b.subtitle}</p>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (b.type === 'discount') {
+                              if (b.promoCode) { navigator.clipboard?.writeText(b.promoCode); setCopiedId(b.id); setTimeout(() => setCopiedId(null), 1500); }
+                            } else if (b.type === 'notice') setActiveNotice(b);
+                            else if (b.productId) go({ name: 'product', productId: b.productId });
+                            else if (b.link === 'customize') go({ name: 'customize' });
+                            else if (b.link === 'categories') go({ name: 'tabs', tab: 'categories' });
+                            else go({ name: 'product', productId: safeArray(products)[0]?.id || 'p1' });
+                          }}
+                          className="mt-3 inline-flex h-9 w-fit items-center gap-1.5 rounded-full bg-gold px-4 text-[12.5px] font-bold text-white shadow-[0_6px_16px_-4px_rgba(201,150,60,.45)] transition active:scale-95"
+                        >
+                          {b.type === 'discount' ? (copiedId === b.id ? 'Copied!' : `Copy: ${b.promoCode || 'CODE'}`) : (<>Shop Now <ArrowRight className="h-3.5 w-3.5" strokeWidth={2.5} /></>)}
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                  <button onClick={() => setBannerIdx((i) => (i - 1 + activeBanners.length) % activeBanners.length)} className="absolute top-1/2 left-3 z-20 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/80 text-ink backdrop-blur transition active:scale-95 md:flex" aria-label="Previous"><ChevronLeft className="h-4 w-4" strokeWidth={2.5} /></button>
+                  <button onClick={() => setBannerIdx((i) => (i + 1) % activeBanners.length)} className="absolute top-1/2 right-3 z-20 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/80 text-ink backdrop-blur transition active:scale-95 md:flex" aria-label="Next"><ChevronRight className="h-4 w-4" strokeWidth={2.5} /></button>
+                </div>
+              </div>
+              {/* Pagination dots — reference layout: OUTSIDE/below the card, not overlaid on the image */}
+              {activeBanners.length > 1 && (
+                <div className="mt-3 flex justify-center gap-1.5">
+                  {activeBanners.map((_, i) => (
+                    <button key={i} onClick={() => setBannerIdx(i)} className={`h-1.5 rounded-full transition-all ${i === bannerIdx ? 'w-6 bg-coral' : 'w-1.5 bg-ink-100'}`} aria-label={`Go to slide ${i + 1}`} />
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Category row — reference layout: horizontal pill chips (icon + label), now AFTER Exclusive Offers */}
+        <div className="mt-7 px-5 anim-up delay-2">
           <div className="flex items-center justify-between mb-3">
             <h2 className="font-display text-[16px] font-bold tracking-tight text-ink">Explore Categories</h2>
             <button
@@ -188,68 +253,6 @@ export default function HomeScreen({ onAuthOpen, onNotificationsOpen }: { onAuth
               <div className="text-[11px] text-ink-300">Order a special cake now</div>
             </div>
             <button onClick={() => go({ name: 'tabs', tab: 'categories' })} className="flex-shrink-0 rounded-xl bg-coral px-3 py-1.5 text-[11px] font-bold text-white">Order</button>
-          </div>
-        )}
-
-        {/* Hero banner — wireframe layout: "Exclusive Offers / See all" header above the carousel */}
-        {!search.trim() && activeBanners.length > 0 && (
-          <div className="mt-6 anim-up delay-1">
-            <SectionHeader
-              eyebrow="Today's picks"
-              title="Exclusive Offers"
-              action={{ label: 'See all', onClick: () => go({ name: 'tabs', tab: 'categories' }) }}
-            />
-            <div className="mt-3 px-5">
-            <div className="relative overflow-hidden rounded-[26px]">
-              <div className="relative aspect-[1.7/1] w-full overflow-hidden">
-                {activeBanners.map((b, i) => (
-                  <div
-                    key={b.id}
-                    onClick={() => {
-                      if (b.productId) go({ name: 'product', productId: b.productId });
-                      else if (b.link === 'customize') go({ name: 'customize' });
-                      else if (b.link === 'categories') go({ name: 'tabs', tab: 'categories' });
-                    }}
-                    className={`absolute inset-0 cursor-pointer transition-opacity duration-700 ${i === bannerIdx ? 'z-10 opacity-100' : 'z-0 opacity-0'}`}
-                  >
-                    <img src={b.image} alt={b.title} className="absolute inset-0 h-full w-full object-cover" />
-                    <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent" />
-                    <div className="absolute inset-0 flex flex-col justify-center p-5">
-                      <span className="mb-2 inline-flex w-fit items-center gap-1 rounded-full bg-white px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-ink">
-                        {b.tag}
-                      </span>
-                      <h3 className="max-w-[16ch] font-display text-[26px] font-semibold leading-[1.1] tracking-tight text-white">
-                        {b.title}
-                      </h3>
-                      <p className="mt-1 max-w-[22ch] text-[12px] leading-snug text-white/85">{b.subtitle}</p>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (b.type === 'discount') {
-                            if (b.promoCode) { navigator.clipboard?.writeText(b.promoCode); setCopiedId(b.id); setTimeout(() => setCopiedId(null), 1500); }
-                          } else if (b.type === 'notice') setActiveNotice(b);
-                          else if (b.productId) go({ name: 'product', productId: b.productId });
-                          else if (b.link === 'customize') go({ name: 'customize' });
-                          else if (b.link === 'categories') go({ name: 'tabs', tab: 'categories' });
-                          else go({ name: 'product', productId: safeArray(products)[0]?.id || 'p1' });
-                        }}
-                        className="mt-3 inline-flex h-9 w-fit items-center gap-1.5 rounded-full bg-gold px-4 text-[12.5px] font-bold text-white shadow-[0_6px_16px_-4px_rgba(201,150,60,.45)] transition active:scale-95"
-                      >
-                        {b.type === 'discount' ? (copiedId === b.id ? 'Copied!' : `Copy: ${b.promoCode || 'CODE'}`) : (<>Shop Now <ArrowRight className="h-3.5 w-3.5" strokeWidth={2.5} /></>)}
-                      </button>
-                    </div>
-                  </div>
-                ))}
-                <button onClick={() => setBannerIdx((i) => (i - 1 + activeBanners.length) % activeBanners.length)} className="absolute top-1/2 left-3 z-20 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/80 text-ink backdrop-blur transition active:scale-95 md:flex" aria-label="Previous"><ChevronLeft className="h-4 w-4" strokeWidth={2.5} /></button>
-                <button onClick={() => setBannerIdx((i) => (i + 1) % activeBanners.length)} className="absolute top-1/2 right-3 z-20 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/80 text-ink backdrop-blur transition active:scale-95 md:flex" aria-label="Next"><ChevronRight className="h-4 w-4" strokeWidth={2.5} /></button>
-                <div className="absolute right-0 bottom-3 left-0 z-20 flex justify-center gap-1.5">
-                  {activeBanners.map((_, i) => (
-                    <button key={i} onClick={() => setBannerIdx(i)} className={`h-1.5 rounded-full transition-all ${i === bannerIdx ? 'w-6 bg-white' : 'w-1.5 bg-white/50'}`} />
-                  ))}
-                </div>
-              </div>
-            </div>
-            </div>
           </div>
         )}
 
