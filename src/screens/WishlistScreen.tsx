@@ -20,6 +20,19 @@ export default function WishlistScreen({
   const { user } = useAuthStore();
   const { products } = useProducts();
   const [activeCat, setActiveCat] = useState<string>('all');
+  const [fadingIds, setFadingIds] = useState<Set<string>>(new Set());
+
+  const handleUnwish = (id: string) => {
+    setFadingIds((prev) => new Set(prev).add(id));
+    setTimeout(() => {
+      toggleWish(id);
+      setFadingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+    }, 220);
+  };
   const saved = safeArray<Product>(products).filter((p) => (p.approved ?? true) && wishlist.includes(p.id));
   const list = activeCat === 'all' ? saved : saved.filter((p) => p.occasion === activeCat);
 
@@ -111,14 +124,22 @@ export default function WishlistScreen({
             </p>
             <div className="grid grid-cols-2 gap-3">
               {list.map((p) => (
-                <ProductCard
+                <div
                   key={p.id}
-                  product={p}
-                  wished
-                  onWish={toggleWish}
-                  onOpen={() => go({ name: 'product', productId: p.id })}
-                  variant="grid"
-                />
+                  style={{
+                    opacity: fadingIds.has(p.id) ? 0.45 : 1,
+                    transition: 'opacity .2s ease',
+                    pointerEvents: fadingIds.has(p.id) ? 'none' : 'auto',
+                  }}
+                >
+                  <ProductCard
+                    product={p}
+                    wished
+                    onWish={handleUnwish}
+                    onOpen={() => go({ name: 'product', productId: p.id })}
+                    variant="grid"
+                  />
+                </div>
               ))}
             </div>
           </>

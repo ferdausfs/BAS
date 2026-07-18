@@ -1,5 +1,74 @@
 # Agent Log — BAS (Bake Art Style 2)
 
+## Session: ProductCard + WishlistScreen — redesigned to match Favorite grid mockup (2026-07-18, same chat session, follow-up)
+**Agent/Tool:** Claude (chat, Code Master protocol)
+**Feature worked on:** User shared a "Favorite" screen HTML mockup (2-col
+product grid: discount badge top-left, fav heart top-right, rating inline
+next to product name, price + strikethrough old price + add button row)
+and said the current wishlist/card design was outdated and should be
+rebuilt to match it.
+
+### Review (before fix):
+- `ProductCard.tsx` (shared by Home, Categories, Wishlist — any grid/list
+  of products): showed only `bestseller`/`newArrival` badges (no discount
+  badge despite `Product.oldPrice` already existing in
+  `src/types/index.ts` L9 and being unused for display), rating shown as
+  a badge overlaid on the image's bottom-left corner (not inline with the
+  name like the mockup), and the price row showed only the current price
+  with no strikethrough original price.
+- `WishlistScreen.tsx`: `onWish={toggleWish}` called directly — un-wishing
+  an item removed it from the `saved` list (and therefore the grid) on
+  the very next render, no transition at all. The mockup's fav-toggle
+  fades the card to 0.45 opacity first.
+
+### কী হয়েছে:
+- **`src/components/ProductCard.tsx`**: added a discount-percent badge
+  (`{pct}% ছাড়`, coral pill) computed from `oldPrice` vs `price`, shown
+  alongside the existing Best/New badges (top-left). Moved the star
+  rating from an image-overlay badge to inline next to the product name
+  (`flex justify-between`, name left/truncated, rating right). Price row
+  now shows the strikethrough `oldPrice` next to the current price when
+  present. This is a shared component, so the change applies everywhere
+  it's used (Home, Categories, Wishlist), not just the Favorite screen.
+- **`src/screens/WishlistScreen.tsx`**: added `fadingIds` state and a
+  `handleUnwish` that fades the specific card to `opacity: 0.45` (with
+  `pointer-events: none` during the fade) for 220ms before actually
+  calling `toggleWish` and letting it drop out of the grid — matches the
+  mockup's soft-unfavorite feel instead of an instant disappearance. Each
+  grid cell wrapped in a small transition div for this; `ProductCard`
+  itself wasn't given fade logic (kept generic/reusable).
+- Deliberately **not** added: the mockup's bottom navbar (BAS already has
+  its own real bottom-tab navigation elsewhere; Wishlist is a pushed
+  screen with a back-button header, so a second nav bar would be
+  redundant/wrong) and the mockup's `.chip-row` category filter (Wishlist
+  already had its own working category-chip row using the real
+  `categories`/`OccasionIcon` data, not the mockup's static "Fresh
+  Produce / Beverages / Dairy" list — kept that as-is).
+
+### Touched files:
+- `src/components/ProductCard.tsx`
+- `src/screens/WishlistScreen.tsx`
+
+### Verify:
+- `npx tsc --noEmit`: 0 new errors from these two files (one pre-existing
+  unrelated `ZoomIn` unused-import warning in `ProductCard.tsx` confirmed
+  via `git stash` to predate this session).
+- `npm run build`: ✓ built in 16.72s
+- Not yet confirmed visually on device.
+
+### এখনো Pending / পরবর্তী Agent এর জন্য নোট:
+- Since `ProductCard` is shared, double-check the Home/Categories screens
+  still look right with the rating moved off the image — wasn't asked to
+  change those screens specifically but they'll inherit this layout
+  automatically.
+- The Add-button "bump" scale animation from the mockup was **not**
+  added — BAS's existing add-to-cart feedback (icon swaps to a checkmark
+  + green background for ~1.2s) was left as-is since it's arguably
+  clearer than a quick scale bump and wasn't specifically called out as
+  broken. Flag if the user wants that changed too.
+
+---
+
 ## Session: CartScreen — minus button becomes delete-with-confirm at qty 1 (2026-07-18, same chat session, follow-up)
 **Agent/Tool:** Claude (chat, Code Master protocol)
 **Feature worked on:** Swipe-to-delete still not visibly working after the

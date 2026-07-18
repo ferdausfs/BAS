@@ -65,9 +65,19 @@ export default function ProductCard({ product, wished, onOpen, onWish, variant =
       </button>
     ) : null;
 
+  const discountPct =
+    product.oldPrice && product.oldPrice > product.price
+      ? Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100)
+      : null;
+
   const Badges = () =>
     !zoomed ? (
       <div className="absolute top-2.5 left-2.5 flex flex-col gap-1">
+        {discountPct !== null && (
+          <span className="rounded-full bg-coral px-2 py-0.5 text-[9px] font-bold text-white">
+            {discountPct}% ছাড়
+          </span>
+        )}
         {product.bestseller && (
           <span className="flex items-center gap-1 rounded-full bg-ink/85 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white backdrop-blur-md">
             <Award className="h-2.5 w-2.5" strokeWidth={2.5} /> Best
@@ -109,13 +119,6 @@ export default function ProductCard({ product, wished, onOpen, onWish, variant =
             <Heart key={heartKey} className={`h-3.5 w-3.5 ${wished ? 'anim-pop' : ''}`} style={{ fill: wished ? '#A8672E' : 'none' }} strokeWidth={2} />
           </button>
         )}
-        {!zoomed && (
-          <span className="absolute bottom-2 left-2 flex items-center gap-1 rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-bold text-ink shadow-sm">
-            <Star className="h-3 w-3 fill-gold text-gold" />
-            {product.rating}
-            <span className="text-ink-200">({product.reviews.toLocaleString()})</span>
-          </span>
-        )}
       </div>
 
       <div className="px-1.5 pt-2.5 pb-1">
@@ -127,9 +130,20 @@ export default function ProductCard({ product, wished, onOpen, onWish, variant =
             </span>
           </div>
         )}
-        <h3 className="line-clamp-1 font-display text-[15px] font-bold tracking-tight text-ink">{product.name}</h3>
+        <div className="flex items-center justify-between gap-1.5">
+          <h3 className="line-clamp-1 font-display text-[15px] font-bold tracking-tight text-ink">{product.name}</h3>
+          <span className="flex flex-shrink-0 items-center gap-0.5 text-[11px] font-bold text-ink-200">
+            <Star className="h-3 w-3 fill-gold text-gold" />
+            {product.rating}
+          </span>
+        </div>
         <div className="mt-2 flex items-center justify-between">
-          <span className="font-display text-[16px] font-bold tabular text-coral">{formatINR(product.price)}</span>
+          <span className="flex items-baseline gap-1.5">
+            <span className="font-display text-[16px] font-bold tabular text-coral">{formatINR(product.price)}</span>
+            {product.oldPrice && product.oldPrice > product.price && (
+              <span className="text-[11px] text-ink-200 line-through tabular">{formatINR(product.oldPrice)}</span>
+            )}
+          </span>
           <AddButton size={isGrid ? 32 : 30} />
         </div>
       </div>
