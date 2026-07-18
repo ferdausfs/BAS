@@ -16,7 +16,6 @@ import { safeArray } from '../lib/utils';
 import { useModalDepth } from '../hooks/useModalDepth';
 import SearchBar from '../components/SearchBar';
 import ProductCard from '../components/ProductCard';
-import OccasionIcon from '../components/OccasionIcon';
 import { useDebounce } from '../hooks/useDebounce';
 
 function SkeletonCard() {
@@ -140,31 +139,23 @@ export default function CategoriesScreen() {
         </div>
       </header>
 
-      {/* Explore Categories — icon grid (wireframe's dedicated category-grid
-          screen pattern: circle icon + label underneath, wraps to multiple
-          rows). Replaces the old single-line horizontal chip row so this
-          screen genuinely matches the wireframe's "Explore Categories" grid,
-          not just a reused Home-style chip strip. Same filter logic as
-          before (active/setActive) — only the visual shape changed. */}
-      <div className="mt-3 grid flex-shrink-0 grid-cols-4 gap-x-2 gap-y-3 px-5 pb-3">
+      {/* Category filter — horizontal text chip row (mockup layout),
+          BAS coral/gold palette kept: active chip = solid coral pill,
+          inactive = soft ink-tinted pill. Replaces the old 4-col icon
+          grid. Same filter logic as before (active/setActive) — only
+          the visual shape changed. */}
+      <div className="no-scrollbar mt-3 flex flex-shrink-0 gap-2.5 overflow-x-auto px-5 pb-3">
         {[ALL_CAT, ...categories].map((c) => {
           const isActive = active === c.id;
           return (
             <button
               key={c.id}
               onClick={() => setActive(c.id)}
-              className="flex flex-col items-center gap-1.5"
+              className={`flex-shrink-0 whitespace-nowrap rounded-full px-5 py-2.5 text-[13px] font-semibold transition active:scale-95 ${
+                isActive ? 'bg-coral text-white' : 'bg-ink-50 text-ink-300'
+              }`}
             >
-              <span
-                className={`flex h-14 w-14 items-center justify-center rounded-2xl transition active:scale-95 ${
-                  isActive ? 'bg-coral text-white' : 'bg-ink-50 text-ink-300'
-                }`}
-              >
-                <OccasionIcon id={c.id} size={22} />
-              </span>
-              <span className={`text-[10.5px] font-semibold ${isActive ? 'text-ink' : 'text-ink-200'}`}>
-                {c.name}
-              </span>
+              {c.name}
             </button>
           );
         })}
@@ -172,40 +163,6 @@ export default function CategoriesScreen() {
 
       {/* Grid */}
       <div className="no-scrollbar flex-1 overflow-y-auto px-5 pb-32">
-        {/* Nearby Bakeries reference card section */}
-        <div className="mb-5">
-          <div className="flex items-center justify-between mb-2">
-            <h2 className="font-display text-[15px] font-bold text-ink">Bakeries Near You</h2>
-            <span className="text-[11px] font-semibold text-coral">Live Map 📍</span>
-          </div>
-          <div className="no-scrollbar flex gap-3 overflow-x-auto pb-1">
-            {[
-              { id: 'b1', name: 'Luscious Layers Bakery', rating: '4.9', reviews: '1k+', dist: '2.2 km', time: '14 min', free: true, tags: 'Cup Cake, Cookies, Donuts' },
-              { id: 'b2', name: 'Crave Cupcakes & Bakes', rating: '5.0', reviews: '850', dist: '1.8 km', time: '10 min', free: false, tags: 'Custom Cakes, Breads' },
-            ].map((bakery) => (
-              <div
-                key={bakery.id}
-                className="w-[220px] flex-shrink-0 rounded-2xl border border-ink-50 bg-white p-3 shadow-sm active:scale-95 transition"
-              >
-                <div className="flex items-center gap-2.5">
-                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-cocoa-50 text-xl font-bold text-cocoa-700">
-                    🧁
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="truncate font-bold text-[13px] text-ink">{bakery.name}</div>
-                    <div className="truncate text-[10px] text-ink-200">{bakery.tags}</div>
-                  </div>
-                </div>
-                <div className="mt-2.5 flex items-center justify-between text-[11px] font-semibold text-ink-300">
-                  <span className="flex items-center gap-0.5 text-gold font-bold">★ {bakery.rating}</span>
-                  <span>{bakery.time} • {bakery.dist}</span>
-                  {bakery.free && <span className="rounded bg-emerald-50 px-1.5 py-0.5 text-[9.5px] font-bold text-emerald-700">Free Delivery</span>}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
         <div className="mb-3 flex items-center justify-between">
           <p className="text-[12px] font-medium text-ink-200">
             <span className="font-bold text-ink">{filtered.length}</span> Results Found
