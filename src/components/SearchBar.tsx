@@ -25,8 +25,8 @@ const SearchBar = forwardRef<HTMLInputElement, Props>(
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
-          className={`glass h-[52px] w-full rounded-[18px] pl-12 text-[14px] font-medium text-ink outline-none transition-shadow duration-200 placeholder:font-normal placeholder:text-ink-200 focus:ring-4 focus:ring-coral/12 ${
-            onOpenOccasions ? 'pr-11' : 'pr-12'
+          className={`glass h-[52px] w-full rounded-full pl-12 text-[14px] font-medium text-ink outline-none transition-shadow duration-200 placeholder:font-normal placeholder:text-ink-200 focus:ring-4 focus:ring-coral/12 ${
+            onOpenOccasions ? 'pr-14' : 'pr-12'
           }`}
         />
         {value ? (
@@ -43,10 +43,12 @@ const SearchBar = forwardRef<HTMLInputElement, Props>(
             <button
               onMouseDown={(e) => e.preventDefault()}
               onClick={onOpenOccasions}
-              className="absolute -right-1.5 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-[15px] bg-ink text-white shadow-[0_4px_10px_-2px_rgba(42,27,18,0.4)] transition active:scale-90"
+              className="absolute -right-2 top-1/2 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-white/15 transition active:scale-95"
               aria-label="Browse by occasion"
             >
-              <SlidersHorizontal className="h-[17px] w-[17px]" strokeWidth={2.2} />
+              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-ink text-white shadow-[0_4px_10px_-2px_rgba(42,27,18,0.4)]">
+                <SlidersHorizontal className="h-[16px] w-[16px]" strokeWidth={2.2} />
+              </span>
             </button>
           )
         )}
