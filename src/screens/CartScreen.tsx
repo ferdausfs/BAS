@@ -140,7 +140,9 @@ export default function CartScreen() {
             <CartItemRow
               key={item.productId + "-" + idx}
               item={item}
-              onDecrease={() => setQty(idx, item.quantity - 1)}
+              onDecrease={() => {
+                if (item.quantity > 1) setQty(idx, item.quantity - 1);
+              }}
               onIncrease={() => setQty(idx, item.quantity + 1)}
               onRequestRemove={() => setConfirmIdx(idx)}
             />
@@ -469,7 +471,8 @@ function CartItemRow({
             <div className="flex items-center rounded-full border border-ink-50 bg-white p-0.5">
               <button
                 onClick={onDecrease}
-                className="flex h-11 w-11 items-center justify-center rounded-full text-ink-200 transition hover:bg-cream"
+                disabled={item.quantity <= 1}
+                className="flex h-11 w-11 items-center justify-center rounded-full text-ink-200 transition hover:bg-cream disabled:opacity-40 disabled:hover:bg-transparent"
               >
                 <Minus className="h-3.5 w-3.5" />
               </button>

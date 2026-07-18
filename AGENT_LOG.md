@@ -1,5 +1,55 @@
 # Agent Log — BAS (Bake Art Style 2)
 
+## Session: CartScreen — minus button no longer auto-deletes at qty 0 (2026-07-18, immediately after)
+**Agent/Tool:** Claude (chat, Code Master protocol)
+**Feature worked on:** User reported repeatedly tapping the "-" stepper
+button eventually deletes the item. Root cause: `useCart.setQty` (in
+`lib/store.ts`, pre-existing, not touched this session) filters out any
+item whose quantity drops to `0`, so decrementing past 1 silently removes
+it — this predates the swipe work but now directly conflicts with the
+swipe+confirm-sheet flow just built, which is meant to be the only
+deletion path.
+
+### Review (before fix):
+- `lib/store.ts` L218–223: `setQty` — `.filter((it) => it.quantity > 0)`,
+  confirmed this is the existing store behavior, not something introduced
+  by the swipe changes.
+- `CartScreen.tsx`: `onDecrease` prop passed `setQty(idx, item.quantity - 1)`
+  unconditionally, so at `quantity === 1` this calls `setQty(idx, 0)` →
+  store removes the item.
+
+### কী হয়েছে:
+- **`src/screens/CartScreen.tsx`**: `onDecrease` now floors at 1 —
+  `if (item.quantity > 1) setQty(idx, item.quantity - 1)`. The minus button
+  in `CartItemRow` is `disabled` (with a dimmed `disabled:opacity-40`
+  style) once `item.quantity <= 1`, so it's visually clear that removal
+  now only happens through swipe → confirm sheet, not by decrementing to
+  zero. `lib/store.ts` itself was **not** touched — its 0-quantity filter
+  may still matter for other callers (e.g. `ProductScreen`'s own quantity
+  control), so the fix was scoped to Cart's stepper only.
+
+### Touched files:
+- `src/screens/CartScreen.tsx`
+
+### Verify:
+- `npx tsc --noEmit`: 0 errors in `CartScreen.tsx`.
+- `npm run build`: ✓ built in 10.37s
+
+### এখনো Pending / পরবর্তী Agent এর জন্য নোট:
+- **Swipe-to-delete itself is still unconfirmed working on the user's
+  actual device** — this is the third round on the swipe gesture in this
+  session (Pointer Events, then native touch listeners, both reported as
+  "same" / not working) and the agent cannot test real touch input in this
+  sandboxed environment. Before attempting a 4th code-level fix blind,
+  asked the user to confirm via `grep -n "touchstart"
+  src/screens/CartScreen.tsx` that the native-touch-listener version is
+  actually present on disk after unzipping, and to hard-refresh /
+  uninstall-reinstall if a cached/PWA build could be serving stale JS —
+  per the ZIP-filename-collision and stale-cache mistakes already logged
+  in `AGENT-WORKFLOW-PROTOCOL.md`'s "যে ভুলগুলো আগে হয়েছে" section.
+
+---
+
 ## Session: CartScreen — swipe-to-delete fixed to use native touch listeners (2026-07-18, immediately after)
 **Agent/Tool:** Claude (chat, Code Master protocol)
 **Feature worked on:** Second follow-up correction in the same Cart session
