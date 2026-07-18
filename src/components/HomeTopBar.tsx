@@ -16,12 +16,12 @@ interface Props {
 
 /**
  * Brown/gold bakery-style home header block.
- * Renders a solid cocoa header panel with two rows — location + bell/wishlist/
- * cart icons, then the search field directly below — matching the reference
- * wireframe's compact 2-row header. Cart/wishlist/notification icons are kept
- * here (not dropped, even though the wireframe's top bar doesn't show them)
- * because Home is the only screen carrying them: BAS's bottom tab bar has no
- * cart/wishlist tab, so removing these would cut off navigation to both.
+ * Two layers: a location+icons panel that scrolls away normally, and a search
+ * bar that sits flush below it at first, then sticks to the top of the scroll
+ * container (rises up and pins) once the panel scrolls out of view. Cart/
+ * wishlist/notification icons live in the (non-sticky) panel — Home is the
+ * only screen carrying them, since BAS's bottom tab bar has no cart/wishlist
+ * tab and removing these would cut off navigation to both.
  */
 export default function HomeTopBar({
   search,
@@ -51,15 +51,13 @@ export default function HomeTopBar({
   }, [cartCount]);
 
   return (
-    <div
-      className="sticky top-0 z-20 rounded-b-[22px] px-5 pt-5 pb-4 anim-up"
-      style={{
-        background: 'linear-gradient(160deg, #6B3A18 0%, #3D2418 100%)',
-        boxShadow: '0 14px 30px -18px rgba(61,36,24,0.55)',
-      }}
-    >
-      {/* Row 1: location + actions */}
-      <div className="flex items-center justify-between">
+    <div className="relative z-10 anim-up">
+      {/* Row 1: location + actions — normal flow, scrolls away with the page */}
+      <div
+        className="px-5 pt-5 pb-6"
+        style={{ background: 'linear-gradient(160deg, #6B3A18 0%, #3D2418 100%)' }}
+      >
+        <div className="flex items-center justify-between">
         <button
           onClick={() => setTab('profile')}
           className="flex items-center gap-2.5 text-left transition active:scale-95"
@@ -128,10 +126,17 @@ export default function HomeTopBar({
             )}
           </button>
         </div>
+        </div>
       </div>
 
-      {/* Search — reference layout: search row comes directly after location row, no greeting heading in between */}
-      <div className="mt-4">
+      {/* Search — sticky layer: sits flush under row 1 at first, then rises up and pins to the top of the scroll container once row 1 scrolls out of view */}
+      <div
+        className="sticky top-0 z-20 -mt-3 rounded-b-[22px] px-5 pt-3 pb-4"
+        style={{
+          background: '#3D2418',
+          boxShadow: '0 14px 30px -18px rgba(61,36,24,0.55)',
+        }}
+      >
         <SearchBar
           value={search}
           onChange={onSearchChange}

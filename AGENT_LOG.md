@@ -1,5 +1,31 @@
 # Agent Log — BAS (Bake Art Style 2)
 
+## Session: Sticky search bar (rises up on scroll) + filter icon restyle (2026-07-17)
+**Agent/Tool:** Claude (chat, Code Master protocol)
+**Feature worked on:** Two related Home-header requests: (1) the search bar's filter/occasion icon button didn't match the reference wireframe's style, (2) on scroll, the search bar should detach from the header and stick/float to the top of the screen ("uthe jabe" — rises up).
+
+### Review (before fix):
+- `HomeTopBar.tsx`: the whole header (location row + search row together) was `position: sticky; top: 0`, meaning it was already permanently pinned from the very top of the scroll — nothing actually scrolled away, so there was no "rise up" moment to see. This wasn't matching the requested behavior: location/icon row should scroll away normally, only the search bar should stick, and it should visually detach and pin once the location row scrolls past.
+- `SearchBar.tsx`: the occasion/filter button was a light (`bg-white/70`) inset circle using a `LayoutGrid` icon, fully inside the pill. Reference shows a dark, rounded-square button with a sliders/adjustments icon that overlaps the pill's right edge (sits partly outside it).
+
+### কী হয়েছে:
+- **`src/components/SearchBar.tsx`**: swapped `LayoutGrid` → `SlidersHorizontal` (lucide) to match the reference's sliders-style filter icon. Restyled the button from a light inset circle (`bg-white/70`, inside the pill) to a dark rounded-square button (`bg-ink`, `rounded-[15px]`, `h-11 w-11`) positioned to overlap the pill's right edge (`-right-1.5`), matching the reference's floating filter button. Adjusted input `pr` since the button now hangs mostly outside the pill instead of fully inside it.
+- **`src/components/HomeTopBar.tsx`**: split the single sticky header div into two layers — (1) the location+icons panel, now plain `relative` flow (no longer sticky, scrolls away with the page), and (2) the search bar in its own `sticky top-0` wrapper directly below it, with a solid `#3D2418` background (matches the gradient's dark end so the seam between the two layers is invisible) and the header's `rounded-b-[22px]`/shadow moved onto this layer. Because the search-bar layer is a sticky element sitting right after the (now non-sticky) location panel in document flow, plain CSS handles the "rises up and pins" behavior — no scroll listener or IntersectionObserver needed. Cart/wishlist/bell icons stayed in the (now non-sticky) location panel — unchanged from the standing decision that they must live in the Home header since the bottom tab bar has no cart/wishlist tab.
+
+### Touched files:
+- `src/components/HomeTopBar.tsx`
+- `src/components/SearchBar.tsx`
+
+### Verify:
+- `npx tsc --noEmit`: 0 errors in both touched files (before and after — clean either way).
+- `npm run build`: ✓ built in 14.17s
+
+### এখনো Pending / পরবর্তী Agent এর জন্য নোট:
+- The sticky search layer uses a solid `#3D2418` background rather than a token — if the header gradient's colors ever change, this hardcoded hex needs to be updated to match, or it'll create a visible seam. Worth extracting to a shared constant if the header gradient is touched again.
+- `BAS-redesign-plan.md` (the broader 21-screen plan) is still parked — user said to finish Home-only fixes first, hasn't brought the bigger plan back up yet.
+
+---
+
 ## Session: Home — full A-Z pass vs reference wireframe (header/banner/badges) (2026-07-17)
 **Agent/Tool:** Claude (chat, Code Master protocol)
 **Feature worked on:** Follow-up to the section-reorder session below. User said the live Home screen still didn't match the reference (`Grocery-Delivery-App-Wireframe-Figma-Design.png`) and, when asked 3 specific yes/no questions (banner photo, header greeting, chip active-state), answered "look at the full screen, everything in it needs work, A to Z" for the first two and picked "keep uniform (no change)" for chips. Interpreted as: keep the real banner photo (explicit — "tumi banner-r photo niya aso", i.e. keep it), but do a comprehensive layout/detail pass on every other element of the screen to close the gap with the reference, not just the two items already fixed.
