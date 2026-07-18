@@ -1,6 +1,33 @@
 # Agent Log — BAS (Bake Art Style 2)
 
-## Session: HomeScreen wireframe pass — header icons + search/filter layout (2026-07-18)
+## Session: Section title text-size unification vs wireframe (2026-07-18, later same day)
+**Agent/Tool:** Claude (chat, Code Master protocol)
+**Feature worked on:** After the header/search-filter session, user shared a live screenshot of the deployed Home screen and asked to match text size below the header to the wireframe (`need_to_apply_on_bas_HomeScreen.html`'s `.section-title` at 19px, uniform across sections).
+
+### Review (before fix):
+Section titles were inconsistent: `SectionHeader.tsx` ("Exclusive Offers", "Featured Products") used `text-[17px]`, while the custom "Explore Categories" heading in `HomeScreen.tsx` used `text-[16px]` — neither matched the wireframe's uniform 19px `.section-title`. Category pill (`.chip` class in `index.css`) text was `13px` vs wireframe's `14px`.
+
+### কী হয়েছে:
+- **`src/components/SectionHeader.tsx`**: title `text-[17px]` → `text-[19px]` (affects "Exclusive Offers" and "Featured Products").
+- **`src/screens/HomeScreen.tsx`**: "Explore Categories" heading `text-[16px]` → `text-[19px]` — now matches the other two section titles exactly.
+- **`src/index.css`**: `.chip` (category pill) `font-size: 13px` → `14px`.
+
+### Touched files:
+- `src/components/SectionHeader.tsx`
+- `src/screens/HomeScreen.tsx`
+- `src/index.css`
+
+### Verify:
+- `npx tsc --noEmit`: same 57 pre-existing `unknown`-type errors in `HomeScreen.tsx` as documented in the 2026-07-17 log entry (line numbers shifted by +1 from the one added line) — zero new errors.
+- `npm run build`: ✓ built in 9.46s
+
+### এখনো Pending / পরবর্তী Agent এর জন্য নোট:
+- "See all" label size (13px) and category pill padding already matched the wireframe closely — untouched.
+- The pre-existing 57 `unknown`-type errors in `HomeScreen.tsx` (from `useProducts`/`useBanners`/`useOrders` returning loosely-typed data) are unrelated to this session and still unresolved — flagged again in case a future session wants to properly type those hooks.
+
+---
+
+
 **Agent/Tool:** Claude (chat, Code Master protocol)
 **Feature worked on:** Comprehensive review of a new full-screen HTML wireframe (`need_to_apply_on_bas_HomeScreen.html`, grayscale placeholder) against live Home, then applied the two user-approved, non-conflicting fixes.
 

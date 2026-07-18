@@ -317,7 +317,7 @@ button { -webkit-tap-highlight-color: transparent; }
   background: #FFFFFF;
   border: 1.5px solid #EEE1D2;
   color: #2A1B12;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   transition: all .15s ease;
 }

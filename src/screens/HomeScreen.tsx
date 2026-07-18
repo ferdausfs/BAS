@@ -200,7 +200,7 @@ export default function HomeScreen({ onAuthOpen, onNotificationsOpen }: { onAuth
         {/* Category row — reference layout: horizontal pill chips (icon + label), now AFTER Exclusive Offers */}
         <div className="mt-7 px-5 anim-up delay-2">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="font-display text-[16px] font-bold tracking-tight text-ink">Explore Categories</h2>
+            <h2 className="font-display text-[19px] font-bold tracking-tight text-ink">Explore Categories</h2>
             <button
               onClick={() => go({ name: 'tabs', tab: 'categories' })}
               className="text-[12px] font-bold text-coral hover:underline"
