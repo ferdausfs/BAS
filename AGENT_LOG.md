@@ -1,6 +1,30 @@
 # Agent Log — BAS (Bake Art Style 2)
 
-## Session: Section title text-size unification vs wireframe (2026-07-18, later same day)
+## Session: ProductScreen — quantity stepper moved to bottom CTA bar (2026-07-18, later same day)
+**Agent/Tool:** Claude (chat, Code Master protocol)
+**Feature worked on:** User shared a new grocery-app wireframe screenshot for the Product Detail page and asked for a mockup preview (fondant-designer flow) before any code change. Full-screen review found most sections (hero image/gallery, "Bake Art Style" brand contact card, Flavor selector) already closely matched the wireframe's intent structurally — the one real gap was the Quantity stepper's position: wireframe puts it directly in the sticky bottom bar next to the Add-to-cart button, while BAS had it as a separate mid-page section. User approved applying that change.
+
+### Review (before fix):
+- `ProductScreen.tsx` L610–636: standalone "Quantity" `<section>` with its own +/− stepper, positioned mid-page after the Weight selector.
+- `ProductScreen.tsx` L876–898 (old): sticky bottom CTA bar had only the Total price summary and the "Add to Cart" button — no quantity control.
+
+### কী হয়েছে:
+- **`src/screens/ProductScreen.tsx`**: removed the standalone mid-page "Quantity" section entirely. Added a compact quantity stepper (smaller `h-8 w-8` +/− buttons in a pill-shaped `bg-ink-50` wrapper) directly inside the sticky bottom CTA bar, positioned between the Total price block and the "Add to Cart" button — matches the wireframe's bottom-bar layout. Same `quantity`/`setQuantity` state, same `Minus`/`Plus` icons — no new imports needed, no behavior change, purely a relocation + restyle to fit the smaller bottom-bar footprint.
+
+### Touched files:
+- `src/screens/ProductScreen.tsx`
+
+### Verify:
+- `npx tsc --noEmit`: 0 errors in `ProductScreen.tsx`.
+- `npm run build`: ✓ built in 8.36s
+
+### এখনো Pending / পরবর্তী Agent এর জন্য নোট:
+- The out-of-stock branch of the bottom CTA bar (Notify Me button) was left untouched — it doesn't show a quantity stepper since you can't add an out-of-stock item, which is correct as-is.
+- Everything else compared against this wireframe (hero image + rounded overlap sheet, thumbnail ring-highlight, brand contact card, flavor pills) was already a close match to the wireframe's intent using BAS's existing premium visual language — no further ProductScreen changes were requested or made this session.
+
+---
+
+
 **Agent/Tool:** Claude (chat, Code Master protocol)
 **Feature worked on:** After the header/search-filter session, user shared a live screenshot of the deployed Home screen and asked to match text size below the header to the wireframe (`need_to_apply_on_bas_HomeScreen.html`'s `.section-title` at 19px, uniform across sections).
 

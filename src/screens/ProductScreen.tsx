@@ -607,34 +607,6 @@ export default function ProductScreen() {
             )}
           </section>
 
-          {/* Quantity stepper — lets the user set quantity right here instead of
-              always adding 1 and adjusting later in Cart. */}
-          <section className="mt-7">
-            <div className="flex items-center justify-between">
-              <h3 className="font-display text-[15px] font-bold tracking-tight text-ink">Quantity</h3>
-              <div className="flex items-center gap-4">
-                <button
-                  onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                  disabled={quantity <= 1}
-                  className="flex h-11 w-11 items-center justify-center rounded-full border-2 border-ink-50 bg-white text-ink transition active:scale-90 disabled:opacity-40"
-                  aria-label="Decrease quantity"
-                >
-                  <Minus className="h-4 w-4" strokeWidth={2.5} />
-                </button>
-                <span className="min-w-[20px] text-center font-display text-[16px] font-bold text-ink tabular">
-                  {quantity}
-                </span>
-                <button
-                  onClick={() => setQuantity((q) => q + 1)}
-                  className="flex h-11 w-11 items-center justify-center rounded-full border-2 border-coral bg-coral-50 text-coral transition active:scale-90"
-                  aria-label="Increase quantity"
-                >
-                  <Plus className="h-4 w-4" strokeWidth={2.5} />
-                </button>
-              </div>
-            </div>
-          </section>
-
           {/* Add-ons */}
           <section className="mt-7">
             <h3 className="font-display text-[15px] font-bold tracking-tight text-ink">Add-ons</h3>
@@ -889,13 +861,36 @@ export default function ProductScreen() {
             </div>
           </div>
           {(product.inStock ?? true) ? (
-            <button
-              onClick={handleAdd}
-              className="btn-primary ml-auto flex h-14 flex-1 items-center justify-center gap-2 rounded-2xl text-[14px] font-bold tracking-tight"
-            >
-              <ShoppingBag className="h-[18px] w-[18px]" strokeWidth={2.2} />
-              Add to Cart
-            </button>
+            <div className="ml-auto flex flex-1 items-center gap-2">
+              {/* Quantity stepper — moved here from mid-page (wireframe layout: quantity sits beside Add to Cart) */}
+              <div className="flex flex-shrink-0 items-center gap-2.5 rounded-2xl bg-ink-50 px-2.5 py-2">
+                <button
+                  onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                  disabled={quantity <= 1}
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-ink transition active:scale-90 disabled:opacity-40"
+                  aria-label="Decrease quantity"
+                >
+                  <Minus className="h-3.5 w-3.5" strokeWidth={2.5} />
+                </button>
+                <span className="min-w-[14px] text-center font-display text-[14px] font-bold text-ink tabular">
+                  {quantity}
+                </span>
+                <button
+                  onClick={() => setQuantity((q) => q + 1)}
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-ink text-white transition active:scale-90"
+                  aria-label="Increase quantity"
+                >
+                  <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
+                </button>
+              </div>
+              <button
+                onClick={handleAdd}
+                className="btn-primary flex h-14 flex-1 items-center justify-center gap-2 rounded-2xl text-[14px] font-bold tracking-tight"
+              >
+                <ShoppingBag className="h-[18px] w-[18px]" strokeWidth={2.2} />
+                Add to Cart
+              </button>
+            </div>
           ) : (
             <div className="flex flex-1 ml-auto flex-col items-center gap-2">
               <div className="flex items-center gap-1 text-[11px] text-ink/50 font-semibold">
