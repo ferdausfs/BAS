@@ -384,7 +384,7 @@ function CartItemRow({
   }, []);
 
   return (
-    <div className="relative overflow-hidden rounded-2xl">
+    <div className="relative overflow-hidden rounded-2xl anim-up">
       <button
         onClick={() => {
           onRequestRemove();
@@ -404,7 +404,7 @@ function CartItemRow({
           transition: drag.current.dragging ? 'none' : 'transform .25s ease',
           touchAction: 'pan-y',
         }}
-        className="relative flex cursor-grab gap-3 rounded-2xl border border-ink-50/80 bg-white p-3 product-card-shadow anim-up"
+        className="relative flex cursor-grab gap-3 rounded-2xl border border-ink-50/80 bg-white p-3 product-card-shadow"
       >
         <div className="h-24 w-24 flex-shrink-0 rounded-2xl border border-ink-50/80 bg-white p-1.5 product-card-shadow">
           <div className="h-full w-full overflow-hidden rounded-[14px]">

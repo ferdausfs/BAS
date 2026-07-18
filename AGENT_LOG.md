@@ -1,5 +1,71 @@
 # Agent Log — BAS (Bake Art Style 2)
 
+## Session: CartScreen — swipe transform was being masked by the anim-up entrance animation (2026-07-18, same chat session, follow-up)
+**Agent/Tool:** Claude (chat, Code Master protocol)
+**Feature worked on:** Follow-up after the Pointer Events rewrite (previous
+entry below) still didn't move the card at all — user confirmed via a
+fresh incognito tab (rules out caching) and confirmed the card doesn't
+move even 1px on a **mouse** drag (rules out touch-action/Pointer Events
+gesture-recognition nuances entirely, since mouse pointerdown/move has
+none of those). That pointed away from the event-handling mechanism
+itself — which had already been rewritten twice — and toward the CSS
+actually rendering the transform.
+
+### Review (before fix):
+- `CartScreen.tsx`: the swipeable `<article>` had className `... anim-up`
+  *and* an inline `style={{ transform: 'translateX(...)' }}` driven by
+  JS state.
+- `index.css` L111, L138: `@keyframes slideUp { from { transform:
+  translateY(36px) } to { transform: translateY(0) } }` and `.anim-up {
+  animation: slideUp .55s var(--ease-premium) both; }`. The `both`
+  fill-mode means the animation's final keyframe value stays in effect
+  indefinitely after the animation finishes — and a CSS Animation's value
+  for a property takes cascade priority over an inline style for that same
+  property for as long as the animation is in effect, fill-mode included.
+  So `transform: translateY(0)` from the animation was permanently
+  overriding the inline `transform: translateX(x)` we were setting via
+  JS on every drag — the JS state (`translateX`) was updating correctly
+  the whole time, it just was never visible on screen. This explains why
+  none of the three swipe-mechanism rewrites in this repo's history
+  (React synthetic Pointer Events → native touch listeners → native
+  Pointer Events + setPointerCapture) ever visibly worked: the actual bug
+  was never the event-handling layer.
+
+### কী হয়েছে:
+- **`src/screens/CartScreen.tsx`**: moved the `anim-up` class off the
+  `<article>` (swipeable card) and onto its outer wrapping `<div
+  className="relative overflow-hidden rounded-2xl">`. The entrance
+  animation still plays (now for the whole row including the trash panel,
+  which is a small visual improvement — previously the trash panel had no
+  entrance animation at all), and the `<article>`'s `transform` is now
+  free for the swipe drag exclusively, with nothing else contending for
+  that CSS property on that element.
+
+### Touched files:
+- `src/screens/CartScreen.tsx`
+
+### Verify:
+- `npx tsc --noEmit`: 0 errors in `CartScreen.tsx`.
+- `npm run build`: ✓ built in 11.73s
+- **Not yet confirmed on the user's device** — but this is a definitive,
+  mechanism-level explanation (CSS animation vs. inline-style specificity)
+  rather than another guess at the gesture-recognition layer, and it's
+  consistent with every symptom reported so far (build/deploy confirmed
+  correct via grep, incognito ruled out cache, zero movement on mouse
+  ruled out touch-action).
+
+### এখনো Pending / পরবর্তী Agent এর জন্য নোট:
+- If swipe *still* doesn't visibly move the card after this, next thing to
+  check: `grep -n "anim-up" src/screens/CartScreen.tsx` should show it on
+  the outer `<div>` only, not on the `<article>`. If it's still on the
+  `<article>` after unzipping, the ZIP wasn't applied.
+- If the card DOES move now but something else is off (e.g. trash panel
+  positioning, confirm-sheet not opening), that's a distinct, separate
+  bug from everything diagnosed in this and the previous entry — should
+  get its own fresh Review, not be folded into this one.
+
+---
+
 ## Session: CartScreen — swipe-to-delete rebuilt on native Pointer Events (2026-07-18, new chat session)
 **Agent/Tool:** Claude (chat, Code Master protocol)
 **Feature worked on:** User reported swipe still didn't work ("swipe kaj kore
