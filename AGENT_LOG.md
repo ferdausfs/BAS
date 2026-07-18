@@ -1,5 +1,76 @@
 # Agent Log — BAS (Bake Art Style 2)
 
+## Session: CartScreen — swipe-to-delete rebuilt on native Pointer Events (2026-07-18, new chat session)
+**Agent/Tool:** Claude (chat, Code Master protocol)
+**Feature worked on:** User reported swipe still didn't work ("swipe kaj kore
+na") after the previous native-touch-listener attempt, and asked to fully
+re-apply `cart-swipe-delete-preview.html`'s behavior fresh rather than
+patch further.
+
+### Review (before fix):
+- `CartScreen.tsx` (prior version, native touch listeners): on the first
+  `touchmove` where cumulative `|dx|`/`|dy|` were both under the 6px
+  threshold, the handler returned *without* calling `preventDefault()`,
+  deferring the horizontal/vertical decision to a later event. On iOS
+  Safari and several Android WebViews, the browser's scroll-vs-gesture
+  decision is made from that very first uncancelled `touchmove` — once it
+  commits to native scrolling there, a later `preventDefault()` call has
+  no effect. This is a known race condition with the touchmove+manual-lock
+  pattern and is the most likely reason both this attempt and the earlier
+  React-synthetic-Pointer-Events attempt were reported as non-functional
+  on-device.
+- `cart-swipe-delete-preview.html` (the approved, user-tested reference):
+  uses native `pointerdown`/`pointermove`/`pointerup` listeners with
+  `card.setPointerCapture(e.pointerId)` and `touch-action: pan-y`, with no
+  manual dx/dy lock and no `preventDefault()` call anywhere. With Pointer
+  Events + `touch-action: pan-y`, the browser's gesture recognizer decides
+  *before* dispatch whether the touch is a native vertical scroll (JS never
+  sees it) or a horizontal drag (forwarded as pointer events) — there is no
+  JS-vs-browser race to lose.
+
+### কী হয়েছে:
+- **`src/screens/CartScreen.tsx`**: `CartItemRow`'s gesture handling
+  rewritten to use native `pointerdown`/`pointermove`/`pointerup`/
+  `pointercancel` listeners (attached via `useEffect`, same as before) with
+  `el.setPointerCapture(e.pointerId)` on pointerdown — mirrors the approved
+  mockup's mechanism exactly. Removed the old touchstart/touchmove/touchend
+  listeners and the separate desktop-only `onMouseDown`/`window`
+  mousemove/mouseup handler entirely — Pointer Events natively cover mouse,
+  touch, and pen in one code path, so the duplicate mouse handling was
+  redundant. `touch-action: pan-y` and `cursor: grab` on the `<article>`
+  kept unchanged. Button-click bail-out (`closest('button')`), `SWIPE_MAX`,
+  the confirm-bottom-sheet flow, and everything else in `CartItemRow`/
+  `CartScreen` untouched.
+
+### Touched files:
+- `src/screens/CartScreen.tsx`
+
+### Verify:
+- `npx tsc --noEmit`: 0 errors in `CartScreen.tsx`.
+- `npm run build`: ✓ built in 9.09s
+- **Not yet confirmed on the user's actual device** — this is the third
+  attempt at the gesture mechanism itself, but the first based on the same
+  event model (Pointer Events + `setPointerCapture`) as the mockup the user
+  already validated by testing the standalone HTML file. Cannot be tested
+  for real touch input in this sandboxed environment.
+
+### এখনো Pending / পরবর্তী Agent এর জন্য নোট:
+- If swipe *still* doesn't register after this ZIP, next things to check
+  on the actual device, in order: (1) `grep -n "setPointerCapture"
+  src/screens/CartScreen.tsx` after unzipping, to confirm the new code is
+  actually on disk (not a stale/cached bundle — `main.tsx` already
+  unregisters any old service worker on load, so a hard-refresh should be
+  enough); (2) whether the device/WebView's Pointer Events support is
+  incomplete (rare, but some older Android System WebView versions had
+  partial Pointer Events support before Chromium ~55) — if so, the
+  touch-event approach would need to come back with the lock decided on
+  the *first* touchmove unconditionally rather than waiting for a 6px
+  threshold; (3) confirm the gesture being tested is a clearly horizontal
+  swipe starting directly on the card (not on the stepper buttons, which
+  intentionally bail out of the drag).
+
+---
+
 ## Session: CartScreen — minus button no longer auto-deletes at qty 0 (2026-07-18, immediately after)
 **Agent/Tool:** Claude (chat, Code Master protocol)
 **Feature worked on:** User reported repeatedly tapping the "-" stepper
