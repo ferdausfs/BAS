@@ -1,4 +1,4 @@
-import { Search, X, SlidersHorizontal } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 import { forwardRef } from 'react';
 
 type Props = {
@@ -47,7 +47,12 @@ const SearchBar = forwardRef<HTMLInputElement, Props>(
               aria-label="Browse by occasion"
             >
               <span className="flex h-10 w-10 items-center justify-center rounded-full bg-ink text-white shadow-[0_4px_10px_-2px_rgba(42,27,18,0.4)]">
-                <SlidersHorizontal className="h-[16px] w-[16px]" strokeWidth={2.2} />
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <circle cx="5" cy="8" r="2" fill="currentColor" stroke="none" />
+                  <line x1="9" y1="8" x2="20" y2="8" />
+                  <line x1="4" y1="16" x2="15" y2="16" />
+                  <circle cx="19" cy="16" r="2" fill="currentColor" stroke="none" />
+                </svg>
               </span>
             </button>
           )
