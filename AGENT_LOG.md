@@ -1,5 +1,57 @@
 # Agent Log — BAS (Bake Art Style 2)
 
+## Session: CartScreen — minus button becomes delete-with-confirm at qty 1 (2026-07-18, same chat session, follow-up)
+**Agent/Tool:** Claude (chat, Code Master protocol)
+**Feature worked on:** Swipe-to-delete still not visibly working after the
+anim-up/transform fix in the previous entry (unconfirmed why — user moved
+on rather than continuing to debug it live). User asked instead for a
+simpler, separate removal path: when an item's quantity is 1, the "−"
+stepper button itself should act as delete (going through the existing
+confirm sheet, not deleting instantly); at quantity 2+ it behaves as a
+normal decrement.
+
+### Review (before fix):
+- `CartScreen.tsx`: the "−" button was `disabled` once `item.quantity <=
+  1` (from an earlier session preventing `setQty` from silently deleting
+  at 0 — see older entry below), with no way to remove the item from that
+  button at all; removal was swipe-only.
+- The confirm-removal bottom sheet (`confirmIdx` state → "কার্ট থেকে
+  সরাবেন?" sheet → `remove(confirmIdx)`) already existed and needed no
+  changes — just a new trigger into it.
+
+### কী হয়েছে:
+- **`src/screens/CartScreen.tsx`**: "−" button no longer `disabled` at
+  qty 1. `onClick` now checks `item.quantity`: at `1`, it calls
+  `onRequestRemove()` (opens the same confirm sheet swipe already used);
+  above `1`, it calls `onDecrease()` as before. Icon swaps from `Minus` to
+  `Trash2` when `quantity <= 1` so the button's changed purpose is visible,
+  with `aria-label` updated to match ("মুছুন" vs "কমান").
+- Swipe-to-delete code itself (`CartItemRow`'s pointer-event drag, trash
+  panel) was left untouched — not confirmed working, but not asked to be
+  removed either; it's now a second (currently unverified) path to the
+  same confirm sheet alongside this new one.
+
+### Touched files:
+- `src/screens/CartScreen.tsx`
+
+### Verify:
+- `npx tsc --noEmit`: 0 errors in `CartScreen.tsx`.
+- `npm run build`: ✓ built in 9.90s
+- Not yet confirmed on device.
+
+### এখনো Pending / পরবর্তী Agent এর জন্য নোট:
+- Swipe-to-delete's actual on-device status is still unresolved — three
+  gesture-mechanism rewrites plus one CSS-masking fix, none confirmed
+  working by the user. If revisited, don't assume the anim-up fix solved
+  it; get fresh confirmation first.
+- This new minus-button path is independent of swipe and should work
+  regardless of whatever is still wrong with the gesture — it reuses the
+  same confirm-sheet/`remove()` call, just a plain button click, so it
+  doesn't carry the same risk factors (touch-action, Pointer Events, CSS
+  transform conflicts) that swipe did.
+
+---
+
 ## Session: CartScreen — swipe transform was being masked by the anim-up entrance animation (2026-07-18, same chat session, follow-up)
 **Agent/Tool:** Claude (chat, Code Master protocol)
 **Feature worked on:** Follow-up after the Pointer Events rewrite (previous
