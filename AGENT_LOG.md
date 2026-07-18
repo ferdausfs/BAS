@@ -1,5 +1,67 @@
 # Agent Log — BAS (Bake Art Style 2)
 
+## Session: CartScreen — swipe-to-delete fixed to use native touch listeners (2026-07-18, immediately after)
+**Agent/Tool:** Claude (chat, Code Master protocol)
+**Feature worked on:** Second follow-up correction in the same Cart session
+— user reported swipe still didn't work after the previous entry (which
+used React's synthetic Pointer Events). Root cause: same class of bug
+already solved once before in this repo for `ProductScreen.tsx`'s
+image-gallery swipe — see new `tasks/lessons.md` entry ("Swipe/drag
+gestures on real touch devices need native touch listeners, not Pointer
+Events alone"). Mobile browsers hand vertical-scroll gestures to their own
+built-in recognizer before React's synthetic pointer handlers get a chance
+to call `preventDefault()`, so the drag was silently cancelled on real
+touch input despite `tsc`/`npm run build` passing cleanly both times.
+
+### Review (before fix):
+- `CartScreen.tsx` (prior version): `CartItemRow` used
+  `onPointerDown/Move/Up/Cancel` (React synthetic Pointer Events) with
+  `touchAction: 'pan-y'` — type-checks and builds fine, but the actual drag
+  never visibly starts on a real device.
+- `ProductScreen.tsx` L74–116: existing, previously-verified-working native
+  `touchstart`/`touchmove` (`passive: false`)/`touchend` pattern for the
+  hero-image gallery swipe — used as the reference fix.
+
+### কী হয়েছে:
+- **`src/screens/CartScreen.tsx`**: `CartItemRow` rewritten to attach real
+  native touch listeners via `useEffect` on a `cardRef` (`touchstart` /
+  `touchmove` with `{ passive: false }` / `touchend` / `touchcancel`), with
+  a small-movement threshold that decides horizontal-vs-vertical intent
+  before locking the gesture and calling `preventDefault()` — matches
+  `ProductScreen.tsx`'s established working pattern exactly. Kept a
+  lightweight `onMouseDown` + `window` mousemove/mouseup handler alongside
+  it purely so the gesture is also draggable with a mouse for desktop/
+  Termux-browser preview testing; the touch path is the one that matters
+  on the actual Android device.
+- **`tasks/lessons.md`**: added a new lesson capturing this pattern so
+  future swipe/drag features go straight to native touch listeners instead
+  of re-discovering the Pointer-Events pitfall.
+
+### Touched files:
+- `src/screens/CartScreen.tsx`
+- `tasks/lessons.md`
+
+### Verify:
+- `npx tsc --noEmit`: 0 errors in `CartScreen.tsx`.
+- `npm run build`: ✓ built in 11.96s
+- **Not yet confirmed on an actual device by the agent** — this fix mirrors
+  a pattern already verified working elsewhere in the repo, but the agent
+  cannot itself perform a real touch-swipe test in this environment. User
+  should swipe-test on the Android device after applying this ZIP before
+  considering this fully closed.
+
+### এখনো Pending / পরবর্তী Agent এর জন্য নোট:
+- If swipe still doesn't register after this fix, next things to check on
+  the actual device: (1) confirm the ZIP was actually unzipped over the old
+  file (`grep -n "touchstart" src/screens/CartScreen.tsx` should show the
+  new listener code), (2) confirm the browser/WebView is loading the fresh
+  build and not a cached service-worker/PWA version of the old bundle, (3)
+  try swiping with a clearly horizontal gesture — the 6px move-threshold +
+  horizontal-vs-vertical lock means a mostly-vertical or very short swipe
+  won't trigger it by design.
+
+---
+
 ## Session: CartScreen — real swipe-to-delete implemented, standalone delete icon removed (2026-07-18, immediately after)
 **Agent/Tool:** Claude (chat, Code Master protocol)
 **Feature worked on:** Follow-up correction — the previous entry in this same

@@ -40,7 +40,30 @@ command assuming the exact original name will fail with "No such file".
    files shown). Before a batch `cp && cp && git add` command, verify each
    individual file is present in Downloads rather than assuming all are.
 
-## Cross-checking fixed-position global overlays
+## Swipe/drag gestures on real touch devices need native touch listeners, not Pointer Events alone
+A cart-item swipe-to-delete was first built with React's synthetic Pointer
+Events (`onPointerDown/Move/Up`) and passed `tsc`/`npm run build` cleanly,
+but didn't actually work when swiped on a real device — the mobile browser's
+own vertical-scroll gesture recognizer wins the very first touch and cancels
+the drag before the pointer handlers can call `preventDefault()`. This is
+the same root cause already documented for `ProductScreen.tsx`'s
+image-gallery swipe: only a native `addEventListener('touchmove', fn,
+{ passive: false })` (attached via `useEffect` on a ref, not React's
+synthetic touch/pointer props) can call `preventDefault()` in time to
+suppress the browser's default scroll and let a custom horizontal drag win.
+**Fix going forward:** for ANY new swipe/drag-to-reveal gesture on a card or
+list row, go straight to the native-touch-listener pattern from
+`ProductScreen.tsx` (touchstart passive:true → touchmove passive:false with
+a horizontal-vs-vertical lock decided after a small movement threshold →
+touchend/touchcancel) instead of Pointer Events — Pointer Events look like
+they should work and pass every build/type check, but silently fail on
+real mobile touch input specifically because of this passive-listener
+scroll-priority issue. Don't declare a touch gesture "done" on the strength
+of a clean build; it needs to be verified as actually swipeable, and if
+that can't be confirmed in this environment, say so explicitly rather than
+presenting an untested gesture as finished.
+
+
 Fixed-position global overlays must be cross-checked against all screens for
 competing header elements (carried over from prior sessions).
 

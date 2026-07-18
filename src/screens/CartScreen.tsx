@@ -317,30 +317,102 @@ function CartItemRow({
 }) {
   const [translateX, setTranslateX] = useState(0);
   const [open, setOpen] = useState(false);
-  const drag = useRef({ dragging: false, startX: 0, baseX: 0 });
+  const cardRef = useRef<HTMLElement | null>(null);
+  const openRef = useRef(open);
+  openRef.current = open;
+  // dragging/locked/base kept in a ref so the native listeners (attached once
+  // in the effect below) always see the latest values without needing to be
+  // re-attached on every render.
+  const drag = useRef({ dragging: false, locked: false, startX: 0, startY: 0, baseX: 0 });
 
-  const handlePointerDown = (e: React.PointerEvent<HTMLElement>) => {
-    // Let buttons (qty stepper) handle their own taps — don't hijack the pointer.
+  // Native touch listeners — React's synthetic touch handlers are passive by
+  // default and can't call preventDefault(), so the mobile browser's own
+  // vertical-scroll gesture wins and cancels our drag before it starts (same
+  // issue already solved for ProductScreen's image-gallery swipe — see
+  // AGENT_LOG.md). touchmove must be passive:false so we can suppress page
+  // scroll once we've committed to a horizontal drag.
+  useEffect(() => {
+    const el = cardRef.current;
+    if (!el) return;
+
+    const onTouchStart = (e: TouchEvent) => {
+      if ((e.target as HTMLElement).closest('button')) return;
+      const t = e.touches[0];
+      drag.current.dragging = true;
+      drag.current.locked = false;
+      drag.current.startX = t.clientX;
+      drag.current.startY = t.clientY;
+      drag.current.baseX = openRef.current ? -SWIPE_MAX : 0;
+    };
+
+    const onTouchMove = (e: TouchEvent) => {
+      if (!drag.current.dragging) return;
+      const t = e.touches[0];
+      const dx = t.clientX - drag.current.startX;
+      const dy = t.clientY - drag.current.startY;
+      if (!drag.current.locked) {
+        if (Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
+        drag.current.locked = Math.abs(dx) > Math.abs(dy);
+        if (!drag.current.locked) {
+          // Vertical intent — let the page scroll normally, stop tracking.
+          drag.current.dragging = false;
+          return;
+        }
+      }
+      e.preventDefault();
+      const x = Math.max(-SWIPE_MAX, Math.min(0, drag.current.baseX + dx));
+      setTranslateX(x);
+    };
+
+    const onTouchEnd = () => {
+      if (!drag.current.dragging) return;
+      drag.current.dragging = false;
+      if (!drag.current.locked) return;
+      setTranslateX((current) => {
+        const nextOpen = current < -SWIPE_MAX / 2;
+        setOpen(nextOpen);
+        return nextOpen ? -SWIPE_MAX : 0;
+      });
+    };
+
+    el.addEventListener('touchstart', onTouchStart, { passive: true });
+    el.addEventListener('touchmove', onTouchMove, { passive: false });
+    el.addEventListener('touchend', onTouchEnd, { passive: true });
+    el.addEventListener('touchcancel', onTouchEnd, { passive: true });
+
+    return () => {
+      el.removeEventListener('touchstart', onTouchStart);
+      el.removeEventListener('touchmove', onTouchMove);
+      el.removeEventListener('touchend', onTouchEnd);
+      el.removeEventListener('touchcancel', onTouchEnd);
+    };
+  }, []);
+
+  // Mouse support so the gesture is also testable on desktop/Termux browser preview.
+  const handleMouseDown = (e: React.MouseEvent<HTMLElement>) => {
     if ((e.target as HTMLElement).closest('button')) return;
     drag.current.dragging = true;
-    drag.current.startX = e.clientX;
-    drag.current.baseX = open ? -SWIPE_MAX : 0;
-    e.currentTarget.setPointerCapture(e.pointerId);
-  };
-
-  const handlePointerMove = (e: React.PointerEvent<HTMLElement>) => {
-    if (!drag.current.dragging) return;
-    const dx = e.clientX - drag.current.startX;
-    const x = Math.max(-SWIPE_MAX, Math.min(0, drag.current.baseX + dx));
-    setTranslateX(x);
-  };
-
-  const endDrag = () => {
-    if (!drag.current.dragging) return;
-    drag.current.dragging = false;
-    const nextOpen = translateX < -SWIPE_MAX / 2;
-    setOpen(nextOpen);
-    setTranslateX(nextOpen ? -SWIPE_MAX : 0);
+    drag.current.baseX = openRef.current ? -SWIPE_MAX : 0;
+    const startX = e.clientX;
+    const onMouseMove = (ev: MouseEvent) => {
+      if (!drag.current.dragging) return;
+      const dx = ev.clientX - startX;
+      const x = Math.max(-SWIPE_MAX, Math.min(0, drag.current.baseX + dx));
+      setTranslateX(x);
+    };
+    const onMouseUp = () => {
+      if (!drag.current.dragging) return;
+      drag.current.dragging = false;
+      setTranslateX((current) => {
+        const nextOpen = current < -SWIPE_MAX / 2;
+        setOpen(nextOpen);
+        return nextOpen ? -SWIPE_MAX : 0;
+      });
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+    };
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
   };
 
   return (
@@ -358,10 +430,8 @@ function CartItemRow({
         <Trash2 className="h-5 w-5" strokeWidth={2} />
       </button>
       <article
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={endDrag}
-        onPointerCancel={endDrag}
+        ref={cardRef}
+        onMouseDown={handleMouseDown}
         style={{
           transform: `translateX(${translateX}px)`,
           transition: drag.current.dragging ? 'none' : 'transform .25s ease',
