@@ -1,5 +1,59 @@
 # Agent Log — BAS (Bake Art Style 2)
 
+## Session: CartScreen — real swipe-to-delete implemented, standalone delete icon removed (2026-07-18, immediately after)
+**Agent/Tool:** Claude (chat, Code Master protocol)
+**Feature worked on:** Follow-up correction — the previous entry in this same
+session only restyled the item card to mat-frame and removed the Delivery
+Address block; it explicitly left the swipe gesture from the original HTML
+mockup unimplemented. User pointed out the HTML wasn't fully applied
+("swipe kaj kore na") and asked to also remove the standalone trash icon
+button, since swipe now owns deletion.
+
+### Review (before fix):
+- `CartScreen.tsx` (prior version, this session): each item `<article>` had
+  a fixed `Trash2` icon button in the top-right corner calling `remove(idx)`
+  directly, with no confirmation and no swipe gesture at all.
+- Reference: `cart-swipe-delete-preview.html` — pointer-based drag on the
+  card revealing a trash panel behind it, tap-to-confirm via a bottom sheet
+  before actual removal.
+
+### কী হয়েছে:
+- **`src/screens/CartScreen.tsx`**: extracted a new `CartItemRow` component
+  implementing the swipe gesture with `onPointerDown/Move/Up/Cancel`
+  (mirrors the approved HTML mockup's drag math — `SWIPE_MAX = 84`, clamps
+  `translateX` between `-SWIPE_MAX` and `0`, snaps open/closed based on
+  whether the drag passed the halfway point). The revealed trash panel
+  (rose gradient, `Trash2` icon) sits behind the card and, on tap, opens a
+  confirmation bottom sheet (`confirmIdx` state on `CartScreen`) rather than
+  deleting immediately — sheet shows the item thumbnail/name/size/flavor
+  and Cancel / "হ্যাঁ, সরান" buttons; only the latter calls `remove(idx)`.
+  Removed the old standalone top-right `Trash2` button from the item card
+  entirely — swipe + confirm sheet is now the only removal path. Pointer
+  handlers check `e.target.closest('button')` and bail out so the qty
+  +/− stepper buttons still receive their own clicks uninterrupted by the
+  drag capture.
+
+### Touched files:
+- `src/screens/CartScreen.tsx`
+
+### Verify:
+- `npx tsc --noEmit`: 0 errors in `CartScreen.tsx`.
+- `npm run build`: ✓ built in 12.39s
+
+### এখনো Pending / পরবর্তী Agent এর জন্য নোট:
+- Swipe is pointer-events based (`touchAction: 'pan-y'`), same approach as
+  the approved HTML mockup — works for touch and mouse. Not yet tested on
+  an actual Android device inside the app WebView; if the drag feels
+  laggy/jumpy on-device, first thing to check is whether `pan-y` needs to
+  be `none` there, or whether the outer scroll container's own touch
+  handling is fighting the per-row pointer capture.
+- Only one row can usefully be "open" at a time in the current
+  implementation — swiping a second row does not auto-close a previously
+  open one. Not a reported issue, but worth flagging if the user tests
+  multiple open swipes and finds it confusing.
+
+---
+
 ## Session: CartScreen — mat-frame item cards + removed Delivery Address quick-access (2026-07-18, later same day)
 **Agent/Tool:** Claude (chat, Code Master protocol)
 **Feature worked on:** User shared a swipe-to-delete cart HTML mockup, asked

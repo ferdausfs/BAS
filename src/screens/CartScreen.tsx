@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { ArrowLeft, Plus, Minus, Trash2, ShoppingBag, Sparkles, Truck, Shield, ShoppingCart, Cake, Flower2, Gift } from 'lucide-react';
 import {
   useCart,
@@ -65,6 +65,10 @@ export default function CartScreen() {
     go({ name: 'checkout' });
   };
 
+  // Swipe-to-delete: index of the item pending removal confirmation (sheet open)
+  const [confirmIdx, setConfirmIdx] = useState<number | null>(null);
+  const confirmItem = confirmIdx !== null ? items[confirmIdx] : null;
+
   if (items.length === 0) {
     // clear any stale discounts when cart empties
     if (promoDiscount > 0 || pendingLoyaltyRedeem > 0) {
@@ -130,71 +134,16 @@ export default function CartScreen() {
           </div>
         )}
 
-        {/* Items */}
+        {/* Items — swipe left to reveal delete, tap to confirm removal */}
         <div className="space-y-3">
           {safeArray<CartItem>(items).map((item, idx) => (
-            <article
+            <CartItemRow
               key={item.productId + "-" + idx}
-              className="flex gap-3 rounded-2xl bg-white border border-ink-50/80 product-card-shadow p-3 anim-up"
-            >
-              <div className="h-24 w-24 flex-shrink-0 rounded-2xl bg-white p-1.5 border border-ink-50/80 product-card-shadow">
-                <div className="h-full w-full overflow-hidden rounded-[14px]">
-                  <img
-                    loading="lazy"
-                    decoding="async"
-                    src={item.image || '/cakes/logo-cake.png'}
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = '/cakes/logo-cake.png';
-                    }}
-                    alt=""
-                    className="h-full w-full object-cover"
-                  />
-                </div>
-              </div>
-              <div className="flex flex-1 flex-col">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex-1">
-                    <h4 className="line-clamp-1 text-[14px] font-bold text-ink">{item.name}</h4>
-                    <div className="mt-0.5 text-[12px] text-ink-200">
-                      {item.size} · {item.flavor}
-                    </div>
-                    {item.message && (
-                      <div className="mt-0.5 line-clamp-1 text-[11.5px] italic text-coral">
-                        "{item.message}"
-                      </div>
-                    )}
-                  </div>
-                  <button
-                    onClick={() => remove(idx)}
-                    className="flex h-11 w-11 items-center justify-center rounded-full text-ink-200 transition active:bg-rose-50 active:text-rose-600"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-                <div className="mt-auto flex items-center justify-between pt-1">
-                  <div className="flex items-center rounded-full border border-ink-50 bg-white p-0.5">
-                    <button
-                      onClick={() => setQty(idx, item.quantity - 1)}
-                      className="flex h-11 w-11 items-center justify-center rounded-full text-ink-200 transition hover:bg-cream"
-                    >
-                      <Minus className="h-3.5 w-3.5" />
-                    </button>
-                    <span className="w-7 text-center text-[12.5px] font-bold tabular text-ink">
-                      {item.quantity}
-                    </span>
-                    <button
-                      onClick={() => setQty(idx, item.quantity + 1)}
-                      className="flex h-11 w-11 items-center justify-center rounded-full text-ink-200 transition hover:bg-cream"
-                    >
-                      <Plus className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                  <span className="font-display text-[15px] font-bold tabular text-ink">
-                    {formatINR(item.price * item.quantity)}
-                  </span>
-                </div>
-              </div>
-            </article>
+              item={item}
+              onDecrease={() => setQty(idx, item.quantity - 1)}
+              onIncrease={() => setQty(idx, item.quantity + 1)}
+              onRequestRemove={() => setConfirmIdx(idx)}
+            />
           ))}
         </div>
 
@@ -299,6 +248,177 @@ export default function CartScreen() {
           চেকআউট · {formatINR(total)}
         </button>
       </div>
+
+      {/* Remove-item confirmation sheet (opened by swipe-to-delete tap) */}
+      {confirmItem && confirmIdx !== null && (
+        <div
+          className="fixed inset-0 z-50 flex items-end bg-ink/25 backdrop-blur-sm"
+          onClick={() => setConfirmIdx(null)}
+        >
+          <div
+            className="w-full rounded-t-[26px] bg-white p-6 pb-8 anim-up"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="mb-4 font-display text-[18px] font-bold text-ink">কার্ট থেকে সরাবেন?</h2>
+            <div className="mb-5 flex gap-3 rounded-2xl border border-ink-50 p-3">
+              <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-xl">
+                <img
+                  src={confirmItem.image || '/cakes/logo-cake.png'}
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = '/cakes/logo-cake.png';
+                  }}
+                  alt=""
+                  className="h-full w-full object-cover"
+                />
+              </div>
+              <div className="flex flex-col justify-center">
+                <div className="text-[14px] font-bold text-ink">{confirmItem.name}</div>
+                <div className="text-[12px] text-ink-200">
+                  {confirmItem.size} · {confirmItem.flavor}
+                </div>
+              </div>
+            </div>
+            <div className="flex gap-2.5">
+              <button
+                onClick={() => setConfirmIdx(null)}
+                className="h-12 flex-1 rounded-full bg-ink-50 text-[14px] font-bold text-ink"
+              >
+                বাতিল
+              </button>
+              <button
+                onClick={() => {
+                  remove(confirmIdx);
+                  setConfirmIdx(null);
+                }}
+                className="h-12 flex-1 rounded-full bg-rose-500 text-[14px] font-bold text-white"
+              >
+                হ্যাঁ, সরান
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+const SWIPE_MAX = 84;
+
+function CartItemRow({
+  item,
+  onDecrease,
+  onIncrease,
+  onRequestRemove,
+}: {
+  item: CartItem;
+  onDecrease: () => void;
+  onIncrease: () => void;
+  onRequestRemove: () => void;
+}) {
+  const [translateX, setTranslateX] = useState(0);
+  const [open, setOpen] = useState(false);
+  const drag = useRef({ dragging: false, startX: 0, baseX: 0 });
+
+  const handlePointerDown = (e: React.PointerEvent<HTMLElement>) => {
+    // Let buttons (qty stepper) handle their own taps — don't hijack the pointer.
+    if ((e.target as HTMLElement).closest('button')) return;
+    drag.current.dragging = true;
+    drag.current.startX = e.clientX;
+    drag.current.baseX = open ? -SWIPE_MAX : 0;
+    e.currentTarget.setPointerCapture(e.pointerId);
+  };
+
+  const handlePointerMove = (e: React.PointerEvent<HTMLElement>) => {
+    if (!drag.current.dragging) return;
+    const dx = e.clientX - drag.current.startX;
+    const x = Math.max(-SWIPE_MAX, Math.min(0, drag.current.baseX + dx));
+    setTranslateX(x);
+  };
+
+  const endDrag = () => {
+    if (!drag.current.dragging) return;
+    drag.current.dragging = false;
+    const nextOpen = translateX < -SWIPE_MAX / 2;
+    setOpen(nextOpen);
+    setTranslateX(nextOpen ? -SWIPE_MAX : 0);
+  };
+
+  return (
+    <div className="relative overflow-hidden rounded-2xl">
+      <button
+        onClick={() => {
+          onRequestRemove();
+          setOpen(false);
+          setTranslateX(0);
+        }}
+        aria-label="মুছুন"
+        className="absolute top-0 right-0 bottom-0 flex items-center justify-center rounded-2xl bg-gradient-to-br from-rose-500 to-rose-600 text-white"
+        style={{ width: SWIPE_MAX }}
+      >
+        <Trash2 className="h-5 w-5" strokeWidth={2} />
+      </button>
+      <article
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={endDrag}
+        onPointerCancel={endDrag}
+        style={{
+          transform: `translateX(${translateX}px)`,
+          transition: drag.current.dragging ? 'none' : 'transform .25s ease',
+          touchAction: 'pan-y',
+        }}
+        className="relative flex cursor-grab gap-3 rounded-2xl border border-ink-50/80 bg-white p-3 product-card-shadow anim-up"
+      >
+        <div className="h-24 w-24 flex-shrink-0 rounded-2xl border border-ink-50/80 bg-white p-1.5 product-card-shadow">
+          <div className="h-full w-full overflow-hidden rounded-[14px]">
+            <img
+              loading="lazy"
+              decoding="async"
+              src={item.image || '/cakes/logo-cake.png'}
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = '/cakes/logo-cake.png';
+              }}
+              alt=""
+              className="h-full w-full object-cover"
+            />
+          </div>
+        </div>
+        <div className="flex flex-1 flex-col">
+          <div className="flex-1">
+            <h4 className="line-clamp-1 text-[14px] font-bold text-ink">{item.name}</h4>
+            <div className="mt-0.5 text-[12px] text-ink-200">
+              {item.size} · {item.flavor}
+            </div>
+            {item.message && (
+              <div className="mt-0.5 line-clamp-1 text-[11.5px] italic text-coral">
+                "{item.message}"
+              </div>
+            )}
+          </div>
+          <div className="mt-auto flex items-center justify-between pt-1">
+            <div className="flex items-center rounded-full border border-ink-50 bg-white p-0.5">
+              <button
+                onClick={onDecrease}
+                className="flex h-11 w-11 items-center justify-center rounded-full text-ink-200 transition hover:bg-cream"
+              >
+                <Minus className="h-3.5 w-3.5" />
+              </button>
+              <span className="w-7 text-center text-[12.5px] font-bold tabular text-ink">
+                {item.quantity}
+              </span>
+              <button
+                onClick={onIncrease}
+                className="flex h-11 w-11 items-center justify-center rounded-full text-ink-200 transition hover:bg-cream"
+              >
+                <Plus className="h-3.5 w-3.5" />
+              </button>
+            </div>
+            <span className="font-display text-[15px] font-bold tabular text-ink">
+              {formatINR(item.price * item.quantity)}
+            </span>
+          </div>
+        </div>
+      </article>
     </div>
   );
 }
