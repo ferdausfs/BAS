@@ -1,6 +1,5 @@
-import { Bell, ShoppingBag, Heart, ChevronDown } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
-import { useUI, useCart, useUser, useLocation, useAuthStore } from '../lib/store';
+import { Bell, ChevronDown } from 'lucide-react';
+import { useUI, useLocation, useAuthStore } from '../lib/store';
 import SearchBar from './SearchBar';
 
 interface Props {
@@ -16,12 +15,13 @@ interface Props {
 
 /**
  * Brown/gold bakery-style home header block.
- * Two layers: a location+icons panel that scrolls away normally, and a search
+ * Two layers: a location+panel that scrolls away normally, and a search
  * bar that sits flush below it at first, then sticks to the top of the scroll
- * container (rises up and pins) once the panel scrolls out of view. Cart/
- * wishlist/notification icons live in the (non-sticky) panel — Home is the
- * only screen carrying them, since BAS's bottom tab bar has no cart/wishlist
- * tab and removing these would cut off navigation to both.
+ * container (rises up and pins) once the panel scrolls out of view.
+ * Only the notification (bell) icon lives in the (non-sticky) panel, matching
+ * the reference wireframe — cart/wishlist quick-icons were removed from Home
+ * (user decision, 2026-07-18); cart/wishlist remain reachable via their own
+ * screens/other entry points elsewhere in the app.
  */
 export default function HomeTopBar({
   search,
@@ -33,24 +33,12 @@ export default function HomeTopBar({
   onOpenOccasions,
   onNotificationsOpen,
 }: Props) {
-  const { go, setTab, notifications } = useUI();
-  const { items } = useCart();
-  const { wishlist } = useUser();
+  const { setTab, notifications } = useUI();
   const { user } = useAuthStore();
   const district = useLocation((s) => s.district);
   const initial = (user?.name?.trim()?.[0] ?? 'B').toUpperCase();
 
-  const cartCount = items.reduce((s, i) => s + i.quantity, 0);
-  const wishCount = wishlist.length;
   const unreadCount = notifications.filter((n) => !n.read).length;
-
-  // Cart badge bounce when count grows (mirrors the old Header micro-interaction).
-  const [badgeKey, setBadgeKey] = useState(0);
-  const prevCount = useRef(cartCount);
-  useEffect(() => {
-    if (cartCount > prevCount.current) setBadgeKey((k) => k + 1);
-    prevCount.current = cartCount;
-  }, [cartCount]);
 
   return (
     <div className="relative z-10 anim-up">
@@ -83,57 +71,21 @@ export default function HomeTopBar({
           </span>
         </button>
 
-        <div className="flex items-center gap-1.5">
-          {/* Notifications */}
-          <button
-            onClick={onNotificationsOpen ?? (() => setTab('profile'))}
-            className="relative flex h-10 w-10 items-center justify-center rounded-full bg-white text-[#6B3A18] transition active:scale-90"
-            aria-label="Notifications"
-          >
-            <Bell className="h-[18px] w-[18px]" strokeWidth={1.9} />
-            {unreadCount > 0 ? (
-              <span className="absolute top-1.5 right-1.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-gold px-1 text-[9px] font-bold text-[#3D2418] ring-2 ring-white">
-                {unreadCount}
-              </span>
-            ) : (
-              <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-gold ring-2 ring-white" />
-            )}
-          </button>
-
-          {/* Wishlist */}
-          <button
-            onClick={() => go({ name: 'wishlist' })}
-            className="relative flex h-10 w-10 items-center justify-center rounded-full bg-white/12 text-white transition active:scale-90"
-            aria-label="Wishlist"
-          >
-            <Heart
-              className={'h-[18px] w-[18px] ' + (wishCount > 0 ? 'fill-gold text-gold' : '')}
-              strokeWidth={1.9}
-            />
-            {wishCount > 0 && (
-              <span className="absolute top-1.5 right-1.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-gold px-1 text-[9px] font-bold text-[#3D2418]">
-                {wishCount}
-              </span>
-            )}
-          </button>
-
-          {/* Cart */}
-          <button
-            onClick={() => go({ name: 'cart' })}
-            className="relative flex h-10 w-10 items-center justify-center rounded-full bg-gold text-[#3D2418] transition active:scale-90"
-            aria-label="Cart"
-          >
-            <ShoppingBag className="h-[18px] w-[18px]" strokeWidth={2.1} />
-            {cartCount > 0 && (
-              <span
-                key={badgeKey}
-                className="absolute -top-1 -right-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-white px-1 text-[10px] font-bold text-[#6B3A18] ring-2 ring-[#3D2418] anim-pop"
-              >
-                {cartCount}
-              </span>
-            )}
-          </button>
-        </div>
+        {/* Notifications — only quick-icon in the header, per reference wireframe */}
+        <button
+          onClick={onNotificationsOpen ?? (() => setTab('profile'))}
+          className="relative flex h-10 w-10 items-center justify-center rounded-full bg-white text-[#6B3A18] transition active:scale-90"
+          aria-label="Notifications"
+        >
+          <Bell className="h-[18px] w-[18px]" strokeWidth={1.9} />
+          {unreadCount > 0 ? (
+            <span className="absolute top-1.5 right-1.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-gold px-1 text-[9px] font-bold text-[#3D2418] ring-2 ring-white">
+              {unreadCount}
+            </span>
+          ) : (
+            <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-gold ring-2 ring-white" />
+          )}
+        </button>
         </div>
       </div>
 

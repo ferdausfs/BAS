@@ -1,6 +1,33 @@
 # Agent Log — BAS (Bake Art Style 2)
 
-## Session: Sticky search bar (rises up on scroll) + filter icon restyle (2026-07-17)
+## Session: HomeScreen wireframe pass — header icons + search/filter layout (2026-07-18)
+**Agent/Tool:** Claude (chat, Code Master protocol)
+**Feature worked on:** Comprehensive review of a new full-screen HTML wireframe (`need_to_apply_on_bas_HomeScreen.html`, grayscale placeholder) against live Home, then applied the two user-approved, non-conflicting fixes.
+
+### Review (before fix):
+Full-screen review against the wireframe surfaced 3 items conflicting with earlier documented decisions (header had 3 icons vs wireframe's 1, offer card was a real photo vs wireframe's flat text-card, bottom nav had 4 labeled tabs vs wireframe's 5 icon-only) plus 2 safe/non-conflicting items (search+filter button overlap style, categories already close). User decisions: (1) header → bell-only, cart/wishlist icons removed (explicitly accepted losing that quick-access path since bottom nav has no cart/wishlist tab), (2) offer card → keep the real photo, no fabricated discount %, card-frame styling only, (3) bottom nav → explicitly left unchanged ("nav bar eta balo premium fell dey"). Search+filter button style approved as a safe standalone fix.
+
+### কী হয়েছে:
+- **`src/components/HomeTopBar.tsx`**: removed the Wishlist and Cart quick-icon buttons from the header — only the Notifications (bell) button remains, matching the wireframe. Removed now-unused `useCart`/`useUser` hooks, `Heart`/`ShoppingBag` imports, `cartCount`/`wishCount`/badge-bounce state (`useEffect`/`useRef`/`useState` for `badgeKey`), and the now-unused `go` from `useUI()` (was only used by the removed wishlist/cart `onClick`s). Bell's existing behavior (`onNotificationsOpen` popup) unchanged.
+- **`src/components/SearchBar.tsx`**: restructured from an absolutely-positioned, overlapping filter button (`-right-2`, sat partly outside the pill) to a flex-row layout — search pill and filter button are now siblings with a `gap-2.5`, filter button no longer overlaps the pill's edge. Kept the existing dark rounded-square button and sliders-style icon (no icon swap — matches wireframe's "separated filter button" concept, not a shape change).
+- Offer card (`HomeScreen.tsx`): **no change** — user confirmed keep the real photo banner; already had matching card-frame details (rounded card, tag chip, pagination dots below the card with elongated active-dot) from the previous wireframe pass, so nothing was out of sync once the "no photo" idea was dropped.
+- Bottom nav (`BottomTabBar.tsx`): **no change** — user explicitly kept the current 4-tab labeled design.
+
+### Touched files:
+- `src/components/HomeTopBar.tsx`
+- `src/components/SearchBar.tsx`
+
+### Verify:
+- `npx tsc --noEmit`: 0 errors in both touched files.
+- `npm run build`: ✓ built in 8.36s
+
+### এখনো Pending / পরবর্তী Agent এর জন্য নোট:
+- Cart and wishlist are no longer reachable from the Home header at all — confirm this doesn't surprise the user later; they explicitly accepted this trade-off in this session but there's no other quick-access entry point to wishlist from Home now (cart is somewhat reachable via product pages / "Order again" flow, wishlist has no Home-screen entry point anymore).
+- The offer-card discount-percentage question (no numeric field in `Banner` type) is still open if the user later wants a real "Up to X%" number shown — would need either a new `discountPercent` field on `Banner` or displaying `tag` text instead. Not needed for this session's approved scope.
+
+---
+
+
 **Agent/Tool:** Claude (chat, Code Master protocol)
 **Feature worked on:** Two related Home-header requests: (1) the search bar's filter/occasion icon button didn't match the reference wireframe's style, (2) on scroll, the search bar should detach from the header and stick/float to the top of the screen ("uthe jabe" — rises up).
 
