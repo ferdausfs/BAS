@@ -1,5 +1,57 @@
 # Agent Log — BAS (Bake Art Style 2)
 
+## Session: CartScreen — mat-frame item cards + removed Delivery Address quick-access (2026-07-18, later same day)
+**Agent/Tool:** Claude (chat, Code Master protocol)
+**Feature worked on:** User shared a swipe-to-delete cart HTML mockup, asked
+for it adapted to BAS's cream-coral theme, then specifically requested the
+item cards use the same "polaroid/mat-frame" treatment as `ProductCard.tsx`
+(not glass-strong). Also asked to remove the "ডেলিভারি ঠিকানা" (Delivery
+Address) quick-access row from the Cart page entirely. Mockups were shown
+via the visualizer for approval before touching any repo code; the actual
+swipe-to-delete gesture itself was not implemented in this session — only
+the card style + section removal, which is what was explicitly approved.
+
+### Review (before fix):
+- `CartScreen.tsx` L140–151 (old): item thumbnail was
+  `h-24 w-24 ... rounded-2xl glass-strong` — frosted-glass system, not the
+  white mat-frame used elsewhere in the app.
+- `ProductCard.tsx` L84–95: reference mat-frame pattern — outer
+  `bg-white p-2 border border-ink-50/80 product-card-shadow rounded-[22px]`,
+  inner image at `rounded-[16px]`.
+- `CartScreen.tsx` L243–275 (old): "ডেলিভারি ঠিকানা" horizontally-scrollable
+  quick-address row (Home/Office/Parent's/Friend's + Add New), all routing
+  to `checkout`. Confirmed this was purely a Cart-page shortcut into the
+  Checkout wizard's address step, not the actual address-selection logic —
+  safe to remove without touching Checkout.
+
+### কী হয়েছে:
+- **`src/screens/CartScreen.tsx`**: item `<article>` card and its thumbnail
+  wrapper both switched from `glass-strong` to the flat mat-frame treatment
+  (`bg-white border border-ink-50/80 product-card-shadow`), with the
+  thumbnail getting an inner `p-1.5` white border band + `rounded-[14px]`
+  image, matching `ProductCard.tsx`'s existing pattern. Deleted the entire
+  "ডেলিভারি ঠিকানা" quick-access section (comment + `div.mt-5.mb-1` block).
+  `go` import/usage untouched — still used by `handleCheckout`.
+
+### Touched files:
+- `src/screens/CartScreen.tsx`
+
+### Verify:
+- `npx tsc --noEmit`: 0 errors in `CartScreen.tsx`.
+- `npm run build`: ✓ built in 10.20s
+
+### এখনো Pending / পরবর্তী Agent এর জন্য নোট:
+- Swipe-to-delete gesture (from the original HTML mockup) was **not**
+  implemented — user only approved the card-style + section-removal parts
+  this session. If swipe-to-delete is wanted on the real Cart items, that's
+  a separate follow-up (would need pointer-event handling similar to the
+  mockup, applied per cart-item `<article>`, plus a confirm bottom-sheet
+  before actually calling `remove(idx)`).
+- Address selection itself still lives entirely in the Checkout wizard,
+  unchanged — Cart no longer has any address-related UI at all.
+
+---
+
 ## Session: ProductScreen — quantity stepper moved to bottom CTA bar (2026-07-18, later same day)
 **Agent/Tool:** Claude (chat, Code Master protocol)
 **Feature worked on:** User shared a new grocery-app wireframe screenshot for the Product Detail page and asked for a mockup preview (fondant-designer flow) before any code change. Full-screen review found most sections (hero image/gallery, "Bake Art Style" brand contact card, Flavor selector) already closely matched the wireframe's intent structurally — the one real gap was the Quantity stepper's position: wireframe puts it directly in the sticky bottom bar next to the Add-to-cart button, while BAS had it as a separate mid-page section. User approved applying that change.

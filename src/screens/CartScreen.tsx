@@ -135,19 +135,21 @@ export default function CartScreen() {
           {safeArray<CartItem>(items).map((item, idx) => (
             <article
               key={item.productId + "-" + idx}
-              className="flex gap-3 rounded-2xl glass-strong p-3 anim-up"
+              className="flex gap-3 rounded-2xl bg-white border border-ink-50/80 product-card-shadow p-3 anim-up"
             >
-              <div className="h-24 w-24 flex-shrink-0 overflow-hidden rounded-2xl glass-strong">
-                <img
-                  loading="lazy"
-                  decoding="async"
-                  src={item.image || '/cakes/logo-cake.png'}
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = '/cakes/logo-cake.png';
-                  }}
-                  alt=""
-                  className="h-full w-full object-cover"
-                />
+              <div className="h-24 w-24 flex-shrink-0 rounded-2xl bg-white p-1.5 border border-ink-50/80 product-card-shadow">
+                <div className="h-full w-full overflow-hidden rounded-[14px]">
+                  <img
+                    loading="lazy"
+                    decoding="async"
+                    src={item.image || '/cakes/logo-cake.png'}
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = '/cakes/logo-cake.png';
+                    }}
+                    alt=""
+                    className="h-full w-full object-cover"
+                  />
+                </div>
               </div>
               <div className="flex flex-1 flex-col">
                 <div className="flex items-start justify-between gap-2">
@@ -239,40 +241,6 @@ export default function CartScreen() {
             </div>
           </div>
         )}
-
-        {/* Delivery address quick-access — moved here (below items/add-ons, above
-            the bill) to match the wireframe's Cart layout order: items -> order
-            type/address summary -> bill -> CTA. Actual type/address selection
-            still happens in the Checkout wizard (unchanged, avoids touching
-            that flow); this row is just a quick jump-in, same as before. */}
-        <div className="mt-5 mb-1">
-          <div className="mb-2.5 px-1 text-[11px] font-bold tracking-wider text-ink-200 uppercase">ডেলিভারি ঠিকানা</div>
-          <div className="flex gap-2.5 overflow-x-auto pb-1 scrollbar-hide">
-            {[
-              { id: 'home', label: 'Home', icon: '🏠' },
-              { id: 'office', label: 'Office', icon: '🏢' },
-              { id: 'parents', label: "Parent's House", icon: '👨‍👩‍👧' },
-              { id: 'friend', label: "Friend's House", icon: '👥' },
-            ].map((addr) => (
-              <button
-                key={addr.id}
-                onClick={() => go({ name: 'checkout' })}
-                className="flex-shrink-0 w-[108px] rounded-2xl border border-ink-50 bg-white px-3 py-3 text-left active:scale-95 transition"
-              >
-                <div className="text-2xl mb-1.5">{addr.icon}</div>
-                <div className="font-bold text-[13px] text-ink">{addr.label}</div>
-                <div className="text-[10px] text-ink-200 mt-0.5">Tap to edit</div>
-              </button>
-            ))}
-            <button
-              onClick={() => go({ name: 'checkout' })}
-              className="flex-shrink-0 w-[108px] rounded-2xl border-2 border-dashed border-ink-200 px-3 py-3 text-left active:scale-95 transition"
-            >
-              <div className="text-2xl mb-1.5 text-ink-200">+</div>
-              <div className="font-bold text-[13px] text-ink-200">Add New</div>
-            </button>
-          </div>
-        </div>
 
         {/* Promo/wallet discounts are now applied from the Checkout → পেমেন্ট step,
             not here. Discount state itself is global (useUI store) so this page's
