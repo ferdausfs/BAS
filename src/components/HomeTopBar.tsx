@@ -1,6 +1,6 @@
-import { Bell, ShoppingBag, Heart, MapPin, ChevronDown } from 'lucide-react';
+import { Bell, ShoppingBag, Heart, ChevronDown } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
-import { useUI, useCart, useUser, useLocation } from '../lib/store';
+import { useUI, useCart, useUser, useLocation, useAuthStore } from '../lib/store';
 import SearchBar from './SearchBar';
 
 interface Props {
@@ -36,7 +36,9 @@ export default function HomeTopBar({
   const { go, setTab, notifications } = useUI();
   const { items } = useCart();
   const { wishlist } = useUser();
+  const { user } = useAuthStore();
   const district = useLocation((s) => s.district);
+  const initial = (user?.name?.trim()?.[0] ?? 'B').toUpperCase();
 
   const cartCount = items.reduce((s, i) => s + i.quantity, 0);
   const wishCount = wishlist.length;
@@ -63,8 +65,12 @@ export default function HomeTopBar({
           className="flex items-center gap-2.5 text-left transition active:scale-95"
           aria-label="Delivery location"
         >
-          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white/15 text-white">
-            <MapPin className="h-4 w-4" strokeWidth={2} />
+          <span className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-white/20 text-white">
+            {user?.avatar ? (
+              <img src={user.avatar} alt="" className="h-full w-full object-cover" />
+            ) : (
+              <span className="text-[14px] font-bold">{initial}</span>
+            )}
           </span>
           <span className="leading-tight">
             <span className="block text-[10px] font-semibold text-white/55">
@@ -81,14 +87,16 @@ export default function HomeTopBar({
           {/* Notifications */}
           <button
             onClick={onNotificationsOpen ?? (() => setTab('profile'))}
-            className="relative flex h-10 w-10 items-center justify-center rounded-full bg-white/12 text-white transition active:scale-90"
+            className="relative flex h-10 w-10 items-center justify-center rounded-full bg-white text-[#6B3A18] transition active:scale-90"
             aria-label="Notifications"
           >
             <Bell className="h-[18px] w-[18px]" strokeWidth={1.9} />
-            {unreadCount > 0 && (
-              <span className="absolute top-1.5 right-1.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-gold px-1 text-[9px] font-bold text-[#3D2418]">
+            {unreadCount > 0 ? (
+              <span className="absolute top-1.5 right-1.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-gold px-1 text-[9px] font-bold text-[#3D2418] ring-2 ring-white">
                 {unreadCount}
               </span>
+            ) : (
+              <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-gold ring-2 ring-white" />
             )}
           </button>
 
