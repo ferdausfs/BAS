@@ -44,7 +44,7 @@ const EMPTY_PRODUCT = {
 };
 
 const EMPTY_BANNER = {
-  id: '', title: '', subtitle: '', image: '', tag: 'Shop Now', color: '#F3E4D0',
+  id: '', title: '', subtitle: '', image: '', tag: 'Shop Now', color: '#FFD6E4',
   type: 'new_item' as const, promoCode: '', productId: '', noticeText: '',
 };
 
@@ -56,7 +56,8 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
   const { products, saveProduct, deleteProduct, uploadProductImage } = useProducts();
   const { orders, fetchOrders, updateStatus, subscribeToNewOrders } = useOrdersHook();
   const { gallery, saveGalleryItem, deleteGalleryItem, uploadGalleryImage } = useGallery();
-  const { reviews, approveReview, deleteReview } = useReviews();
+  // approveReview intentionally not destructured — reviews are auto-approved (BUG 1 FIX below)
+  const { reviews, deleteReview } = useReviews();
   const { customers, loading: customersLoading } = useCustomers();
   const { banners, saveBanner, deleteBanner, uploadBannerImage } = useBanners();
   const { clearNewOrders, addNotification } = useUI();
@@ -108,25 +109,25 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
       else { setPinError(true); setPinInput(''); }
     };
     return (
-      <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-        <div className="glass-strong rounded-3xl p-8 w-full max-w-xs text-center">
-          <div className="flex justify-center text-ink mb-3">
-            <Lock size={36} strokeWidth={1.75} />
+      <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-ink/60">
+        <div className="rounded-[24px] border border-border bg-surface p-8 w-full max-w-xs text-center shadow-card">
+          <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-secondary text-coral">
+            <Lock size={28} strokeWidth={1.75} />
           </div>
-          <h2 className="font-display text-lg font-bold text-ink mb-1">Admin Panel</h2>
-          <p className="text-xs text-ink/50 mb-4">Enter your PIN</p>
+          <h2 className="text-lg font-bold text-ink mb-1">Admin Panel</h2>
+          <p className="text-xs text-ink-300 mb-4">Enter your PIN</p>
           <input
             type="password" maxLength={8}
-            className={`w-full text-center text-2xl tracking-widest px-4 py-3 rounded-2xl border mb-1 focus:outline-none bg-white text-ink ${pinError ? 'border-red-400' : 'border-ink/10'}`}
+            className={`w-full text-center text-2xl tracking-widest px-4 py-3 rounded-2xl border mb-1 focus:outline-none focus:ring-2 focus:ring-coral/15 bg-surface text-ink ${pinError ? 'border-error' : 'border-border'}`}
             value={pinInput}
             onChange={(e) => { setPinInput(e.target.value); setPinError(false); }}
             onKeyDown={(e) => e.key === 'Enter' && tryPin()}
             placeholder="••••"
             autoFocus
           />
-          {pinError && <p className="text-red-500 text-xs mb-2">Wrong PIN!</p>}
-          <button onClick={tryPin} className="w-full py-3 rounded-2xl bg-coral text-white font-bold mt-2">Enter</button>
-          <button onClick={onClose} className="mt-2 text-xs text-ink/40">Cancel</button>
+          {pinError && <p className="text-error text-xs mb-2">Wrong PIN!</p>}
+          <button onClick={tryPin} className="w-full py-3 rounded-2xl bg-coral text-white font-bold mt-2 shadow-btn transition active:scale-[.98]">Enter</button>
+          <button onClick={onClose} className="mt-2 text-xs text-ink-200">Cancel</button>
         </div>
       </div>
     );
@@ -235,21 +236,21 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
 
   return (
     <div className={embedded
-      ? "flex flex-col bg-cream rounded-3xl overflow-hidden border border-ink/8 mt-4"
-      : "fixed inset-0 z-[70] flex flex-col bg-cream"
+      ? "flex flex-col bg-bg rounded-[24px] overflow-hidden border border-border mt-4 shadow-card"
+      : "fixed inset-0 z-[70] flex flex-col bg-bg"
     }>
-      {/* Top bar */}
-      <div className="flex items-center justify-between px-4 py-3 bg-ink text-white flex-shrink-0">
+      {/* Top bar — solid brand pink */}
+      <div className="flex items-center justify-between px-4 py-3 bg-coral text-white flex-shrink-0">
         <div className="flex items-center gap-2">
           <Cake className="w-5 h-5" strokeWidth={1.75} />
           <span className="font-bold text-sm">Admin Dashboard</span>
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={fetchOrders} className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
+          <button onClick={fetchOrders} className="w-8 h-8 rounded-full bg-white/15 flex items-center justify-center">
             <RefreshCw className="w-4 h-4" />
           </button>
           {!embedded && onClose && (
-            <button onClick={onClose} className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
+            <button onClick={onClose} className="w-8 h-8 rounded-full bg-white/15 flex items-center justify-center">
               <X className="w-4 h-4" />
             </button>
           )}
@@ -257,13 +258,13 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
       </div>
 
       {/* Tabs */}
-      <div className="flex overflow-x-auto gap-1 px-3 py-2 bg-white border-b border-ink/8 no-scrollbar flex-shrink-0">
+      <div className="flex overflow-x-auto gap-1 px-3 py-2 bg-surface border-b border-border no-scrollbar flex-shrink-0">
         {TABS.map((t) => (
           <button key={t.id} onClick={() => setTab(t.id)}
-            className={`relative flex-shrink-0 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${tab === t.id ? 'bg-coral text-white' : 'text-ink/60 hover:bg-ink/5'}`}>
+            className={`relative flex-shrink-0 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${tab === t.id ? 'bg-coral text-white shadow-btn' : 'text-ink-300 hover:bg-ink-50'}`}>
             {t.label}
             {(t.badge ?? 0) > 0 && (
-              <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 text-white text-[8px] font-black flex items-center justify-center">
+              <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-error text-white text-[8px] font-black flex items-center justify-center">
                 {t.badge}
               </span>
             )}
@@ -287,16 +288,16 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                 { label: 'Today', value: todayCount },
                 { label: 'Products', value: safeProducts.length },
               ].map((s) => (
-                <div key={s.label} className="bg-white rounded-2xl p-4">
+                <div key={s.label} className="rounded-[20px] border border-border bg-surface p-4 shadow-card">
                   <p className="text-xl font-black text-coral">{s.value}</p>
                   <p className="text-xs font-bold text-ink">{s.label}</p>
                 </div>
               ))}
             </div>
-            <div className="bg-white rounded-2xl p-4">
+            <div className="rounded-[20px] border border-border bg-surface p-4 shadow-card">
               <p className="text-xs font-bold text-ink mb-3">Top Products</p>
               {topProducts.map(({ product, qty }) => (
-                <div key={product!.id} className="flex items-center gap-2.5 py-2 border-b border-ink/5 last:border-0">
+                <div key={product!.id} className="flex items-center gap-2.5 py-2 border-b border-border last:border-0">
                   <img src={product!.image} alt="" className="h-10 w-10 rounded-xl object-cover bg-blush" />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-xs font-bold text-ink">{product!.name || 'N/A'}</p>
@@ -305,13 +306,13 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                   <p className="text-xs font-black text-coral">{formatINR((product!.price || 0) * qty)}</p>
                 </div>
               ))}
-              {topProducts.length === 0 && <p className="text-center text-xs text-ink/30 py-4">No product sales yet</p>}
+              {topProducts.length === 0 && <p className="text-center text-xs text-ink-200 py-4">No product sales yet</p>}
             </div>
 
-            <div className="bg-white rounded-2xl p-4">
+            <div className="rounded-[20px] border border-border bg-surface p-4 shadow-card">
               <p className="text-xs font-bold text-ink mb-3">Recent Orders</p>
             {safeOrders.filter(Boolean).slice(0, 5).map((o) => (
-              <div key={o.id} className="flex justify-between items-center py-2 border-b border-ink/5 last:border-0">
+              <div key={o.id} className="flex justify-between items-center py-2 border-b border-border last:border-0">
                 <div>
                   <p className="text-xs font-bold text-ink">{o.customer?.name || 'Guest'}</p>
                     <p className="text-[10px] text-ink/40">#{o.id || 'N/A'}</p>
@@ -322,7 +323,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                   </div>
                 </div>
               ))}
-              {safeOrders.length === 0 && <p className="text-center text-xs text-ink/30 py-4">No orders yet</p>}
+              {safeOrders.length === 0 && <p className="text-center text-xs text-ink-200 py-4">No orders yet</p>}
             </div>
           </div>
         )}
@@ -332,7 +333,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
           <div className="space-y-3">
             <div className="flex items-center justify-between gap-2">
               <p className="text-xs font-bold text-ink/60">{filteredOrders.length}/{safeOrders.length} orders</p>
-              <button onClick={exportCSV} className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-coral text-white text-xs font-bold">
+              <button onClick={exportCSV} className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-coral text-white text-xs font-bold shadow-btn transition active:scale-95">
                 <Download className="w-3 h-3" /> Export CSV
               </button>
             </div>
@@ -342,7 +343,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                 <button
                   key={s}
                   onClick={() => setOrderFilter(s)}
-                  className={`flex-shrink-0 rounded-full px-3 py-1.5 text-[11px] font-bold capitalize ${orderFilter === s ? 'bg-coral text-white' : 'bg-white text-ink/55'}`}
+                  className={`flex-shrink-0 rounded-full px-3 py-1.5 text-[11px] font-bold capitalize ${orderFilter === s ? 'bg-coral text-white' : 'border border-border bg-surface text-ink-300'}`}
                 >
                   {s === 'all' ? 'All' : s}
                 </button>
@@ -350,7 +351,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
             </div>
 
             {filteredOrders.map((o) => (
-              <div key={o.id} className="bg-white rounded-2xl p-4">
+              <div key={o.id} className="rounded-[20px] border border-border bg-surface p-4 shadow-card">
                 <div className="flex justify-between items-start gap-3 mb-2">
                   <div className="min-w-0">
                     <p className="font-bold text-sm text-ink truncate">{o.customer?.name || 'Guest'}</p>
@@ -362,7 +363,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                   </div>
                 </div>
 
-                <div className="rounded-xl bg-cream p-3 text-[11px] leading-relaxed text-ink/65">
+                <div className="rounded-xl bg-ink-50 p-3 text-[11px] leading-relaxed text-ink/65">
                   <p><span className="font-bold text-ink">Phone:</span> {o.customer?.phone || 'N/A'}</p>
                   {o.customer?.email && <p><span className="font-bold text-ink">Email:</span> {o.customer.email}</p>}
                   <p><span className="font-bold text-ink">Address:</span> {o.customer?.address || 'N/A'}, {o.customer?.city || ''}</p>
@@ -383,7 +384,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                       {i?.image ? (
                         <button
                           onClick={() => setViewImage(i.image!)}
-                          className="flex-shrink-0 h-12 w-12 rounded-xl overflow-hidden border border-ink/10 bg-cream active:scale-95 transition"
+                          className="flex-shrink-0 h-12 w-12 rounded-xl overflow-hidden border border-border bg-surface active:scale-95 transition"
                           title="Tap to view full image"
                         >
                           <img src={i.image} alt={i?.name || ''} className="h-full w-full object-cover" />
@@ -412,7 +413,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                   <select
                     value={o.status || 'placed'}
                     onChange={(e) => requestStatusChange(o, e.target.value as Order['status'])}
-                    className="mt-1 h-10 w-full rounded-xl border border-ink/10 bg-white px-3 text-xs font-bold text-ink focus:outline-none"
+                    className="mt-1 h-10 w-full rounded-xl border border-border bg-surface px-3 text-xs font-bold text-ink focus:outline-none"
                   >
                     {ORDER_STATUSES.map((s) => <option key={s} value={s}>{STATUS_LABELS[s]}</option>)}
                   </select>
@@ -435,14 +436,14 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                       : `Hello ${o.customer?.name || 'Customer'}, your Bake Art Style order #${o.id || 'N/A'} is now ${o.status || 'placed'}.`)}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex-1 rounded-xl bg-green-50 py-2 text-center text-xs font-bold text-green-700"
+                    className="flex-1 rounded-xl bg-success/10 py-2 text-center text-xs font-bold text-success"
                   >
                     WhatsApp customer
                   </a>
                   {o.paymentScreenshot && (
                     <button
                       onClick={() => void openPaymentScreenshot(o.paymentScreenshot)}
-                      className="rounded-xl bg-amber-50 px-3 py-2 text-xs font-bold text-amber-700"
+                      className="rounded-xl bg-gold-light px-3 py-2 text-xs font-bold text-ink"
                     >
                       Advance proof
                     </button>
@@ -456,7 +457,15 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                 </div>
               </div>
             ))}
-            {filteredOrders.length === 0 && <div className="text-center py-16 text-ink/30 text-sm">No orders yet</div>}
+            {filteredOrders.length === 0 && (
+              <div className="rounded-[20px] border border-border bg-surface py-12 text-center shadow-card">
+                <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-secondary text-coral">
+                  <Package className="h-6 w-6" strokeWidth={1.75} />
+                </div>
+                <p className="text-sm font-bold text-ink">No orders yet</p>
+                <p className="mt-1 text-xs text-ink-200">New orders will appear here</p>
+              </div>
+            )}
           </div>
         )}
 
@@ -464,26 +473,26 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
         {tab === 'products' && (
           <div className="space-y-3">
             <button onClick={() => setEditProduct({ ...EMPTY_PRODUCT, id: `p-${Date.now()}` })}
-              className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl bg-coral text-white font-bold text-sm">
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl bg-coral text-white font-bold text-sm shadow-btn transition active:scale-[.98]">
               <Plus className="w-4 h-4" /> Add Product
             </button>
 
             {editProduct && (
-              <div className="bg-white rounded-2xl p-4 space-y-3 border-2 border-coral/30">
+              <div className="rounded-[20px] border-2 border-coral/30 bg-surface p-4 space-y-3 shadow-card">
                 <p className="font-bold text-sm text-ink">
                   {safeProducts.find((p) => p && p.id === editProduct.id) ? 'Edit' : 'New'} Product
                 </p>
                 {(['name', 'tagline', 'description'] as const).map((f) => (
                   <div key={f}>
                     <label className="text-[10px] font-bold text-ink/50 uppercase">{f}</label>
-                    <input className="w-full mt-0.5 px-3 py-2 rounded-xl border border-ink/10 bg-cream text-xs text-ink focus:outline-none"
+                    <input className="w-full mt-0.5 px-3 py-2 rounded-xl border border-border bg-surface text-xs text-ink focus:outline-none"
                       value={String(editProduct[f] ?? '')}
                       onChange={(e) => setEditProduct({ ...editProduct, [f]: e.target.value })} />
                   </div>
                 ))}
                 <div>
                   <label className="text-[10px] font-bold text-ink/50 uppercase">Price (৳)</label>
-                  <input type="number" className="w-full mt-0.5 px-3 py-2 rounded-xl border border-ink/10 bg-cream text-xs text-ink focus:outline-none"
+                  <input type="number" className="w-full mt-0.5 px-3 py-2 rounded-xl border border-border bg-surface text-xs text-ink focus:outline-none"
                     value={editProduct.price}
                     onChange={(e) => setEditProduct({ ...editProduct, price: +e.target.value })} />
                 </div>
@@ -499,7 +508,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                         onClick={() => setEditProduct(prev => prev ? { ...prev, tier: t } : prev)}
                         className={`flex-1 py-2 rounded-xl text-[11px] font-bold capitalize transition ${
                           (editProduct.tier ?? 'normal') === t
-                            ? t === 'premium' ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-white'
+                            ? t === 'premium' ? 'bg-gold text-white'
                             : t === 'custom' ? 'bg-coral text-white'
                             : 'bg-ink text-white'
                             : 'bg-ink/5 text-ink/50'
@@ -512,7 +521,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                 </div>
 
                 {/* Weight-based Pricing */}
-                <div className="space-y-2 border border-ink/8 rounded-2xl p-3">
+                <div className="space-y-2 border border-border rounded-2xl p-3">
                   <label className="text-[10px] font-bold text-ink/50 uppercase">Weight-based Pricing (optional)</label>
                   <p className="text-[10px] text-ink/40">If set, price = customer's weight × rate below. Leave blank to use fixed price above.</p>
                   <div className="flex gap-2">
@@ -521,7 +530,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                       <input
                         type="number"
                         placeholder="e.g. 100"
-                        className="w-full mt-0.5 px-3 py-2 rounded-xl border border-ink/10 bg-cream text-xs text-ink focus:outline-none"
+                        className="w-full mt-0.5 px-3 py-2 rounded-xl border border-border bg-surface text-xs text-ink focus:outline-none"
                         value={editProduct.pricePerUnit ?? ''}
                         onChange={(e) => setEditProduct(prev => prev ? { ...prev, pricePerUnit: e.target.value ? +e.target.value : undefined } : prev)}
                       />
@@ -529,7 +538,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                     <div className="flex-1">
                       <label className="text-[10px] font-bold text-ink/40">Unit</label>
                       <select
-                        className="w-full mt-0.5 px-3 py-2 rounded-xl border border-ink/10 bg-cream text-xs text-ink focus:outline-none"
+                        className="w-full mt-0.5 px-3 py-2 rounded-xl border border-border bg-surface text-xs text-ink focus:outline-none"
                         value={editProduct.priceUnit ?? 'kg'}
                         onChange={(e) => setEditProduct(prev => prev ? { ...prev, priceUnit: e.target.value as 'kg' | 'pound' } : prev)}
                       >
@@ -547,7 +556,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
 
                 <div>
                   <label className="text-[10px] font-bold text-ink/50 uppercase">Category</label>
-                  <select className="w-full mt-0.5 px-3 py-2 rounded-xl border border-ink/10 bg-cream text-xs text-ink focus:outline-none"
+                  <select className="w-full mt-0.5 px-3 py-2 rounded-xl border border-border bg-surface text-xs text-ink focus:outline-none"
                     value={editProduct.occasion}
                     onChange={(e) => setEditProduct({ ...editProduct, occasion: e.target.value as Product['occasion'] })}>
                     {['birthday', 'wedding', 'anniversary', 'cupcakes', 'gift', 'premium'].map((c) => (
@@ -568,7 +577,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                       className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-ink/5 text-xs font-bold text-ink disabled:opacity-50">
                       <ImageIcon className="w-3.5 h-3.5" /> {imgUploading ? 'Uploading...' : 'Upload Image'}
                     </button>
-                    <input className="mt-1 w-full px-2 py-1 rounded-lg border border-ink/10 text-[10px] text-ink focus:outline-none bg-cream"
+                    <input className="mt-1 w-full px-2 py-1 rounded-lg border border-border text-[10px] text-ink focus:outline-none bg-surface"
                       placeholder="Or paste image URL"
                       value={editProduct.image?.startsWith('data:') ? '' : editProduct.image}
                       onChange={(e) => setEditProduct({ ...editProduct, image: e.target.value })} />
@@ -576,14 +585,14 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                 </div>
 
                 {/* Additional Images (gallery) */}
-                <div className="space-y-2 border-t border-ink/5 pt-3">
+                <div className="space-y-2 border-t border-border pt-3">
                   <label className="text-[10px] font-bold text-ink/50 uppercase">Additional Images (gallery)</label>
 
                   {/* Thumbnail List */}
                   {editProduct.gallery && editProduct.gallery.length > 0 && (
                     <div className="flex flex-wrap gap-2">
                       {editProduct.gallery.map((url, i) => (
-                        <div key={i} className="relative w-12 h-12 rounded-lg overflow-hidden border border-ink/10">
+                        <div key={i} className="relative w-12 h-12 rounded-lg overflow-hidden border border-border">
                           <img src={url} alt="" className="w-full h-full object-cover" />
                           <button
                             type="button"
@@ -594,7 +603,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                                 return { ...prev, gallery: nextGallery };
                               });
                             }}
-                            className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center transition active:scale-90"
+                            className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-error text-white text-[9px] font-bold flex items-center justify-center transition active:scale-90"
                           >
                             <X className="w-3 h-3" />
                           </button>
@@ -658,21 +667,21 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                   <input
                     type="number"
                     placeholder="e.g. 850"
-                    className="w-full mt-0.5 px-3 py-2 rounded-xl border border-ink/10 bg-cream text-xs text-ink focus:outline-none"
+                    className="w-full mt-0.5 px-3 py-2 rounded-xl border border-border bg-surface text-xs text-ink focus:outline-none"
                     value={editProduct.oldPrice ?? ''}
                     onChange={(e) => setEditProduct(prev => prev ? { ...prev, oldPrice: e.target.value ? +e.target.value : undefined } : prev)}
                   />
                 </div>
 
                 {/* Sizes & Prices */}
-                <div className="space-y-2 border border-ink/8 rounded-2xl p-3">
+                <div className="space-y-2 border border-border rounded-2xl p-3">
                   <label className="text-[10px] font-bold text-ink/50 uppercase">Sizes & Prices</label>
                   <p className="text-[10px] text-ink/40">Customer selects size when ordering. Add at least one.</p>
                   {(editProduct.weights ?? []).map((w, i) => (
                     <div key={i} className="flex gap-2 items-center">
                       <input
                         placeholder="e.g. 1 kg"
-                        className="flex-1 px-3 py-2 rounded-xl border border-ink/10 bg-cream text-xs text-ink focus:outline-none"
+                        className="flex-1 px-3 py-2 rounded-xl border border-border bg-surface text-xs text-ink focus:outline-none"
                         value={w.size}
                         onChange={(e) => {
                           const next = [...(editProduct.weights ?? [])];
@@ -683,7 +692,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                       <input
                         type="number"
                         placeholder="৳"
-                        className="w-20 px-3 py-2 rounded-xl border border-ink/10 bg-cream text-xs text-ink focus:outline-none"
+                        className="w-20 px-3 py-2 rounded-xl border border-border bg-surface text-xs text-ink focus:outline-none"
                         value={w.price}
                         onChange={(e) => {
                           const next = [...(editProduct.weights ?? [])];
@@ -697,7 +706,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                           const next = (editProduct.weights ?? []).filter((_, idx) => idx !== i);
                           setEditProduct(prev => prev ? { ...prev, weights: next } : prev);
                         }}
-                        className="text-red-400"
+                        className="text-error"
                       >
                         <X className="w-4 h-4" />
                       </button>
@@ -720,7 +729,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                   <label className="text-[10px] font-bold text-ink/50 uppercase">Flavors (comma separated)</label>
                   <input
                     placeholder="Chocolate, Vanilla, Strawberry"
-                    className="w-full mt-0.5 px-3 py-2 rounded-xl border border-ink/10 bg-cream text-xs text-ink focus:outline-none"
+                    className="w-full mt-0.5 px-3 py-2 rounded-xl border border-border bg-surface text-xs text-ink focus:outline-none"
                     value={(editProduct.flavors ?? []).join(', ')}
                     onChange={(e) => {
                       const flavors = e.target.value.split(',').map(s => s.trim()).filter(Boolean);
@@ -734,7 +743,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                   <label className="text-[10px] font-bold text-ink/50 uppercase">Toppings (optional, comma separated)</label>
                   <input
                     placeholder="Sprinkles, Fondant, Fresh Flowers"
-                    className="w-full mt-0.5 px-3 py-2 rounded-xl border border-ink/10 bg-cream text-xs text-ink focus:outline-none"
+                    className="w-full mt-0.5 px-3 py-2 rounded-xl border border-border bg-surface text-xs text-ink focus:outline-none"
                     value={(editProduct.toppings ?? []).join(', ')}
                     onChange={(e) => {
                       const toppings = e.target.value.split(',').map(s => s.trim()).filter(Boolean);
@@ -748,7 +757,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                   <label className="text-[10px] font-bold text-ink/50 uppercase">Tags (optional, comma separated)</label>
                   <input
                     placeholder="eggless, sugar-free, custom"
-                    className="w-full mt-0.5 px-3 py-2 rounded-xl border border-ink/10 bg-cream text-xs text-ink focus:outline-none"
+                    className="w-full mt-0.5 px-3 py-2 rounded-xl border border-border bg-surface text-xs text-ink focus:outline-none"
                     value={(editProduct.tags ?? []).join(', ')}
                     onChange={(e) => {
                       const tags = e.target.value.split(',').map(s => s.trim()).filter(Boolean);
@@ -794,7 +803,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
             )}
 
             {safeProducts.filter(Boolean).map((p) => (
-              <div key={p.id} className="bg-white rounded-2xl p-3 flex gap-3 items-center">
+              <div key={p.id} className="rounded-[20px] border border-border bg-surface p-3 flex gap-3 items-center shadow-card">
                 <img src={p.image} alt={p.name} className="w-14 h-14 rounded-xl object-cover flex-shrink-0 bg-blush" />
                 <div className="flex-1 min-w-0">
                   <p className="font-bold text-sm text-ink truncate">{p.name || 'N/A'}</p>
@@ -816,7 +825,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                       }
                     }}
                     className={`rounded-lg px-2 py-1 text-[10px] font-bold transition ${
-                      (p.inStock ?? true) ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-400'
+                      (p.inStock ?? true) ? 'bg-success/10 text-success' : 'bg-error/10 text-error'
                     }`}
                   >
                     {(p.inStock ?? true) ? 'In Stock' : 'Out of Stock'}
@@ -824,7 +833,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                   <button
                     onClick={() => void saveProduct({ ...p, approved: !(p.approved ?? true) })}
                     className={`rounded-lg px-2 py-1 text-[10px] font-bold transition ${
-                      (p.approved ?? true) ? 'bg-blue-50 text-blue-600' : 'bg-orange-50 text-orange-600'
+                      (p.approved ?? true) ? 'bg-coral-100 text-coral-700' : 'bg-ink-100 text-ink-300'
                     }`}
                   >
                     {(p.approved ?? true) ? 'Approved' : 'Hidden'}
@@ -832,8 +841,8 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                   <button onClick={() => setEditProduct(p)} className="w-8 h-8 rounded-xl bg-ink/5 flex items-center justify-center">
                     <Edit3 className="w-3.5 h-3.5 text-ink/60" />
                   </button>
-                  <button onClick={() => deleteProduct(p.id)} className="w-8 h-8 rounded-xl bg-red-50 flex items-center justify-center">
-                    <Trash2 className="w-3.5 h-3.5 text-red-400" />
+                  <button onClick={() => deleteProduct(p.id)} className="w-8 h-8 rounded-xl bg-error/10 flex items-center justify-center">
+                    <Trash2 className="w-3.5 h-3.5 text-error" />
                   </button>
                 </div>
               </div>
@@ -845,19 +854,19 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
         {tab === 'banners' && (
           <div className="space-y-3">
             <button onClick={() => setEditBanner({ ...EMPTY_BANNER, id: `b-${Date.now()}` })}
-              className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl bg-coral text-white font-bold text-sm">
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl bg-coral text-white font-bold text-sm shadow-btn transition active:scale-[.98]">
               <Plus className="w-4 h-4" /> Add Banner
             </button>
 
             {editBanner && (
-              <div className="bg-white rounded-2xl p-4 space-y-3 border-2 border-coral/30">
+              <div className="rounded-[20px] border-2 border-coral/30 bg-surface p-4 space-y-3 shadow-card">
                 <p className="font-bold text-sm text-ink">
                   {safeBanners.find((b) => b && b.id === editBanner.id) ? 'Edit' : 'New'} Banner
                 </p>
                 {(['title', 'subtitle', 'tag', 'color'] as const).map((f) => (
                   <div key={f}>
                     <label className="text-[10px] font-bold text-ink/50 uppercase">{f}</label>
-                    <input className="w-full mt-0.5 px-3 py-2 rounded-xl border border-ink/10 bg-cream text-xs text-ink focus:outline-none"
+                    <input className="w-full mt-0.5 px-3 py-2 rounded-xl border border-border bg-surface text-xs text-ink focus:outline-none"
                       value={String(editBanner[f] ?? '')}
                       onChange={(e) => setEditBanner({ ...editBanner, [f]: e.target.value })} />
                   </div>
@@ -865,7 +874,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
 
                 <div>
                   <label className="text-[10px] font-bold text-ink/50 uppercase">Type</label>
-                  <select className="w-full mt-0.5 px-3 py-2 rounded-xl border border-ink/10 bg-cream text-xs text-ink focus:outline-none"
+                  <select className="w-full mt-0.5 px-3 py-2 rounded-xl border border-border bg-surface text-xs text-ink focus:outline-none"
                     value={editBanner.type}
                     onChange={(e) => setEditBanner({ ...editBanner, type: e.target.value as any })}>
                     <option value="new_item">New Item</option>
@@ -877,7 +886,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                 {editBanner.type === 'discount' && (
                   <div>
                     <label className="text-[10px] font-bold text-ink/50 uppercase">Promo Code</label>
-                    <input className="w-full mt-0.5 px-3 py-2 rounded-xl border border-ink/10 bg-cream text-xs text-ink focus:outline-none"
+                    <input className="w-full mt-0.5 px-3 py-2 rounded-xl border border-border bg-surface text-xs text-ink focus:outline-none"
                       value={editBanner.promoCode ?? ''}
                       onChange={(e) => setEditBanner({ ...editBanner, promoCode: e.target.value })} />
                   </div>
@@ -886,7 +895,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                 {editBanner.type === 'new_item' && (
                   <div>
                     <label className="text-[10px] font-bold text-ink/50 uppercase">Product Link</label>
-                    <select className="w-full mt-0.5 px-3 py-2 rounded-xl border border-ink/10 bg-cream text-xs text-ink focus:outline-none"
+                    <select className="w-full mt-0.5 px-3 py-2 rounded-xl border border-border bg-surface text-xs text-ink focus:outline-none"
                       value={editBanner.productId ?? ''}
                       onChange={(e) => setEditBanner({ ...editBanner, productId: e.target.value })}>
                       <option value="">Select product...</option>
@@ -900,7 +909,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                 {editBanner.type === 'notice' && (
                   <div>
                     <label className="text-[10px] font-bold text-ink/50 uppercase">Notice Text</label>
-                    <textarea rows={3} className="w-full mt-0.5 p-3 rounded-xl border border-ink/10 bg-cream text-xs text-ink focus:outline-none resize-none"
+                    <textarea rows={3} className="w-full mt-0.5 p-3 rounded-xl border border-border bg-surface text-xs text-ink focus:outline-none resize-none"
                       value={editBanner.noticeText ?? ''}
                       onChange={(e) => setEditBanner({ ...editBanner, noticeText: e.target.value })} />
                   </div>
@@ -919,7 +928,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                       className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-ink/5 text-xs font-bold text-ink disabled:opacity-50">
                       <ImageIcon className="w-3.5 h-3.5" /> {bannerImgUploading ? 'Uploading...' : 'Upload Image'}
                     </button>
-                    <input className="mt-1 w-full px-2 py-1 rounded-lg border border-ink/10 text-[10px] text-ink focus:outline-none bg-cream"
+                    <input className="mt-1 w-full px-2 py-1 rounded-lg border border-border text-[10px] text-ink focus:outline-none bg-surface"
                       placeholder="Or paste image URL"
                       value={editBanner.image?.startsWith('data:') ? '' : editBanner.image}
                       onChange={(e) => setEditBanner({ ...editBanner, image: e.target.value })} />
@@ -937,7 +946,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
             )}
 
             {safeBanners.filter(Boolean).map((b) => (
-              <div key={b.id} className="bg-white rounded-2xl p-3 flex gap-3 items-center">
+              <div key={b.id} className="rounded-[20px] border border-border bg-surface p-3 flex gap-3 items-center shadow-card">
                 <img src={b.image} alt={b.title} className="w-14 h-14 rounded-xl object-cover flex-shrink-0 bg-blush" />
                 <div className="flex-1 min-w-0">
                   <p className="font-bold text-sm text-ink truncate">{b.title || 'N/A'}</p>
@@ -948,8 +957,8 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                   <button onClick={() => setEditBanner(b)} className="w-8 h-8 rounded-xl bg-ink/5 flex items-center justify-center">
                     <Edit3 className="w-3.5 h-3.5 text-ink/60" />
                   </button>
-                  <button onClick={() => deleteBanner(b.id)} className="w-8 h-8 rounded-xl bg-red-50 flex items-center justify-center">
-                    <Trash2 className="w-3.5 h-3.5 text-red-400" />
+                  <button onClick={() => deleteBanner(b.id)} className="w-8 h-8 rounded-xl bg-error/10 flex items-center justify-center">
+                    <Trash2 className="w-3.5 h-3.5 text-error" />
                   </button>
                 </div>
               </div>
@@ -960,9 +969,9 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
         {/* Gallery */}
         {tab === 'gallery' && (
           <div className="space-y-3">
-            <div className="bg-white rounded-2xl p-4 space-y-2">
+            <div className="rounded-[20px] border border-border bg-surface p-4 shadow-card space-y-2">
               <p className="text-xs font-bold text-ink">Add Gallery Photo</p>
-              <input className="w-full px-3 py-2 rounded-xl border border-ink/10 bg-cream text-xs focus:outline-none"
+              <input className="w-full px-3 py-2 rounded-xl border border-border bg-surface text-xs focus:outline-none"
                 placeholder="Caption (optional)" value={newGalleryCaption} onChange={(e) => setNewGalleryCaption(e.target.value)} />
               <input ref={galleryImgRef} type="file" accept="image/*" className="hidden" onChange={async (e) => {
                 const file = e.target.files?.[0]; if (!file) return;
@@ -974,7 +983,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                 } finally { setGalleryUploading(false); }
               }} />
               <button onClick={() => galleryImgRef.current?.click()} disabled={galleryUploading}
-                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-coral text-white font-bold text-xs disabled:opacity-50">
+                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-coral text-white font-bold text-xs shadow-btn transition active:scale-[.98] disabled:opacity-50">
                 <ImageIcon className="w-3.5 h-3.5" /> {galleryUploading ? 'Uploading...' : 'Upload Photo'}
               </button>
             </div>
@@ -982,29 +991,37 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
               {safeGallery.filter(Boolean).map((g) => (
                 <div key={g.id} className="relative rounded-2xl overflow-hidden bg-blush">
                   <img src={g.image} alt={g.caption || ''} className="w-full h-28 object-cover" />
-                  <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/60">
+                  <div className="absolute bottom-0 left-0 right-0 p-2 bg-ink/70">
                     <p className="text-[10px] text-white font-medium truncate">{g.caption || ''}</p>
                   </div>
-                  <button onClick={() => deleteGalleryItem(g.id)} className="absolute top-2 right-2 w-6 h-6 rounded-full bg-red-500 flex items-center justify-center">
+                  <button onClick={() => deleteGalleryItem(g.id)} className="absolute top-2 right-2 w-6 h-6 rounded-full bg-error flex items-center justify-center">
                     <X className="w-3 h-3 text-white" />
                   </button>
                 </div>
               ))}
             </div>
-            {safeGallery.length === 0 && <div className="text-center py-12 text-ink/30 text-sm">No gallery photos yet</div>}
+            {safeGallery.length === 0 && (
+              <div className="rounded-[20px] border border-border bg-surface py-12 text-center shadow-card">
+                <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-secondary text-coral">
+                  <ImageIcon className="h-6 w-6" strokeWidth={1.75} />
+                </div>
+                <p className="text-sm font-bold text-ink">No gallery photos yet</p>
+                <p className="mt-1 text-xs text-ink-200">Upload your first photo above</p>
+              </div>
+            )}
           </div>
         )}
 
         {/* Reviews - BUG 1 FIX: Reviews are auto-approved, only delete option */}
         {tab === 'reviews' && (
           <div className="space-y-3">
-            {safeReviews.filter(Boolean).map((r) => (
-              <div key={r.id} className="bg-white rounded-2xl p-4">
+            {safeReviews.filter(Boolean).map((r: any) => (
+              <div key={r.id} className="rounded-[20px] border border-border bg-surface p-4 shadow-card">
                 <div className="flex justify-between items-start mb-1">
                   <p className="font-bold text-sm text-ink">{r.user_name || 'Anonymous'}</p>
                   <div className="flex gap-0.5">
                     {Array.from({ length: 5 }).map((_, i) => (
-                      <Star key={i} className={`w-3 h-3 ${i < (r.rating || 5) ? 'fill-amber-400 text-amber-400' : 'text-ink/20'}`} />
+                      <Star key={i} className={`w-3 h-3 ${i < (r.rating || 5) ? 'fill-gold text-gold' : 'text-ink/20'}`} />
                     ))}
                   </div>
                 </div>
@@ -1021,13 +1038,21 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                 <div className="flex gap-2 mt-2">
                   {/* Only delete button - no approve needed since reviews are auto-approved */}
                   <button onClick={() => deleteReview(r.id)}
-                    className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-red-50 text-red-400 text-[10px] font-bold">
+                    className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-error/10 text-error text-[10px] font-bold">
                     <Trash2 className="w-3 h-3" /> Delete
                   </button>
                 </div>
               </div>
             ))}
-            {safeReviews.length === 0 && <div className="text-center py-16 text-ink/30 text-sm">No reviews yet</div>}
+            {safeReviews.length === 0 && (
+              <div className="rounded-[20px] border border-border bg-surface py-12 text-center shadow-card">
+                <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-secondary text-coral">
+                  <Star className="h-6 w-6" strokeWidth={1.75} />
+                </div>
+                <p className="text-sm font-bold text-ink">No reviews yet</p>
+                <p className="mt-1 text-xs text-ink-200">Customer reviews will appear here</p>
+              </div>
+            )}
           </div>
         )}
 
@@ -1035,11 +1060,11 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
         {tab === 'customers' && (
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
-              <div className="rounded-2xl bg-white p-4">
+              <div className="rounded-[20px] border border-border bg-surface p-4 shadow-card">
                 <p className="text-xl font-black text-coral">{safeCustomers.length}</p>
                 <p className="text-xs font-bold text-ink">Customers</p>
               </div>
-              <div className="rounded-2xl bg-white p-4">
+              <div className="rounded-[20px] border border-border bg-surface p-4 shadow-card">
                 <p className="text-xl font-black text-coral">{formatINR(safeCustomers.reduce((s, c) => s + (c?.totalSpent || 0), 0))}</p>
                 <p className="text-xs font-bold text-ink">Total spent</p>
               </div>
@@ -1057,9 +1082,9 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                 .slice(0, 4);
 
               return (
-                <div key={c.id} className="rounded-2xl bg-white p-4">
+                <div key={c.id} className="rounded-[20px] border border-border bg-surface p-4 shadow-card">
                   <div className="flex items-start gap-3">
-                    <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-ink-50 text-ink-200">
+                    <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-secondary text-coral">
                       {c.avatar ? <img src={c.avatar} alt="" className="h-full w-full rounded-full object-cover" /> : <Users className="h-5 w-5" />}
                     </div>
                     <div className="min-w-0 flex-1">
@@ -1076,10 +1101,10 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                     </div>
                   </div>
 
-                  <div className="mt-3 rounded-xl bg-cream p-3">
+                  <div className="mt-3 rounded-xl bg-ink-50 p-3">
                     <p className="mb-2 text-[10px] font-bold uppercase text-ink/40">Customer info is saved from checkout orders + logged-in profiles</p>
                     {customerOrders.length > 0 ? customerOrders.map((o) => (
-                      <div key={o.id} className="flex items-center justify-between border-b border-ink/5 py-1.5 last:border-0">
+                      <div key={o.id} className="flex items-center justify-between border-b border-border py-1.5 last:border-0">
                         <div>
                           <p className="text-[11px] font-bold text-ink">#{o.id || 'N/A'}</p>
                           <p className="text-[9px] text-ink/40">{o.createdAt ? new Date(o.createdAt).toLocaleDateString('en-BD') : 'N/A'} · {o.status || 'placed'}</p>
@@ -1094,7 +1119,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                       href={waLink(c.phone, `Hello ${c.name || 'Customer'}, this is Bake Art Style.`)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="mt-3 block rounded-xl bg-green-50 py-2 text-center text-xs font-bold text-green-700"
+                      className="mt-3 block rounded-xl bg-success/10 py-2 text-center text-xs font-bold text-success"
                     >
                       WhatsApp customer
                     </a>
@@ -1102,14 +1127,22 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                 </div>
               );
             })}
-            {!customersLoading && safeCustomers.length === 0 && <div className="text-center py-16 text-ink/30 text-sm">No customers yet</div>}
+            {!customersLoading && safeCustomers.length === 0 && (
+              <div className="rounded-[20px] border border-border bg-surface py-12 text-center shadow-card">
+                <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-secondary text-coral">
+                  <Users className="h-6 w-6" strokeWidth={1.75} />
+                </div>
+                <p className="text-sm font-bold text-ink">No customers yet</p>
+                <p className="mt-1 text-xs text-ink-200">Customers appear here after their first order</p>
+              </div>
+            )}
           </div>
         )}
 
         {/* Zones */}
         {tab === 'zones' && (
           <div className="space-y-4">
-            <div className="rounded-2xl bg-white p-4">
+            <div className="rounded-[20px] border border-border bg-surface p-4 shadow-card">
               <div className="mb-3 flex items-center justify-between">
                 <div>
                   <p className="text-sm font-bold text-ink">Delivery zone gating</p>
@@ -1124,7 +1157,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
               </div>
               <div className="flex flex-wrap gap-2">
                 {(safeSettings.allowedZones ?? []).map((z) => (
-                  <span key={z} className="inline-flex items-center gap-1.5 rounded-full border border-ink/10 bg-white px-3 py-1.5 text-xs font-bold text-ink">
+                  <span key={z} className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface px-3 py-1.5 text-xs font-bold text-ink">
                     <MapPin className="h-3 w-3 text-ink-200" /> {z}
                     <button onClick={() => updateSettings({ allowedZones: (safeSettings.allowedZones ?? []).filter((x) => x !== z) })} className="text-ink/50">
                       <X className="h-3 w-3" />
@@ -1137,7 +1170,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                   value={newZone}
                   onChange={(e) => setNewZone(e.target.value)}
                   placeholder="Add zone..."
-                  className="h-11 flex-1 rounded-xl border border-ink/10 bg-cream px-3 text-xs text-ink focus:outline-none"
+                  className="h-11 flex-1 rounded-xl border border-border bg-surface px-3 text-xs text-ink focus:outline-none"
                 />
                 <button
                   onClick={() => {
@@ -1148,19 +1181,19 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                     }
                     setNewZone('');
                   }}
-                  className="rounded-xl bg-coral px-4 text-xs font-bold text-white"
+                  className="rounded-xl bg-coral px-4 text-xs font-bold text-white shadow-btn transition active:scale-95"
                 >
                   Add
                 </button>
               </div>
             </div>
-            <div className="rounded-2xl bg-white p-4">
+            <div className="rounded-[20px] border border-border bg-surface p-4 shadow-card">
               <label className="text-[10px] font-bold uppercase text-ink/50">Out-of-zone message</label>
               <textarea
                 value={safeSettings.outOfZoneMessage ?? ''}
                 onChange={(e) => updateSettings({ outOfZoneMessage: e.target.value })}
                 rows={3}
-                className="mt-1 w-full resize-none rounded-xl border border-ink/10 bg-cream p-3 text-xs text-ink focus:outline-none"
+                className="mt-1 w-full resize-none rounded-xl border border-border bg-surface p-3 text-xs text-ink focus:outline-none"
               />
             </div>
           </div>
@@ -1184,7 +1217,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
               <div key={field}>
                 <label className="text-[10px] font-bold text-ink/50 uppercase">{label}</label>
                 <input type={type}
-                  className="w-full mt-0.5 px-3 py-2.5 rounded-xl border border-ink/10 bg-white text-xs text-ink focus:outline-none focus:ring-2 focus:ring-coral/20"
+                  className="w-full mt-0.5 px-3 py-2.5 rounded-xl border border-border bg-surface text-xs text-ink focus:outline-none focus:ring-2 focus:ring-coral/20"
                   value={String(localSettings[field] ?? '')}
                   onChange={(e) => setLocalSettings({
                     ...localSettings,
@@ -1215,10 +1248,10 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
               </div>
               <div className="space-y-2">
                 {(settings.customAddons ?? []).map((addon, idx) => (
-                  <div key={addon.id} className="flex items-center gap-2 rounded-xl bg-cream p-2">
+                  <div key={addon.id} className="flex items-center gap-2 rounded-xl bg-ink-50 p-2">
                     <input
                       value={addon.emoji}
-                      className="w-10 text-center rounded-lg border border-ink/10 bg-white px-1 py-1 text-sm"
+                      className="w-10 text-center rounded-lg border border-border bg-surface px-1 py-1 text-sm"
                       onChange={(e) => {
                         const updated = [...(settings.customAddons ?? [])];
                         updated[idx] = { ...updated[idx], emoji: e.target.value };
@@ -1227,7 +1260,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                     />
                     <input
                       value={addon.label}
-                      className="flex-1 rounded-lg border border-ink/10 bg-white px-2 py-1 text-xs text-ink"
+                      className="flex-1 rounded-lg border border-border bg-surface px-2 py-1 text-xs text-ink"
                       onChange={(e) => {
                         const updated = [...(settings.customAddons ?? [])];
                         updated[idx] = { ...updated[idx], label: e.target.value };
@@ -1237,7 +1270,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                     <input
                       type="number"
                       value={addon.price}
-                      className="w-16 rounded-lg border border-ink/10 bg-white px-2 py-1 text-xs text-ink"
+                      className="w-16 rounded-lg border border-border bg-surface px-2 py-1 text-xs text-ink"
                       onChange={(e) => {
                         const updated = [...(settings.customAddons ?? [])];
                         updated[idx] = { ...updated[idx], price: +e.target.value };
@@ -1246,7 +1279,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                     />
                     <select
                       value={addon.category}
-                      className="rounded-lg border border-ink/10 bg-white px-1 py-1 text-[10px] text-ink"
+                      className="rounded-lg border border-border bg-surface px-1 py-1 text-[10px] text-ink"
                       onChange={(e) => {
                         const updated = [...(settings.customAddons ?? [])];
                         updated[idx] = { ...updated[idx], category: e.target.value as CustomAddon['category'] };
@@ -1260,7 +1293,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                     </select>
                     <button
                       onClick={() => updateSettings({ customAddons: (settings.customAddons ?? []).filter((_, i) => i !== idx) })}
-                      className="h-6 w-6 rounded-lg bg-red-50 text-red-400 flex items-center justify-center"
+                      className="h-6 w-6 rounded-lg bg-error/10 text-error flex items-center justify-center"
                     >
                       <X className="h-3 w-3" />
                     </button>
@@ -1271,7 +1304,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
 
             <div className="flex gap-2">
               <button onClick={() => updateSettings(localSettings)}
-                className="flex-1 py-3 rounded-2xl bg-coral text-white font-bold text-sm">Save</button>
+                className="flex-1 py-3 rounded-2xl bg-coral text-white font-bold text-sm shadow-btn transition active:scale-[.98]">Save</button>
               <button onClick={() => { setLocalSettings(DEFAULT_SETTINGS); updateSettings(DEFAULT_SETTINGS); }}
                 className="px-4 py-3 rounded-2xl bg-ink/5 text-ink/50 font-bold text-sm">Reset</button>
             </div>
@@ -1282,7 +1315,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
       {/* Image lightbox — for order item images & custom cake reference photos */}
       {viewImage && (
         <div
-          className="fixed inset-0 z-[200] flex items-center justify-center p-5 bg-black/85 backdrop-blur-sm"
+          className="fixed inset-0 z-[200] flex items-center justify-center p-5 bg-ink/90"
           onClick={() => setViewImage(null)}
         >
           <div
@@ -1312,16 +1345,16 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
       {/* Cancel-reason modal — must fill a reason before an order can be marked Cancelled */}
       {cancelModal && (
         <div
-          className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm"
+          className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center bg-ink/60"
           onClick={() => setCancelModal(null)}
         >
           <div
-            className="w-full max-w-sm rounded-t-3xl sm:rounded-3xl bg-white p-5"
+            className="w-full max-w-sm rounded-t-3xl sm:rounded-3xl border border-border bg-surface p-5 shadow-card-hover"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center gap-2.5">
-              <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-red-100">
-                <X className="h-5 w-5 text-red-500" strokeWidth={2} />
+              <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-error/10">
+                <X className="h-5 w-5 text-error" strokeWidth={2} />
               </div>
               <div>
                 <p className="text-sm font-bold text-ink">অর্ডার বাতিল করবেন?</p>
@@ -1346,7 +1379,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
               onChange={(e) => setCancelReasonInput(e.target.value)}
               placeholder="বাতিলের কারণ লিখুন..."
               rows={3}
-              className="mt-3 w-full rounded-2xl border border-ink/10 bg-cream/50 px-3 py-2.5 text-[13px] text-ink outline-none focus:border-coral"
+              className="mt-3 w-full rounded-2xl border border-border bg-surface px-3 py-2.5 text-[13px] text-ink outline-none focus:border-coral focus:ring-2 focus:ring-coral/15"
             />
 
             <div className="mt-4 flex gap-2">
@@ -1359,7 +1392,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
               <button
                 onClick={confirmCancel}
                 disabled={!cancelReasonInput.trim()}
-                className="flex-1 rounded-2xl bg-red-500 py-3 text-[13px] font-bold text-white disabled:opacity-40"
+                className="flex-1 rounded-2xl bg-error py-3 text-[13px] font-bold text-white disabled:opacity-40"
               >
                 বাতিল নিশ্চিত করুন
               </button>

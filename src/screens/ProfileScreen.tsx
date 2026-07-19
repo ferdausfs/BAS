@@ -96,16 +96,16 @@ class AdminErrorBoundary extends React.Component<{ children: React.ReactNode }, 
   render() {
     if (this.state.hasError) {
       return (
-        <div className="bg-red-50 border border-red-100 rounded-3xl p-5 mt-4 text-center">
-          <div className="flex justify-center text-red-500 mb-2">
+        <div className="border border-error/20 bg-error/5 rounded-3xl p-5 mt-4 text-center">
+          <div className="flex justify-center text-error mb-2">
             <AlertTriangle size={32} strokeWidth={1.75} />
           </div>
-          <h2 className="text-sm font-bold text-red-700 mb-1">Admin Dashboard Error</h2>
-          <p className="text-xs text-red-500 mb-2">{this.state.errorMessage}</p>
-          <p className="text-xs text-ink/40">Refresh the page to retry.</p>
+          <h2 className="text-sm font-bold text-error mb-1">Admin Dashboard Error</h2>
+          <p className="text-xs text-error mb-2">{this.state.errorMessage}</p>
+          <p className="text-xs text-ink-200">Refresh the page to retry.</p>
           <button
             onClick={() => this.setState({ hasError: false, errorMessage: '' })}
-            className="mt-3 px-4 py-2 rounded-xl bg-ink text-white text-xs font-bold"
+            className="mt-3 px-4 py-2 rounded-xl bg-coral text-white text-xs font-bold shadow-btn"
           >
             Retry
           </button>
@@ -433,16 +433,16 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
   if (!user) {
     return (
       <div className="flex h-full flex-col items-center justify-center px-8 text-center">
-        <div className="flex justify-center text-ink-200 opacity-60 mb-4">
-          <User size={48} strokeWidth={1.5} />
+        <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-secondary text-coral shadow-card">
+          <User size={36} strokeWidth={1.75} />
         </div>
-        <h2 className="font-display text-2xl font-bold text-ink mb-2">Sign In</h2>
-        <p className="text-sm text-ink/50 mb-6">
+        <h2 className="text-2xl font-bold text-ink mb-2">Sign In</h2>
+        <p className="text-sm text-ink-300 mb-6">
           Sign in to save your delivery info, orders, wishlist, and profile.
         </p>
         <button
           onClick={onAuthOpen}
-          className="flex items-center gap-2 px-8 py-3.5 rounded-2xl bg-coral text-white font-bold text-sm"
+          className="flex items-center gap-2 px-8 py-3.5 rounded-2xl bg-coral text-white font-bold text-sm shadow-btn transition active:scale-95"
         >
           <LogIn className="w-4 h-4" /> Sign In
         </button>
@@ -459,60 +459,57 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
 
   return (
     <div className="flex h-full flex-col">
-      <header className="flex-shrink-0 px-5 pt-3 pb-2">
-        <h1 className="font-display text-[24px] font-bold tracking-tight text-ink">
+      {/* Header — QuickBar-safe with right clearance */}
+      <header className="flex-shrink-0 px-5 pr-18 pt-6 pb-3">
+        <div className="text-[12px] font-semibold tracking-wider text-primary uppercase">Account</div>
+        <h1 className="mt-1 text-[24px] font-bold tracking-tight text-ink">
           Profile
         </h1>
       </header>
 
       <div className="no-scrollbar flex-1 overflow-y-auto pb-32">
         <div className="px-5 anim-up">
-          <div
-            className="relative overflow-hidden rounded-[28px] p-5"
-            style={{ background: 'linear-gradient(135deg, var(--color-ink-400) 0%, var(--color-ink-500) 100%)' }}
-          >
-            <div className="absolute -top-10 -right-10 h-32 w-32 rounded-full bg-white/10" />
-            <div className="absolute -bottom-12 -left-12 h-40 w-40 rounded-full bg-gold/15" />
+          <div className="relative overflow-hidden rounded-[24px] border border-border bg-surface p-5 shadow-card">
+            {/* quiet soft-pink decorative circle (solid, no blur) */}
+            <div className="absolute -top-10 -right-10 h-32 w-32 rounded-full bg-secondary" />
+            <div className="absolute -bottom-12 -left-12 h-40 w-40 rounded-full bg-accent/40" />
 
             <div className="relative flex items-center gap-3.5">
-              <div
-                className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-2xl bg-white/25 text-[24px] font-bold text-white backdrop-blur"
-                style={{ boxShadow: 'inset 0 1px 0 rgba(255,255,255,.3)' }}
-              >
+              <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-coral text-[24px] font-bold text-white shadow-btn">
                 {user.avatar && user.avatar.length > 2 ? (
-                  <img src={user.avatar} alt="" className="w-full h-full object-cover rounded-2xl" />
+                  <img src={user.avatar} alt="" className="w-full h-full object-cover" />
                 ) : initials}
               </div>
 
               <div className="flex-1">
-                <div className="font-display text-[18px] font-bold tracking-tight text-white">
+                <div className="text-[18px] font-bold tracking-tight text-ink">
                   {user.name}
                 </div>
-                {user.email && <div className="text-[12px] text-white/80">{user.email}</div>}
-                <div className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-bold tracking-wider text-white uppercase backdrop-blur">
-                  <Star className="h-2.5 w-2.5 fill-white text-white" /> Member
+                {user.email && <div className="text-[12px] text-ink-300">{user.email}</div>}
+                <div className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-0.5 text-[10px] font-bold tracking-wider text-coral uppercase">
+                  <Star className="h-2.5 w-2.5 fill-coral text-coral" /> Member
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Wallet Card */}
+        {/* Wallet Card — solid brand-pink (bKash-pink money convention), no gradient */}
         {user && (
           <section className="px-4 pt-2 pb-1">
-            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#5C3A22] via-[#3D2418] to-[#5C3A22] px-4 py-3.5 text-white"
-              style={{ boxShadow: '0 8px 24px -8px rgba(168,103,46,.45)' }}>
-              <div className="pointer-events-none absolute -right-4 -top-4 h-20 w-20 rounded-full bg-white/10" />
-              <div className="flex items-center justify-between">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-white/70">My Wallet</div>
+            <div className="relative overflow-hidden rounded-[24px] bg-coral px-4 py-4 text-white shadow-btn">
+              <div className="pointer-events-none absolute -right-4 -top-4 h-20 w-20 rounded-full bg-white/15" />
+              <div className="pointer-events-none absolute -left-8 -bottom-10 h-24 w-24 rounded-full bg-white/10" />
+              <div className="relative flex items-center justify-between">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-white/80">My Wallet</div>
                 <WalletIcon className="h-4 w-4 text-white/80" />
               </div>
-              <div className="mt-1.5 font-display text-[26px] font-bold leading-none">
+              <div className="relative mt-1.5 text-[26px] font-bold leading-none">
                 ৳{balance.toLocaleString()}
               </div>
               <button
                 onClick={() => setWalletHistoryOpen(true)}
-                className="mt-2.5 flex w-full items-center justify-between rounded-xl bg-white/10 px-3 py-2 text-[11px] font-medium text-white/90 transition active:scale-[.98]"
+                className="relative mt-2.5 flex w-full items-center justify-between rounded-xl bg-white/15 px-3 py-2 text-[11px] font-medium text-white transition active:scale-[.98]"
               >
                 <span>৳{totalEarned.toLocaleString()} earned · {referralCode ?? '—'}</span>
                 <span>History →</span>
@@ -533,21 +530,20 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
           {user && (
             <button
               onClick={() => setShowAddressModal(true)}
-              className="mt-3 flex w-full items-center justify-between rounded-2xl glass-strong p-4 text-left transition active:scale-[.98]"
-              style={{ boxShadow: '0 1px 2px rgba(26,19,17,.02), 0 8px 24px -16px rgba(26,19,17,.16)' }}
+              className="mt-3 flex w-full items-center justify-between rounded-[20px] border border-border bg-surface p-4 text-left shadow-card transition active:scale-[.98]"
             >
               <div className="flex items-center gap-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-coral/10 text-coral">
+                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-coral">
                   <MapPin className="h-4 w-4" />
                 </div>
                 <div>
                   <div className="text-[13px] font-bold text-ink">Address book</div>
-                  <div className="text-[11px] text-ink/50">
+                  <div className="text-[11px] text-ink-300">
                     {addresses.length === 0 ? 'Save multiple addresses' : `${addresses.length} address${addresses.length > 1 ? 'es' : ''} saved`}
                   </div>
                 </div>
               </div>
-              <ChevronRight className="h-4 w-4 text-ink/30" />
+              <ChevronRight className="h-4 w-4 text-ink-200" />
             </button>
           )}
 
@@ -555,52 +551,50 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
           {user && (
             <button
               onClick={() => setShowDatesModal(true)}
-              className="mt-3 flex w-full items-center justify-between rounded-2xl glass-strong p-4 text-left transition active:scale-[.98]"
-              style={{ boxShadow: '0 1px 2px rgba(26,19,17,.02), 0 8px 24px -16px rgba(26,19,17,.16)' }}
+              className="mt-3 flex w-full items-center justify-between rounded-[20px] border border-border bg-surface p-4 text-left shadow-card transition active:scale-[.98]"
             >
               <div className="flex items-center gap-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-coral/10 text-coral">
+                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-coral">
                   <Cake className="h-4 w-4" />
                 </div>
                 <div>
                   <div className="text-[13px] font-bold text-ink">Special Dates</div>
-                  <div className="text-[11px] text-ink/50">
+                  <div className="text-[11px] text-ink-300">
                     {specialDates.length === 0 ? 'Birthdays, anniversaries' : `${specialDates.length} date${specialDates.length > 1 ? 's' : ''} saved`}
                   </div>
                 </div>
               </div>
-              <ChevronRight className="h-4 w-4 text-ink/30" />
+              <ChevronRight className="h-4 w-4 text-ink-200" />
             </button>
           )}
 
           {/* My Coupons */}
           <button
             onClick={() => go({ name: 'coupons' })}
-            className="mt-3 flex w-full items-center justify-between rounded-2xl glass-strong p-4 text-left transition active:scale-[.98]"
-            style={{ boxShadow: '0 1px 2px rgba(26,19,17,.02), 0 8px 24px -16px rgba(26,19,17,.16)' }}
+            className="mt-3 flex w-full items-center justify-between rounded-[20px] border border-border bg-surface p-4 text-left shadow-card transition active:scale-[.98]"
           >
             <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-coral/10 text-coral">
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-coral">
                 <Tag className="h-4 w-4" />
               </div>
               <div>
                 <div className="text-[13px] font-bold text-ink">My Coupons</div>
-                <div className="text-[11px] text-ink/50">Offers you can use at checkout</div>
+                <div className="text-[11px] text-ink-300">Offers you can use at checkout</div>
               </div>
             </div>
-            <ChevronRight className="h-4 w-4 text-ink/30" />
+            <ChevronRight className="h-4 w-4 text-ink-200" />
           </button>
         </div>
 
         {wishlistItems.length > 0 && (
           <div className="mt-5 anim-up delay-2">
             <div className="flex items-center justify-between px-5">
-              <h3 className="font-display text-[15px] font-bold tracking-tight text-ink">
+              <h3 className="text-[15px] font-bold tracking-tight text-ink">
                 Wishlist
               </h3>
               <button
                 onClick={() => go({ name: 'wishlist' })}
-                className="text-[12px] font-bold text-ink underline-offset-4 hover:underline"
+                className="text-[12px] font-bold text-coral underline-offset-4 hover:underline"
               >
                 See all
               </button>
@@ -611,8 +605,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
                 <button
                   key={p.id}
                   onClick={() => go({ name: 'product', productId: p.id })}
-                  className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-2xl active:scale-95"
-                  style={{ boxShadow: '0 6px 14px -8px rgba(26,19,17,.3)' }}
+                  className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-2xl border border-border shadow-card transition active:scale-95"
                 >
                   <img src={p.image} alt="" className="h-full w-full object-cover" />
                 </button>
@@ -622,24 +615,21 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
         )}
 
         <div className="mt-5 px-5 anim-up delay-3">
-          <div
-            className="overflow-hidden rounded-2xl glass-strong"
-            style={{ boxShadow: '0 1px 2px rgba(26,19,17,.02), 0 8px 24px -16px rgba(26,19,17,.16)' }}
-          >
+          <div className="overflow-hidden rounded-[20px] border border-border bg-surface shadow-card">
             {menu.map((m, i) => (
               <button
                 key={m.label}
                 onClick={m.action}
-                className={`flex w-full items-center gap-3 px-4 py-3.5 text-left transition active:bg-cream ${
-                  i !== menu.length - 1 ? 'border-b border-ink-50' : ''
+                className={`flex w-full items-center gap-3 px-4 py-3.5 text-left transition active:bg-bg ${
+                  i !== menu.length - 1 ? 'border-b border-border' : ''
                 }`}
               >
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-ink-50 text-ink-200">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-secondary text-coral">
                   <m.Icon className="h-[17px] w-[17px]" strokeWidth={2} />
                 </div>
                 <div className="flex-1">
                   <div className="text-[13.5px] font-bold text-ink">{m.label}</div>
-                  <div className="text-[11px] text-ink-200">{m.sub}</div>
+                  <div className="text-[11px] text-ink-300">{m.sub}</div>
                 </div>
                 <ChevronRight className="h-4 w-4 text-ink-200" />
               </button>
@@ -648,17 +638,17 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
         </div>
 
         <div className="mt-4 px-5 anim-up delay-4">
-          <div className="flex items-center gap-3 rounded-2xl border border-dashed border-ink-100 bg-white px-3.5 py-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-ink text-white">
+          <div className="flex items-center gap-3 rounded-[20px] border border-dashed border-coral/40 bg-secondary/50 px-3.5 py-3 shadow-card">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-coral text-white shadow-btn">
               <Sparkles className="h-4 w-4" strokeWidth={2} />
             </div>
             <div className="flex-1">
               <div className="text-[13px] font-bold text-ink">Invite friends, earn ৳100</div>
-              <div className="text-[11px] text-ink-200">Share your referral link</div>
+              <div className="text-[11px] text-ink-300">Share your referral link</div>
             </div>
             <button
               onClick={() => setInviteOpen(true)}
-              className="rounded-full bg-ink px-3 py-1.5 text-[11px] font-bold text-white active:scale-95"
+              className="rounded-full bg-coral px-3 py-1.5 text-[11px] font-bold text-white shadow-btn transition active:scale-95"
             >
               Invite
             </button>
@@ -668,7 +658,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
         <div className="mt-4 px-5 anim-up delay-4">
           <button
             onClick={signOut}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl border border-white/40 glass-strong py-3.5 text-[13px] font-bold text-ink transition active:scale-[.98]"
+            className="flex w-full items-center justify-center gap-2 rounded-[20px] border border-border bg-surface py-3.5 text-[13px] font-bold text-error shadow-card transition active:scale-[.98]"
           >
             <LogOut className="h-4 w-4" />
 
@@ -680,9 +670,9 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
         {showAdmin && effectiveIsAdmin && user && (
           <div className="px-4 pb-6 anim-up">
             <div className="flex items-center gap-2 mb-3 mt-4">
-              <Settings className="h-5 w-5 text-ink" strokeWidth={2} />
-              <h2 className="font-display text-[17px] font-bold text-ink">Admin Dashboard</h2>
-              <span className="ml-auto rounded-full bg-ink px-2 py-0.5 text-[10px] font-bold text-white uppercase tracking-wide">Admin</span>
+              <Settings className="h-5 w-5 text-coral" strokeWidth={2} />
+              <h2 className="text-[17px] font-bold text-ink">Admin Dashboard</h2>
+              <span className="ml-auto rounded-full bg-coral px-2 py-0.5 text-[10px] font-bold text-white uppercase tracking-wide">Admin</span>
             </div>
             <AdminErrorBoundary>
               <AdminPanel embedded />
@@ -701,24 +691,24 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
       {customerOpen && (
         <>
           <div
-            className="fixed inset-0 bg-black/40 z-[60] backdrop-blur-sm"
+            className="fixed inset-0 bg-ink/45 z-[60]"
             onClick={() => setCustomerOpen(false)}
           />
-          <div className="fixed bottom-0 left-1/2 z-[61] max-h-[88vh] w-full max-w-[420px] -translate-x-1/2 overflow-hidden rounded-t-3xl glass-strong shadow-2xl">
-            <div className="w-10 h-1 bg-ink/10 rounded-full mx-auto mt-3" />
+          <div className="fixed bottom-0 left-1/2 z-[61] max-h-[88vh] w-full max-w-[420px] -translate-x-1/2 overflow-hidden rounded-t-[28px] border-t border-border bg-surface shadow-float">
+            <div className="w-10 h-1 bg-ink-100 rounded-full mx-auto mt-3" />
 
             <div className="px-5 pt-4 pb-2 flex items-center justify-between">
               <div>
-                <h2 className="font-display text-lg font-bold text-ink">Checkout Profile</h2>
+                <h2 className="text-lg font-bold text-ink">Checkout Profile</h2>
                 <p className="text-[11px] text-ink-200">
                   একবার save করলে checkout-এ auto-fill হবে
                 </p>
               </div>
               <button
                 onClick={() => setCustomerOpen(false)}
-                className="w-8 h-8 rounded-full bg-ink/5 flex items-center justify-center"
+                className="w-8 h-8 rounded-full bg-ink-50 flex items-center justify-center"
               >
-                <X className="w-4 h-4 text-ink/60" />
+                <X className="w-4 h-4 text-ink-300" />
               </button>
             </div>
 
@@ -747,7 +737,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
                     type="button"
                     onClick={handleLocateProfile}
                     disabled={profileLocating}
-                    className="flex items-center justify-center gap-1.5 self-start rounded-full bg-ink-50 px-3.5 py-1.5 text-[11px] font-bold text-ink transition hover:bg-ink-100 active:scale-95 disabled:opacity-50"
+                    className="flex items-center justify-center gap-1.5 self-start rounded-full bg-secondary px-3.5 py-1.5 text-[11px] font-bold text-coral transition active:scale-95 disabled:opacity-50"
                   >
                     {profileLocating ? (
                       <Loader2 className="h-3 w-3 animate-spin" />
@@ -757,7 +747,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
                     {profileLocating ? 'লোকেশন খোঁজা হচ্ছে...' : 'বর্তমান অবস্থান ব্যবহার করুন'}
                   </button>
                   {profileLocateError && (
-                    <span className="text-[11px] text-red-500 font-semibold px-1">{profileLocateError}</span>
+                    <span className="text-[11px] text-error font-semibold px-1">{profileLocateError}</span>
                   )}
                 </div>
                 <textarea
@@ -765,7 +755,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
                   onChange={(e) => setDraftProfile({ ...draftProfile, address: e.target.value })}
                   placeholder="বাসা/রোড/এলাকা"
                   rows={3}
-                  className="w-full resize-none rounded-xl border border-ink-50 bg-white px-3 py-2.5 text-[13px] font-medium text-ink outline-none focus:border-coral focus:ring-2 focus:ring-coral/15"
+                  className="w-full resize-none rounded-xl border border-border bg-surface px-3 py-2.5 text-[13px] font-medium text-ink outline-none focus:border-coral focus:ring-2 focus:ring-coral/15"
                 />
               </label>
 
@@ -776,7 +766,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
                 <select
                   value={draftProfile.district}
                   onChange={(e) => setDraftProfile({ ...draftProfile, district: e.target.value })}
-                  className="h-11 w-full rounded-xl border border-ink-50 bg-white px-3 text-[13px] font-medium text-ink outline-none focus:border-coral focus:ring-2 focus:ring-coral/15"
+                  className="h-11 w-full rounded-xl border border-border bg-surface px-3 text-[13px] font-medium text-ink outline-none focus:border-coral focus:ring-2 focus:ring-coral/15"
                 >
                   {BD_DISTRICTS.map((d) => (
                     <option key={d} value={d}>{d}</option>
@@ -796,7 +786,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
                       className={`flex items-center justify-between rounded-xl border-2 p-3 text-left ${
                         draftProfile.payment === p.id
                           ? 'border-coral bg-coral-50/50'
-                          : 'border-ink-50 bg-white'
+                          : 'border-border bg-surface'
                       }`}
                     >
                       <div>
@@ -806,7 +796,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
                       <div className={`flex h-5 w-5 items-center justify-center rounded-full ${
                         draftProfile.payment === p.id
                           ? 'bg-coral text-white'
-                          : 'border border-ink-50 bg-white'
+                          : 'border border-border bg-surface'
                       }`}>
                         {draftProfile.payment === p.id && <Check className="h-3 w-3" strokeWidth={3} />}
                       </div>
@@ -817,7 +807,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
 
               <button
                 onClick={() => void handleSaveCustomer()}
-                className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-coral text-[13px] font-bold text-white"
+                className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-coral text-[13px] font-bold text-white shadow-btn transition active:scale-[.98]"
               >
                 <Save className="h-4 w-4" />
                 Save for Checkout
@@ -830,18 +820,18 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
       {contactOpen && (
         <>
           <div
-            className="fixed inset-0 bg-black/40 z-[60] backdrop-blur-sm"
+            className="fixed inset-0 bg-ink/45 z-[60]"
             onClick={() => setContactOpen(false)}
           />
-          <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[420px] z-[61] glass-strong rounded-t-3xl shadow-2xl">
-            <div className="w-10 h-1 bg-ink/10 rounded-full mx-auto mt-3" />
+          <div className="fixed bottom-0 left-1/2 z-[61] w-full max-w-[420px] -translate-x-1/2 rounded-t-[28px] border-t border-border bg-surface shadow-float">
+            <div className="w-10 h-1 bg-ink-100 rounded-full mx-auto mt-3" />
             <div className="px-5 pt-4 pb-2 flex items-center justify-between">
-              <h2 className="font-display text-lg font-bold text-ink">যোগাযোগ ও সহায়তা</h2>
+              <h2 className="text-lg font-bold text-ink">যোগাযোগ ও সহায়তা</h2>
               <button
                 onClick={() => setContactOpen(false)}
-                className="w-8 h-8 rounded-full bg-ink/5 flex items-center justify-center"
+                className="w-8 h-8 rounded-full bg-ink-50 flex items-center justify-center"
               >
-                <X className="w-4 h-4 text-ink/60" />
+                <X className="w-4 h-4 text-ink-300" />
               </button>
             </div>
             <div className="px-5 pb-8">
@@ -853,11 +843,11 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
 
       {/* Address Manager Modal */}
       {showAddressModal && (
-        <div className="fixed inset-0 z-[80] flex flex-col bg-black/40 backdrop-blur-sm" onClick={() => !editingAddress && setShowAddressModal(false)}>
-          <div className="mt-auto w-full rounded-t-3xl glass-strong p-5 pb-8" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-[80] flex flex-col bg-ink/45" onClick={() => !editingAddress && setShowAddressModal(false)}>
+          <div className="mt-auto w-full rounded-t-[28px] border-t border-border bg-surface p-5 pb-8 shadow-float" onClick={(e) => e.stopPropagation()}>
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="font-display text-[17px] font-bold text-ink">ঠিকানার তালিকা</h2>
-              <button onClick={() => setShowAddressModal(false)} className="h-8 w-8 rounded-full bg-ink/5 flex items-center justify-center">
+              <h2 className="text-[17px] font-bold text-ink">ঠিকানার তালিকা</h2>
+              <button onClick={() => setShowAddressModal(false)} className="h-8 w-8 rounded-full bg-ink-50 flex items-center justify-center text-ink-300">
                 <X className="h-4 w-4" />
               </button>
             </div>
@@ -866,28 +856,27 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
               <>
                 <div className="space-y-2 max-h-64 overflow-y-auto">
                   {addresses.length === 0 && (
-                    <div className="py-6 text-center text-[13px] text-ink/40">এখনো কোনো ঠিকানা সংরক্ষণ করা হয়নি</div>
+                    <div className="rounded-[20px] border border-border bg-ink-50 py-6 text-center text-[13px] text-ink-200">এখনো কোনো ঠিকানা সংরক্ষণ করা হয়নি</div>
                   )}
                   {addresses.map((addr) => (
-                    <div key={addr.id} className="flex items-center gap-3 rounded-2xl glass-strong p-3"
-                      style={{ boxShadow: '0 1px 4px rgba(26,19,17,.06)' }}>
+                    <div key={addr.id} className="flex items-center gap-3 rounded-[20px] border border-border bg-surface p-3 shadow-card">
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
                           <span className="text-[12px] font-bold text-ink">{addr.name}</span>
                           {addr.isDefault && <span className="rounded-full bg-coral px-2 py-0.5 text-[9px] font-bold text-white">ডিফল্ট</span>}
                         </div>
-                        <div className="text-[11px] text-ink/50 mt-0.5">{addr.address}, {addr.district}</div>
-                        <div className="text-[11px] text-ink/40">{addr.phone}</div>
+                        <div className="text-[11px] text-ink-300 mt-0.5">{addr.address}, {addr.district}</div>
+                        <div className="text-[11px] text-ink-200">{addr.phone}</div>
                       </div>
                       <div className="flex gap-1">
                         {!addr.isDefault && (
                           <button onClick={() => setAddresses(prev => prev.map(a => ({ ...a, isDefault: a.id === addr.id })))}
-                            className="rounded-lg bg-ink/5 px-2 py-1 text-[10px] font-bold text-ink/60">ডিফল্ট করুন</button>
+                            className="rounded-lg bg-ink-50 px-2 py-1 text-[10px] font-bold text-ink-300">ডিফল্ট করুন</button>
                         )}
                         <button onClick={() => { setAddrForm({ name: addr.name, address: addr.address, district: addr.district, phone: addr.phone }); setAddrLocateError(''); setEditingAddress(addr); }}
-                          className="rounded-lg bg-coral/10 px-2 py-1 text-[10px] font-bold text-coral">এডিট</button>
+                          className="rounded-lg bg-secondary px-2 py-1 text-[10px] font-bold text-coral">এডিট</button>
                         <button onClick={() => setAddresses(prev => prev.filter(a => a.id !== addr.id))}
-                          className="rounded-lg bg-red-50 px-2 py-1 text-[10px] font-bold text-red-400">×</button>
+                          className="rounded-lg bg-error/10 px-2 py-1 text-[10px] font-bold text-error">×</button>
                       </div>
                     </div>
                   ))}
@@ -895,7 +884,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
                 {addresses.length < 5 && (
                   <button
                     onClick={() => { setAddrForm({ name: '', address: '', district: '', phone: '' }); setAddrLocateError(''); setEditingAddress({ id: `addr-${Date.now()}`, name: '', address: '', district: '', phone: '', isDefault: addresses.length === 0 }); }}
-                    className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl bg-coral py-3 text-[13px] font-bold text-white"
+                    className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl bg-coral py-3 text-[13px] font-bold text-white shadow-btn transition active:scale-[.98]"
                   >
                     + নতুন ঠিকানা যোগ করুন
                   </button>
@@ -906,12 +895,12 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
                 <h3 className="text-[14px] font-bold text-ink">{addresses.find(a => a.id === editingAddress.id) ? 'ঠিকানা এডিট করুন' : 'নতুন ঠিকানা'}</h3>
 
                 <div>
-                  <label className="text-[10px] font-bold text-ink/50 uppercase">লেবেল (যেমন: বাসা, অফিস)</label>
+                  <label className="text-[10px] font-bold text-ink-200 uppercase">লেবেল (যেমন: বাসা, অফিস)</label>
                   <input
                     value={addrForm.name}
                     onChange={(e) => setAddrForm(prev => ({ ...prev, name: e.target.value }))}
                     placeholder="বাসা"
-                    className="mt-1 w-full rounded-xl border border-ink-50 bg-white px-3 py-2.5 text-[13px] font-medium text-ink outline-none focus:border-coral focus:ring-2 focus:ring-coral/15"
+                    className="mt-1 w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-[13px] font-medium text-ink outline-none focus:border-coral focus:ring-2 focus:ring-coral/15"
                   />
                 </div>
 
@@ -920,7 +909,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
                     type="button"
                     onClick={handleLocateAddress}
                     disabled={addrLocating}
-                    className="flex items-center justify-center gap-1.5 self-start rounded-full bg-ink-50 px-3.5 py-1.5 text-[11px] font-bold text-ink transition hover:bg-ink-100 active:scale-95 disabled:opacity-50"
+                    className="flex items-center justify-center gap-1.5 self-start rounded-full bg-secondary px-3.5 py-1.5 text-[11px] font-bold text-coral transition active:scale-95 disabled:opacity-50"
                   >
                     {addrLocating ? (
                       <Loader2 className="h-3 w-3 animate-spin" />
@@ -930,27 +919,27 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
                     {addrLocating ? 'লোকেশন খোঁজা হচ্ছে...' : 'বর্তমান অবস্থান ব্যবহার করুন'}
                   </button>
                   {addrLocateError && (
-                    <span className="text-[11px] text-red-500 font-semibold px-1">{addrLocateError}</span>
+                    <span className="text-[11px] text-error font-semibold px-1">{addrLocateError}</span>
                   )}
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-bold text-ink/50 uppercase">সম্পূর্ণ ঠিকানা</label>
+                  <label className="text-[10px] font-bold text-ink-200 uppercase">সম্পূর্ণ ঠিকানা</label>
                   <textarea
                     value={addrForm.address}
                     onChange={(e) => setAddrForm(prev => ({ ...prev, address: e.target.value }))}
                     placeholder="বাসা ৫, রোড ৩, কুমিল্লা"
                     rows={2}
-                    className="mt-1 w-full rounded-xl border border-ink-50 bg-white px-3 py-2.5 text-[13px] font-medium text-ink outline-none focus:border-coral focus:ring-2 focus:ring-coral/15 resize-none"
+                    className="mt-1 w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-[13px] font-medium text-ink outline-none focus:border-coral focus:ring-2 focus:ring-coral/15 resize-none"
                   />
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-bold text-ink/50 uppercase">জেলা</label>
+                  <label className="text-[10px] font-bold text-ink-200 uppercase">জেলা</label>
                   <select
                     value={addrForm.district}
                     onChange={(e) => setAddrForm(prev => ({ ...prev, district: e.target.value }))}
-                    className="mt-1 w-full rounded-xl border border-ink-50 bg-white px-3 py-2.5 text-[13px] font-medium text-ink outline-none focus:border-coral focus:ring-2 focus:ring-coral/15"
+                    className="mt-1 w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-[13px] font-medium text-ink outline-none focus:border-coral focus:ring-2 focus:ring-coral/15"
                   >
                     <option value="">জেলা বাছাই করুন</option>
                     {BD_DISTRICTS.map((d) => (
@@ -960,14 +949,14 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-bold text-ink/50 uppercase">মোবাইল নম্বর</label>
+                  <label className="text-[10px] font-bold text-ink-200 uppercase">মোবাইল নম্বর</label>
                   <input
                     type="tel"
                     inputMode="numeric"
                     value={addrForm.phone}
                     onChange={(e) => setAddrForm(prev => ({ ...prev, phone: e.target.value }))}
                     placeholder="01700000000"
-                    className="mt-1 w-full rounded-xl border border-ink-50 bg-white px-3 py-2.5 text-[13px] font-medium text-ink outline-none focus:border-coral focus:ring-2 focus:ring-coral/15"
+                    className="mt-1 w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-[13px] font-medium text-ink outline-none focus:border-coral focus:ring-2 focus:ring-coral/15"
                   />
                 </div>
 
@@ -982,10 +971,10 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
                       });
                       setEditingAddress(null);
                     }}
-                    className="flex-1 rounded-xl bg-coral py-2.5 text-[13px] font-bold text-white"
+                    className="flex-1 rounded-xl bg-coral py-2.5 text-[13px] font-bold text-white shadow-btn transition active:scale-[.98]"
                   >সেভ করুন</button>
                   <button onClick={() => { setAddrLocateError(''); setEditingAddress(null); }}
-                    className="flex-1 rounded-xl bg-ink/5 py-2.5 text-[13px] font-bold text-ink/60">বাতিল</button>
+                    className="flex-1 rounded-xl bg-ink-50 py-2.5 text-[13px] font-bold text-ink-300">বাতিল</button>
                 </div>
               </div>
             )}
@@ -995,43 +984,43 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
 
       {/* Special Dates Modal */}
       {showDatesModal && (
-        <div className="fixed inset-0 z-[80] flex flex-col bg-black/40 backdrop-blur-sm" onClick={() => setShowDatesModal(false)}>
-          <div className="mt-auto w-full rounded-t-3xl glass-strong p-5 pb-8" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-[80] flex flex-col bg-ink/45" onClick={() => setShowDatesModal(false)}>
+          <div className="mt-auto w-full rounded-t-[28px] border-t border-border bg-surface p-5 pb-8 shadow-float" onClick={(e) => e.stopPropagation()}>
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="font-display text-[17px] font-bold text-ink">Special Dates</h2>
-              <button onClick={() => setShowDatesModal(false)} className="h-8 w-8 rounded-full bg-ink/5 flex items-center justify-center">
+              <h2 className="text-[17px] font-bold text-ink">Special Dates</h2>
+              <button onClick={() => setShowDatesModal(false)} className="h-8 w-8 rounded-full bg-ink-50 flex items-center justify-center text-ink-300">
                 <X className="h-4 w-4" />
               </button>
             </div>
-            <p className="mb-3 text-[11px] text-ink/50">We'll remind you 7 days before to order a cake</p>
+            <p className="mb-3 text-[11px] text-ink-300">We'll remind you 7 days before to order a cake</p>
             <div className="space-y-2 max-h-48 overflow-y-auto mb-3">
               {specialDates.map((d) => (
-                <div key={d.id} className="flex items-center gap-3 rounded-2xl glass-strong p-3" style={{ boxShadow: '0 1px 4px rgba(26,19,17,.06)' }}>
-                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-coral/10 text-coral">
+                <div key={d.id} className="flex items-center gap-3 rounded-[20px] border border-border bg-surface p-3 shadow-card">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-coral">
                     {d.type === 'birthday' ? <Cake className="h-4 w-4" /> : d.type === 'anniversary' ? <Heart className="h-4 w-4" /> : <Gift className="h-4 w-4" />}
                   </span>
                   <div className="flex-1">
                     <div className="text-[12px] font-bold text-ink">{d.name}</div>
-                    <div className="text-[11px] text-ink/50">{d.type} · {d.date}</div>
+                    <div className="text-[11px] text-ink-300">{d.type} · {d.date}</div>
                   </div>
                   <button onClick={() => setSpecialDates(prev => prev.filter(x => x.id !== d.id))}
-                    className="text-[11px] text-red-400 font-bold">Remove</button>
+                    className="text-[11px] text-error font-bold">Remove</button>
                 </div>
               ))}
-              {specialDates.length === 0 && <div className="py-4 text-center text-[12px] text-ink/40">No dates saved yet</div>}
+              {specialDates.length === 0 && <div className="rounded-[20px] border border-border bg-ink-50 py-4 text-center text-[12px] text-ink-200">No dates saved yet</div>}
             </div>
             {specialDates.length < 5 && (
-              <div className="space-y-2 border-t border-ink/8 pt-3">
+              <div className="space-y-2 border-t border-border pt-3">
                 <div className="flex gap-2">
                   <select value={dateForm.type} onChange={(e) => setDateForm(f => ({ ...f, type: e.target.value as SpecialDate['type'] }))}
-                    className="rounded-xl border border-ink/10 bg-cream px-2 py-2 text-[12px] text-ink">
+                    className="rounded-xl border border-border bg-surface px-2 py-2 text-[12px] text-ink">
                     <option value="birthday">Birthday</option>
                     <option value="anniversary">Anniversary</option>
                     <option value="other">Other</option>
                   </select>
                   <input value={dateForm.name} onChange={(e) => setDateForm(f => ({ ...f, name: e.target.value }))}
                     placeholder="e.g. Mom's Birthday"
-                    className="flex-1 rounded-xl border border-ink/10 bg-cream px-3 py-2 text-[12px] text-ink focus:border-coral focus:outline-none" />
+                    className="flex-1 rounded-xl border border-border bg-surface px-3 py-2 text-[12px] text-ink focus:border-coral focus:outline-none" />
                 </div>
                 <div className="flex gap-2">
                   <input type="date" value={dateForm.date ? `2000-${dateForm.date}` : ''}
@@ -1039,14 +1028,14 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
                       const parts = e.target.value.split('-');
                       if (parts.length >= 3) setDateForm(f => ({ ...f, date: `${parts[1]}-${parts[2]}` }));
                     }}
-                    className="flex-1 rounded-xl border border-ink/10 bg-cream px-3 py-2 text-[12px] text-ink focus:border-coral focus:outline-none" />
+                    className="flex-1 rounded-xl border border-border bg-surface px-3 py-2 text-[12px] text-ink focus:border-coral focus:outline-none" />
                   <button
                     onClick={() => {
                       if (!dateForm.name || !dateForm.date) return;
                       setSpecialDates(prev => [...prev, { id: `sd-${Date.now()}`, ...dateForm }]);
                       setDateForm({ type: 'birthday', name: '', date: '' });
                     }}
-                    className="rounded-xl bg-coral px-4 py-2 text-[12px] font-bold text-white"
+                    className="rounded-xl bg-coral px-4 py-2 text-[12px] font-bold text-white shadow-btn transition active:scale-[.98]"
                   >Add</button>
                 </div>
               </div>
@@ -1060,14 +1049,14 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
       {/* ── Invite Sheet ── */}
       {inviteOpen && (
         <div className="fixed inset-0 z-50 flex flex-col justify-end">
-          {/* Backdrop */}
+          {/* Backdrop — opaque scrim, no blur */}
           <div
-            className="absolute inset-0 bg-black/40 backdrop-blur-[2px]"
+            className="absolute inset-0 bg-ink/45"
             onClick={() => setInviteOpen(false)}
           />
 
           {/* Sheet */}
-          <div className="relative rounded-t-3xl glass-deep px-5 pt-5 pb-10">
+          <div className="relative rounded-t-[28px] border-t border-border bg-surface px-5 pt-5 pb-10 shadow-float">
 
             {/* Drag handle */}
             <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-ink-100" />
@@ -1075,7 +1064,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
             {/* Header */}
             <div className="flex items-center justify-between mb-5">
               <div>
-                <h2 className="font-display text-[18px] font-bold tracking-tight text-ink">
+                <h2 className="text-[18px] font-bold tracking-tight text-ink">
                   Invite & Earn
                 </h2>
                 <p className="text-[12px] text-ink-200 mt-0.5">
@@ -1091,7 +1080,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
             </div>
 
             {/* How it works */}
-            <div className="mb-5 rounded-2xl glass-strong px-4 py-3.5 space-y-2.5">
+            <div className="mb-5 rounded-[20px] bg-secondary px-4 py-3.5 space-y-2.5">
               <div className="text-[11px] font-bold uppercase tracking-wider text-ink-200 mb-1">
                 কীভাবে কাজ করে
               </div>
@@ -1113,7 +1102,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
             )}
 
             {/* Link display */}
-            <div className="mb-4 flex items-center gap-2 rounded-2xl border border-white/40 glass-strong px-3.5 py-2.5">
+            <div className="mb-4 flex items-center gap-2 rounded-2xl border border-border bg-surface px-3.5 py-2.5 shadow-card">
               <span className="flex-1 truncate text-[11.5px] text-ink-200 font-medium">
                 {referralLink}
               </span>
@@ -1127,10 +1116,10 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
                     // fallback: select text
                   }
                 }}
-                className="flex items-center gap-1.5 rounded-xl bg-ink-50 px-3 py-1.5 text-[11px] font-bold text-ink active:scale-95 transition"
+                className="flex items-center gap-1.5 rounded-xl bg-secondary px-3 py-1.5 text-[11px] font-bold text-coral active:scale-95 transition"
               >
                 {copied
-                  ? <><Check className="h-3 w-3 text-emerald-600" /> Copied!</>
+                  ? <><Check className="h-3 w-3 text-success" /> Copied!</>
                   : <><Copy className="h-3 w-3" /> Copy</>
                 }
               </button>
@@ -1186,7 +1175,7 @@ function Field({
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         inputMode={inputMode}
-        className="h-11 w-full rounded-xl border border-ink-50 bg-white px-3 text-[13px] font-medium text-ink outline-none focus:border-coral focus:ring-2 focus:ring-coral/15"
+        className="h-11 w-full rounded-xl border border-border bg-surface px-3 text-[13px] font-medium text-ink outline-none focus:border-coral focus:ring-2 focus:ring-coral/15"
       />
     </label>
   );
@@ -1196,10 +1185,9 @@ function Stat({ label, value, onClick }: { label: string; value: number; onClick
   return (
     <button
       onClick={onClick}
-      className="rounded-2xl glass-strong p-3 text-center transition active:scale-95"
-      style={{ boxShadow: '0 1px 2px rgba(26,19,17,.02), 0 6px 18px -14px rgba(26,19,17,.16)' }}
+      className="rounded-[20px] border border-border bg-surface p-3 text-center shadow-card transition active:scale-95"
     >
-      <div className="font-display text-[18px] font-bold tabular text-ink">{value}</div>
+      <div className="text-[18px] font-bold tabular text-ink">{value}</div>
       <div className="mt-0.5 text-[10px] font-semibold text-ink-200">{label} →</div>
     </button>
   );

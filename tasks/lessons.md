@@ -1,5 +1,23 @@
 # Lessons — cross-session rules for future agents
 
+## For bulk class sweeps in large files, use scripted replace with MISS reporting — not 30 sequential edit blocks (2026-07-19)
+During BAS0001 Phase 5, `AdminPanel.tsx` (1373 lines) needed the same 3–4 class
+patterns (`bg-white rounded-2xl` cards, `border-ink/10 bg-cream` inputs, status
+color pairs) replaced in ~60 places, plus one ~85-line single-block edit. A giant
+`old_text` block that actually existed in the file failed fuzzy matching ("Context
+not found"), and doing 60 small edits one-by-one would have been slow and
+drift-prone. The reliable pattern: a small Python script doing
+`str.count()` → assert expected count → `str.replace()` for each pattern, printing
+`MISS:`/`COUNT MISMATCH` with the pattern prefix when reality disagrees. Every
+assumption is verified as it runs, you get a complete audit trail in the output,
+and follow-up greps confirm nothing was half-applied. **Fix going forward:** when a
+phase calls for the same token swap more than ~5 times in one file, script it with
+count assertions instead of sequential edit_file calls; keep single-instance
+structural edits (hero cards, headers) as normal edit blocks where review
+readability matters. Also: `npm install` on a fresh clone may churn
+`package-lock.json` platform metadata — `git checkout -- package-lock.json` before
+packaging so the phase ZIP only carries intended files.
+
 ## QuickBar-safe screen headers need explicit top/right clearance (2026-07-19)
 `QuickBar.tsx` is fixed at `top-4 right-4` on every screen except splash/product/home,
 so any non-home screen that also puts its own header action in the top-right corner

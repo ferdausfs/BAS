@@ -52,7 +52,7 @@ export default function SplashScreen() {
   const slide = SLIDES[slideIdx];
 
   return (
-    <div className="relative flex h-full w-full flex-col justify-between overflow-hidden bg-[#FBF6EF] px-6 pt-12 pb-8">
+    <div className="relative flex h-full w-full flex-col justify-between overflow-hidden bg-bg px-6 pt-12 pb-8">
       {/* Top Bar — Skip button */}
       <div className="flex items-center justify-between z-10">
         <div className="flex items-center gap-2">
@@ -72,22 +72,21 @@ export default function SplashScreen() {
 
       {/* Main Card Graphic */}
       <div className="relative my-auto flex flex-col items-center justify-center text-center z-10 anim-fade">
-        {/* Soft Brown Header Card Visual */}
-        <div
-          className="relative flex h-52 w-full max-w-xs items-center justify-center rounded-[32px] p-6 shadow-xl"
-          style={{ background: 'linear-gradient(145deg, #6B3A18 0%, #3D2418 100%)' }}
-        >
-          <div className="absolute -top-4 -right-4 h-24 w-24 rounded-full bg-white/10 blur-xl" />
-          <div className="flex h-24 w-24 items-center justify-center rounded-3xl bg-white/15 text-5xl shadow-inner backdrop-blur">
+        {/* Soft-pink hero card — solid opaque surface, real soft elevation, no gradient/blur */}
+        <div className="relative flex h-52 w-full max-w-xs items-center justify-center rounded-[32px] bg-secondary p-6 shadow-card">
+          {/* quiet decorative ring for depth (solid, no blur) */}
+          <div className="absolute -top-4 -right-4 h-24 w-24 rounded-full border border-border bg-surface/60" />
+          <div className="absolute -bottom-6 -left-6 h-16 w-16 rounded-full bg-accent/50" />
+          <div className="relative flex h-24 w-24 items-center justify-center rounded-3xl bg-surface text-5xl shadow-card">
             {slide.icon}
           </div>
         </div>
 
-        <span className="mt-6 inline-flex items-center gap-1 rounded-full bg-amber-900/10 px-3 py-1 text-[11px] font-bold text-coral uppercase tracking-wider">
+        <span className="mt-6 inline-flex items-center gap-1 rounded-full bg-secondary px-3 py-1 text-[11px] font-bold text-coral uppercase tracking-wider">
           {slide.tag}
         </span>
 
-        <h1 className="mt-3 max-w-[18ch] font-display text-[24px] font-bold leading-tight tracking-tight text-ink">
+        <h1 className="mt-3 max-w-[18ch] text-[24px] font-bold leading-tight tracking-tight text-ink">
           {slide.title}
         </h1>
 
@@ -105,7 +104,7 @@ export default function SplashScreen() {
               key={i}
               onClick={() => setSlideIdx(i)}
               className={`h-2 rounded-full transition-all duration-300 ${
-                i === slideIdx ? 'w-8 bg-[#5C3A22]' : 'w-2 bg-ink-100'
+                i === slideIdx ? 'w-8 bg-coral' : 'w-2 bg-coral-200'
               }`}
             />
           ))}
@@ -114,7 +113,7 @@ export default function SplashScreen() {
         {/* CTA Button */}
         <button
           onClick={handleNext}
-          className="btn-primary flex h-14 w-full items-center justify-center gap-2 rounded-2xl text-[14px] font-bold tracking-tight shadow-lg transition active:scale-95"
+          className="btn-primary flex h-14 w-full items-center justify-center gap-2 rounded-2xl text-[14px] font-bold tracking-tight shadow-btn transition active:scale-95"
         >
           {slideIdx === SLIDES.length - 1 ? (
             <>
