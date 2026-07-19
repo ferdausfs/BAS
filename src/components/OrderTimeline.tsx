@@ -2,7 +2,6 @@ import { Check, Package, ChefHat, Truck } from 'lucide-react';
 import type { Order } from '../types';
 
 type OrderStatus = Order['status'];
-
 export const STATUSES: { key: OrderStatus; label: string; icon: typeof Check }[] = [
   { key: 'placed', label: 'Placed', icon: Check },
   { key: 'confirmed', label: 'Confirmed', icon: Package },
@@ -13,31 +12,21 @@ export const STATUSES: { key: OrderStatus; label: string; icon: typeof Check }[]
 ];
 
 export default function OrderTimeline({ status, compact = false }: { status: OrderStatus; compact?: boolean }) {
-  const currentIdx = Math.max(0, STATUSES.findIndex((s) => s.key === status));
-
+  const currentIndex = Math.max(0, STATUSES.findIndex((item) => item.key === status));
   return (
-    <div>
-      <div className="flex items-center gap-1">
-        {STATUSES.map((s, i) => (
-          <div
-            key={s.key}
-            className={`h-1 flex-1 rounded-full transition-all ${i <= currentIdx ? 'bg-coral' : 'bg-ink-50'}`}
-          />
-        ))}
+    <div aria-label={`Order progress: ${STATUSES[currentIndex]?.label ?? status}`}>
+      <div className="flex items-center gap-1.5">
+        {STATUSES.map((item, index) => <span key={item.key} className={`h-1.5 flex-1 rounded-full ${index <= currentIndex ? 'bg-primary shadow-[0_1px_4px_rgba(246,95,143,0.28)]' : 'bg-divider'}`} />)}
       </div>
-
       {!compact && (
-        <div className="mt-2 flex items-center gap-0.5">
-          {STATUSES.map((s, i) => {
-            const done = i <= currentIdx;
+        <div className="mt-3 flex items-start">
+          {STATUSES.map((item, index) => {
+            const done = index <= currentIndex;
+            const Icon = item.icon;
             return (
-              <div key={s.key} className="flex flex-1 flex-col items-center gap-1">
-                <div className={`flex h-5 w-5 items-center justify-center rounded-full transition ${done ? 'bg-coral text-white' : 'bg-ink-50 text-ink-200'}`}>
-                  <s.icon className="h-3 w-3" strokeWidth={2.5} />
-                </div>
-                <span className={`text-[9px] font-semibold ${done ? 'text-ink' : 'text-ink-200'}`}>
-                  {s.label}
-                </span>
+              <div key={item.key} className="flex min-w-0 flex-1 flex-col items-center gap-1.5 text-center">
+                <span className={`flex h-7 w-7 items-center justify-center rounded-full ${done ? 'bg-primary text-white shadow-btn' : 'bg-ink-50 text-text-tertiary'}`}><Icon className="h-3.5 w-3.5" strokeWidth={2.2} /></span>
+                <span className={`text-[10px] font-medium leading-tight ${done ? 'text-text' : 'text-text-tertiary'}`}>{item.label}</span>
               </div>
             );
           })}

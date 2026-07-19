@@ -3,42 +3,30 @@
 > One phase per run. Read `AGENT_LOG.md` first to find the next phase.
 > This file is rewritten each run to scope ONLY the current phase.
 
-## Current run → Phase 0: Design Tokens (foundation)
+## Current run → Phase 1: Shared components
 
-Scope: `src/index.css` (@theme + all hardcoded old-token usage), `tailwind.config.ts`,
-`index.html` (font `<link>`). NOTHING ELSE.
+Scope only: `BottomTabBar.tsx`, `HomeTopBar.tsx`, `SearchBar.tsx`, `SectionHeader.tsx`,
+`ProductCard.tsx`, `OccasionIcon.tsx`, `OccasionSheet.tsx`, `OccasionZoomOverlay.tsx`,
+`QuickBar.tsx`, `AuthSheet.tsx`, `NotificationsSheet.tsx`, `WalletHistoryModal.tsx`,
+`PaymentAppPopup.tsx`, `BrandLogo.tsx`, `PhoneFrame.tsx`, `OrderTimeline.tsx`, and
+`ChatBot.tsx` (plus this TODO, `AGENT_LOG.md`, optional new reusable lesson, and the phase ZIP).
 
-### Phase 0 checklist
-- [x] `git checkout -- . && git pull` (clean tree, on main)
-- [x] Read `AGENT_LOG.md` + `tasks/lessons.md` — confirmed no soft-pink redesign phase exists yet → start at Phase 0
-- [x] Baseline: `npx tsc --noEmit` = 132 pre-existing errors (saved `/tmp/baseline_tsc.txt`), `npm run build` ✓
-- [x] **index.html**: swap Google Fonts `<link>` → Poppins (400/500/600/700) + Hind Siliguri (400/500/600/700); drop Fraunces + Great Vibes; bump `theme-color` to `#F65F8F`
-- [x] **src/index.css `@theme`**: remap legacy var names to soft-pink (coral→primary pink scale, blush→secondary, cream→bg, paper→surface, ink→neutral text scale, gold→soft amber, plum/sage→pastel siblings) AND add explicit semantic tokens (primary/secondary/accent/bg/surface/border/divider/text/text-secondary/text-tertiary/success/warning/error); fonts → Poppins with Hind Siliguri fallback
-- [x] **src/index.css components**: strip cream-coral `.glass-*` gradients → solid opaque white + soft pink-tinted shadows; retune `.btn-primary/.btn-secondary/.btn-ghost`, `.chip-active`, `.section-eyebrow/.section-title`, `.price-display`, `.tab-indicator`, `.badge-premium`, `.text-gradient-coral`, `.hairline`, `.card*`, `.product-card-shadow`, `.shimmer`, `.confetti-dots`, `.mesh-warm`, focus ring, scrollbar, `:root`, `html/body` bg, `.lux-canvas`/`.lux-orb` to the pink system
-- [x] **tailwind.config.ts**: `brand.*` → pink scale; `gold` → soft amber; `boxShadow.*` → pink-tinted soft shadows; `fontFamily` → Poppins; keep radius/spacing
-- [x] Self-verify: `npx tsc --noEmit` — zero NEW errors vs baseline (132); `npm run build` ✓
-- [x] Re-check Phase 0 files vs every rule in `tasks/lessons.md` (depth≠hue, native touch, fixed-overlay, cart≠checkout, ProductCard ripple — note Phase 0 is tokens-only so no JSX/gesture changes, but glass-strip must not break any overlay)
-- [x] Package only changed files → `bas-redesign-phase0-<timestamp>.zip`
-- [x] New entry at TOP of `AGENT_LOG.md` (Phase 0 done, **next = Phase 1 shared components**)
-- [x] Add any new reusable rule to `tasks/lessons.md`
+### Phase 1 checklist
+- [x] Start clean: `git checkout -- . && git pull origin main`; confirmed BAS0001 Phase 0 is complete and Phase 1 is next.
+- [x] Read `AGENT_LOG.md` and all of `tasks/lessons.md`; preserve native touch gestures and cross-check fixed overlays.
+- [x] Inspect every scoped component and its imports/usages; inventory inline legacy cocoa hexes and global overlay interactions.
+- [x] Rebuild shared chrome/cards/sheets in the opaque white + restrained soft-pink system: 8px rhythm, 20–24px cards, 16–20px controls, quiet borders, actual soft elevation — no gradients, glass, or backdrop blur.
+- [x] Restyle `ProductCard` as a premium shared product tile and replace its inline legacy hexes; check its Home/Categories/Wishlist consumers without editing Phase 2 screen files.
+- [x] Restyle BottomTabBar, QuickBar, and ChatBot fixed/launcher layers; verify their z-index/clearance against screen headers and each other.
+- [x] Preserve existing component behavior and modal accessibility; do not refactor unrelated logic. Do not add/regress any synthetic pointer/touch gesture.
+- [x] Add elegant loading/empty treatment where these shared components currently expose a bare spinner/blank state (notably ChatBot).
+- [x] Run `npx tsc --noEmit` and compare with clean baseline; run `npm run build`; fix all new errors. (baseline: 160 pre-existing error lines; Phase 1: 159 — one stale ProductCard unused import removed; zero new.)
+- [x] Re-read every touched Phase 1 file against `tasks/lessons.md`, verify claimed edits against source, then package ONLY Phase 1 files to one timestamped ZIP.
+- [x] Prepend one Phase 1 handoff entry to `AGENT_LOG.md` naming exact files, verification results, and **NEXT = Phase 2**; no new reusable lesson discovered.
 
-### Phase map (handoff)
-- Phase 0 — tokens ✅ (this run)
-- Phase 1 — shared components (BottomTabBar, HomeTopBar, SearchBar, SectionHeader, ProductCard, OccasionIcon/Sheet/ZoomOverlay, QuickBar, AuthSheet, NotificationsSheet, WalletHistoryModal, PaymentAppPopup, BrandLogo, PhoneFrame, OrderTimeline, ChatBot)
-- Phase 2 — batch A browse (Home, Categories, Wishlist)
-- Phase 3 — batch B purchase (Product, Cart, Checkout, Coupons, Customize)
-- Phase 4 — batch C post-purchase (Orders, Tracking, Success, ReviewsList, WriteReview)
-- Phase 5 — batch D account/admin/splash (Profile, AdminScreen+AdminPanel, Splash)
-- Phase 6 — final consistency pass (grep for leftover coral/blush/ink/Fraunces/GreatVibes/glass-strong; side-by-side spacing/radius/shadow/type audit)
-
-### Known handoffs surfaced during Phase 0 (NOT fixed here — out of scope)
-- `src/lib/data.ts` lines 4–8 still hold the saturated category hexes (Birthday `#A8672E`,
-  Anniversary `#6E2A45`, Wedding `#C9963C`, Cupcakes `#5F7556`, Custom `#4E3626`). The CSS
-  vars `--color-plum`/`--color-sage` were retuned to pastel siblings, but those are orphaned
-  for category rendering — the real category chip colors come from `data.ts`. **Retune
-  `data.ts` category `color`/`fg` pairs to soft pastel siblings during Phase 2 (CategoriesScreen redesign).**
-- `src/components/QuickBar.tsx` uses invalid `text-gold-800` (gold has no 800 step) — renders
-  with no color. Fix in Phase 1.
-- 132 pre-existing `tsc` errors (AdminPanel `unknown` casts, store null/txns, firestoreMappers
-  `sizes`/`addons`/`createdAt`, unused-imports) — predate this redesign, unrelated to tokens.
-  Left untouched per "don't silently fix unrelated bugs" rule.
+### Explicit Phase-1 guardrails
+- `ProductCard` is shared by Home, Categories, and Wishlist: visually inspect source usage after its change; screens are Phase 2 and must not be rewritten now.
+- BottomTabBar, QuickBar, ChatBot launcher, and component modals are global/fixed overlays: retain their safe-area handling and ensure z-index ordering does not compete with screen headers/each other.
+- Cart and ProductScreen swipe gestures are out of this phase: do not touch their native `touchmove` listener pattern.
+- Replace the Phase-0 handoff’s scoped inline cocoa literals in BottomTabBar, HomeTopBar, ProductCard, and QuickBar with semantic pink-system tokens while restyling.
+- Do not touch data/business logic, screens, hooks, or lib code outside required prop/type compatibility.

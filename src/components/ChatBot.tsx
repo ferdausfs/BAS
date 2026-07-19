@@ -517,61 +517,49 @@ ${productList}
   if (!embedded && !chatOpen) return null;
 
   const panel = (
-    <div className={`flex flex-col overflow-hidden bg-white ${embedded ? 'rounded-2xl' : 'h-full'}`} style={embedded ? { height: 420, boxShadow: '0 1px 2px rgba(26,19,17,.02), 0 8px 24px -16px rgba(26,19,17,.16)' } : undefined}>
-      <div className="flex flex-shrink-0 items-center gap-2 bg-coral px-4 py-3 text-white">
-        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20">
-          <Cake size={18} strokeWidth={1.75} />
-        </div>
-        <div className="flex-1">
-          <p className="text-sm font-bold">BAS can support/help</p>
-          <p className="text-[10px] text-white/70">কেক, অর্ডার, tracking বা সাধারণ প্রশ্ন করুন</p>
+    <div
+      className={`flex flex-col overflow-hidden bg-surface ${embedded ? 'rounded-[24px] border border-border shadow-card' : 'h-full'}`}
+      style={embedded ? { height: 440 } : undefined}
+    >
+      <header className="flex shrink-0 items-center gap-3 border-b border-primary-hover bg-primary px-4 py-3.5 text-white">
+        <span className="flex h-10 w-10 items-center justify-center rounded-[14px] bg-white/18 shadow-[0_2px_8px_rgba(44,44,44,0.12)]">
+          <Cake className="h-5 w-5" strokeWidth={1.8} />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="text-[15px] font-semibold">BAS support</p>
+          <p className="truncate text-[11px] text-white/80">কেক, অর্ডার, tracking বা সাধারণ প্রশ্ন করুন</p>
         </div>
         {!embedded && (
-          <button
-            onClick={() => setChatOpen(false)}
-            className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-white/15 active:scale-90"
-            aria-label="Close chat"
-          >
-            <X className="h-4 w-4" />
+          <button type="button" onClick={() => setChatOpen(false)} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-white/15 transition active:scale-90" aria-label="Close chat">
+            <X className="h-5 w-5" />
           </button>
         )}
-      </div>
+      </header>
 
-      <div className="flex-1 space-y-2 overflow-y-auto p-3">
+      <div className="flex-1 space-y-3 overflow-y-auto bg-bg p-4" aria-live="polite">
         {messages.length === 0 && (
-          <div className="py-4 text-center text-xs text-ink/40">
-            হ্যালো! আমি BAS। লিখুন "ki koro" বা নিচের option বেছে নিন।
+          <div className="flex flex-col items-center px-5 py-8 text-center">
+            <span className="flex h-14 w-14 items-center justify-center rounded-[20px] bg-secondary text-primary shadow-card"><Cake className="h-7 w-7" strokeWidth={1.5} /></span>
+            <p className="mt-3 text-[15px] font-semibold text-text">হ্যালো! আমি BAS</p>
+            <p className="mt-1 text-[12px] leading-relaxed text-text-secondary">আপনার কেক বা অর্ডার নিয়ে যেকোনো প্রশ্ন লিখুন, অথবা নিচের একটি option বেছে নিন।</p>
           </div>
         )}
-        {messages.map((m, i) => (
-          <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div className={`max-w-[85%] rounded-2xl px-3 py-2 text-xs leading-relaxed ${m.role === 'user' ? 'rounded-br-sm bg-coral text-white' : 'rounded-bl-sm bg-cream text-ink'}`}>
-              {m.image && (
-                <img
-                  src={m.image}
-                  alt="Reference"
-                  className="mb-1 max-h-40 w-full rounded-xl object-cover"
-                />
-              )}
-              {m.text.split('\n').map((line, j, arr) => (
-                <span key={j}>{line}{j < arr.length - 1 && <br />}</span>
-              ))}
+        {messages.map((message, index) => (
+          <div key={index} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+            <div className={`max-w-[85%] rounded-[18px] px-3 py-2.5 text-[12px] leading-relaxed shadow-card ${message.role === 'user' ? 'rounded-br-sm bg-primary text-white' : 'rounded-bl-sm border border-border bg-surface text-text'}`}>
+              {message.image && <img src={message.image} alt="Reference" className="mb-2 max-h-40 w-full rounded-[12px] object-cover" />}
+              {message.text.split('\n').map((line, lineIndex, lines) => <span key={lineIndex}>{line}{lineIndex < lines.length - 1 && <br />}</span>)}
             </div>
           </div>
         ))}
         {imageUploading && (
-          <div className="flex justify-end">
-            <div className="flex items-center gap-1.5 rounded-2xl rounded-br-sm bg-coral/70 px-3 py-2 text-xs text-white">
-              <Loader2 className="h-3 w-3 animate-spin" /> ছবি পাঠানো হচ্ছে...
-            </div>
-          </div>
+          <div className="flex justify-end"><div className="flex items-center gap-2 rounded-[18px] rounded-br-sm bg-primary/80 px-3 py-2.5 text-[12px] text-white shadow-card"><Loader2 className="h-3.5 w-3.5 animate-spin" />ছবি পাঠানো হচ্ছে...</div></div>
         )}
         {loading && (
           <div className="flex justify-start">
-            <div className="flex gap-1 rounded-2xl rounded-bl-sm bg-cream px-3 py-2">
-              {[0, 1, 2].map((i) => (
-                <div key={i} className="h-1.5 w-1.5 animate-bounce rounded-full bg-coral" style={{ animationDelay: `${i * 0.15}s` }} />
-              ))}
+            <div className="flex items-center gap-2 rounded-[18px] rounded-bl-sm border border-border bg-surface px-3 py-2.5 shadow-card">
+              <span className="flex gap-1" aria-label="BAS is responding">{[0, 1, 2].map((dot) => <span key={dot} className="h-1.5 w-1.5 animate-bounce rounded-full bg-primary" style={{ animationDelay: `${dot * 0.15}s` }} />)}</span>
+              <span className="text-[11px] font-medium text-text-secondary">BAS is responding</span>
             </div>
           </div>
         )}
@@ -579,68 +567,38 @@ ${productList}
       </div>
 
       {showQuick && (
-        <div className="flex flex-shrink-0 flex-wrap gap-1.5 px-3 pb-2">
-          {QUICK_REPLIES.map((qr) => (
-            <button
-              key={qr.label}
-              onClick={() => send(qr.q)}
-              className="rounded-full border border-ink/15 bg-white px-2.5 py-1 text-[10px] font-bold text-ink"
-            >
-              {qr.label}
-            </button>
+        <div className="flex shrink-0 flex-wrap gap-2 border-t border-divider bg-surface px-3 py-2.5">
+          {QUICK_REPLIES.map((reply) => (
+            <button key={reply.label} type="button" onClick={() => send(reply.q)} className="rounded-full border border-border bg-secondary px-3 py-1.5 text-[11px] font-semibold text-primary transition active:scale-95">{reply.label}</button>
           ))}
         </div>
       )}
 
-      {imageError && (
-        <div className="flex-shrink-0 px-3 pb-1 text-[10px] font-bold text-red-600">{imageError}</div>
-      )}
+      {imageError && <p className="shrink-0 bg-error/10 px-4 py-2 text-[11px] font-semibold text-error">{imageError}</p>}
 
-      <div className="flex flex-shrink-0 items-center gap-2 border-t border-ink/8 px-3 py-2">
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          onChange={handleImageSelect}
-          className="hidden"
-        />
-        <button
-          onClick={() => fileInputRef.current?.click()}
-          disabled={imageUploading}
-          className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-ink/5 text-ink/60 disabled:opacity-40"
-          aria-label="Send reference image"
-          title="রেফারেন্স ছবি পাঠান"
-        >
-          <Camera className="h-3.5 w-3.5" />
-        </button>
+      <div className="flex shrink-0 items-center gap-2 border-t border-divider bg-surface px-3 py-3">
+        <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageSelect} className="hidden" />
+        <button type="button" onClick={() => fileInputRef.current?.click()} disabled={imageUploading} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-secondary text-primary transition active:scale-90 disabled:opacity-40" aria-label="Send reference image" title="রেফারেন্স ছবি পাঠান"><Camera className="h-4 w-4" /></button>
         <input
           ref={inputRef}
           type="text"
           value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && send()}
+          onChange={(event) => setInput(event.target.value)}
+          onKeyDown={(event) => event.key === 'Enter' && send()}
           placeholder="মেসেজ লিখুন..."
-          className="flex-1 rounded-full bg-ink/5 px-3 py-2 text-xs text-ink focus:outline-none"
+          className="h-10 min-w-0 flex-1 rounded-[14px] border border-border bg-bg px-3 text-[12px] text-text outline-none transition placeholder:text-text-tertiary focus:border-accent focus:ring-4 focus:ring-primary/10"
         />
-        <button
-          onClick={() => send()}
-          disabled={!input.trim() || loading}
-          className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-coral text-white disabled:opacity-40"
-        >
-          <Send className="h-3.5 w-3.5" />
-        </button>
+        <button type="button" onClick={() => send()} disabled={!input.trim() || loading} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-primary text-white shadow-btn transition hover:bg-primary-hover disabled:opacity-40 active:scale-90" aria-label="Send message"><Send className="h-4 w-4" /></button>
       </div>
 
       <a
         href={settings.whatsappNumber.replace(/\D/g, '').length >= 10 ? waLink(settings.whatsappNumber, 'হ্যালো! আমার একটা প্রশ্ন আছে।') : '#'}
         target="_blank"
         rel="noopener noreferrer"
-        onClick={(e) => {
-          if (settings.whatsappNumber.replace(/\D/g, '').length < 10) e.preventDefault();
-        }}
-        className="flex flex-shrink-0 items-center justify-center gap-2 bg-green-50 border-t border-green-100 py-3 text-xs font-bold text-green-700 transition"
+        onClick={(event) => { if (settings.whatsappNumber.replace(/\D/g, '').length < 10) event.preventDefault(); }}
+        className="flex min-h-12 shrink-0 items-center justify-center gap-2 border-t border-success/20 bg-success/10 px-4 text-[12px] font-semibold text-success transition hover:bg-success/15"
       >
-        <Phone className="h-3.5 w-3.5" /> সরাসরি WhatsApp-এ কথা বলুন
+        <Phone className="h-4 w-4" /> সরাসরি WhatsApp-এ কথা বলুন
       </a>
     </div>
   );
@@ -649,11 +607,11 @@ ${productList}
 
   return (
     <div
-      className="fixed inset-0 z-[300] flex items-end justify-center bg-black/50 backdrop-blur-sm sm:items-center"
+      className="fixed inset-0 z-[250] flex items-end justify-center bg-ink/45 p-4 sm:items-center"
       onClick={() => setChatOpen(false)}
     >
       <div
-        className="h-[82vh] w-full overflow-hidden rounded-t-3xl bg-white sm:h-[600px] sm:max-w-sm sm:rounded-3xl"
+        className="h-[82vh] w-full overflow-hidden rounded-[28px] border border-border bg-surface shadow-float sm:h-[600px] sm:max-w-sm"
         onClick={(e) => e.stopPropagation()}
       >
         {panel}

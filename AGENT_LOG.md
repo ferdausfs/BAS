@@ -1,6 +1,82 @@
 # Agent Log — BAS (Bake Art Style 2)
 
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## BAS0001 — PREMIUM SOFT-PINK REDESIGN — Phase 1 (shared components) ✅ (2026-07-19, arena.ai Agent Mode)
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+**Agent/Tool:** arena.ai Agent Mode (codename BAS0001)
+**Phase worked on:** **Phase 1 — Shared Components.** Phase 0 tokens was confirmed
+on `main` before work. **NEXT RUN = Phase 2 (batch A — `HomeScreen.tsx`,
+`CategoriesScreen.tsx`, routed `src/screens/WishlistScreen.tsx`; plus the category
+accent data handoff noted below).** One phase only; no Phase-2 screen JSX was edited.
+
+### কী বদলেছে — shared premium soft-pink system (exact Phase-1 source files)
+- **Navigation & home chrome:** `BottomTabBar.tsx`, `HomeTopBar.tsx`,
+  `SearchBar.tsx`, `SectionHeader.tsx`, `QuickBar.tsx` now use solid opaque white /
+  soft-pink surfaces, 1px quiet borders, 16–24px control radii, and real low-opacity
+  pink elevation. Removed every cocoa inline literal, gradient, glass/backdrop-blur
+  treatment, and heavy shadow from these files. Bottom navigation remains the floating
+  pill, with a solid secondary active capsule; Home location/search chrome is calm and
+  sticky with no dark-cocoa header. QuickBar is now a solid elevated action popover;
+  its invalid `text-gold-800` was eliminated.
+- **Shared product/category primitives:** `ProductCard.tsx` is now a 22px premium
+  surface tile with solid badge/chip treatment, semantic primary/wishlist states,
+  actual `shadow-card` depth, and an image shimmer skeleton until image load. Its old
+  cocoa heart/CTA values and `backdrop-blur` badges are gone. Source consumers were
+  checked in all three routed contexts: Home horizontal + grid cards, Categories grid,
+  and Wishlist grid (no screen files changed in this phase). `OccasionIcon.tsx` is
+  standardized at a 24px / 2px non-scaling outline. `OccasionSheet.tsx` and
+  `OccasionZoomOverlay.tsx` now use opaque solid sheets/elevation and no gradients;
+  category tint remains derived from `data.ts` until Phase 2 retunes its data.
+- **Sheets, modals & identity:** `AuthSheet.tsx`, `NotificationsSheet.tsx`,
+  `WalletHistoryModal.tsx`, `PaymentAppPopup.tsx`, `BrandLogo.tsx`, `PhoneFrame.tsx`,
+  `OrderTimeline.tsx` were rebuilt into the same solid surface language. Auth removed
+  backdrop blur; all input and social controls have quiet borders + soft elevation.
+  Notifications and wallet now have designed empty states. Payment keeps only official
+  bKash/Nagad brand colors inside its small method mark; its CTA is BAS primary pink.
+  `BrandLogo` remains the supplied artwork (no script type); its surrounding type is
+  now Poppins/Hind Siliguri from Phase 0, while the mark gets a restrained white tile.
+  PhoneFrame no longer supplies a mesh/blob/glass desktop stage.
+- **Chat:** `ChatBot.tsx` has an opaque surface modal (no blur), a soft-pink support
+  header, elegant empty welcome state, explicit "BAS is responding" loading bubble,
+  image-upload feedback, elevated message/input controls, and a clear success support
+  route. Existing chat behavior/API logic is unchanged.
+
+### Fixed overlays / touch safety cross-check
+- Deliberate stacking: QuickBar **z45** (below sheets), BottomTabBar **z100**,
+  occasion/notification/wallet **z120**, Auth **z130/131**, payment **z140**,
+  occasion transition **z220**, Chat modal **z250**. This keeps fixed global layers
+  from competing with headers and lets modal scrims cover QuickBar/tab chrome.
+- BottomTabBar safe-area padding remains intact. No swipe/drag component was touched;
+  no synthetic pointer/touch gesture was introduced. QuickBar's outside-tap listener
+  uses a passive native `touchstart` only (not a drag); Cart/Product native
+  non-passive `touchmove` implementations remain untouched. `cart` is still routed
+  from QuickBar checkout to the cart review screen, never directly to checkout.
+
+### Verification (self)
+- `npx tsc --noEmit`: baseline clean-main run = **160 pre-existing error lines**;
+  Phase 1 = **159 lines**, with a diff showing **zero new errors** (the one removed
+  baseline line is the stale unused `ZoomIn` import deleted from ProductCard).
+  Pre-existing errors remain out of scope in AdminPanel/store/mappers/screens/hooks.
+- `npm run build`: **✓ passed** (Vite production bundle built successfully).
+- `git diff --check`: **✓ clean**. Scoped grep confirms no `glass-*`,
+  `backdrop-blur`, CSS gradients, legacy inline cocoa hexes, Fraunces, or Great Vibes
+  remains in any Phase-1 component. Remaining inline hexes are intentional official
+  Google/Facebook SVG colors and official bKash/Nagad method marks only.
+
+### Handoff / pending for Phase 2
+- **NEXT = Phase 2 (core browse screens only):** Home, Categories, and the routed
+  `src/screens/WishlistScreen.tsx`. Keep checking ProductCard across all three as
+  layouts are reworked; its new 172px horizontal and responsive grid behavior is the
+  shared baseline.
+- Retune `src/lib/data.ts` category `color`/`fg` values during Phase 2 (the documented
+  soft `plum`/`sage` CSS vars do not feed current category rendering). This is the
+  intentional outstanding category-accent handoff from Phase 0, not forgotten work.
+- Screen-level empty/no-results cards and old `glass-*` class consumers in the Phase-2
+  screen files still need their dedicated layouts. Do not treat Phase 1’s component
+  polish as a replacement for Phase-2 screen spacing/order work.
+
+
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ## BAS0001 — PREMIUM SOFT-PINK REDESIGN — Phase 0 (tokens) ✅ (2026-07-19, arena.ai Agent Mode)
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 **⚠ Claude verification correction (2026-07-19, before push):** the delivered ZIP's

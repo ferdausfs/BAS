@@ -18,13 +18,14 @@ export default function OccasionIcon({ id, size = 24, className = '', style }: O
     viewBox: '0 0 24 24',
     fill: 'none',
     stroke: 'currentColor',
-    strokeWidth: 2.15,
+    strokeWidth: 2,
     strokeLinecap: 'round' as const,
     strokeLinejoin: 'round' as const,
     className,
     style,
     'aria-hidden': true,
     shapeRendering: 'geometricPrecision' as const,
+    vectorEffect: 'non-scaling-stroke' as const,
   };
 
   switch (iconId) {

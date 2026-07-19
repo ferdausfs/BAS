@@ -9,21 +9,20 @@ type Props = {
 
 export default function SectionHeader({ eyebrow, title, subtitle, action }: Props) {
   return (
-    <div className="flex items-end justify-between px-5">
-      <div>
-        {eyebrow && <div className="section-eyebrow">{eyebrow}</div>}
-        <h2 className="mt-1 font-display text-[19px] font-bold tracking-tight text-ink">
-          {title}
-        </h2>
-        {subtitle && <p className="mt-0.5 text-[13px] text-ink-200">{subtitle}</p>}
+    <div className="flex items-end justify-between gap-4 px-5">
+      <div className="min-w-0">
+        {eyebrow && <p className="mb-1 text-[12px] font-semibold uppercase tracking-[0.12em] text-primary">{eyebrow}</p>}
+        <h2 className="font-display text-[20px] font-semibold tracking-[-0.02em] text-text">{title}</h2>
+        {subtitle && <p className="mt-1 text-[14px] text-text-secondary">{subtitle}</p>}
       </div>
       {action && (
         <button
+          type="button"
           onClick={action.onClick}
-          className="flex items-center gap-0.5 text-[13px] font-semibold text-coral transition active:scale-95"
+          className="mb-0.5 flex shrink-0 items-center gap-0.5 rounded-full px-2 py-1 text-[13px] font-semibold text-primary transition hover:bg-secondary active:scale-95"
         >
           {action.label}
-          <ChevronRight className="h-3.5 w-3.5" strokeWidth={2.5} />
+          <ChevronRight className="h-4 w-4" strokeWidth={2} />
         </button>
       )}
     </div>

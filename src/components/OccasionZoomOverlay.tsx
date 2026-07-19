@@ -1,24 +1,16 @@
 import { useUI } from '../lib/store';
 
-/**
- * Renders a color chip that grows from an occasion icon's on-screen position
- * to fill the viewport, then fades out — used as a "zoom into the category"
- * page transition when tapping an occasion on the Home screen.
- *
- * Lives at the App root (not inside HomeScreen) so the animation survives
- * the screen swap that happens mid-transition.
- */
+/** Expanding occasion transition; rendered at app root so it survives a screen swap. */
 export default function OccasionZoomOverlay() {
   const { occasionZoom } = useUI();
   if (!occasionZoom) return null;
 
   const { top, left, width, height, radius, color, stage } = occasionZoom;
   const fading = stage === 'fadeout';
-
   return (
     <div
       aria-hidden="true"
-      className="fixed z-[200] pointer-events-none"
+      className="pointer-events-none fixed z-[220] shadow-card"
       style={{
         top,
         left,
@@ -28,8 +20,8 @@ export default function OccasionZoomOverlay() {
         background: color,
         opacity: fading ? 0 : 1,
         transition: fading
-          ? 'opacity .3s ease'
-          : 'top .68s cubic-bezier(.5,0,.15,1), left .68s cubic-bezier(.5,0,.15,1), width .68s cubic-bezier(.5,0,.15,1), height .68s cubic-bezier(.5,0,.15,1), border-radius .68s cubic-bezier(.5,0,.15,1)',
+          ? 'opacity .28s ease'
+          : 'top .62s cubic-bezier(.16,1,.3,1), left .62s cubic-bezier(.16,1,.3,1), width .62s cubic-bezier(.16,1,.3,1), height .62s cubic-bezier(.16,1,.3,1), border-radius .62s cubic-bezier(.16,1,.3,1), opacity .2s ease',
       }}
     />
   );

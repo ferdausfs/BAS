@@ -1,10 +1,10 @@
-import { Search, X } from 'lucide-react';
+import { Search, SlidersHorizontal, X } from 'lucide-react';
 import { forwardRef } from 'react';
 
 type Props = {
   value: string;
-  onChange: (v: string) => void;
-  onSearch?: (v: string) => void;
+  onChange: (value: string) => void;
+  onSearch?: (value: string) => void;
   placeholder?: string;
   className?: string;
   suggestions?: string[];
@@ -14,49 +14,43 @@ type Props = {
 };
 
 const SearchBar = forwardRef<HTMLInputElement, Props>(
-  ({ value, onChange, placeholder = 'Search cakes, flavors, occasions', className = '', onOpenOccasions }, ref) => {
-    return (
-      <div className={`flex items-center gap-2.5 ${className}`}>
-        <div className="group relative flex-1">
-          <div className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-ink-200 transition-colors group-focus-within:text-coral">
-            <Search className="h-[18px] w-[18px]" strokeWidth={2} />
-          </div>
-          <input
-            ref={ref}
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            placeholder={placeholder}
-            className="glass h-[52px] w-full rounded-full pl-12 pr-4 text-[14px] font-medium text-ink outline-none transition-shadow duration-200 placeholder:font-normal placeholder:text-ink-200 focus:ring-4 focus:ring-coral/12"
-          />
-          {value && (
-            <button
-              onMouseDown={(e) => e.preventDefault()}
-              onClick={() => onChange('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 flex h-7 w-7 items-center justify-center rounded-full bg-white/70 text-ink-300 transition active:scale-90"
-              aria-label="Clear search"
-            >
-              <X className="h-3.5 w-3.5" strokeWidth={2.5} />
-            </button>
-          )}
-        </div>
-        {onOpenOccasions && (
+  ({ value, onChange, onSearch, placeholder = 'Search cakes, flavors, occasions', className = '', onOpenOccasions }, ref) => (
+    <div className={`flex items-center gap-2 ${className}`}>
+      <div className="group relative flex-1">
+        <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-text-tertiary transition-colors group-focus-within:text-primary" strokeWidth={1.9} />
+        <input
+          ref={ref}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          onKeyDown={(event) => event.key === 'Enter' && onSearch?.(value)}
+          placeholder={placeholder}
+          className="h-13 w-full rounded-[18px] border border-border bg-surface pl-12 pr-11 text-[14px] font-medium text-text shadow-card outline-none transition placeholder:font-normal placeholder:text-text-tertiary focus:border-accent focus:ring-4 focus:ring-primary/10"
+        />
+        {value && (
           <button
-            onMouseDown={(e) => e.preventDefault()}
-            onClick={onOpenOccasions}
-            className="flex h-[52px] w-[52px] flex-shrink-0 items-center justify-center rounded-full bg-ink text-white shadow-[0_4px_10px_-2px_rgba(42,27,18,0.4)] transition active:scale-95"
-            aria-label="Browse by occasion"
+            type="button"
+            onMouseDown={(event) => event.preventDefault()}
+            onClick={() => onChange('')}
+            className="absolute right-3 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-secondary text-text-secondary transition active:scale-90"
+            aria-label="Clear search"
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <circle cx="5" cy="8" r="2" fill="currentColor" stroke="none" />
-              <line x1="9" y1="8" x2="20" y2="8" />
-              <line x1="4" y1="16" x2="15" y2="16" />
-              <circle cx="19" cy="16" r="2" fill="currentColor" stroke="none" />
-            </svg>
+            <X className="h-4 w-4" strokeWidth={2} />
           </button>
         )}
       </div>
-    );
-  }
+      {onOpenOccasions && (
+        <button
+          type="button"
+          onMouseDown={(event) => event.preventDefault()}
+          onClick={onOpenOccasions}
+          className="flex h-13 w-13 shrink-0 items-center justify-center rounded-[18px] border border-border bg-secondary text-primary shadow-card transition active:scale-95"
+          aria-label="Browse by occasion"
+        >
+          <SlidersHorizontal className="h-5 w-5" strokeWidth={1.9} />
+        </button>
+      )}
+    </div>
+  )
 );
 
 SearchBar.displayName = 'SearchBar';

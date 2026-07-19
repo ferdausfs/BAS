@@ -88,26 +88,26 @@ export function AuthSheet({ open, onClose, onSuccess }: Props) {
   if (user) {
     return (
       <>
-        <div className={`fixed inset-0 bg-black/40 z-[60] backdrop-blur-sm ${closing ? 'anim-fade-out' : 'anim-fade'}`} onClick={onClose} />
-        <div className={`fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[420px] z-[61] glass-strong rounded-t-3xl p-6 shadow-2xl ${closing ? 'anim-down' : 'anim-up'}`}>
-          <div className="w-10 h-1 bg-[var(--color-ink)]/10 rounded-full mx-auto mb-5" />
+        <div className={`fixed inset-0 bg-ink/45 z-[130] ${closing ? 'anim-fade-out' : 'anim-fade'}`} onClick={onClose} />
+        <div className={`fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[420px] z-[131] max-h-[90dvh] overflow-y-auto rounded-t-[28px] border border-border bg-surface p-6 shadow-float ${closing ? 'anim-down' : 'anim-up'}`}>
+          <div className="w-10 h-1 bg-divider rounded-full mx-auto mb-5" />
           <div className="text-center mb-6">
-            <div className="w-16 h-16 rounded-full bg-[var(--color-coral)]/10 flex items-center justify-center mx-auto mb-3">
+            <div className="w-16 h-16 rounded-full bg-secondary flex items-center justify-center mx-auto mb-3">
               {user.avatar && user.avatar.length > 2 ? (
                 <img src={user.avatar} alt="" className="w-full h-full object-cover rounded-full" />
               ) : (
-                <User className="w-8 h-8 text-[var(--color-coral)]" strokeWidth={1.75} />
+                <User className="w-8 h-8 text-primary" strokeWidth={1.75} />
               )}
             </div>
-            <p className="font-display font-bold text-[var(--color-ink)] text-lg">{user.name}</p>
-            {user.email && <p className="text-sm text-[var(--color-ink)]/50">{user.email}</p>}
+            <p className="font-display font-bold text-text text-lg">{user.name}</p>
+            {user.email && <p className="text-sm text-text-secondary">{user.email}</p>}
           </div>
           <button onClick={() => { signOut(); onClose(); }}
-            className="w-full py-3 rounded-2xl bg-red-50 text-red-600 font-bold text-sm mb-2">
+            className="mb-2 w-full rounded-[16px] bg-error/10 py-3 text-sm font-bold text-error transition active:scale-[0.98]">
             Sign Out
           </button>
           <button onClick={onClose}
-            className="w-full py-2.5 text-[var(--color-ink)]/50 text-sm font-medium">
+            className="w-full py-2.5 text-text-secondary text-sm font-medium">
             Close
           </button>
         </div>
@@ -236,18 +236,18 @@ export function AuthSheet({ open, onClose, onSuccess }: Props) {
 
   return (
     <>
-      <div className={`fixed inset-0 bg-black/40 z-[60] backdrop-blur-sm ${closing ? 'anim-fade-out' : 'anim-fade'}`} onClick={onClose} />
-      <div className={`fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[420px] z-[61] glass-strong rounded-t-3xl shadow-2xl ${closing ? 'anim-down' : 'anim-up'}`}>
+      <div className={`fixed inset-0 bg-ink/45 z-[130] ${closing ? 'anim-fade-out' : 'anim-fade'}`} onClick={onClose} />
+      <div className={`fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[420px] z-[131] max-h-[90dvh] overflow-y-auto rounded-t-[28px] border border-border bg-surface shadow-float ${closing ? 'anim-down' : 'anim-up'}`}>
         {/* Handle */}
-        <div className="w-10 h-1 bg-[var(--color-ink)]/10 rounded-full mx-auto mt-3" />
+        <div className="w-10 h-1 bg-divider rounded-full mx-auto mt-3" />
 
         {/* Header */}
         <div className="px-6 pt-4 pb-3 flex items-center justify-between">
           <div>
-            <h2 className="font-display font-bold text-[var(--color-ink)] text-xl tracking-tight">
+            <h2 className="font-display font-bold text-text text-xl tracking-tight">
               {needsConfirmation ? 'Check Your Email' : mode === 'signin' ? 'Sign In' : 'Create Account'}
             </h2>
-            <p className="text-xs text-[var(--color-ink)]/50 mt-0.5">
+            <p className="text-xs text-text-secondary mt-0.5">
               {needsConfirmation
                 ? `Verification link sent to ${email}`
                 : mode === 'signin'
@@ -255,30 +255,30 @@ export function AuthSheet({ open, onClose, onSuccess }: Props) {
                 : 'Create an account to start ordering delicious cakes'}
             </p>
           </div>
-          <button onClick={onClose} className="w-8 h-8 rounded-full bg-[var(--color-ink)]/5 flex items-center justify-center">
-            <X className="w-4 h-4 text-[var(--color-ink)]/60" />
+          <button onClick={onClose} className="flex h-10 w-10 items-center justify-center rounded-[14px] bg-secondary text-text-secondary transition active:scale-90">
+            <X className="w-4 h-4 text-text-secondary" />
           </button>
         </div>
 
         <div className="px-6 pb-8 space-y-4">
           {/* Toast */}
           {toast && (
-            <div className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${toast.type === 'ok' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600'}`}>
+            <div className={`px-4 py-2.5 rounded-[14px] text-sm font-medium transition-all ${toast.type === 'ok' ? 'bg-success/10 text-success' : 'bg-error/10 text-error'}`}>
               {toast.msg}
             </div>
           )}
 
           {needsConfirmation ? (
             <div className="text-center py-4 space-y-4">
-              <div className="flex justify-center text-[var(--color-coral)]">
+              <div className="flex justify-center text-primary">
                 <Mail size={48} strokeWidth={1.5} />
               </div>
-              <p className="text-sm text-[var(--color-ink)]/70 font-medium">
-                We have sent a verification link to <span className="font-bold text-[var(--color-ink)]">{email}</span>. Please click the link to confirm your account before signing in.
+              <p className="text-sm text-text-secondary font-medium">
+                We have sent a verification link to <span className="font-bold text-text">{email}</span>. Please click the link to confirm your account before signing in.
               </p>
               <button
                 onClick={onClose}
-                className="w-full py-3.5 rounded-2xl bg-[var(--color-coral)] text-white font-bold text-sm"
+                className="w-full py-3.5 rounded-[16px] bg-primary text-white font-bold text-sm shadow-btn"
               >
                 Got it
               </button>
@@ -286,13 +286,13 @@ export function AuthSheet({ open, onClose, onSuccess }: Props) {
           ) : (
             <>
               {/* Method switcher — Email / Phone */}
-              <div className="flex gap-1 p-1 bg-[var(--color-ink)]/5 rounded-xl">
+              <div className="flex gap-1 p-1 bg-ink-50 rounded-[14px]">
                 {([
                   { id: 'email' as const, label: 'Email', Icon: Mail },
                   { id: 'phone' as const, label: 'Phone', Icon: PhoneIcon },
                 ]).map(({ id, label, Icon }) => (
                   <button key={id} onClick={() => { setMethod(id); setToast(null); }}
-                    className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-xs font-bold transition-all ${method === id ? 'bg-white text-[var(--color-coral)] shadow-sm' : 'text-[var(--color-ink)]/50'}`}>
+                    className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-[12px] text-xs font-bold transition-all ${method === id ? 'bg-surface text-primary shadow-card' : 'text-text-secondary'}`}>
                     <Icon className="w-3.5 h-3.5" strokeWidth={2} />
                     {label}
                   </button>
@@ -303,13 +303,13 @@ export function AuthSheet({ open, onClose, onSuccess }: Props) {
               {method === 'email' && emailLoginMode === 'password' && (
                 <div className="space-y-4">
                   {/* Sign in / Create account toggle */}
-                  <div className="flex gap-1 p-1 bg-[var(--color-ink)]/5 rounded-xl">
+                  <div className="flex gap-1 p-1 bg-ink-50 rounded-[14px]">
                     {([
                       { id: 'signin', label: 'Sign In' },
                       { id: 'signup', label: 'Create Account' }
                     ] as const).map((m) => (
                       <button key={m.id} onClick={() => { setMode(m.id); setToast(null); }}
-                        className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-bold transition-all ${mode === m.id ? 'bg-white text-[var(--color-coral)] shadow-sm' : 'text-[var(--color-ink)]/50'}`}>
+                        className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-[12px] text-xs font-bold transition-all ${mode === m.id ? 'bg-surface text-primary shadow-card' : 'text-text-secondary'}`}>
                         {m.label}
                       </button>
                     ))}
@@ -317,7 +317,7 @@ export function AuthSheet({ open, onClose, onSuccess }: Props) {
 
                   {mode === 'signup' && (
                     <input
-                      className="w-full px-4 py-3 rounded-2xl border border-[var(--color-ink)]/10 bg-white text-[var(--color-ink)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-coral)]/30 transition-shadow"
+                      className="w-full px-4 py-3 rounded-[16px] border border-border bg-surface text-text text-sm shadow-card focus:outline-none focus:ring-2 focus:ring-primary/20 transition-shadow"
                       type="text"
                       placeholder="Your Name"
                       value={name}
@@ -327,7 +327,7 @@ export function AuthSheet({ open, onClose, onSuccess }: Props) {
                   )}
 
                   <input
-                    className="w-full px-4 py-3 rounded-2xl border border-[var(--color-ink)]/10 bg-white text-[var(--color-ink)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-coral)]/30 transition-shadow"
+                    className="w-full px-4 py-3 rounded-[16px] border border-border bg-surface text-text text-sm shadow-card focus:outline-none focus:ring-2 focus:ring-primary/20 transition-shadow"
                     type="email"
                     placeholder="your@email.com"
                     value={email}
@@ -337,7 +337,7 @@ export function AuthSheet({ open, onClose, onSuccess }: Props) {
 
                   <div className="relative">
                     <input
-                      className="w-full px-4 py-3 pr-10 rounded-2xl border border-[var(--color-ink)]/10 bg-white text-[var(--color-ink)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-coral)]/30 transition-shadow"
+                      className="w-full px-4 py-3 pr-10 rounded-[16px] border border-border bg-surface text-text text-sm shadow-card focus:outline-none focus:ring-2 focus:ring-primary/20 transition-shadow"
                       type={showPassword ? 'text' : 'password'}
                       placeholder="Password (min 6 chars)"
                       value={password}
@@ -347,7 +347,7 @@ export function AuthSheet({ open, onClose, onSuccess }: Props) {
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-ink)]/40 hover:text-[var(--color-ink)]/60"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary hover:text-text-secondary"
                     >
                       {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
@@ -355,7 +355,7 @@ export function AuthSheet({ open, onClose, onSuccess }: Props) {
 
                   {mode === 'signup' && (
                     <input
-                      className="w-full px-4 py-3 rounded-2xl border border-[var(--color-ink)]/10 bg-white text-[var(--color-ink)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-coral)]/30 transition-shadow"
+                      className="w-full px-4 py-3 rounded-[16px] border border-border bg-surface text-text text-sm shadow-card focus:outline-none focus:ring-2 focus:ring-primary/20 transition-shadow"
                       type="password"
                       placeholder="Confirm Password"
                       value={confirmPassword}
@@ -365,7 +365,7 @@ export function AuthSheet({ open, onClose, onSuccess }: Props) {
                   )}
 
                   <button onClick={mode === 'signin' ? handleSignIn : handleSignUp} disabled={loading}
-                    className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-[var(--color-coral)] text-white font-bold text-sm shadow-[0_8px_20px_-8px_rgba(168,103,46,0.55)] active:scale-[0.98] transition-transform disabled:opacity-60">
+                    className="w-full flex items-center justify-center gap-2 py-3.5 rounded-[16px] bg-primary text-white font-bold text-sm shadow-btn shadow-btn active:scale-[0.98] transition-transform disabled:opacity-60">
                     {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
                     {loading ? (mode === 'signin' ? 'Signing In...' : 'Creating Account...') : (mode === 'signin' ? 'Sign In' : 'Create Account')}
                   </button>
@@ -374,7 +374,7 @@ export function AuthSheet({ open, onClose, onSuccess }: Props) {
                     <button
                       type="button"
                       onClick={() => { setEmailLoginMode('magiclink'); setToast(null); }}
-                      className="w-full flex items-center justify-center gap-1.5 text-xs font-bold text-[var(--color-coral)]"
+                      className="w-full flex items-center justify-center gap-1.5 text-xs font-bold text-primary"
                     >
                       <Link2 className="w-3.5 h-3.5" />
                       Password ছাড়া, email-এ login link পাঠান
@@ -387,14 +387,14 @@ export function AuthSheet({ open, onClose, onSuccess }: Props) {
                 <div className="space-y-4">
                   {!magicLinkSent ? (
                     <>
-                      <div className="rounded-2xl bg-[var(--color-coral)]/8 px-4 py-3 flex items-start gap-2.5">
-                        <KeyRound className="w-4 h-4 text-[var(--color-coral)] flex-shrink-0 mt-0.5" />
-                        <p className="text-xs text-[var(--color-ink)]/70 leading-relaxed">
+                      <div className="rounded-[16px] bg-secondary px-4 py-3 flex items-start gap-2.5">
+                        <KeyRound className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
+                        <p className="text-xs text-text-secondary leading-relaxed">
                           Email দিন, আমরা একটা login link পাঠাবো। Link-এ ক্লিক করলেই login হয়ে যাবে — password লাগবে না।
                         </p>
                       </div>
                       <input
-                        className="w-full px-4 py-3 rounded-2xl border border-[var(--color-ink)]/10 bg-white text-[var(--color-ink)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-coral)]/30 transition-shadow"
+                        className="w-full px-4 py-3 rounded-[16px] border border-border bg-surface text-text text-sm shadow-card focus:outline-none focus:ring-2 focus:ring-primary/20 transition-shadow"
                         type="email"
                         placeholder="your@email.com"
                         value={email}
@@ -402,24 +402,24 @@ export function AuthSheet({ open, onClose, onSuccess }: Props) {
                         onKeyDown={(e) => e.key === 'Enter' && handleSendMagicLink()}
                       />
                       <button onClick={handleSendMagicLink}
-                        className="w-full py-3.5 rounded-2xl bg-[var(--color-coral)] text-white font-bold text-sm shadow-[0_8px_20px_-8px_rgba(168,103,46,0.55)] active:scale-[0.98] transition-transform">
+                        className="w-full py-3.5 rounded-[16px] bg-primary text-white font-bold text-sm shadow-btn shadow-btn active:scale-[0.98] transition-transform">
                         Login Link পাঠান
                       </button>
                     </>
                   ) : (
                     <div className="text-center py-2 space-y-3">
-                      <div className="flex justify-center text-[var(--color-coral)]">
+                      <div className="flex justify-center text-primary">
                         <Mail size={40} strokeWidth={1.5} />
                       </div>
-                      <p className="text-sm text-[var(--color-ink)]/70 font-medium">
-                        <span className="font-bold text-[var(--color-ink)]">{email}</span>-এ login link পাঠানো হয়েছে। Email খুলে link-এ ক্লিক করুন।
+                      <p className="text-sm text-text-secondary font-medium">
+                        <span className="font-bold text-text">{email}</span>-এ login link পাঠানো হয়েছে। Email খুলে link-এ ক্লিক করুন।
                       </p>
                     </div>
                   )}
                   <button
                     type="button"
                     onClick={() => { setEmailLoginMode('password'); setMagicLinkSent(false); setToast(null); }}
-                    className="w-full flex items-center justify-center gap-1.5 text-xs font-bold text-[var(--color-ink)]/50"
+                    className="w-full flex items-center justify-center gap-1.5 text-xs font-bold text-text-secondary"
                   >
                     <ArrowLeft className="w-3.5 h-3.5" />
                     Password দিয়ে login করুন
@@ -431,9 +431,9 @@ export function AuthSheet({ open, onClose, onSuccess }: Props) {
               {method === 'phone' && phoneStep === 'enter' && (
                 <div className="space-y-4">
                   <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-[var(--color-ink)]/50">+880</span>
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-text-secondary">+880</span>
                     <input
-                      className="w-full pl-16 pr-4 py-3 rounded-2xl border border-[var(--color-ink)]/10 bg-white text-[var(--color-ink)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-coral)]/30 transition-shadow"
+                      className="w-full pl-16 pr-4 py-3 rounded-[16px] border border-border bg-surface text-text text-sm shadow-card focus:outline-none focus:ring-2 focus:ring-primary/20 transition-shadow"
                       type="tel"
                       inputMode="numeric"
                       placeholder="1XXXXXXXXX"
@@ -443,7 +443,7 @@ export function AuthSheet({ open, onClose, onSuccess }: Props) {
                     />
                   </div>
                   <button onClick={handleSendOtp} disabled={phoneBusy}
-                    className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-[var(--color-coral)] text-white font-bold text-sm shadow-[0_8px_20px_-8px_rgba(168,103,46,0.55)] active:scale-[0.98] transition-transform disabled:opacity-60">
+                    className="w-full flex items-center justify-center gap-2 py-3.5 rounded-[16px] bg-primary text-white font-bold text-sm shadow-btn shadow-btn active:scale-[0.98] transition-transform disabled:opacity-60">
                     {phoneBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
                     {phoneBusy ? 'পাঠানো হচ্ছে...' : 'OTP পাঠান'}
                   </button>
@@ -452,11 +452,11 @@ export function AuthSheet({ open, onClose, onSuccess }: Props) {
 
               {method === 'phone' && phoneStep === 'verify' && (
                 <div className="space-y-4">
-                  <p className="text-xs text-[var(--color-ink)]/60 text-center">
-                    <span className="font-bold text-[var(--color-ink)]">+880{phone.replace(/\D/g, '').replace(/^880/, '').replace(/^0/, '')}</span>-এ পাঠানো ৬ ডিজিটের কোড দিন
+                  <p className="text-xs text-text-secondary text-center">
+                    <span className="font-bold text-text">+880{phone.replace(/\D/g, '').replace(/^880/, '').replace(/^0/, '')}</span>-এ পাঠানো ৬ ডিজিটের কোড দিন
                   </p>
                   <input
-                    className="w-full px-4 py-3 rounded-2xl border border-[var(--color-ink)]/10 bg-white text-[var(--color-ink)] text-center text-xl font-bold tracking-[0.5em] focus:outline-none focus:ring-2 focus:ring-[var(--color-coral)]/30 transition-shadow"
+                    className="w-full px-4 py-3 rounded-[16px] border border-border bg-surface text-text text-center text-xl font-bold tracking-[0.5em] focus:outline-none focus:ring-2 focus:ring-primary/20 transition-shadow"
                     type="tel"
                     inputMode="numeric"
                     maxLength={6}
@@ -466,14 +466,14 @@ export function AuthSheet({ open, onClose, onSuccess }: Props) {
                     onKeyDown={(e) => e.key === 'Enter' && handleVerifyOtp()}
                   />
                   <button onClick={handleVerifyOtp} disabled={phoneBusy}
-                    className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-[var(--color-coral)] text-white font-bold text-sm shadow-[0_8px_20px_-8px_rgba(168,103,46,0.55)] active:scale-[0.98] transition-transform disabled:opacity-60">
+                    className="w-full flex items-center justify-center gap-2 py-3.5 rounded-[16px] bg-primary text-white font-bold text-sm shadow-btn shadow-btn active:scale-[0.98] transition-transform disabled:opacity-60">
                     {phoneBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
                     {phoneBusy ? 'যাচাই হচ্ছে...' : 'Verify & Continue'}
                   </button>
                   <button
                     type="button"
                     onClick={() => { setPhoneStep('enter'); setOtp(''); setConfirmation(null); setToast(null); }}
-                    className="w-full flex items-center justify-center gap-1.5 text-xs font-bold text-[var(--color-ink)]/50"
+                    className="w-full flex items-center justify-center gap-1.5 text-xs font-bold text-text-secondary"
                   >
                     <ArrowLeft className="w-3.5 h-3.5" />
                     নম্বর বদলান
@@ -487,14 +487,14 @@ export function AuthSheet({ open, onClose, onSuccess }: Props) {
               {showSocialButtons && (
                 <>
                   <div className="flex items-center gap-3 py-1">
-                    <div className="flex-1 h-px bg-[var(--color-ink)]/8" />
-                    <span className="text-xs text-[var(--color-ink)]/40">or</span>
-                    <div className="flex-1 h-px bg-[var(--color-ink)]/8" />
+                    <div className="flex-1 h-px bg-divider" />
+                    <span className="text-xs text-text-tertiary">or</span>
+                    <div className="flex-1 h-px bg-divider" />
                   </div>
 
                   {/* Google */}
                   <button onClick={handleGoogle}
-                    className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-2xl border border-[var(--color-ink)]/10 bg-white font-bold text-sm text-[var(--color-ink)] active:scale-[0.98] transition-transform">
+                    className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-[16px] border border-border bg-surface font-bold shadow-card text-sm text-text active:scale-[0.98] transition-transform">
                     <svg width="18" height="18" viewBox="0 0 24 24">
                       <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                       <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -507,7 +507,7 @@ export function AuthSheet({ open, onClose, onSuccess }: Props) {
                   {/* Facebook — gated behind FACEBOOK_LOGIN_LIVE until the app is Published */}
                   {FACEBOOK_LOGIN_LIVE ? (
                     <button onClick={handleFacebook}
-                      className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-2xl border border-[var(--color-ink)]/10 bg-white font-bold text-sm text-[var(--color-ink)] active:scale-[0.98] transition-transform">
+                      className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-[16px] border border-border bg-surface font-bold shadow-card text-sm text-text active:scale-[0.98] transition-transform">
                       <svg width="18" height="18" viewBox="0 0 24 24">
                         <path fill="#1877F2" d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07c0 6.02 4.39 11.02 10.13 11.93v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.79-4.69 4.53-4.69 1.31 0 2.68.24 2.68.24v2.97h-1.51c-1.49 0-1.95.93-1.95 1.89v2.25h3.32l-.53 3.49h-2.79V24C19.61 23.09 24 18.09 24 12.07z"/>
                       </svg>
@@ -516,7 +516,7 @@ export function AuthSheet({ open, onClose, onSuccess }: Props) {
                   ) : (
                     <div
                       title="Facebook App এখনো Meta-র Business Verification/Publish প্রক্রিয়ায় আছে"
-                      className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-2xl border border-dashed border-[var(--color-ink)]/15 bg-[var(--color-ink)]/[0.02] font-bold text-sm text-[var(--color-ink)]/35 cursor-not-allowed select-none"
+                      className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-[16px] border border-dashed border-border bg-bg font-bold text-sm text-text-tertiary cursor-not-allowed select-none"
                     >
                       <svg width="18" height="18" viewBox="0 0 24 24" opacity="0.5">
                         <path fill="currentColor" d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07c0 6.02 4.39 11.02 10.13 11.93v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.79-4.69 4.53-4.69 1.31 0 2.68.24 2.68.24v2.97h-1.51c-1.49 0-1.95.93-1.95 1.89v2.25h3.32l-.53 3.49h-2.79V24C19.61 23.09 24 18.09 24 12.07z"/>
