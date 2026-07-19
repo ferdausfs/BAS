@@ -1,62 +1,77 @@
-# Phase 5 — Account / Admin / Splash (soft-pink redesign)
+# Phase 6 — Final consistency pass (ALL screens) — soft-pink redesign
 
 ## Scope
-`src/screens/ProfileScreen.tsx`, `src/screens/SplashScreen.tsx`,
-`src/components/AdminPanel.tsx` (+ verify `src/screens/AdminScreen.tsx` — thin
-wrapper, expected no visual change).
+Full-repo consistency + leftover-straggler hunt. Phases 0–5 are confirmed done on
+`main`. This run is the dedicated final pass. One phase only; stop after.
 
-Previous phase confirmed on main: **Phase 4 (post-purchase)**.
-This run: **Phase 5 only**. NEXT after this → Phase 6 (final consistency pass).
+## Pre-flight (done at start)
+- [x] `git checkout -- . && git pull origin main` — clean, up to date.
+- [x] Read `AGENT_LOG.md` top → Phase 5 done; NEXT = Phase 6.
+- [x] Read `tasks/lessons.md` fully — bulk-replace w/ count assertions, QuickBar-safe
+      headers, verify claims against real file, native touch listeners, etc.
+- [x] Baseline `tsc --noEmit` = 63 lines (all pre-existing logic errors in
+      App/hooks/lib/some-screens — OUT of scope, do NOT fix). `npm run build` = ✓.
+- [x] Confirm `src/components/WishlistScreen.tsx` is DEAD (App.tsx:17 imports
+      `./screens/WishlistScreen`; nothing imports the components/ duplicate) → leave it.
 
-## Checklist — STATUS: COMPLETE (`tsc --noEmit` 68→59 baseline-diff clean, zero new; `npm run build` ✓ 5.35s)
+## Straggler hunt (grep -rn across src/) — STATUS
+### A. `backdrop-blur` (must be zero)
+- [x] `ProductScreen.tsx:316` "Out of Stock" badge `backdrop-blur` → solid
+      `bg-surface shadow-card`. (Native touch listeners at 97–103 UNTOUCHED.)
 
-### SplashScreen.tsx
-- [x] Page bg `bg-[#FBF6EF]` (cocoa ivory hex) → `bg-bg` (#FFF9FB)
-- [x] Hero card: strip cocoa `linear-gradient(145deg,#6B3A18,#3D2418)` + `blur-xl` blob + `backdrop-blur` inner tile → solid `bg-secondary` card + white `bg-surface` emoji tile with real `shadow-card` elevation (depth ≠ hue)
-- [x] Tag chip `bg-amber-900/10` → `bg-secondary` (semantic soft-pink surface)
-- [x] Remove `font-display` explicit calls (Poppins already default)
-- [x] Pagination dot active `bg-[#5C3A22]` → `bg-coral`; inactive → `bg-coral-200`
-- [x] CTA `shadow-lg` → `shadow-btn` (pink-tinted)
+### B. `bg-gradient` / `linear-gradient` JSX (cocoa-era → remove; functional → keep)
+- [x] `CartScreen.tsx:376` delete button `bg-gradient-to-br from-error to-red-600`
+      → `bg-error` (solid).
+- [x] `ProductScreen.tsx:292` premium tier badge
+      `bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600` → `bg-gold` (solid).
+- [x] `ProductScreen.tsx:285` decorative top `from-secondary/80 to-transparent` scrim
+      (no text on image; controls are solid) → REMOVED.
+- [x] `LocationGate.tsx:84` inline cocoa `linear-gradient(#FDF8F1,#F3E4D0,#E8C68F)`
+      → solid `background:'#FFF9FB'` (Phase-0 permitted trivial swap; presentation-only).
+- [~] KEEP (documented intentional): `HomeScreen.tsx:197` dark legibility scrim behind
+      white banner text; `CouponsScreen.tsx:84` brand-pink discount strip (Phase 3
+      deliberate); `index.css` `.shimmer` skeleton infra. None are cocoa-era leftovers.
 
-### ProfileScreen.tsx
-- [x] Header: add QuickBar-safe clearance (`pr-18`, `pt-6` per Phase-4 OrdersScreen pattern); eyebrow + 24px title; drop `font-display`
-- [x] Guest sign-in state → designed empty state: `bg-secondary` icon circle + headline + copy + `bg-coral shadow-btn` CTA
-- [x] Identity card: strip ink-gradient + `backdrop-blur` avatar tile + `bg-white/20` chip → white `bg-surface border-border shadow-card` card, coral avatar tile, `bg-secondary text-coral` member chip
-- [x] Wallet card: strip cocoa gradient (`#5C3A22`/`#3D2418`) + cocoa rgba shadow → solid `bg-coral shadow-btn` brand card (bKash-pink convention)
-- [x] Stat cards + list buttons (Address book / Special Dates / My Coupons) + menu group: `glass-strong` + inline cocoa rgba shadows → `border-border bg-surface shadow-card rounded-[20px]`
-- [x] Menu icon tiles `bg-ink-50 text-ink-200` → `bg-secondary text-coral`; row dividers `border-ink-50` → `border-border`
-- [x] Wishlist thumbnail rails: inline cocoa shadow → `shadow-card`
-- [x] Invite card: `border-dashed border-ink-100` + `bg-ink` icon/button → coral-tinted dashed card, `bg-coral` actions
-- [x] Sign out: `border-white/40 glass-strong` → `border-border bg-surface shadow-card text-error` (destructive semantics)
-- [x] Admin section header: drop `font-display`; Admin badge → `bg-coral`
-- [x] AdminErrorBoundary: `bg-red-50/text-red-*` → error tokens; retry `bg-ink` → `bg-coral`
-- [x] All 5 modals: scrims `bg-black/40 backdrop-blur-*` → `bg-ink/45` (NO blur — Phase-1 pattern); sheets `glass-strong`/`glass-deep shadow-2xl` → `bg-surface border-t border-border shadow-float rounded-t-[28px]`; drop `font-display` headings
-- [x] Modal inputs/selects/textareas: `border-ink-50/ink-10 bg-white/bg-cream` → `border-border bg-surface` + coral focus ring
-- [x] Small destructive buttons `bg-red-50 text-red-400` / `text-red-500` errors → `bg-error/10 text-error`
-- [x] Keep ALL logic untouched: geolocation, Firestore profile save, referral claim, address/date CRUD, 5-tap admin shortcut, ChatBot embed, modal depth hooks
-- [x] Fixed-overlay cross-check: all modal scrims ≥ z-[60] above QuickBar z45; tab bar already hidden via useModalDepth
+### C. `font-display` / `font-brand` (must be zero in live code)
+- [x] Remove class token from: AuthSheet(2), ErrorBoundary(1), NotificationsSheet(1),
+      OccasionSheet(1), PaymentAppPopup(1), ProductCard(2), SectionHeader(1),
+      WalletHistoryModal(2), CheckoutScreen(8). Default body font is already
+      Poppins+Hind Siliguri, so removal is render-safe (weights/sizes preserved).
+- [x] `src/index.css`: remove `--font-display` / `--font-brand` from `@theme`; remove
+      `.font-display` / `.font-brand` class defs; update the two comments that named them.
+- [~] `src/components/WishlistScreen.tsx` (dead) keeps its old `font-display` — left
+      untouched per handoff (unrouted).
 
-### AdminPanel.tsx (admin-only — restyle, ZERO logic changes)
-- [x] PIN gate: scrim → `bg-ink/60`; card → `bg-surface border-border shadow-card`; drop `font-display`; lock icon in `bg-secondary text-coral` circle; error → error tokens; CTA + `shadow-btn`
-- [x] Root containers `bg-cream` → `bg-bg`; embedded border `border-ink/8` → `border-border`
-- [x] Top bar `bg-ink` → `bg-coral` brand bar; tabs strip `bg-white border-ink/8` → `bg-surface border-border`; badge `bg-red-500` → `bg-error`
-- [x] Every `bg-white rounded-2xl` card → `rounded-[20px] border border-border bg-surface shadow-card`
-- [x] Inputs `border-ink/10 bg-cream/bg-white` → `border-border bg-surface`; sub-panels `bg-cream` → `bg-ink-50`
-- [x] Status semantics: in-stock/approved/destructive/error colors → `success`/`error` tokens; off-palette blue/orange "Approved/Hidden" → coral-tint/neutral pair
-- [x] Rating stars `fill-amber-400` → `fill-gold text-gold` (Phase-0 soft amber)
-- [x] Premium tier `bg-gradient-to-r from-amber-400 to-amber-500` → solid `bg-gold`
-- [x] Gallery caption overlay `bg-gradient-to-t from-black/60` → solid `bg-ink/70`
-- [x] Lightbox + cancel modal scrims → `bg-ink/…` no blur; cancel confirm `bg-red-500` → `bg-error`
-- [x] `EMPTY_BANNER.color '#F3E4D0'` (cocoa) → `#FFD6E4` (accent)
-- [x] Empty states (orders/reviews/customers/gallery) → soft designed states (icon + `text-text-tertiary`)
-- [x] Clear the file's 8 pre-existing baseline errors while restyling (Phase-4 convention): `(r: any)` in reviews map; drop unused `approveReview` destructure
+### D. Dead CSS class defs (no JSX consumer → remove for grep-zero)
+- [x] `src/index.css`: remove `.glass-strong`, `.glass-deep`, `.glass-tint`, `.glass`,
+      `.glass-subtle`, `.glass-dark` (all unused after phases 1–5 solid-surface swap).
+- [x] `src/index.css`: remove `.mesh-warm` (unused).
+- [x] `src/index.css`: remove unused `.hairline`, `.text-gradient-coral`,
+      `.badge-premium`, `.confetti-dots` (verified 0 JSX usages). Keep `.shimmer`.
 
-### AdminScreen.tsx
-- [x] Verify only (thin `AdminPanel` wrapper — no own styling); confirm 'admin' route hides BottomTabBar (`showTabBar` gates on `view.name === 'tabs'`)
+### E. Off-system shadow normalization (3 files, 9 hits)
+- [x] `ProductScreen.tsx`: active flavor/weight chips (486/523/568) `shadow-md` →
+      `shadow-btn` (pressed/active pink). Floating control + count badge
+      (704/783/790/797) `shadow-md` → `shadow-card`.
+- [x] `AdminPanel.tsx:1333` close button `shadow-lg` → `shadow-card`.
 
-### Verify (self)
-- [x] `npx tsc --noEmit` — zero NEW errors vs `/tmp/baseline_tsc.txt` (68 lines)
-- [x] `npm run build` — passes
-- [x] grep-sweep the touched files: `glass-strong`, `glass-deep`, `backdrop-blur`, `font-display`, `font-brand`, cocoa hexes, `linear-gradient`, `bg-gradient-*`, `bg-black/*` scrims → zero leftovers
-- [x] Update AGENT_LOG.md (top, newest-first) + note Phase 6 is next
-- [x] ZIP: `bas-redesign-phase5-<timestamp>.zip` with only the touched files
+### F. Gesture / fixed-overlay regression check
+- [x] `ProductScreen.tsx` native `touchstart`/`touchmove`(passive:false)/`touchend`
+      at 97–103 UNTOUCHED.
+- [x] `CartScreen.tsx` swipe/delete listeners (354–357) UNTOUCHED (pre-existing
+      pointer-based impl left as-is; noted as pending behavior fix, NOT a visual
+      regression).
+- [x] No fixed-overlay (BottomTabBar z100 / QuickBar z45 / sheets) edits this phase.
+
+## Verify (self)
+- [ ] `npx tsc --noEmit` — zero NEW errors vs `/tmp/baseline_tsc.txt` (63 lines).
+- [ ] `npm run build` — must pass.
+- [ ] grep-zero check: `glass-*`, `backdrop-blur`, `Fraunces`(code), `Great Vibes`(code),
+      inline cocoa hexes, `bg-gradient`(cocoa) → only documented intentional exceptions.
+- [ ] Re-read each touched file for lesson compliance (depth≠hue, native touch, etc.).
+
+## Package & handoff
+- [ ] ZIP only files changed this phase → `bas-redesign-phase6-<ts>.zip`.
+- [ ] New AGENT_LOG.md entry at TOP: phase #, what changed, tsc/build results, NEXT=done.
+- [ ] `git checkout -- package-lock.json` (revert npm-install churn) before zip.
+- [ ] Add any new lesson to `tasks/lessons.md`.

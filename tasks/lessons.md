@@ -192,3 +192,24 @@ the single source of truth. Same hazard for duplicate `.class {}` blocks
 further down the file overriding the ones you just edited: pick one
 definition, delete the rest.
 
+
+## Dead CSS class definitions count as stragglers in a final consistency pass (2026-07-19)
+During BAS0001 Phase 6 (final consistency pass), the grep-zero straggler audit
+flagged not just JSX class usages but also DEAD CSS class definitions that no
+longer had any JSX consumer. `.glass-strong`/`.glass-deep`/`.glass-tint`/`.glass`/
+`.glass-subtle`/`.glass-dark` (renamed to solid surfaces in phases 1–5), `.mesh-warm`,
+and unused gradient utilities (`.text-gradient-coral`, `.badge-premium`, `.hairline`,
+`.confetti-dots`) all still carried `glass-*` / `linear-gradient` / `radial-gradient`
+strings in `src/index.css` even though zero `.tsx` files referenced them — they only
+surfaced because the sweep covers the whole `src/` tree, not just `src/**/*.tsx`.
+**Fix:** when a phase migrates every consumer of a token/class away, also DELETE the
+now-dead CSS class definition (and the `@theme` var if unreferenced) in the same
+pass — otherwise a later "grep should return nothing" audit fails on dead code.
+Confirm 0 JSX references with `grep -rn "<class>" src` (ALL extensions, not just
+`.tsx`) before deleting.
+
+**Companion guard for bulk class-token removal scripts:** when stripping a class
+token (e.g. `font-display`) across many files, collapse ONLY internal multi-space
+runs with a leading-non-space guard — `re.sub(r'(\S)[ \t]{2,}', r'\1 ', s)` —
+NEVER a bare `re.sub(r'\s{2,}',' ',s)`, or you destroy JSX indentation (leading
+line whitespace is a horizontal run with no `\S` before it, so the guard skips it).

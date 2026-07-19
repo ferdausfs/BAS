@@ -37,9 +37,9 @@ const ADVANCE_FRACTION = 1 / 3;
 
 const SLOTS = [
   { v: '10am - 12pm', hot: false },
-  { v: '12pm - 2pm',  hot: false },
-  { v: '4pm - 6pm',   hot: true },
-  { v: '6pm - 8pm',   hot: false },
+  { v: '12pm - 2pm', hot: false },
+  { v: '4pm - 6pm', hot: true },
+  { v: '6pm - 8pm', hot: false },
 ];
 
 const getMinDeliveryDate = () => {
@@ -478,7 +478,7 @@ export default function CheckoutScreen({ onBack }: Props) {
           <div className="flex justify-center text-ink-200 opacity-60">
             <ShoppingCart size={48} strokeWidth={1.5} />
           </div>
-          <h2 className="mt-4 font-display text-[20px] font-bold text-ink">কার্ট খালি</h2>
+          <h2 className="mt-4 text-[20px] font-bold text-ink">কার্ট খালি</h2>
           <p className="mt-1 text-[12px] text-ink-200">আগে একটা কেক যোগ করুন।</p>
           <button onClick={handleBack} className="btn-primary mt-5 h-12 rounded-2xl px-6 text-[13px] font-bold">
             কেক দেখুন
@@ -522,7 +522,7 @@ export default function CheckoutScreen({ onBack }: Props) {
                   <div className="line-clamp-1 text-[13px] font-bold text-ink">{it.name}</div>
                   <div className="text-[11.5px] text-ink-200">{it.size} · ×{it.quantity}</div>
                 </div>
-                <div className="font-display text-[13px] font-bold tabular text-ink">
+                <div className=" text-[13px] font-bold tabular text-ink">
                   {formatINR(it.price * it.quantity)}
                 </div>
               </div>
@@ -719,7 +719,7 @@ export default function CheckoutScreen({ onBack }: Props) {
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-ink-50 text-ink-200">
                 <Tag className="h-4 w-4" strokeWidth={2} />
               </div>
-              <span className="font-display text-[14px] font-bold tracking-tight text-ink">
+              <span className=" text-[14px] font-bold tracking-tight text-ink">
                 ডিসকাউন্ট / রেফারেল (ঐচ্ছিক)
               </span>
               {extrasAlreadyApplied && (
@@ -977,8 +977,8 @@ export default function CheckoutScreen({ onBack }: Props) {
             {giftMode && gift.wrap && <Row label="Gift wrap" value={formatINR(50)} />}
             <div className="h-px bg-ink-50" />
             <div className="flex items-center justify-between pt-1">
-              <span className="font-display text-[15px] font-bold tracking-tight text-ink">মোট</span>
-              <span className="font-display text-[20px] font-bold tabular text-ink">{formatINR(total)}</span>
+              <span className=" text-[15px] font-bold tracking-tight text-ink">মোট</span>
+              <span className=" text-[20px] font-bold tabular text-ink">{formatINR(total)}</span>
             </div>
             <div className="h-px bg-ink-50" />
             <Row label="অগ্রিম (এখনই, প্রস্তুতির জন্য)" value={formatINR(advanceAmount)} positive />
@@ -1003,7 +1003,7 @@ export default function CheckoutScreen({ onBack }: Props) {
               <div className="text-[11px] font-bold uppercase tracking-wide text-coral-700">এখনই দিতে হবে</div>
               <div className="text-[11.5px] text-ink/50">কেক প্রস্তুতি শুরু হবে এই পেমেন্ট পাওয়ার পর</div>
             </div>
-            <div className="font-display text-[20px] font-bold tabular text-coral-700">{formatINR(advanceAmount)}</div>
+            <div className=" text-[20px] font-bold tabular text-coral-700">{formatINR(advanceAmount)}</div>
           </div>
           <div className="space-y-2">
             {ADVANCE_METHODS.map((method) => {
@@ -1044,7 +1044,7 @@ export default function CheckoutScreen({ onBack }: Props) {
                     <div className="border-t border-coral/20 px-3.5 pb-3.5 pt-3 anim-fade">
                       <p className="mb-1.5 text-[11px] text-ink-200">এই নাম্বারে Send Money করুন</p>
                       <div className="flex items-center gap-2 rounded-xl bg-white px-3 py-2.5">
-                        <span className="flex-1 font-display text-[15px] font-bold tabular tracking-wide text-ink">
+                        <span className="flex-1 text-[15px] font-bold tabular tracking-wide text-ink">
                           {methodNumber}
                         </span>
                         <button
@@ -1119,7 +1119,7 @@ export default function CheckoutScreen({ onBack }: Props) {
               <div className="text-[11px] font-bold uppercase tracking-wide text-ink-200">ডেলিভারির সময় দিবেন</div>
               <div className="text-[11.5px] text-ink/50">Cash অথবা bKash/Nagad — যেভাবে সুবিধা</div>
             </div>
-            <div className="font-display text-[20px] font-bold tabular text-ink">{formatINR(remainingAmount)}</div>
+            <div className=" text-[20px] font-bold tabular text-ink">{formatINR(remainingAmount)}</div>
           </div>
           <div className="space-y-2">
             {PAYMENT_METHODS.map((method) => {
@@ -1207,7 +1207,7 @@ function Header({
         >
           <ArrowLeft className="h-[20px] w-[20px]" strokeWidth={2} />
         </button>
-        <h1 className="font-display text-[16px] font-bold tracking-tight text-ink">{title}</h1>
+        <h1 className=" text-[16px] font-bold tracking-tight text-ink">{title}</h1>
         <div className="w-10" />
       </div>
       {/* Step indicator — reflects real step state; tapping a reached step jumps back to it */}

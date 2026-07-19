@@ -22,7 +22,7 @@ export default function OccasionSheet({ open, onClose, onSelect }: Props) {
       <section className={`relative max-h-[76%] w-full overflow-hidden rounded-t-[28px] border border-border bg-surface shadow-float ${closing ? 'anim-down' : 'anim-up'}`} aria-label="Browse by occasion">
         <header className="flex items-center justify-between border-b border-divider px-5 py-4">
           <div>
-            <h2 className="font-display text-[20px] font-semibold text-text">Browse by occasion</h2>
+            <h2 className=" text-[20px] font-semibold text-text">Browse by occasion</h2>
             <p className="mt-0.5 text-[14px] text-text-secondary">Pick a category to explore</p>
           </div>
           <button type="button" onClick={onClose} className="flex h-10 w-10 items-center justify-center rounded-[14px] bg-secondary text-text-secondary transition active:scale-90" aria-label="Close">

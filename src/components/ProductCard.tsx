@@ -104,14 +104,14 @@ export default function ProductCard({ product, wished, onOpen, onWish, variant =
           </span>
         )}
         <div className="flex items-center justify-between gap-1.5">
-          <h3 className="line-clamp-1 font-display text-[15px] font-semibold tracking-[-0.015em] text-text">{product.name}</h3>
+          <h3 className="line-clamp-1 text-[15px] font-semibold tracking-[-0.015em] text-text">{product.name}</h3>
           <span className="flex shrink-0 items-center gap-0.5 rounded-full bg-ink-50 px-1.5 py-1 text-[10px] font-semibold text-text-secondary">
             <Star className="h-3 w-3 fill-gold text-gold" />{product.rating}
           </span>
         </div>
         <div className="mt-2.5 flex items-center justify-between gap-2">
           <span className="min-w-0">
-            <span className="font-display text-[16px] font-semibold tabular text-primary">{formatINR(product.price)}</span>
+            <span className=" text-[16px] font-semibold tabular text-primary">{formatINR(product.price)}</span>
             {product.oldPrice && product.oldPrice > product.price && <span className="ml-1.5 text-[11px] tabular text-text-tertiary line-through">{formatINR(product.oldPrice)}</span>}
           </span>
           {(product.inStock ?? true) && (

@@ -44,7 +44,7 @@ export default function WalletHistoryModal({ open, onClose }: Props) {
       <header className="flex shrink-0 items-center justify-between border-b border-divider bg-surface px-5 pb-3 pt-[max(16px,env(safe-area-inset-top))]">
         <div>
           <p className="text-[12px] font-medium text-text-tertiary">Your rewards</p>
-          <h1 className="font-display text-[24px] font-bold tracking-[-0.02em] text-text">Wallet history</h1>
+          <h1 className=" text-[24px] font-bold tracking-[-0.02em] text-text">Wallet history</h1>
         </div>
         <button type="button" onClick={onClose} className="flex h-11 w-11 items-center justify-center rounded-[16px] bg-secondary text-text transition active:scale-90" aria-label="Close wallet history"><X className="h-5 w-5" /></button>
       </header>
@@ -52,7 +52,7 @@ export default function WalletHistoryModal({ open, onClose }: Props) {
       <div className="shrink-0 px-5 py-5">
         <section className="rounded-[24px] border border-accent bg-secondary p-5 shadow-card">
           <div className="flex items-center gap-3 text-primary"><span className="flex h-10 w-10 items-center justify-center rounded-[14px] bg-surface shadow-card"><Wallet className="h-5 w-5" /></span><span className="text-[13px] font-semibold">Available balance</span></div>
-          <p className="mt-4 font-display text-[32px] font-bold leading-none tabular text-text">৳{balance.toLocaleString()}</p>
+          <p className="mt-4 text-[32px] font-bold leading-none tabular text-text">৳{balance.toLocaleString()}</p>
           <p className="mt-2 text-[13px] text-text-secondary">Total earned: <span className="font-semibold text-text">৳{totalEarned.toLocaleString()}</span></p>
         </section>
       </div>

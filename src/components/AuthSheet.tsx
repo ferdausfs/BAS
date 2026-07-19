@@ -99,7 +99,7 @@ export function AuthSheet({ open, onClose, onSuccess }: Props) {
                 <User className="w-8 h-8 text-primary" strokeWidth={1.75} />
               )}
             </div>
-            <p className="font-display font-bold text-text text-lg">{user.name}</p>
+            <p className=" font-bold text-text text-lg">{user.name}</p>
             {user.email && <p className="text-sm text-text-secondary">{user.email}</p>}
           </div>
           <button onClick={() => { signOut(); onClose(); }}
@@ -244,7 +244,7 @@ export function AuthSheet({ open, onClose, onSuccess }: Props) {
         {/* Header */}
         <div className="px-6 pt-4 pb-3 flex items-center justify-between">
           <div>
-            <h2 className="font-display font-bold text-text text-xl tracking-tight">
+            <h2 className=" font-bold text-text text-xl tracking-tight">
               {needsConfirmation ? 'Check Your Email' : mode === 'signin' ? 'Sign In' : 'Create Account'}
             </h2>
             <p className="text-xs text-text-secondary mt-0.5">

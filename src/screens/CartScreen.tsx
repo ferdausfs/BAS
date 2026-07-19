@@ -373,7 +373,7 @@ function CartItemRow({
           setTranslateX(0);
         }}
         aria-label="মুছুন"
-        className="absolute top-0 right-0 bottom-0 flex items-center justify-center rounded-[20px] bg-gradient-to-br from-error to-red-600 text-white"
+        className="absolute top-0 right-0 bottom-0 flex items-center justify-center rounded-[20px] bg-error text-white"
         style={{ width: SWIPE_MAX }}
       >
         <Trash2 className="h-5 w-5" strokeWidth={2} />

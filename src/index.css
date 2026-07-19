@@ -85,12 +85,11 @@
   --color-sage-tint: #ECF4EE;
 
   /* === Typography — Poppins governs Latin; Hind Siliguri renders Bengali
-     (most copy) and is the fallback. Fraunces + Great Vibes removed.
-     --font-brand (was Great Vibes script) now bold Poppins — see AGENT_LOG
-     flag: BrandLogo wordmark becomes a bold Poppins wordmark (Phase 1 fix). === */
-  --font-display: "Poppins", "Hind Siliguri", system-ui, -apple-system, sans-serif;
+     (most copy) and is the fallback. Fraunces + Great Vibes removed in
+     Phase 0. The legacy `.font-display` / `.font-brand` class hooks AND
+     their @theme vars were removed in Phase 6 — headings now use the default
+     Poppins+Hind Siliguri stack. BrandLogo wordmark is bold Poppins. === */
   --font-body:    "Poppins", "Hind Siliguri", system-ui, -apple-system, sans-serif;
-  --font-brand:   "Poppins", "Hind Siliguri", system-ui, -apple-system, sans-serif;
 }
 
 :root {
@@ -116,13 +115,11 @@ html, body {
 
 html { scroll-behavior: smooth; }
 
-/* All three font-* utilities now resolve to Poppins (with Hind Siliguri
-   Bengali fallback). Display/brand lose their serif/script optical sizing
-   but keep weight control via utility classes (font-display stays a class
-   hook for headings; brand wordmark is bold Poppins now). */
-.font-display { font-family: "Poppins", "Hind Siliguri", system-ui, sans-serif; letter-spacing: -0.01em; font-feature-settings: "ss01"; }
+/* Font utilities resolve to Poppins (with Hind Siliguri Bengali fallback).
+   The legacy `.font-display` / `.font-brand` class hooks were removed in
+   Phase 6 — headings use the default body stack now. `.font-body` is kept
+   as a no-op alias of the base font. */
 .font-body    { font-family: "Poppins", "Hind Siliguri", system-ui, sans-serif; }
-.font-brand   { font-family: "Poppins", "Hind Siliguri", system-ui, sans-serif; letter-spacing: -0.01em; }
 .tabular      { font-variant-numeric: tabular-nums; }
 
 /* === Scrollbar (pink-tinted) === */
@@ -264,86 +261,22 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 
 /* ===== Solid Surface System (BAS0001) =====
-   Cream-coral frosted-glass treatment STRIPPED. `.glass-*` class names
-   are kept (zero JSX changes across ~19 consumers) but now render as
-   solid opaque white surfaces with soft pink-tinted elevation shadows.
-   No backdrop-blur, no gradients — premium minimalist soft-luxury. */
+   Cream-coral frosted-glass treatment STRIPPED in phases 1–5. The legacy
+   `.glass-*` class definitions were removed in Phase 6 (every consumer now
+   uses solid `bg-surface border-border shadow-card` etc.). No backdrop-blur,
+   no gradients — premium minimalist soft-luxury. */
 
-.glass-subtle {
-  /* nav / header */
-  background: #FFFFFF;
-  border: 1px solid #F1E8EC;
-  box-shadow: 0 2px 12px rgba(246,95,143,0.06);
-}
+/* Confetti uses the `.anim-confetti` animation. The legacy `.confetti-dots`
+   background class (unused) was removed in Phase 6. */
 
-.glass-strong {
-  /* cards / modals */
-  background: #FFFFFF;
-  border: 1px solid #F1E8EC;
-  box-shadow:
-    0 2px 12px rgba(246,95,143,0.08),
-    0 12px 32px -10px rgba(246,95,143,0.12);
-}
+/* ===== Soft canvas tint =====
+   BAS0001: flat soft-pink canvas (#FFF9FB) — no heavy gradient mesh.
+   The legacy `.mesh-warm` class (unused after the solid-surface redesign)
+   was removed in Phase 6; App.tsx renders the subtle `.lux-orb` glow
+   decorations instead. */
 
-.glass-deep {
-  /* bottom sheets */
-  background: #FFFFFF;
-  border-top: 1px solid #F1E8EC;
-  box-shadow: 0 -8px 32px -8px rgba(246,95,143,0.12);
-}
-
-/* Legacy alias */
-.glass {
-  background: #FFFFFF;
-  border: 1px solid #F1E8EC;
-  box-shadow: 0 2px 12px rgba(246,95,143,0.08);
-}
-
-.glass-dark {
-  /* Price chip on product images — keep dark, retuned neutral (was warm-dark) */
-  background: rgba(44,44,44,0.62);
-  border: 1px solid rgba(255,255,255,0.14);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.20);
-}
-
-.glass-tint {
-  /* ProductScreen content panel — soft pink-tinted surface (was warm tint) */
-  background: #FFF9FB;
-  border-top: 1px solid #F1E8EC;
-  box-shadow: 0 -4px 24px -6px rgba(246,95,143,0.10);
-  isolation: isolate;
-}
-
-/* ===== Confetti splash decoration ===== */
-.confetti-dots {
-  background-image:
-    radial-gradient(circle at 12% 18%, #FFD6E4 1.2px, transparent 1.5px),
-    radial-gradient(circle at 88% 12%, #F65F8F 1.4px, transparent 2px),
-    radial-gradient(circle at 90% 60%, #FFD6E4 1px, transparent 1.5px),
-    radial-gradient(circle at 8% 75%, #FB9DC0 1px, transparent 1.5px),
-    radial-gradient(circle at 50% 92%, #E8A33C 1.2px, transparent 1.5px),
-    radial-gradient(circle at 25% 50%, #FFC1D6 .8px, transparent 1.2px),
-    radial-gradient(circle at 75% 40%, #FFD6E4 1px, transparent 1.5px);
-  background-size: 100% 100%;
-}
-
-/* ===== Soft canvas tint (was heavy warm mesh — flattened for minimalism) =====
-   BAS0001: no heavy gradients. A barely-there pink-tinted wash so screens
-   that use .mesh-warm as a backdrop still get a calm pink canvas. */
-.mesh-warm {
-  background:
-    radial-gradient(ellipse at 18% 8%, #FFE8F0 0%, transparent 32%),
-    radial-gradient(ellipse at 82% 82%, #FFD6E4 0%, transparent 30%),
-    #FFF9FB;
-}
-
-/* ===== Gradient text (pink) ===== */
-.text-gradient-coral {
-  background: linear-gradient(135deg, #F65F8F 0%, #C73B68 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
+/* Brand wordmark is solid `text-primary` Poppins — the legacy
+   `.text-gradient-coral` class (unused) was removed in Phase 6. */
 
 /* ===== Chip / pill filter ===== */
 .chip {
@@ -395,11 +328,8 @@ button { -webkit-tap-highlight-color: transparent; }
   color: #2C2C2C;
 }
 
-/* ===== Hairline divider ===== */
-.hairline {
-  background: linear-gradient(to right, transparent, rgba(233,228,231,0.9) 20%, rgba(233,228,231,0.9) 80%, transparent);
-  height: 1px;
-}
+/* Dividers use the `border-border` / `divide-divider` tokens. The legacy
+   `.hairline` gradient-fade class (unused) was removed in Phase 6. */
 
 /* ===== Product card shadow (pink-tinted) ===== */
 .product-card-shadow {
@@ -408,12 +338,8 @@ button { -webkit-tap-highlight-color: transparent; }
     0 8px 24px -10px rgba(246,95,143,0.12);
 }
 
-/* ===== Premium badge (soft amber — ratings, "featured") ===== */
-.badge-premium {
-  background: linear-gradient(135deg, #E8A33C 0%, #C9872A 100%);
-  color: #fff;
-  box-shadow: 0 2px 8px -3px rgba(232,163,60,.48);
-}
+/* Premium / "featured" chips now use solid `bg-gold`. The legacy
+   `.badge-premium` gradient class (unused) was removed in Phase 6. */
 
 /* ===== Tab active glow dot ===== */
 .tab-indicator {

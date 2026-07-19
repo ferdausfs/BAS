@@ -17,7 +17,7 @@ export default function NotificationsSheet({ open, onClose }: { open: boolean; o
           <div className="flex items-center gap-3">
             <span className="flex h-10 w-10 items-center justify-center rounded-[14px] bg-secondary text-primary shadow-card"><Bell className="h-5 w-5" strokeWidth={1.8} /></span>
             <div>
-              <h2 className="font-display text-[20px] font-semibold text-text">Notifications</h2>
+              <h2 className=" text-[20px] font-semibold text-text">Notifications</h2>
               <p className="text-[13px] text-text-secondary">{notifications.length} updates</p>
             </div>
           </div>

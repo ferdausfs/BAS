@@ -21,7 +21,7 @@ export default function PaymentAppPopup({ open, onClose, method, number }: Props
       <div className={`relative w-full max-w-[336px] overflow-hidden rounded-[24px] border border-border bg-surface p-6 text-center shadow-float ${closing ? 'anim-fade-out' : 'anim-scale'}`}>
         <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-[18px] text-[15px] font-bold shadow-card" style={{ background: meta.bg, color: meta.color }}>{meta.label.slice(0, 2)}</span>
         <p className="mt-4 text-[14px] text-text-secondary">নাম্বার কপি হয়েছে</p>
-        <p className="mt-1 font-display text-[20px] font-semibold tabular text-text">{number}</p>
+        <p className="mt-1 text-[20px] font-semibold tabular text-text">{number}</p>
         <p className="mt-3 text-[13px] leading-relaxed text-text-secondary">{meta.label} অ্যাপ খুলে Send Money করুন</p>
         <div className="mt-5 flex flex-col gap-2.5">
           <button type="button" onClick={() => { openPaymentApp(method); onClose(); }} className="flex min-h-12 w-full items-center justify-center gap-2 rounded-[16px] bg-primary px-4 text-[14px] font-semibold text-white shadow-btn transition hover:bg-primary-hover active:scale-[0.98]">

@@ -1330,7 +1330,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
             />
             <button
               onClick={() => setViewImage(null)}
-              className="absolute -top-3 -right-3 flex h-9 w-9 items-center justify-center rounded-full bg-white text-ink shadow-lg transition active:scale-90"
+              className="absolute -top-3 -right-3 flex h-9 w-9 items-center justify-center rounded-full bg-white text-ink shadow-card transition active:scale-90"
               aria-label="Close"
             >
               <X className="h-4 w-4" strokeWidth={2.5} />

@@ -52,7 +52,7 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
           <div className="max-w-md w-full bg-white rounded-2xl p-8 text-center border border-ink/10 shadow-sm">
             <div className="text-6xl mb-4">🎂</div>
             
-            <h1 className="font-display text-[22px] font-bold text-ink mb-2 tracking-[-0.01em]">
+            <h1 className=" text-[22px] font-bold text-ink mb-2 tracking-[-0.01em]">
               কিছু একটা সমস্যা হয়েছে
             </h1>
             

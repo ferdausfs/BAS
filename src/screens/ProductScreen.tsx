@@ -281,15 +281,13 @@ export default function ProductScreen() {
             style={{ display: 'block', pointerEvents: 'none' }}
           />
 
-          {/* Soft top fade */}
-          <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-secondary/80 to-transparent" />
 
           {/* Tier badge */}
           {product.tier && product.tier !== 'normal' && (
             <div
               className={`absolute left-4 top-[74px] z-10 inline-flex items-center gap-1 rounded-full px-3 py-1 text-[10.5px] font-bold uppercase tracking-wide text-white ${
                 product.tier === 'premium'
-                  ? 'bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600'
+                  ? 'bg-gold'
                   : 'bg-ink'
               }`}
               style={{
@@ -313,7 +311,7 @@ export default function ProductScreen() {
 
           {product.inStock === false && (
             <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-b-[32px]">
-              <span className="rounded-full bg-white/90 px-4 py-2 text-[13px] font-bold text-ink backdrop-blur">Out of Stock</span>
+              <span className="rounded-full bg-surface shadow-card px-4 py-2 text-[13px] font-bold text-ink">Out of Stock</span>
             </div>
           )}
 
@@ -483,7 +481,7 @@ export default function ProductScreen() {
                       onClick={() => setSelectedFlavor(f)}
                       className={`min-h-[42px] rounded-full border px-4 py-2 text-[13px] font-bold transition active:scale-95 ${
                         active
-                          ? 'border-coral bg-coral text-white shadow-md'
+                          ? 'border-coral bg-coral text-white shadow-btn'
                           : 'border-border bg-surface text-ink hover:border-coral-300'
                       }`}
                     >
@@ -520,7 +518,7 @@ export default function ProductScreen() {
                         onClick={() => { setCustomWeight(w); setWeightError(''); }}
                         className={`flex-shrink-0 rounded-full border px-4 py-1.5 text-sm font-bold transition active:scale-95 ${
                           active
-                            ? 'border-coral bg-coral text-white shadow-md'
+                            ? 'border-coral bg-coral text-white shadow-btn'
                             : 'border-border bg-surface text-ink hover:border-coral-300'
                         }`}
                       >
@@ -565,7 +563,7 @@ export default function ProductScreen() {
                       onClick={() => setSize(w.size)}
                       className={`flex-shrink-0 rounded-full border px-4 py-1.5 text-sm font-bold transition active:scale-95 whitespace-nowrap ${
                         active
-                          ? 'border-coral bg-coral text-white shadow-md'
+                          ? 'border-coral bg-coral text-white shadow-btn'
                           : 'border-border bg-surface text-ink hover:border-coral-300'
                       }`}
                     >
@@ -701,7 +699,7 @@ export default function ProductScreen() {
                     <img loading="lazy" decoding="async" src={reviewImagePreview} alt="" className="w-20 h-20 rounded-xl object-cover" />
                     <button
                       onClick={() => { setReviewImageFile(null); setReviewImagePreview(''); }}
-                      className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-ink text-white flex items-center justify-center shadow-md"
+                      className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-ink text-white flex items-center justify-center shadow-card"
                     >
                       <X className="h-3 w-3" />
                     </button>
@@ -780,21 +778,21 @@ export default function ProductScreen() {
       <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-5 pt-5 pb-2 pointer-events-none">
         <button
           onClick={back}
-          className="pointer-events-auto flex h-11 w-11 items-center justify-center rounded-full bg-white text-ink border border-border shadow-md transition active:scale-90"
+          className="pointer-events-auto flex h-11 w-11 items-center justify-center rounded-full bg-white text-ink border border-border shadow-card transition active:scale-90"
           aria-label="Back"
         >
           <ArrowLeft className="h-[20px] w-[20px]" strokeWidth={2.2} />
         </button>
         <div className="flex gap-2.5 pointer-events-auto">
           <button
-            className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-ink border border-border shadow-md transition active:scale-90"
+            className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-ink border border-border shadow-card transition active:scale-90"
             aria-label="Share"
           >
             <Share2 className="h-[18px] w-[18px]" strokeWidth={2} />
           </button>
           <button
             onClick={handleWish}
-            className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-ink border border-border shadow-md transition active:scale-90"
+            className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-ink border border-border shadow-card transition active:scale-90"
             aria-label="Wishlist"
           >
             <Heart
@@ -807,7 +805,7 @@ export default function ProductScreen() {
         </div>
       </div>
 
-      {/* Sticky bottom CTA — replaced glass-strong with beautiful solid surface */}
+      {/* Sticky bottom CTA — solid surface (depth ≠ hue) */}
       <div className="absolute right-0 bottom-0 left-0 z-30 border-t border-border bg-white/95 px-5 pt-3.5 pb-6 shadow-float">
         <div className="flex items-center gap-3">
           <div>
