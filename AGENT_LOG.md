@@ -1,4 +1,56 @@
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## BAS0003 — ProfileScreen Layout Restructure (single phase, complete) ✅ (2026-07-19, chat agent, direct shell)
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**Task:** Restyle `ProfileScreen.tsx`'s layout structure to match a supplied generic wireframe
+kit (centered circular avatar + name, grouped/titled menu sections), while keeping every
+existing BAS feature and handler (wallet card, referral/invite, stats, address book, special
+dates, coupons, settings menu, admin shortcut) fully intact — Buddy explicitly chose "layout
+structure only, keep all features" over "visual style only" when asked.
+
+**In scope (only file touched):** `src/screens/ProfileScreen.tsx`
+**Out of scope (untouched, confirmed zero diff):** every other screen/component; no business
+logic, no `onClick` handlers, no modal state, no Firestore/localStorage calls changed.
+
+### কী বদলেছে
+- **Profile header card** — avatar changed from a 64px `rounded-2xl` square (left-aligned row
+  with name/email beside it) to a 96px (`h-24 w-24`) `rounded-full` circle, with name/email/
+  "Member" badge now centered underneath (`flex flex-col items-center text-center`) instead of
+  beside it. Decorative background circles, avatar image/initials fallback logic, and the
+  Member badge markup are unchanged — only the layout direction (row → column, left → center).
+- **Address book / Special Dates / My Coupons** — were 3 separate floating cards; merged into
+  one bordered `rounded-2xl` list container (matching the existing `menu` list's visual
+  convention) under a new "Quick Access" section title, each row keeping its exact original
+  `onClick` handler, icon, and sub-label logic.
+- **Main menu list** — added an "Account" section title above the existing 6-item menu
+  (Wishlist / Delivery address / Payment methods / Notifications / Contact & Support /
+  Settings); the list itself, its `menu` array, and all handlers are untouched.
+- Wallet card, stats grid, wishlist horizontal scroll, invite banner, sign-out button, admin
+  dashboard, and all modals/sheets (customer editor, address modal, dates modal, invite sheet)
+  are **unchanged** — these are feature cards, not generic nav rows, so they were deliberately
+  left outside the wireframe's grouped-list treatment per Buddy's "keep all features" scope.
+
+### Verification (self)
+- `npx tsc --noEmit`: baseline captured before edit (31 pre-existing errors, matches BAS0002
+  L5's documented count) → re-ran after edit → sorted-line diff = **identical, zero new, zero
+  removed**.
+- `npm run build`: ✓ passed (Vite singlefile bundle, 12.29s).
+- `git diff --stat`: only `src/screens/ProfileScreen.tsx` changed (`package-lock.json` churn
+  from a fresh `npm install` was `git checkout`'d back per the lessons.md rule — not in this
+  ZIP).
+- Claims re-verified against the actual file (not inferred): grepped for the `rounded-full`
+  avatar, the centered flex wrapper, both new section-title strings ("Quick Access", "Account"),
+  and all three quick-access `onClick` handlers — all present exactly as claimed.
+- No touch/gesture listeners exist in this file, so no gesture-regression check was applicable.
+
+### Handoff / next
+- **This is a single, complete phase — no next phase.** Delivered as one ZIP
+  (`ProfileScreen.tsx` + this `AGENT_LOG.md` entry).
+- Apply the ZIP, run `npx tsc --noEmit` (expect the same 31 pre-existing errors) and
+  `npm run build`, then push to `github.com/ferdausfs/BAS`.
+- No judgment calls deferred; no cleanup suggested.
+
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ## BAS0002 — Layout & Spacing Pass — Phase L5 (Final consistency pass — ALL screens) ✅ (2026-07-19, arena.ai Agent Mode)
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 

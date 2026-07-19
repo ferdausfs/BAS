@@ -469,24 +469,24 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
 
       <div className="no-scrollbar flex-1 overflow-y-auto pb-32">
         <div className="px-6 anim-up">
-          <div className="relative overflow-hidden rounded-[22px] border border-border bg-surface p-5 shadow-card">
+          <div className="relative overflow-hidden rounded-[22px] border border-border bg-surface px-5 pb-5 pt-7 shadow-card">
             {/* quiet soft-pink decorative circle (solid, no blur) */}
             <div className="absolute -top-10 -right-10 h-32 w-32 rounded-full bg-secondary" />
             <div className="absolute -bottom-12 -left-12 h-40 w-40 rounded-full bg-accent/40" />
 
-            <div className="relative flex items-center gap-3.5">
-              <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-coral text-[24px] font-bold text-white shadow-btn">
+            <div className="relative flex flex-col items-center text-center">
+              <div className="flex h-24 w-24 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-coral text-[28px] font-bold text-white shadow-btn">
                 {user.avatar && user.avatar.length > 2 ? (
                   <img src={user.avatar} alt="" className="w-full h-full object-cover" />
                 ) : initials}
               </div>
 
-              <div className="flex-1">
+              <div className="mt-3">
                 <div className="text-[18px] font-bold tracking-tight text-ink">
                   {user.name}
                 </div>
-                {user.email && <div className="text-[12px] text-ink-300">{user.email}</div>}
-                <div className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-0.5 text-[10px] font-bold tracking-wider text-coral uppercase">
+                {user.email && <div className="mt-0.5 text-[12px] text-ink-300">{user.email}</div>}
+                <div className="mt-2 inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-0.5 text-[10px] font-bold tracking-wider text-coral uppercase">
                   <Star className="h-2.5 w-2.5 fill-coral text-coral" /> Member
                 </div>
               </div>
@@ -525,65 +525,64 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
           <Stat label="In cart" value={(items ?? []).length} onClick={() => go({ name: 'cart' })} />
         </div>
 
-        <div className="mt-4 px-6 anim-up delay-2">
-          {/* Address book */}
-          {user && (
-            <button
-              onClick={() => setShowAddressModal(true)}
-              className="mt-3 flex w-full items-center justify-between rounded-2xl border border-border bg-surface px-4 py-4 text-left shadow-card transition active:scale-[.98]"
-            >
-              <div className="flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-secondary text-coral">
+        <div className="mt-5 px-6 anim-up delay-2">
+          <div className="mb-2.5 px-1 text-[10.5px] font-bold uppercase tracking-wider text-ink-200">
+            Quick Access
+          </div>
+          <div className="overflow-hidden rounded-2xl border border-border bg-surface shadow-card">
+            {/* Address book */}
+            {user && (
+              <button
+                onClick={() => setShowAddressModal(true)}
+                className="flex w-full items-center gap-3 border-b border-border px-4 py-4 text-left transition active:bg-bg"
+              >
+                <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-secondary text-coral">
                   <MapPin className="h-4 w-4" />
                 </div>
-                <div>
+                <div className="flex-1">
                   <div className="text-[13px] font-bold text-ink">Address book</div>
                   <div className="text-[11px] text-ink-300">
                     {addresses.length === 0 ? 'Save multiple addresses' : `${addresses.length} address${addresses.length > 1 ? 'es' : ''} saved`}
                   </div>
                 </div>
-              </div>
-              <ChevronRight className="h-4 w-4 text-ink-200" />
-            </button>
-          )}
+                <ChevronRight className="h-4 w-4 text-ink-200" />
+              </button>
+            )}
 
-          {/* Special Dates */}
-          {user && (
-            <button
-              onClick={() => setShowDatesModal(true)}
-              className="mt-3 flex w-full items-center justify-between rounded-2xl border border-border bg-surface px-4 py-4 text-left shadow-card transition active:scale-[.98]"
-            >
-              <div className="flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-secondary text-coral">
+            {/* Special Dates */}
+            {user && (
+              <button
+                onClick={() => setShowDatesModal(true)}
+                className="flex w-full items-center gap-3 border-b border-border px-4 py-4 text-left transition active:bg-bg"
+              >
+                <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-secondary text-coral">
                   <Cake className="h-4 w-4" />
                 </div>
-                <div>
+                <div className="flex-1">
                   <div className="text-[13px] font-bold text-ink">Special Dates</div>
                   <div className="text-[11px] text-ink-300">
                     {specialDates.length === 0 ? 'Birthdays, anniversaries' : `${specialDates.length} date${specialDates.length > 1 ? 's' : ''} saved`}
                   </div>
                 </div>
-              </div>
-              <ChevronRight className="h-4 w-4 text-ink-200" />
-            </button>
-          )}
+                <ChevronRight className="h-4 w-4 text-ink-200" />
+              </button>
+            )}
 
-          {/* My Coupons */}
-          <button
-            onClick={() => go({ name: 'coupons' })}
-            className="mt-3 flex w-full items-center justify-between rounded-2xl border border-border bg-surface px-4 py-4 text-left shadow-card transition active:scale-[.98]"
-          >
-            <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-secondary text-coral">
+            {/* My Coupons */}
+            <button
+              onClick={() => go({ name: 'coupons' })}
+              className="flex w-full items-center gap-3 px-4 py-4 text-left transition active:bg-bg"
+            >
+              <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-secondary text-coral">
                 <Tag className="h-4 w-4" />
               </div>
-              <div>
+              <div className="flex-1">
                 <div className="text-[13px] font-bold text-ink">My Coupons</div>
                 <div className="text-[11px] text-ink-300">Offers you can use at checkout</div>
               </div>
-            </div>
-            <ChevronRight className="h-4 w-4 text-ink-200" />
-          </button>
+              <ChevronRight className="h-4 w-4 text-ink-200" />
+            </button>
+          </div>
         </div>
 
         {wishlistItems.length > 0 && (
@@ -615,6 +614,9 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
         )}
 
         <div className="mt-5 px-6 anim-up delay-3">
+          <div className="mb-2.5 px-1 text-[10.5px] font-bold uppercase tracking-wider text-ink-200">
+            Account
+          </div>
           <div className="overflow-hidden rounded-2xl border border-border bg-surface shadow-card">
             {menu.map((m, i) => (
               <button
