@@ -1,25 +1,59 @@
-# TODO — BAS0001 Premium Soft-Pink Redesign
+# Phase 4 — Post-purchase screens (soft-pink redesign)
 
-> One phase per run. Read `AGENT_LOG.md` first to find the next phase.
-> This file is rewritten each run to scope ONLY the current phase.
+## Scope
+`src/screens/OrdersScreen.tsx`, `src/screens/TrackingScreen.tsx`,
+`src/screens/SuccessScreen.tsx`, `src/screens/ReviewsListScreen.tsx`,
+`src/screens/WriteReviewScreen.tsx`
 
-## Current run → Phase 3: Purchase flow
+## Checklist
 
-Scope only: `ProductScreen.tsx`, `CartScreen.tsx`, `CheckoutScreen.tsx`, `CouponsScreen.tsx`, `CustomizeScreen.tsx` (plus this TODO, `AGENT_LOG.md`, optional new reusable lesson, and the phase ZIP).
+### OrdersScreen.tsx
+- [ ] Replace `glass-strong` → `bg-surface border border-border shadow-card rounded-[20px]` (solid opaque)
+- [ ] Remove cocoa inline hexes (`#FDF8F1`, `#F3E4D0`, rgba cocoa shadows) → soft-pink system tokens
+- [ ] Remove `linear-gradient` (coral→gold top accent, gold→coral progress fill) → flat `bg-coral` / soft primary fill
+- [ ] Replace `font-brand` → plain bold Poppins body (no script)
+- [ ] Replace `font-display` → remove (already maps to Poppins, but clean up explicit calls → just use `font-bold`)
+- [ ] Replace cocoa-tinted inline box-shadows → pink-tinted soft shadows (`shadow-card`)
+- [ ] Ensure 8px spacing grid compliance
+- [ ] Verify QuickBar-safe header spacing (pr-18 range)
+- [ ] Keep tab/search/expand/reorder logic untouched
 
-### Phase 3 checklist
-- [ ] Start clean: `git checkout -- . && git pull origin main`; confirmed BAS0001 Phase 2 is complete and **NEXT = Phase 3**.
-- [ ] Read `AGENT_LOG.md` top-to-bottom and `tasks/lessons.md` in full; keep native touch gestures untouched and cross-check global overlays (BottomTabBar / QuickBar / modals) against these purchase screens.
-- [ ] Rebuild `CustomizeScreen.tsx` to remove `.glass-strong` / backdrop-blur treatment and replace with solid opaque white cards + soft elevation shadows. Eliminate legacy brown/cocoa styles, replace with premium soft-pink elements.
-- [ ] Rebuild `CouponsScreen.tsx`: replace old cocoa background (`#FBF6EF`) with premium background (`#FFF9FB`), replace cocoa gradient with premium pink gradient, fix ticket notches to match the page background.
-- [ ] Rebuild `CartScreen.tsx` into the premium soft-pink language: opaque white cards (`bg-surface`), generous 8px-grid spacing, soft pink-tinted shadows, and elegant empty-state / add-on designs. Keep native swipe-to-delete event handlers completely untouched to prevent regression.
-- [ ] Rebuild `ProductScreen.tsx`: replace `.glass-tint` and `.glass-strong` with solid opaque premium card surfaces, change active select state from cocoa (`#5C3A22`) to primary pink, retune brand/contact cards to soft-pink accents, and verify bottom sticky CTA layouts. Ensure image gallery swipe native listeners remain untouched.
-- [ ] Rebuild `CheckoutScreen.tsx`: remove `.glass-strong` from sections, inputs, and components. Change the checkout CTA button from the dark-cocoa gradient (`#5C3A22`) to primary brand pink (`bg-coral`) with `shadow-btn`. Tune section icons, edit buttons, and active states to soft-pink.
-- [ ] Verify that no checkout footer/button overlaps with BottomTabBar or QuickBar.
-- [ ] Run `npx tsc --noEmit` and compare with baseline; run `npm run build`; fix every new error now.
-- [ ] Re-read the touched files against `tasks/lessons.md`, verify every claimed change against source, package ONLY Phase-3 files into one timestamped ZIP, and prepend a Phase-3 handoff entry to `AGENT_LOG.md` with **NEXT = Phase 4**.
+### TrackingScreen.tsx
+- [ ] Replace all `glass-strong` → solid opaque surface tokens
+- [ ] Replace cocoa inline box-shadows → pink-tinted soft shadows
+- [ ] Replace `bg-ink` support FAB → `bg-coral` (primary CTA color)
+- [ ] Ensure back button style matches premium soft-pink (white bg, soft shadow, rounded-full)
+- [ ] Verify fixed-position FAB vs BottomTabBar/QuickBar stacking (z-index)
+- [ ] Keep native touch listeners / polling / cancel-logic untouched
 
-### Explicit Phase-3 guardrails
-- Do not regress the native touch gallery/swipe gestures on ProductScreen and CartScreen.
-- Keep `cart` vs `checkout` routing distinct.
-- No editing of any other files outside Phase 3's scope.
+### SuccessScreen.tsx
+- [ ] Replace `mesh-warm` → flat `bg-bg` (`#FFF9FB`)
+- [ ] Replace confetti cocoa hexes (`#A8672E`, `#C9963C`, `#E8C68F`, etc.) → soft-pink + amber palette
+- [ ] Replace `glass-strong` → solid opaque surface tokens
+- [ ] Replace `bg-gradient-to-br from-coral-400 to-coral-600` checkmark → solid `bg-coral` with pink shadow
+- [ ] Replace cocoa inline shadow hexes → pink-tinted shadows
+- [ ] SVG blob `text-blush-200` → stays (already soft pink)
+- [ ] Keep confetti animation, copy-ID, track/home CTAs untouched
+
+### ReviewsListScreen.tsx
+- [ ] Replace all `glass-strong` → solid opaque surface tokens
+- [ ] Replace header `border-b border-ink-50` → `border-border`
+- [ ] Add proper back-button styling (shadow, rounded, matches other screens)
+- [ ] Replace `bg-coral` rating bars → `bg-coral` stays (it's already the primary)
+- [ ] Add designed empty state (currently bare text)
+- [ ] Keep filter/search/sort logic untouched
+- [ ] Fix unused `go` import (TS6133)
+
+### WriteReviewScreen.tsx
+- [ ] Replace `glass-strong` → solid opaque surface tokens
+- [ ] Replace `bg-cocoa-700` submit button → `bg-coral` (primary CTA)
+- [ ] Replace header `border-b border-ink-50` → `border-border`
+- [ ] Add proper back-button styling
+- [ ] Add image upload dashed-border restyle to soft-pink (`border-coral/30`)
+- [ ] Keep star input, textarea, file upload, submit logic untouched
+
+### Cross-cutting
+- [ ] `npx tsc --noEmit` — zero new errors vs baseline
+- [ ] `npm run build` — must succeed
+- [ ] No remaining `glass-strong` / `cocoa` / cocoa hexes in Phase 4 files
+- [ ] Fixed-overlay cross-check (QuickBar, BottomTabBar, ChatBot) vs new fixed elements

@@ -23,13 +23,12 @@ export default function TrackingScreen() {
   const [match, setMatch] = useState<Order | null>(null);
   const { orders, loading, fetchMyOrders } = useOrdersHook();
   const user = useAuthStore((s) => s.user);
-  const [lastUpdated, setLastUpdated] = useState<number>(Date.now());
+  const [lastUpdated] = useState<number>(Date.now());
   const { settings } = useSettingsStore();
 
   useEffect(() => {
     if (user) {
       fetchMyOrders();
-      setLastUpdated(Date.now());
     }
   }, [fetchMyOrders, user]);
 
@@ -54,14 +53,12 @@ export default function TrackingScreen() {
     setMatch(found ?? null);
   }, [query, orders]);
 
-  // Poll every 30s while the tracked order is active, so admin status changes
-  // reach the customer in near-realtime (no websocket needed on customer side).
+  // Poll every 30s while the tracked order is active
   useEffect(() => {
     if (!match || match.status === 'delivered' || match.status === 'cancelled') return;
 
     const interval = setInterval(() => {
       fetchMyOrders();
-      setLastUpdated(Date.now());
     }, 30000);
 
     return () => clearInterval(interval);
@@ -72,23 +69,22 @@ export default function TrackingScreen() {
       <header className="flex flex-shrink-0 items-center justify-between px-5 pt-3 pb-3">
         <button
           onClick={back}
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-ink active:scale-90"
-          style={{ boxShadow: '0 1px 2px rgba(26,19,17,.03), 0 6px 16px -10px rgba(26,19,17,.2)' }}
+          className="flex h-10 w-10 items-center justify-center rounded-full bg-surface text-ink shadow-card active:scale-90"
         >
           <ArrowLeft className="h-[20px] w-[20px]" strokeWidth={2} />
         </button>
-        <h1 className="font-display text-[16px] font-bold tracking-tight text-ink">Order tracking</h1>
+        <h1 className="text-[16px] font-bold tracking-tight text-ink">Order tracking</h1>
         <div className="w-10" />
       </header>
 
       <div className="no-scrollbar flex-1 overflow-y-auto px-5 pb-20 pt-1">
         <div className="relative">
-          <Search className="pointer-events-none absolute top-1/2 left-4 h-[18px] w-[18px] -translate-y-1/2 text-ink-100" />
+          <Search className="pointer-events-none absolute top-1/2 left-4 h-[18px] w-[18px] -translate-y-1/2 text-text-tertiary" />
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Enter order ID, e.g. BAS123456"
-            className="h-12 w-full rounded-2xl border border-ink-50 bg-white pr-4 pl-11 text-[14px] text-ink outline-none focus:border-coral focus:ring-4 focus:ring-coral/10"
+            className="h-12 w-full rounded-2xl border border-border bg-surface pr-4 pl-11 text-[14px] text-ink outline-none focus:border-coral focus:ring-4 focus:ring-coral/10"
           />
         </div>
 
@@ -99,28 +95,27 @@ export default function TrackingScreen() {
                 <div key={i} className="h-2 w-2 animate-bounce rounded-full bg-ink-200" style={{ animationDelay: `${i * 0.15}s` }} />
               ))}
             </div>
-            <p className="text-[12px] text-ink-200">Syncing orders...</p>
+            <p className="text-[12px] text-text-tertiary">Syncing orders...</p>
           </div>
         ) : match ? (
           <article
-            className="mt-4 overflow-hidden rounded-3xl glass-strong"
-            style={{ boxShadow: '0 1px 2px rgba(26,19,17,.02), 0 8px 24px -16px rgba(26,19,17,.16)' }}
+            className="mt-4 overflow-hidden rounded-[20px] bg-surface border border-border shadow-card"
           >
-            <div className="flex items-center justify-between border-b border-ink-50 px-4 py-3.5">
+            <div className="flex items-center justify-between border-b border-border px-4 py-3.5">
               <div>
-                <div className="text-[10px] font-bold tracking-wider text-ink-200 uppercase">
+                <div className="text-[10px] font-bold tracking-wider text-text-tertiary uppercase">
                   Order #{match.id}
                 </div>
-                <div className="mt-0.5 text-[12px] font-medium text-ink-200">
+                <div className="mt-0.5 text-[12px] font-medium text-text-secondary">
                   {new Date(match.createdAt).toLocaleString('en-BD')}
                 </div>
               </div>
               <div className="flex flex-col items-end gap-1.5">
-                <div className="flex items-center gap-1 text-[10px] text-ink/40">
-                  <div className="h-1.5 w-1.5 rounded-full bg-green-400 animate-pulse" />
+                <div className="flex items-center gap-1 text-[10px] text-text-tertiary">
+                  <div className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
                   Live
                 </div>
-                <div className="font-display text-[18px] font-bold tabular text-ink">
+                <div className="text-[18px] font-bold tabular text-ink">
                   {formatINR(match.total)}
                 </div>
               </div>
@@ -129,35 +124,35 @@ export default function TrackingScreen() {
             <div className="space-y-2.5 px-4 py-3.5">
               {safeArray(match.items).slice(0, 3).map((it, i) => (
                 <div key={i} className="flex items-center gap-3">
-                  <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-xl bg-cream">
+                  <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-xl bg-bg ring-1 ring-border">
                     <img src={it.image} alt="" className="h-full w-full object-cover" />
                   </div>
                   <div className="flex-1">
                     <div className="line-clamp-1 text-[12.5px] font-bold text-ink">{it.name}</div>
-                    <div className="text-[10.5px] text-ink-200">{it.size} · ×{it.quantity}</div>
+                    <div className="text-[10.5px] text-text-secondary">{it.size} · ×{it.quantity}</div>
                   </div>
                 </div>
               ))}
             </div>
 
             {match.status === 'cancelled' && (
-              <div className="mx-5 mb-4 overflow-hidden rounded-2xl border border-red-100 bg-red-50">
-                <div className="flex items-center gap-3 px-4 py-3 border-b border-red-100">
-                  <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-red-100">
-                    <XCircle className="h-5 w-5 text-red-500" strokeWidth={2} />
+              <div className="mx-5 mb-4 overflow-hidden rounded-2xl border border-error/20 bg-error/5">
+                <div className="flex items-center gap-3 px-4 py-3 border-b border-error/10">
+                  <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-error/10">
+                    <XCircle className="h-5 w-5 text-error" strokeWidth={2} />
                   </div>
                   <div>
-                    <p className="text-[13px] font-bold text-red-800">অর্ডার বাতিল হয়েছে</p>
-                    <p className="text-[11px] text-red-500">Order #{match.id} cancelled</p>
+                    <p className="text-[13px] font-bold text-error">অর্ডার বাতিল হয়েছে</p>
+                    <p className="text-[11px] text-error/70">Order #{match.id} cancelled</p>
                   </div>
                 </div>
                 <div className="px-4 py-3 space-y-2">
                   {match.cancelReason && (
-                    <p className="text-[12px] text-red-700">
+                    <p className="text-[12px] text-error/80">
                       <span className="font-bold">কারণ:</span> {match.cancelReason}
                     </p>
                   )}
-                  <p className="text-[12px] text-red-700">
+                  <p className="text-[12px] text-error/80">
                     আপনার পেমেন্ট ওয়ালেটে ফেরত দেওয়া হয়েছে বা দেওয়া হবে।
                   </p>
                   <div className="flex gap-2 mt-2">
@@ -166,13 +161,13 @@ export default function TrackingScreen() {
                         safeArray(match.items).forEach((item) => useCart.getState().add({ ...item }));
                         go({ name: 'cart' });
                       }}
-                      className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-xl bg-red-500 text-[12px] font-bold text-white"
+                      className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-xl bg-error text-[12px] font-bold text-white"
                     >
                       <RefreshCw className="h-3.5 w-3.5" /> পুনরায় অর্ডার করুন
                     </button>
                     <button
                       onClick={() => setChatOpen(true, match.id)}
-                      className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-xl glass-strong border border-red-200 text-[12px] font-bold text-red-600"
+                      className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-xl border border-error/20 bg-surface text-[12px] font-bold text-error"
                     >
                       <MessageCircle className="h-3.5 w-3.5" /> সাপোর্ট
                     </button>
@@ -182,9 +177,9 @@ export default function TrackingScreen() {
             )}
 
             {match.status !== 'cancelled' && (
-            <div className="border-t border-ink-50 px-4 py-3.5">
+            <div className="border-t border-border px-4 py-3.5">
               <div className="mb-2 flex items-center justify-between">
-                <span className="text-[10px] font-bold tracking-wider text-ink-200 uppercase">Live status</span>
+                <span className="text-[10px] font-bold tracking-wider text-text-tertiary uppercase">Live status</span>
                 <span className="text-[12px] font-bold capitalize text-ink">{match.status}</span>
               </div>
               {/* Vertical timeline */}
@@ -205,7 +200,7 @@ export default function TrackingScreen() {
                             ? active
                               ? 'bg-coral text-white ring-2 ring-coral ring-offset-2 scale-110'
                               : 'bg-coral/15 text-coral'
-                            : 'bg-ink-50 text-ink-200'
+                            : 'bg-ink-50 text-text-tertiary'
                         }`}>
                           <StepIcon className="h-4 w-4" strokeWidth={2} />
                         </div>
@@ -217,9 +212,9 @@ export default function TrackingScreen() {
                       {/* Right: text */}
                       <div className={`pb-4 flex-1 ${active ? '' : 'opacity-60'}`}>
                         <div className={`text-[13px] font-bold ${done ? 'text-ink' : 'text-ink/40'}`}>{step.label}</div>
-                        <div className="text-[11px] text-ink/50">{step.sub}</div>
+                        <div className="text-[11px] text-text-tertiary">{step.sub}</div>
                         {active && match.status === 'delivered' && (
-                          <div className="mt-1 text-[11px] font-bold text-green-600">Delivered successfully!</div>
+                          <div className="mt-1 text-[11px] font-bold text-success">Delivered successfully!</div>
                         )}
                       </div>
                     </div>
@@ -227,14 +222,14 @@ export default function TrackingScreen() {
                 })}
               </div>
               {match.status !== 'delivered' && (
-                <div className="mt-3 mx-1 flex items-center justify-between rounded-xl bg-coral/8 px-3 py-2.5">
+                <div className="mt-3 mx-1 flex items-center justify-between rounded-xl bg-secondary px-3 py-2.5">
                   <div className="flex items-center gap-2">
                     <Clock className="h-4 w-4 text-coral" />
                     <div>
                       <p className="text-[11px] font-bold text-coral">
                         {match.status === 'out' ? 'প্রায় পৌঁছে গেছে!' : 'আনুমানিক ডেলিভারি সময়'}
                       </p>
-                      <p className="text-[11px] text-ink/50">
+                      <p className="text-[11px] text-text-tertiary">
                         {match.status === 'out'
                           ? '~15-20 মিনিট'
                           : settings?.deliveryEstimate ?? '45-60 মিনিট'}
@@ -254,19 +249,21 @@ export default function TrackingScreen() {
             )}
           </article>
         ) : query.trim() ? (
-          <div className="mt-8 text-center">
-            <div className="flex justify-center text-ink-200 opacity-60">
-              <Search size={44} strokeWidth={1.5} />
+          /* No-results state */
+          <div className="mt-8 text-center anim-fade">
+            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-ink-50">
+              <Search className="h-9 w-9 text-text-tertiary" strokeWidth={1.6} />
             </div>
-            <p className="mt-2 text-[14px] font-medium text-ink-300">Order not found</p>
-            <p className="text-[12px] text-ink-200">Please check the order ID and try again.</p>
+            <p className="mt-3 text-[16px] font-bold text-ink">Order not found</p>
+            <p className="mt-1 text-[13px] text-text-secondary">Please check the order ID and try again.</p>
           </div>
         ) : (
-          <div className="mt-8 text-center">
-            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl glass-strong">
-              <Package className="h-10 w-10 text-ink-200" strokeWidth={1.8} />
+          /* Initial state — no query yet */
+          <div className="mt-8 text-center anim-fade">
+            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-secondary shadow-card">
+              <Package className="h-10 w-10 text-coral" strokeWidth={1.8} />
             </div>
-            <p className="mt-3 text-[13px] text-ink-200">
+            <p className="mt-3 text-[13px] text-text-secondary leading-relaxed">
               Enter an order ID to see live status. You can also open tracking from your Orders page.
             </p>
             {orders.length > 0 && (
@@ -277,12 +274,12 @@ export default function TrackingScreen() {
                   ) ?? orders[0];
                   if (latest) setQuery(latest.id);
                 }}
-                className="mb-3 flex h-11 w-full items-center justify-center gap-2 rounded-2xl bg-coral text-[13px] font-bold text-white"
+                className="mb-3 mt-4 flex h-11 w-full items-center justify-center gap-2 rounded-2xl bg-coral text-[13px] font-bold text-white shadow-btn"
               >
                 <Truck className="h-4 w-4" /> সর্বশেষ অর্ডার ট্র্যাক করুন
               </button>
             )}
-            <button onClick={() => setTab('orders')} className="btn-primary mt-5 h-11 rounded-2xl px-5 text-[13px] font-bold">
+            <button onClick={() => setTab('orders')} className="btn-primary mt-4 h-11 rounded-2xl px-5 text-[13px] font-bold">
               My orders
             </button>
           </div>
@@ -291,9 +288,7 @@ export default function TrackingScreen() {
       {match && match.status !== 'delivered' && match.status !== 'cancelled' && (
         <button
           onClick={() => setChatOpen(true, match.id)}
-          className="fixed bottom-24 right-5 z-40 flex items-center gap-2 rounded-2xl bg-ink px-4 py-2.5 shadow-lg transition active:scale-95"
-          style={{ boxShadow: '0 4px 20px -4px rgba(26,19,19,.35)' }}
-          // lastUpdated is tracked for battery-friendly polling: {lastUpdated}
+          className="fixed bottom-24 right-5 z-40 flex items-center gap-2 rounded-2xl bg-coral px-4 py-2.5 shadow-btn transition active:scale-95"
         >
           <MessageCircle className="h-4 w-4 text-white" strokeWidth={2} />
           <span className="text-[12px] font-bold text-white">সাহায্য দরকার?</span>

@@ -1,6 +1,36 @@
 # Agent Log — BAS (Bake Art Style 2)
 
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## BAS0001 — PREMIUM SOFT-PINK REDESIGN — Phase 4 (post-purchase) ✅ (2026-07-19, arena.ai Agent Mode)
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+**Agent/Tool:** arena.ai Agent Mode (codename BAS0001)
+**Phase worked on:** **Phase 4 — Post-purchase screens.** Phase 3 purchase flow was completed and confirmed on `main` before work. **NEXT RUN = Phase 5 (account/admin/splash — `src/screens/ProfileScreen.tsx`, `src/screens/AdminScreen.tsx` + `src/components/AdminPanel.tsx`, `src/screens/SplashScreen.tsx`).** One phase only; no Phase-5 account/admin/splash files were edited.
+
+### কী বদলেছে — premium soft-pink post-purchase batch (exact Phase-4 source files)
+- **`src/screens/OrdersScreen.tsx`**: Rebuilt into solid opaque premium surfaces. Replaced `glass-strong` → `bg-surface border border-border shadow-card rounded-[20px]`. Removed all cocoa inline hexes (`#FDF8F1`, `#F3E4D0`, cocoa rgba shadows). Replaced `linear-gradient` coral→gold top accent → solid `bg-coral`. Replaced `linear-gradient` gold→coral progress fill → flat `bg-coral`. Removed `font-brand` (was script-style "your story starts here") → plain bold Poppins. Removed all `font-display` explicit calls → plain `font-bold`. Replaced cocoa-tinted inline box-shadows → `shadow-card`. Full empty-state card now uses `bg-secondary shadow-card` instead of cocoa gradient background. Delivered status badge now uses `success` green tint instead of cocoa dark. Cancel badge uses `error` red. "Order again" CTA button changed from `bg-ink` → `bg-coral shadow-btn` (primary brand pink). Added QuickBar-safe header spacing (`pr-18 pt-6`).
+- **`src/screens/TrackingScreen.tsx`**: Replaced all `glass-strong` → solid opaque surfaces (`bg-surface border border-border shadow-card`). Replaced cocoa inline box-shadows → pink-tinted `shadow-card`. Back button now uses `shadow-card` style. Cancel state card restyled from `bg-red-50 border-red-100` → `bg-error/5 border-error/20` with semantic error colors. Support button in cancelled card changed from `glass-strong border-red-200` → `border border-error/20 bg-surface`. Delivery estimate box changed from `bg-coral/8` → `bg-secondary`. Initial empty-state icon container changed from `glass-strong` → `bg-secondary shadow-card`. No-results state now has designed icon + clear hierarchy. "সাহায্য দরকার?" FAB changed from `bg-ink` cocoa shadow → `bg-coral shadow-btn` (primary brand CTA). Removed unused `lastUpdated` state (was only used for polling interval dependency, not rendering). Kept native touch listeners and polling logic completely untouched.
+- **`src/screens/SuccessScreen.tsx`**: Replaced `mesh-warm` background → flat `bg-bg` (`#FFF9FB`). Replaced confetti cocoa hexes (`#A8672E`, `#C9963C`, `#E8C68F`, `#3B6D11`) → soft-pink + amber palette (`#F65F8F`, `#E84E80`, `#FFD6E4`, `#FFE8F0`, `#E8A33C`, `#FBE9C8`). Replaced `glass-strong` → `bg-surface border border-border shadow-card rounded-[20px]`. Replaced `bg-gradient-to-br from-coral-400 to-coral-600` checkmark badge → solid `bg-coral` with pink-tinted shadow (`rgba(246,95,143,.35)`). Replaced cocoa inline box-shadows → pink-tinted shadows. Kept SVG blob (`text-blush-200`) — already soft-pink from Phase 0.
+- **`src/screens/ReviewsListScreen.tsx`**: Replaced all `glass-strong` → `bg-surface border border-border shadow-card rounded-[20px]`. Header `border-b border-ink-50` → `border-border`. Back button now has `shadow-card` styling matching other screens. Avatar circle in review cards now uses `bg-secondary text-coral` (was `bg-ink-50`). Search input uses `border-border bg-surface` + `focus:border-coral focus:ring-4 focus:ring-coral/10`. Filter button uses `border-border bg-surface shadow-card`. Added designed empty state with `MessageSquare` icon in `bg-secondary` circle + headline + subtext (was bare "কোনো রিভিউ পাওয়া যায়নি" text). Fixed all 13 pre-existing `unknown`-type errors by adding explicit `(r: any)`, `(a: any)`, `(b: any)` casts in filter/sort chains. Removed unused `go` import (TS6133).
+- **`src/screens/WriteReviewScreen.tsx`**: Replaced `glass-strong` → `bg-surface border border-border shadow-card rounded-[20px]`. Replaced `bg-cocoa-700` submit button → `bg-coral shadow-btn` (primary brand CTA). Header `border-b border-ink-50` → `border-border`. Back button now has `shadow-card` styling. Photo upload dashed border changed from `border-ink-200` → `border-coral/30 bg-secondary/50` with hover `border-coral/50`. Camera icon tinted `text-coral/60`. Product thumbnail has `ring-1 ring-border`. Remove-photo button uses `bg-error` (was `bg-ink`). Textarea input uses `border-border bg-surface` + focus ring. Cancel button uses `border-border`. Rating bars `bg-coral` stays (already primary pink).
+
+### Fixed-overlay cross-check
+- TrackingScreen's "সাহায্য দরকার?" FAB: `fixed bottom-24 right-5 z-40`. BottomTabBar is z100, QuickBar is z45 — FAB sits correctly below both global overlays. Changed from `bg-ink` to `bg-coral shadow-btn` to match primary CTA color language.
+- No other Phase-4 screen uses fixed positioning.
+- No swipe/drag code was touched in any Phase-4 file.
+
+### Verification (self)
+- `npx tsc --noEmit`: **✓ Verified**. Baseline = 83 error lines; Phase 4 = 68 lines. Diff shows **zero new errors** and removes the ReviewsListScreen `unknown`-type errors (13 lines) + unused `go` import + unused `lastUpdated` variable via explicit casts/cleanup. Remaining errors are pre-existing in OrdersScreen/TrackingScreen (same `it`/spread types as before, just line-shifted).
+- `npm run build`: **✓ Passed** (Vite production bundle built successfully in **5.34s**).
+- `grep -rn` for `glass-strong`, `glass-tint`, `backdrop-blur`, `Fraunces`, `Great Vibes`, cocoa hexes (`#A8672E`, `#2A1B12`, `#C9963C`, `#5C3A22`, `#3D2418`, `#FBF6EF`, `#E8C68F`, `#D9A85E`, `#6E2A45`, `#5F7556`, `#EEE1D2`), `bg-cocoa`, `cocoa-700`, `#FDF8F1`, `#F3E4D0`, `font-brand`, `font-display`, `linear-gradient`, `mesh-warm`, `bg-gradient` across all 5 Phase-4 files → **zero matches**. Fully clean.
+
+### Handoff / pending for Phase 5
+- **NEXT = Phase 5 (account/admin/splash only):** `ProfileScreen.tsx`, `AdminScreen.tsx` + `AdminPanel.tsx`, `SplashScreen.tsx`.
+- ProfileScreen has inline cocoa hexes to clean (expected from Phase 0 handoff count of 3).
+- SplashScreen has inline cocoa hexes to clean (expected from Phase 0 handoff count of 3).
+- AdminPanel is admin-only — restyle it but keep it functional; don't change business logic.
+- After Phase 5, Phase 6 is the final consistency pass across ALL screens.
+
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ## BAS0001 — PREMIUM SOFT-PINK REDESIGN — Phase 3 (purchase flow) ✅ (2026-07-19, arena.ai Agent Mode)
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 **Agent/Tool:** arena.ai Agent Mode (codename BAS0001)

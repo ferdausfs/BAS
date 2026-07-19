@@ -15,7 +15,6 @@ export default function SuccessScreen() {
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    // Screen mount হলে 300ms পর confetti fire করো
     const t = setTimeout(() => setShowConfetti(true), 300);
     return () => clearTimeout(t);
   }, []);
@@ -29,8 +28,8 @@ export default function SuccessScreen() {
   };
 
   return (
-    <div className="mesh-warm relative flex h-full flex-col items-center justify-between overflow-hidden px-7 pt-12 pb-10">
-      {/* Confetti */}
+    <div className="relative flex h-full flex-col items-center justify-between overflow-hidden bg-bg px-7 pt-12 pb-10">
+      {/* Confetti — soft-pink + amber palette */}
       {showConfetti && (
         <div className="pointer-events-none absolute inset-0 z-50 overflow-hidden" aria-hidden="true">
           {Array.from({ length: 18 }).map((_, i) => (
@@ -40,7 +39,7 @@ export default function SuccessScreen() {
               style={{
                 left: `${5 + (i * 5.5) % 90}%`,
                 top: '-10px',
-                background: ['#A8672E','#C9963C','#E8C68F','#1baf7a','#3B6D11','#A8672E','#C9963C'][i % 7],
+                background: ['#F65F8F','#E84E80','#FFD6E4','#FFE8F0','#E8A33C','#FBE9C8','#F65F8F'][i % 7],
                 animationDelay: `${(i * 0.12)}s`,
                 animationDuration: `${1.8 + (i % 4) * 0.3}s`,
               }}
@@ -49,6 +48,7 @@ export default function SuccessScreen() {
         </div>
       )}
 
+      {/* Decorative soft-pink blob */}
       <svg
         className="absolute -top-16 -left-16 h-80 w-80 text-blush-200"
         viewBox="0 0 200 200"
@@ -58,63 +58,64 @@ export default function SuccessScreen() {
       </svg>
 
       <div className="relative z-10 flex flex-1 flex-col items-center justify-center text-center">
+        {/* Checkmark badge */}
         <div className="relative mb-5">
           <span className="absolute inset-0 rounded-full bg-coral/30 blur-2xl anim-heartbeat" />
           <span className="absolute inset-0 rounded-full anim-ring" />
           <div
-            className="relative flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-coral-400 to-coral-600 text-white anim-pop"
-            style={{ boxShadow: '0 14px 30px -10px rgba(168,103,46,.45)' }}
+            className="relative flex h-16 w-16 items-center justify-center rounded-full bg-coral text-white anim-pop"
+            style={{ boxShadow: '0 14px 30px -10px rgba(246,95,143,.35)' }}
           >
             <Check className="h-8 w-8" strokeWidth={2.5} />
           </div>
         </div>
 
-        <h1 className="font-display text-[20px] font-bold leading-tight tracking-tight text-ink anim-rise delay-1">
+        <h1 className="text-[20px] font-bold leading-tight tracking-tight text-ink anim-rise delay-1">
           অর্ডার সফল হয়েছে
         </h1>
-        <p className="mt-1.5 max-w-[260px] text-[12px] leading-relaxed text-ink-200 anim-rise delay-2">
+        <p className="mt-1.5 max-w-[260px] text-[12px] leading-relaxed text-text-secondary anim-rise delay-2">
           আপনার কেক ভালোবাসা দিয়ে তৈরি হচ্ছে
         </p>
 
+        {/* Order ID card */}
         <div
-          className="mt-5 w-full max-w-[300px] rounded-2xl glass-strong anim-rise delay-3"
-          style={{ boxShadow: '0 1px 2px rgba(26,19,17,.02), 0 12px 30px -16px rgba(26,19,17,.18)' }}
+          className="mt-5 w-full max-w-[300px] rounded-[20px] bg-surface border border-border shadow-card anim-rise delay-3"
         >
           <div className="flex items-center justify-between px-4 py-3">
             <div className="text-left">
-              <div className="text-[9.5px] font-bold tracking-wider text-ink-200 uppercase">Order ID</div>
+              <div className="text-[9.5px] font-bold tracking-wider text-text-tertiary uppercase">Order ID</div>
               <div className="font-mono text-[13px] font-bold text-ink">#{orderId ?? order?.id}</div>
             </div>
             <button
               onClick={copyOrderId}
-              className="flex items-center gap-1 rounded-lg bg-ink-50 px-2 py-1 text-[11px] font-medium text-ink-200 transition active:scale-95"
+              className="flex items-center gap-1 rounded-lg bg-ink-50 px-2 py-1 text-[11px] font-medium text-text-secondary transition active:scale-95"
               aria-label="Copy order ID"
             >
               {copied
-                ? <><Check className="h-3 w-3 text-green-500" /> Copied!</>
+                ? <><Check className="h-3 w-3 text-success" /> Copied!</>
                 : <><Copy className="h-3 w-3" /> Copy</>}
             </button>
           </div>
-          <div className="h-px bg-ink-50 mx-4" />
+          <div className="h-px bg-border mx-4" />
           <div className="flex items-center gap-2.5 px-4 py-3">
-            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-coral/10">
+            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-secondary">
               <Clock className="h-4 w-4 text-coral" strokeWidth={2} />
             </div>
             <div className="text-left">
-              <p className="text-[11px] font-medium text-ink/50">আনুমানিক ডেলিভারি</p>
+              <p className="text-[11px] font-medium text-text-tertiary">আনুমানিক ডেলিভারি</p>
               <p className="text-[12.5px] font-bold text-ink">{settings?.deliveryEstimate ?? '45-60 মিনিট'}</p>
             </div>
           </div>
         </div>
 
+        {/* Item summary card */}
         {order && (
-          <div className="mt-2.5 w-full max-w-[300px] rounded-2xl glass-strong px-4 py-3 anim-rise delay-4 text-left"
-            style={{ boxShadow: '0 1px 2px rgba(26,19,17,.02), 0 8px 24px -16px rgba(26,19,17,.18)' }}>
+          <div className="mt-2.5 w-full max-w-[300px] rounded-[20px] bg-surface border border-border px-4 py-3 shadow-card anim-rise delay-4 text-left">
             <div className="flex items-center justify-between text-[12px]">
-              <span className="text-ink-200">{itemCount}টি আইটেম</span>
+              <span className="text-text-secondary">{itemCount}টি আইটেম</span>
               <span className="font-bold text-ink">৳{order.total?.toLocaleString()}</span>
             </div>
-            <p className="mt-1 text-[10.5px] text-ink/40 truncate">
+            <p className="mt-1 text-[10.5px] text-text-tertiary truncate">
               {safeArray(order.items).slice(0, 2).map((i: any) => i.name).join(', ')}
               {safeArray(order.items).length > 2 ? ` +${safeArray(order.items).length - 2} আরও` : ''}
             </p>
