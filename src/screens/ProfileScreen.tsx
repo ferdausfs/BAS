@@ -96,16 +96,16 @@ class AdminErrorBoundary extends React.Component<{ children: React.ReactNode }, 
   render() {
     if (this.state.hasError) {
       return (
-        <div className="border border-[#969696]/20 bg-[#969696]/5 rounded-3xl p-5 mt-4 text-center">
-          <div className="flex justify-center text-[#969696] mb-2">
+        <div className="border border-error/20 bg-error/5 rounded-3xl p-5 mt-4 text-center">
+          <div className="flex justify-center text-error mb-2">
             <AlertTriangle size={32} strokeWidth={1.75} />
           </div>
-          <h2 className="text-sm font-bold text-[#969696] mb-1">Admin Dashboard Error</h2>
-          <p className="text-xs text-[#969696] mb-2">{this.state.errorMessage}</p>
-          <p className="text-xs text-[#b5b5b5]">Refresh the page to retry.</p>
+          <h2 className="text-sm font-bold text-error mb-1">Admin Dashboard Error</h2>
+          <p className="text-xs text-error mb-2">{this.state.errorMessage}</p>
+          <p className="text-xs text-ink-200">Refresh the page to retry.</p>
           <button
             onClick={() => this.setState({ hasError: false, errorMessage: '' })}
-            className="mt-3 px-4 py-2 rounded-xl bg-[#969696] text-white text-xs font-bold"
+            className="mt-3 px-4 py-2 rounded-xl bg-coral text-white text-xs font-bold shadow-btn"
           >
             Retry
           </button>
@@ -139,14 +139,14 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
   const [showAdmin, setShowAdmin] = useState(false);
   const [, setLogoTapCount] = useState(0);
 
-  const [savedProfile, setSavedProfile] = useState(() =>
+  const [savedProfile, setSavedProfile] = useState<CustomerProfile>(() =>
     loadCustomerProfile(user?.id, user?.name ?? '')
   );
-  const [draftProfile, setDraftProfile] = useState(() =>
+  const [draftProfile, setDraftProfile] = useState<CustomerProfile>(() =>
     loadCustomerProfile(user?.id, user?.name ?? '')
   );
 
-  const [addresses, setAddresses] = useState(() => loadAddresses(user?.id));
+  const [addresses, setAddresses] = useState<SavedAddress[]>(() => loadAddresses(user?.id));
   const [showAddressModal, setShowAddressModal] = useState(false);
   const [editingAddress, setEditingAddress] = useState<SavedAddress | null>(null);
   const [addrForm, setAddrForm] = useState({ name: '', address: '', district: '', phone: '' });
@@ -155,7 +155,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
   const [profileLocating, setProfileLocating] = useState(false);
   const [profileLocateError, setProfileLocateError] = useState('');
 
-  const [specialDates, setSpecialDates] = useState(() => loadSpecialDates(user?.id));
+  const [specialDates, setSpecialDates] = useState<SpecialDate[]>(() => loadSpecialDates(user?.id));
   const [showDatesModal, setShowDatesModal] = useState(false);
   const [dateForm, setDateForm] = useState({ type: 'birthday' as SpecialDate['type'], name: '', date: '' });
 
@@ -191,6 +191,9 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
     return () => setChatOpen(false);
   }, [contactOpen, customerOpen, setChatOpen]);
 
+  // Claim any pending cross-device referral rewards tied to this user's code.
+  // When someone on another device places an order using this code, the reward
+  // is picked up here and credited to the wallet (+৳100 each).
   useEffect(() => {
     if (!referralCode) return;
     let active = true;
@@ -234,7 +237,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
       }
     });
     if (changed) setSpecialDates(updated);
-  }, [user?.id]);
+  }, [user?.id]); // eslint-disable-line
 
   const openCustomerEditor = () => {
     const latest = loadCustomerProfile(user?.id, user?.name ?? '');
@@ -282,6 +285,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
 
     setCustomerOpen(false);
   }, [draftProfile, user]);
+
 
   const handleLocateProfile = async () => {
     setProfileLocating(true);
@@ -428,22 +432,20 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
 
   if (!user) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-[#ffffff] px-6">
-        <div className="w-full max-w-sm rounded-[16px] bg-[#f8f8f8] p-8 text-center shadow-sm">
-          <div className="mx-auto mb-6 flex h-[130px] w-[130px] items-center justify-center rounded-full bg-[#d9d9d9]">
-            <User size={48} className="text-[#999999]" strokeWidth={1.5} />
-          </div>
-          <h2 className="mb-2 text-[18px] font-semibold text-[#999999]">Sign In</h2>
-          <p className="mb-6 text-[12px] text-[#bbbbbb]">
-            Sign in to save your delivery info, orders, wishlist, and profile.
-          </p>
-          <button
-            onClick={onAuthOpen}
-            className="w-full rounded-[12px] bg-[#969696] py-3 text-[14px] font-medium text-white transition active:scale-[.98]"
-          >
-            Sign In
-          </button>
+      <div className="flex h-full flex-col items-center justify-center px-8 text-center">
+        <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-secondary text-coral shadow-card">
+          <User size={36} strokeWidth={1.75} />
         </div>
+        <h2 className="text-2xl font-bold text-ink mb-2">Sign In</h2>
+        <p className="text-sm text-ink-300 mb-6">
+          Sign in to save your delivery info, orders, wishlist, and profile.
+        </p>
+        <button
+          onClick={onAuthOpen}
+          className="flex items-center gap-2 px-8 py-3.5 rounded-2xl bg-coral text-white font-bold text-sm shadow-btn transition active:scale-95"
+        >
+          <LogIn className="w-4 h-4" /> Sign In
+        </button>
       </div>
     );
   }
@@ -456,115 +458,92 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
     .toUpperCase();
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#ffffff]">
-      {/* Header label */}
-      <div className="px-[20px] py-[8px]">
-        <div className="h-[14px] w-[60px] rounded-[4px] bg-[#989898]" />
-      </div>
+    <div className="flex h-full flex-col">
+      {/* Header — QuickBar-safe with right clearance */}
+      <header className="flex-shrink-0 px-6 pr-18 pt-6 pb-3">
+        <div className="text-[12px] font-semibold tracking-wider text-primary uppercase">Account</div>
+        <h1 className="mt-1 text-[24px] font-bold tracking-tight text-ink">
+          Profile
+        </h1>
+      </header>
 
-      {/* Avatar — 130px circle, bg #d9d9d9 */}
-      <div className="flex justify-center mt-[12px]">
-        <div className="relative">
-          {user.avatar && user.avatar.length > 2 ? (
-            <img
-              src={user.avatar}
-              alt={user.name}
-              className="h-[130px] w-[130px] rounded-full object-cover border-[3px] border-[#f0f0f0]"
-            />
-          ) : (
-            <div className="flex h-[130px] w-[130px] items-center justify-center rounded-full bg-[#d9d9d9] text-[36px] font-bold text-[#ffffff]">
-              {initials}
-            </div>
-          )}
-        </div>
-      </div>
+      <div className="no-scrollbar flex-1 overflow-y-auto pb-32">
+        <div className="px-6 anim-up">
+          <div className="relative overflow-hidden rounded-[22px] border border-border bg-surface p-5 shadow-card">
+            {/* quiet soft-pink decorative circle (solid, no blur) */}
+            <div className="absolute -top-10 -right-10 h-32 w-32 rounded-full bg-secondary" />
+            <div className="absolute -bottom-12 -left-12 h-40 w-40 rounded-full bg-accent/40" />
 
-      {/* Name — 120px bar, bg #999999 */}
-      <div className="flex justify-center mt-[16px]">
-        <div className="h-[16px] w-[120px] rounded-[4px] bg-[#999999]" />
-      </div>
-
-      {/* Subtitle (email) — 180px bar, bg #bbbbbb */}
-      {user.email && (
-        <div className="flex justify-center mt-[8px]">
-          <div className="h-[12px] w-[180px] rounded-[4px] bg-[#bbbbbb]" />
-        </div>
-      )}
-
-      {/* Member badge */}
-      <div className="flex justify-center mt-[8px] mb-[30px]">
-        <div className="h-[10px] w-[80px] rounded-[3px] bg-[#c8c8c8]" />
-      </div>
-
-      {/* Menu sections */}
-      <div className="flex-1 overflow-y-auto">
-        {/* Section 1: Quick Actions */}
-        <div className="px-[24px] mb-[16px]">
-          <div className="h-[10px] w-[80px] rounded-[3px] bg-[#aaaaaa] mb-[12px]" />
-
-          {/* Wallet Card */}
-          {user && (
-            <div className="mb-[12px] rounded-[12px] bg-[#969696] p-4">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-[12px] font-medium text-white">My Wallet</span>
-                <WalletIcon size={18} className="text-white" />
+            <div className="relative flex items-center gap-3.5">
+              <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-coral text-[24px] font-bold text-white shadow-btn">
+                {user.avatar && user.avatar.length > 2 ? (
+                  <img src={user.avatar} alt="" className="w-full h-full object-cover" />
+                ) : initials}
               </div>
-              <div className="text-[24px] font-bold text-white mb-2">৳{balance.toLocaleString()}</div>
-              <button
-                onClick={() => setWalletHistoryOpen(true)}
-                className="w-full rounded-[8px] bg-white/15 px-3 py-2 text-[11px] font-medium text-white transition active:scale-[.98]"
-              >
-                ৳{totalEarned.toLocaleString()} earned · {referralCode ?? '—'} | History →
-              </button>
-            </div>
-          )}
 
-          {/* Quick Stats */}
-          <div className="grid grid-cols-3 gap-3 mb-3">
-            <button
-              onClick={() => go({ name: 'tabs', tab: 'orders' })}
-              className="flex flex-col items-center rounded-[12px] bg-[#f8f8f8] p-3 transition active:scale-[.98]"
-            >
-              <div className="text-[18px] font-bold text-[#999999]">{orders.length}</div>
-              <div className="text-[10px] text-[#b5b5b5]">Orders</div>
-            </button>
-            <button
-              onClick={() => go({ name: 'wishlist' })}
-              className="flex flex-col items-center rounded-[12px] bg-[#f8f8f8] p-3 transition active:scale-[.98]"
-            >
-              <div className="text-[18px] font-bold text-[#999999]">{wishlist.length}</div>
-              <div className="text-[10px] text-[#b5b5b5]">Wishlist</div>
-            </button>
-            <button
-              onClick={() => go({ name: 'cart' })}
-              className="flex flex-col items-center rounded-[12px] bg-[#f8f8f8] p-3 transition active:scale-[.98]"
-            >
-              <div className="text-[18px] font-bold text-[#999999]">{items.length}</div>
-              <div className="text-[10px] text-[#b5b5b5]">Cart</div>
-            </button>
+              <div className="flex-1">
+                <div className="text-[18px] font-bold tracking-tight text-ink">
+                  {user.name}
+                </div>
+                {user.email && <div className="text-[12px] text-ink-300">{user.email}</div>}
+                <div className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-0.5 text-[10px] font-bold tracking-wider text-coral uppercase">
+                  <Star className="h-2.5 w-2.5 fill-coral text-coral" /> Member
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Section 2: Account */}
-        <div className="px-[24px] mb-[16px]">
-          <div className="h-[10px] w-[80px] rounded-[3px] bg-[#aaaaaa] mb-[12px]" />
+        {/* Wallet Card — solid brand-pink (bKash-pink money convention), no gradient */}
+        {user && (
+          <section className="px-6 pt-2 pb-1">
+            <div className="relative overflow-hidden rounded-[22px] bg-coral px-4 py-4 text-white shadow-btn">
+              <div className="pointer-events-none absolute -right-4 -top-4 h-20 w-20 rounded-full bg-white/15" />
+              <div className="pointer-events-none absolute -left-8 -bottom-10 h-24 w-24 rounded-full bg-white/10" />
+              <div className="relative flex items-center justify-between">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-white/80">My Wallet</div>
+                <WalletIcon className="h-4 w-4 text-white/80" />
+              </div>
+              <div className="relative mt-1.5 text-[26px] font-bold leading-none">
+                ৳{balance.toLocaleString()}
+              </div>
+              <button
+                onClick={() => setWalletHistoryOpen(true)}
+                className="relative mt-2.5 flex w-full items-center justify-between rounded-xl bg-white/15 px-3 py-2 text-[11px] font-medium text-white transition active:scale-[.98]"
+              >
+                <span>৳{totalEarned.toLocaleString()} earned · {referralCode ?? '—'}</span>
+                <span>History →</span>
+              </button>
+            </div>
+          </section>
+        )}
 
+
+        <div className="mt-4 grid grid-cols-3 gap-3 px-6 anim-up delay-1">
+          <Stat label="Orders" value={(orders ?? []).length} onClick={() => go({ name: 'tabs', tab: 'orders' })} />
+          <Stat label="Wishlist" value={(wishlist ?? []).length} onClick={() => go({ name: 'wishlist' })} />
+          <Stat label="In cart" value={(items ?? []).length} onClick={() => go({ name: 'cart' })} />
+        </div>
+
+        <div className="mt-4 px-6 anim-up delay-2">
           {/* Address book */}
           {user && (
             <button
               onClick={() => setShowAddressModal(true)}
-              className="w-full flex items-center gap-[12px] py-[14px] border-b border-[#f0f0f0] text-left transition active:scale-[.98]"
+              className="mt-3 flex w-full items-center justify-between rounded-2xl border border-border bg-surface px-4 py-4 text-left shadow-card transition active:scale-[.98]"
             >
-              <div className="flex h-[20px] w-[20px] items-center justify-center rounded-[4px] bg-[#d5d5d5]">
-                <MapPin size={14} className="text-[#999999]" />
-              </div>
-              <div className="flex-1">
-                <div className="text-[12px] text-[#b5b5b5]">Address book</div>
-                <div className="text-[10px] text-[#d0d0d0]">
-                  {addresses.length === 0 ? 'Save multiple addresses' : `${addresses.length} address${addresses.length > 1 ? 'es' : ''} saved`}
+              <div className="flex items-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-secondary text-coral">
+                  <MapPin className="h-4 w-4" />
+                </div>
+                <div>
+                  <div className="text-[13px] font-bold text-ink">Address book</div>
+                  <div className="text-[11px] text-ink-300">
+                    {addresses.length === 0 ? 'Save multiple addresses' : `${addresses.length} address${addresses.length > 1 ? 'es' : ''} saved`}
+                  </div>
                 </div>
               </div>
-              <ChevronRight size={16} className="text-[#cccccc]" />
+              <ChevronRight className="h-4 w-4 text-ink-200" />
             </button>
           )}
 
@@ -572,245 +551,655 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
           {user && (
             <button
               onClick={() => setShowDatesModal(true)}
-              className="w-full flex items-center gap-[12px] py-[14px] border-b border-[#f0f0f0] text-left transition active:scale-[.98]"
+              className="mt-3 flex w-full items-center justify-between rounded-2xl border border-border bg-surface px-4 py-4 text-left shadow-card transition active:scale-[.98]"
             >
-              <div className="flex h-[20px] w-[20px] items-center justify-center rounded-[4px] bg-[#d5d5d5]">
-                <Cake size={14} className="text-[#999999]" />
-              </div>
-              <div className="flex-1">
-                <div className="text-[12px] text-[#b5b5b5]">Special Dates</div>
-                <div className="text-[10px] text-[#d0d0d0]">
-                  {specialDates.length === 0 ? 'Birthdays, anniversaries' : `${specialDates.length} date${specialDates.length > 1 ? 's' : ''} saved`}
+              <div className="flex items-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-secondary text-coral">
+                  <Cake className="h-4 w-4" />
+                </div>
+                <div>
+                  <div className="text-[13px] font-bold text-ink">Special Dates</div>
+                  <div className="text-[11px] text-ink-300">
+                    {specialDates.length === 0 ? 'Birthdays, anniversaries' : `${specialDates.length} date${specialDates.length > 1 ? 's' : ''} saved`}
+                  </div>
                 </div>
               </div>
-              <ChevronRight size={16} className="text-[#cccccc]" />
+              <ChevronRight className="h-4 w-4 text-ink-200" />
             </button>
           )}
 
           {/* My Coupons */}
           <button
             onClick={() => go({ name: 'coupons' })}
-            className="w-full flex items-center gap-[12px] py-[14px] border-b border-[#f0f0f0] text-left transition active:scale-[.98]"
+            className="mt-3 flex w-full items-center justify-between rounded-2xl border border-border bg-surface px-4 py-4 text-left shadow-card transition active:scale-[.98]"
           >
-            <div className="flex h-[20px] w-[20px] items-center justify-center rounded-[4px] bg-[#d5d5d5]">
-              <Tag size={14} className="text-[#999999]" />
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-secondary text-coral">
+                <Tag className="h-4 w-4" />
+              </div>
+              <div>
+                <div className="text-[13px] font-bold text-ink">My Coupons</div>
+                <div className="text-[11px] text-ink-300">Offers you can use at checkout</div>
+              </div>
             </div>
-            <div className="flex-1">
-              <div className="text-[12px] text-[#b5b5b5]">My Coupons</div>
-              <div className="text-[10px] text-[#d0d0d0]">Offers you can use at checkout</div>
-            </div>
-            <ChevronRight size={16} className="text-[#cccccc]" />
+            <ChevronRight className="h-4 w-4 text-ink-200" />
           </button>
         </div>
 
-        {/* Wishlist Preview */}
         {wishlistItems.length > 0 && (
-          <div className="px-[24px] mb-[16px]">
-            <div className="flex items-center justify-between mb-[12px]">
-              <div className="h-[10px] w-[80px] rounded-[3px] bg-[#aaaaaa]" />
+          <div className="mt-5 anim-up delay-2">
+            <div className="flex items-center justify-between px-6">
+              <h3 className="text-[20px] font-semibold tracking-tight text-ink">
+                Wishlist
+              </h3>
               <button
                 onClick={() => go({ name: 'wishlist' })}
-                className="text-[11px] font-medium text-[#b5b5b5] underline-offset-4 hover:underline"
+                className="text-[11px] font-medium text-text-tertiary underline-offset-4 hover:underline"
               >
                 See all
               </button>
             </div>
-            <div className="flex gap-3 overflow-x-auto pb-2">
+
+            <div className="no-scrollbar mt-3 flex gap-3 overflow-x-auto px-6 pb-1">
               {wishlistItems.slice(0, 6).map((p) => (
                 <button
                   key={p.id}
                   onClick={() => go({ name: 'product', productId: p.id })}
-                  className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-[12px] border border-[#eeeeee] transition active:scale-95"
+                  className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-2xl border border-border shadow-card transition active:scale-95"
                 >
-                  <img src={p.image} alt={p.name} className="h-full w-full object-cover" />
+                  <img src={p.image} alt="" className="h-full w-full object-cover" />
                 </button>
               ))}
             </div>
           </div>
         )}
 
-        {/* Section 3: Menu Items */}
-        <div className="px-[24px] mb-[16px]">
-          <div className="h-[10px] w-[80px] rounded-[3px] bg-[#aaaaaa] mb-[12px]" />
-
-          {menu.map((m, i) => (
-            <button
-              key={i}
-              onClick={m.action}
-              className="w-full flex items-center gap-[12px] py-[14px] border-b border-[#f0f0f0] text-left transition active:scale-[.98]"
-            >
-              <div className="flex h-[20px] w-[20px] items-center justify-center rounded-[4px] bg-[#d5d5d5]">
-                <m.Icon size={14} className="text-[#999999]" />
-              </div>
-              <div className="flex-1">
-                <div className="text-[12px] text-[#b5b5b5]">{m.label}</div>
-                <div className="text-[10px] text-[#d0d0d0]">{m.sub}</div>
-              </div>
-              <ChevronRight size={16} className="text-[#cccccc]" />
-            </button>
-          ))}
+        <div className="mt-5 px-6 anim-up delay-3">
+          <div className="overflow-hidden rounded-2xl border border-border bg-surface shadow-card">
+            {menu.map((m, i) => (
+              <button
+                key={m.label}
+                onClick={m.action}
+                className={`flex w-full items-center gap-4 px-2 py-4 text-left transition active:bg-bg ${
+                  i !== menu.length - 1 ? 'border-b border-border' : ''
+                }`}
+              >
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-secondary text-coral">
+                  <m.Icon className="h-[17px] w-[17px]" strokeWidth={2} />
+                </div>
+                <div className="flex-1">
+                  <div className="text-[13.5px] font-bold text-ink">{m.label}</div>
+                  <div className="text-[11px] text-ink-300">{m.sub}</div>
+                </div>
+                <ChevronRight className="h-4 w-4 text-ink-200" />
+              </button>
+            ))}
+          </div>
         </div>
 
-        {/* Invite Friends */}
-        <div className="px-[24px] mb-[16px]">
-          <div className="rounded-[12px] bg-[#f8f8f8] p-4">
-            <div className="text-[12px] font-medium text-[#999999] mb-1">Invite friends, earn ৳100</div>
-            <div className="text-[10px] text-[#b5b5b5] mb-3">Share your referral link</div>
+        <div className="mt-4 px-6 anim-up delay-4">
+          <div className="flex items-center gap-4 rounded-2xl border border-dashed border-coral/40 bg-secondary/50 px-3.5 py-3 shadow-card">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-coral text-white shadow-btn">
+              <Sparkles className="h-4 w-4" strokeWidth={2} />
+            </div>
+            <div className="flex-1">
+              <div className="text-[13px] font-bold text-ink">Invite friends, earn ৳100</div>
+              <div className="text-[11px] text-ink-300">Share your referral link</div>
+            </div>
             <button
               onClick={() => setInviteOpen(true)}
-              className="rounded-full bg-[#969696] px-3 py-1.5 text-[11px] font-bold text-white transition active:scale-95"
+              className="rounded-full bg-coral px-3 py-1.5 text-[11px] font-bold text-white shadow-btn transition active:scale-95"
             >
               Invite
             </button>
           </div>
         </div>
 
-        {/* Sign out */}
-        <div className="px-[24px] mb-[24px]">
+        <div className="mt-4 px-6 anim-up delay-4">
           <button
             onClick={signOut}
-            className="w-full flex items-center justify-center gap-2 rounded-[12px] border border-[#eeeeee] py-3 text-[12px] font-medium text-[#999999] transition active:scale-[.98]"
+            className="flex w-full items-center justify-center gap-2 rounded-2xl border border-border bg-surface py-3.5 text-[13px] font-bold text-error shadow-card transition active:scale-[.98]"
           >
-            <LogOut size={16} />
+            <LogOut className="h-4 w-4" />
+
             Sign out
           </button>
         </div>
 
-        {/* Admin Dashboard */}
+        {/* Admin Dashboard — only visible to admin users */}
         {showAdmin && effectiveIsAdmin && user && (
-          <div className="px-[24px] mb-[24px]">
+          <div className="px-4 pb-6 anim-up">
+            <div className="flex items-center gap-2 mb-3 mt-4">
+              <Settings className="h-5 w-5 text-coral" strokeWidth={2} />
+              <h2 className="text-[17px] font-bold text-ink">Admin Dashboard</h2>
+              <span className="ml-auto rounded-full bg-coral px-2 py-0.5 text-[10px] font-bold text-white uppercase tracking-wide">Admin</span>
+            </div>
             <AdminErrorBoundary>
-              <AdminPanel />
+              <AdminPanel embedded />
             </AdminErrorBoundary>
           </div>
         )}
 
-        {/* Footer */}
-        <div className="px-[24px] pb-[40px] text-center">
-          <div onClick={handleLogoTap} className="inline-block cursor-pointer">
-            <BrandLogo size={24} />
-          </div>
-          <div className="mt-2 text-[10px] text-[#d0d0d0]">Bake Art Style · v2.0</div>
-        </div>
+        <button type="button" onClick={handleLogoTap} className="mt-6 flex w-full items-center justify-center gap-2 text-ink-200 active:scale-[.99]">
+          <BrandLogo size={18} />
+          <span className="text-[11px] font-medium tracking-wider uppercase">
+            Bake Art Style · v2.0
+          </span>
+        </button>
       </div>
 
-      {/* Modals */}
       {customerOpen && (
         <>
-          <div className="fixed inset-0 z-40 bg-black/40" onClick={() => setCustomerOpen(false)} />
-          <div className="fixed inset-x-0 bottom-0 z-50 max-h-[90vh] overflow-y-auto rounded-t-[24px] bg-white p-6 shadow-2xl">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-[18px] font-bold text-[#999999]">Checkout Profile</h2>
+          <div
+            className="fixed inset-0 bg-ink/45 z-[60]"
+            onClick={() => setCustomerOpen(false)}
+          />
+          <div className="fixed bottom-0 left-1/2 z-[61] max-h-[88vh] w-full max-w-[420px] -translate-x-1/2 overflow-hidden rounded-t-[22px] border-t border-border bg-surface shadow-float">
+            <div className="w-10 h-1 bg-ink-100 rounded-full mx-auto mt-3" />
+
+            <div className="px-6 pt-4 pb-2 flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-bold text-ink">Checkout Profile</h2>
+                <p className="text-[11px] text-ink-200">
+                  একবার save করলে checkout-এ auto-fill হবে
+                </p>
+              </div>
               <button
                 onClick={() => setCustomerOpen(false)}
-                className="w-8 h-8 rounded-full bg-[#f8f8f8] flex items-center justify-center"
+                className="w-8 h-8 rounded-full bg-ink-50 flex items-center justify-center"
               >
-                <X size={18} className="text-[#999999]" />
+                <X className="w-4 h-4 text-ink-300" />
               </button>
             </div>
-            <p className="text-[12px] text-[#b5b5b5] mb-4">একবার save করলে checkout-এ auto-fill হবে</p>
 
-            <div className="space-y-4">
-              <div>
-                <label className="block text-[11px] font-medium text-[#aaaaaa] mb-1">নাম</label>
-                <input
-                  value={draftProfile.name}
-                  onChange={(e) => setDraftProfile({ ...draftProfile, name: e.target.value })}
-                  placeholder="আপনার নাম"
-                  className="w-full rounded-[8px] border border-[#e8e8e8] bg-[#f8f8f8] px-3 py-2 text-[14px] text-[#999999] outline-none focus:border-[#969696]"
-                />
-              </div>
-              <div>
-                <label className="block text-[11px] font-medium text-[#aaaaaa] mb-1">ফোন</label>
-                <input
-                  value={draftProfile.phone}
-                  onChange={(e) => setDraftProfile({ ...draftProfile, phone: e.target.value })}
-                  placeholder="01XXXXXXXXX"
-                  inputMode="tel"
-                  className="w-full rounded-[8px] border border-[#e8e8e8] bg-[#f8f8f8] px-3 py-2 text-[14px] text-[#999999] outline-none focus:border-[#969696]"
-                />
-              </div>
-              <div>
-                <label className="block text-[11px] font-medium text-[#aaaaaa] mb-1">সম্পূর্ণ ঠিকানা</label>
+            <div className="no-scrollbar max-h-[72vh] overflow-y-auto px-6 pb-6 pt-2 space-y-3">
+              <Field
+                label="আপনার নাম"
+                value={draftProfile.name}
+                onChange={(v) => setDraftProfile({ ...draftProfile, name: v })}
+                placeholder="আপনার নাম"
+              />
+
+              <Field
+                label="মোবাইল নম্বর"
+                value={draftProfile.phone}
+                onChange={(v) => setDraftProfile({ ...draftProfile, phone: v })}
+                placeholder="01XXXXXXXXX"
+                inputMode="tel"
+              />
+
+              <label className="block">
+                <span className="mb-1 block text-[10.5px] font-bold tracking-wider text-ink-200 uppercase">
+                  সম্পূর্ণ ঠিকানা
+                </span>
+                <div className="mb-1.5 flex flex-col gap-1.5">
+                  <button
+                    type="button"
+                    onClick={handleLocateProfile}
+                    disabled={profileLocating}
+                    className="flex items-center justify-center gap-1.5 self-start rounded-full bg-secondary px-3.5 py-1.5 text-[11px] font-bold text-coral transition active:scale-95 disabled:opacity-50"
+                  >
+                    {profileLocating ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : (
+                      <Navigation className="h-3 w-3" />
+                    )}
+                    {profileLocating ? 'লোকেশন খোঁজা হচ্ছে...' : 'বর্তমান অবস্থান ব্যবহার করুন'}
+                  </button>
+                  {profileLocateError && (
+                    <span className="text-[11px] text-error font-semibold px-1">{profileLocateError}</span>
+                  )}
+                </div>
                 <textarea
                   value={draftProfile.address}
                   onChange={(e) => setDraftProfile({ ...draftProfile, address: e.target.value })}
-                  placeholder="বাসা, রোড, এলাকা"
+                  placeholder="বাসা/রোড/এলাকা"
                   rows={3}
-                  className="w-full rounded-[8px] border border-[#e8e8e8] bg-[#f8f8f8] px-3 py-2 text-[14px] text-[#999999] outline-none focus:border-[#969696]"
+                  className="w-full resize-none rounded-xl border border-border bg-surface px-3 py-2.5 text-[13px] font-medium text-ink outline-none focus:border-coral focus:ring-2 focus:ring-coral/15"
                 />
-                <button
-                  onClick={handleLocateProfile}
-                  disabled={profileLocating}
-                  className="mt-2 flex items-center gap-2 text-[11px] font-medium text-[#969696]"
-                >
-                  {profileLocating ? (
-                    <Loader2 size={14} className="animate-spin" />
-                  ) : (
-                    <Navigation size={14} />
-                  )}
-                  {profileLocating ? 'লোকেশন খোঁজা হচ্ছে...' : 'বর্তমান অবস্থান ব্যবহার করুন'}
-                </button>
-                {profileLocateError && (
-                  <p className="mt-1 text-[11px] text-[#999999]">{profileLocateError}</p>
-                )}
-              </div>
-              <div>
-                <label className="block text-[11px] font-medium text-[#aaaaaa] mb-1">জেলা</label>
+              </label>
+
+              <label className="block">
+                <span className="mb-1 block text-[10.5px] font-bold tracking-wider text-ink-200 uppercase">
+                  জেলা / এলাকা
+                </span>
                 <select
                   value={draftProfile.district}
                   onChange={(e) => setDraftProfile({ ...draftProfile, district: e.target.value })}
-                  className="w-full rounded-[8px] border border-[#e8e8e8] bg-[#f8f8f8] px-3 py-2 text-[14px] text-[#999999] outline-none focus:border-[#969696]"
+                  className="h-11 w-full rounded-xl border border-border bg-surface px-3 text-[13px] font-medium text-ink outline-none focus:border-coral focus:ring-2 focus:ring-coral/15"
                 >
                   {BD_DISTRICTS.map((d) => (
                     <option key={d} value={d}>{d}</option>
                   ))}
                 </select>
-              </div>
+              </label>
+
               <div>
-                <label className="block text-[11px] font-medium text-[#aaaaaa] mb-2">পেমেন্ট মেথড</label>
-                <div className="space-y-2">
+                <div className="mb-1 text-[10.5px] font-bold tracking-wider text-ink-200 uppercase">
+                  Default payment
+                </div>
+                <div className="grid grid-cols-1 gap-2">
                   {PAYMENTS.map((p) => (
                     <button
                       key={p.id}
                       onClick={() => setDraftProfile({ ...draftProfile, payment: p.id })}
-                      className={`w-full flex items-center justify-between rounded-[8px] border px-3 py-2 text-left transition ${
+                      className={`flex items-center justify-between rounded-xl border-2 p-3 text-left ${
                         draftProfile.payment === p.id
-                          ? 'border-[#969696] bg-[#f8f8f8]'
-                          : 'border-[#e8e8e8] bg-white'
+                          ? 'border-coral bg-coral-50/50'
+                          : 'border-border bg-surface'
                       }`}
                     >
                       <div>
-                        <div className="text-[13px] font-medium text-[#999999]">{p.label}</div>
-                        <div className="text-[11px] text-[#b5b5b5]">{p.sub}</div>
+                        <div className="text-[13px] font-bold text-ink">{p.label}</div>
+                        <div className="text-[10.5px] text-ink-200">{p.sub}</div>
                       </div>
-                      {draftProfile.payment === p.id && (
-                        <Check size={16} className="text-[#969696]" />
-                      )}
+                      <div className={`flex h-5 w-5 items-center justify-center rounded-full ${
+                        draftProfile.payment === p.id
+                          ? 'bg-coral text-white'
+                          : 'border border-border bg-surface'
+                      }`}>
+                        {draftProfile.payment === p.id && <Check className="h-3 w-3" strokeWidth={3} />}
+                      </div>
                     </button>
                   ))}
                 </div>
               </div>
-            </div>
 
-            <button
-              onClick={handleSaveCustomer}
-              className="mt-6 w-full rounded-[12px] bg-[#969696] py-3 text-[14px] font-medium text-white transition active:scale-[.98]"
-            >
-              Save Profile
-            </button>
+              <button
+                onClick={() => void handleSaveCustomer()}
+                className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-coral text-[13px] font-bold text-white shadow-btn transition active:scale-[.98]"
+              >
+                <Save className="h-4 w-4" />
+                Save for Checkout
+              </button>
+            </div>
           </div>
         </>
       )}
 
-      {/* Other modals (address, dates, invite, wallet history, contact) would go here */}
-      {/* Keeping them minimal for now - they follow the same pattern */}
-
-      {walletHistoryOpen && (
-        <WalletHistoryModal onClose={() => setWalletHistoryOpen(false)} />
+      {contactOpen && (
+        <>
+          <div
+            className="fixed inset-0 bg-ink/45 z-[60]"
+            onClick={() => setContactOpen(false)}
+          />
+          <div className="fixed bottom-0 left-1/2 z-[61] w-full max-w-[420px] -translate-x-1/2 rounded-t-[22px] border-t border-border bg-surface shadow-float">
+            <div className="w-10 h-1 bg-ink-100 rounded-full mx-auto mt-3" />
+            <div className="px-6 pt-4 pb-2 flex items-center justify-between">
+              <h2 className="text-lg font-bold text-ink">যোগাযোগ ও সহায়তা</h2>
+              <button
+                onClick={() => setContactOpen(false)}
+                className="w-8 h-8 rounded-full bg-ink-50 flex items-center justify-center"
+              >
+                <X className="w-4 h-4 text-ink-300" />
+              </button>
+            </div>
+            <div className="px-6 pb-8">
+              <ChatBot embedded />
+            </div>
+          </div>
+        </>
       )}
 
-      {contactOpen && <ChatBot onClose={() => setContactOpen(false)} />}
+      {/* Address Manager Modal */}
+      {showAddressModal && (
+        <div className="fixed inset-0 z-[80] flex flex-col bg-ink/45" onClick={() => !editingAddress && setShowAddressModal(false)}>
+          <div className="mt-auto w-full rounded-t-[22px] border-t border-border bg-surface p-5 pb-8 shadow-float" onClick={(e) => e.stopPropagation()}>
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-[17px] font-bold text-ink">ঠিকানার তালিকা</h2>
+              <button onClick={() => setShowAddressModal(false)} className="h-8 w-8 rounded-full bg-ink-50 flex items-center justify-center text-ink-300">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {!editingAddress ? (
+              <>
+                <div className="space-y-2 max-h-64 overflow-y-auto">
+                  {addresses.length === 0 && (
+                    <div className="rounded-2xl border border-border bg-ink-50 py-6 text-center text-[13px] text-ink-200">এখনো কোনো ঠিকানা সংরক্ষণ করা হয়নি</div>
+                  )}
+                  {addresses.map((addr) => (
+                    <div key={addr.id} className="flex items-center gap-4 rounded-2xl border border-border bg-surface p-3 shadow-card">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[12px] font-bold text-ink">{addr.name}</span>
+                          {addr.isDefault && <span className="rounded-full bg-coral px-2 py-0.5 text-[9px] font-bold text-white">ডিফল্ট</span>}
+                        </div>
+                        <div className="text-[11px] text-ink-300 mt-0.5">{addr.address}, {addr.district}</div>
+                        <div className="text-[11px] text-ink-200">{addr.phone}</div>
+                      </div>
+                      <div className="flex gap-1">
+                        {!addr.isDefault && (
+                          <button onClick={() => setAddresses(prev => prev.map(a => ({ ...a, isDefault: a.id === addr.id })))}
+                            className="rounded-lg bg-ink-50 px-2 py-1 text-[10px] font-bold text-ink-300">ডিফল্ট করুন</button>
+                        )}
+                        <button onClick={() => { setAddrForm({ name: addr.name, address: addr.address, district: addr.district, phone: addr.phone }); setAddrLocateError(''); setEditingAddress(addr); }}
+                          className="rounded-lg bg-secondary px-2 py-1 text-[10px] font-bold text-coral">এডিট</button>
+                        <button onClick={() => setAddresses(prev => prev.filter(a => a.id !== addr.id))}
+                          className="rounded-lg bg-error/10 px-2 py-1 text-[10px] font-bold text-error">×</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {addresses.length < 5 && (
+                  <button
+                    onClick={() => { setAddrForm({ name: '', address: '', district: '', phone: '' }); setAddrLocateError(''); setEditingAddress({ id: `addr-${Date.now()}`, name: '', address: '', district: '', phone: '', isDefault: addresses.length === 0 }); }}
+                    className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl bg-coral py-3 text-[13px] font-bold text-white shadow-btn transition active:scale-[.98]"
+                  >
+                    + নতুন ঠিকানা যোগ করুন
+                  </button>
+                )}
+              </>
+            ) : (
+              <div className="space-y-3">
+                <h3 className="text-[14px] font-bold text-ink">{addresses.find(a => a.id === editingAddress.id) ? 'ঠিকানা এডিট করুন' : 'নতুন ঠিকানা'}</h3>
+
+                <div>
+                  <label className="text-[10px] font-bold text-ink-200 uppercase">লেবেল (যেমন: বাসা, অফিস)</label>
+                  <input
+                    value={addrForm.name}
+                    onChange={(e) => setAddrForm(prev => ({ ...prev, name: e.target.value }))}
+                    placeholder="বাসা"
+                    className="mt-1 w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-[13px] font-medium text-ink outline-none focus:border-coral focus:ring-2 focus:ring-coral/15"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1.5 pt-0.5">
+                  <button
+                    type="button"
+                    onClick={handleLocateAddress}
+                    disabled={addrLocating}
+                    className="flex items-center justify-center gap-1.5 self-start rounded-full bg-secondary px-3.5 py-1.5 text-[11px] font-bold text-coral transition active:scale-95 disabled:opacity-50"
+                  >
+                    {addrLocating ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : (
+                      <Navigation className="h-3 w-3" />
+                    )}
+                    {addrLocating ? 'লোকেশন খোঁজা হচ্ছে...' : 'বর্তমান অবস্থান ব্যবহার করুন'}
+                  </button>
+                  {addrLocateError && (
+                    <span className="text-[11px] text-error font-semibold px-1">{addrLocateError}</span>
+                  )}
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-bold text-ink-200 uppercase">সম্পূর্ণ ঠিকানা</label>
+                  <textarea
+                    value={addrForm.address}
+                    onChange={(e) => setAddrForm(prev => ({ ...prev, address: e.target.value }))}
+                    placeholder="বাসা ৫, রোড ৩, কুমিল্লা"
+                    rows={2}
+                    className="mt-1 w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-[13px] font-medium text-ink outline-none focus:border-coral focus:ring-2 focus:ring-coral/15 resize-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-bold text-ink-200 uppercase">জেলা</label>
+                  <select
+                    value={addrForm.district}
+                    onChange={(e) => setAddrForm(prev => ({ ...prev, district: e.target.value }))}
+                    className="mt-1 w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-[13px] font-medium text-ink outline-none focus:border-coral focus:ring-2 focus:ring-coral/15"
+                  >
+                    <option value="">জেলা বাছাই করুন</option>
+                    {BD_DISTRICTS.map((d) => (
+                      <option key={d} value={d}>{d}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-bold text-ink-200 uppercase">মোবাইল নম্বর</label>
+                  <input
+                    type="tel"
+                    inputMode="numeric"
+                    value={addrForm.phone}
+                    onChange={(e) => setAddrForm(prev => ({ ...prev, phone: e.target.value }))}
+                    placeholder="01700000000"
+                    className="mt-1 w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-[13px] font-medium text-ink outline-none focus:border-coral focus:ring-2 focus:ring-coral/15"
+                  />
+                </div>
+
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      if (!addrForm.name || !addrForm.address) return;
+                      const updated = { ...editingAddress, ...addrForm };
+                      setAddresses(prev => {
+                        const exists = prev.find(a => a.id === updated.id);
+                        return exists ? prev.map(a => a.id === updated.id ? updated : a) : [...prev, updated];
+                      });
+                      setEditingAddress(null);
+                    }}
+                    className="flex-1 rounded-xl bg-coral py-2.5 text-[13px] font-bold text-white shadow-btn transition active:scale-[.98]"
+                  >সেভ করুন</button>
+                  <button onClick={() => { setAddrLocateError(''); setEditingAddress(null); }}
+                    className="flex-1 rounded-xl bg-ink-50 py-2.5 text-[13px] font-bold text-ink-300">বাতিল</button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Special Dates Modal */}
+      {showDatesModal && (
+        <div className="fixed inset-0 z-[80] flex flex-col bg-ink/45" onClick={() => setShowDatesModal(false)}>
+          <div className="mt-auto w-full rounded-t-[22px] border-t border-border bg-surface p-5 pb-8 shadow-float" onClick={(e) => e.stopPropagation()}>
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-[17px] font-bold text-ink">Special Dates</h2>
+              <button onClick={() => setShowDatesModal(false)} className="h-8 w-8 rounded-full bg-ink-50 flex items-center justify-center text-ink-300">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <p className="mb-3 text-[11px] text-ink-300">We'll remind you 7 days before to order a cake</p>
+            <div className="space-y-2 max-h-48 overflow-y-auto mb-3">
+              {specialDates.map((d) => (
+                <div key={d.id} className="flex items-center gap-4 rounded-2xl border border-border bg-surface p-3 shadow-card">
+                  <span className="flex h-12 w-12 items-center justify-center rounded-full bg-secondary text-coral">
+                    {d.type === 'birthday' ? <Cake className="h-4 w-4" /> : d.type === 'anniversary' ? <Heart className="h-4 w-4" /> : <Gift className="h-4 w-4" />}
+                  </span>
+                  <div className="flex-1">
+                    <div className="text-[12px] font-bold text-ink">{d.name}</div>
+                    <div className="text-[11px] text-ink-300">{d.type} · {d.date}</div>
+                  </div>
+                  <button onClick={() => setSpecialDates(prev => prev.filter(x => x.id !== d.id))}
+                    className="text-[11px] text-error font-bold">Remove</button>
+                </div>
+              ))}
+              {specialDates.length === 0 && <div className="rounded-2xl border border-border bg-ink-50 py-4 text-center text-[12px] text-ink-200">No dates saved yet</div>}
+            </div>
+            {specialDates.length < 5 && (
+              <div className="space-y-2 border-t border-border pt-3">
+                <div className="flex gap-2">
+                  <select value={dateForm.type} onChange={(e) => setDateForm(f => ({ ...f, type: e.target.value as SpecialDate['type'] }))}
+                    className="rounded-xl border border-border bg-surface px-2 py-2 text-[12px] text-ink">
+                    <option value="birthday">Birthday</option>
+                    <option value="anniversary">Anniversary</option>
+                    <option value="other">Other</option>
+                  </select>
+                  <input value={dateForm.name} onChange={(e) => setDateForm(f => ({ ...f, name: e.target.value }))}
+                    placeholder="e.g. Mom's Birthday"
+                    className="flex-1 rounded-xl border border-border bg-surface px-3 py-2 text-[12px] text-ink focus:border-coral focus:outline-none" />
+                </div>
+                <div className="flex gap-2">
+                  <input type="date" value={dateForm.date ? `2000-${dateForm.date}` : ''}
+                    onChange={(e) => {
+                      const parts = e.target.value.split('-');
+                      if (parts.length >= 3) setDateForm(f => ({ ...f, date: `${parts[1]}-${parts[2]}` }));
+                    }}
+                    className="flex-1 rounded-xl border border-border bg-surface px-3 py-2 text-[12px] text-ink focus:border-coral focus:outline-none" />
+                  <button
+                    onClick={() => {
+                      if (!dateForm.name || !dateForm.date) return;
+                      setSpecialDates(prev => [...prev, { id: `sd-${Date.now()}`, ...dateForm }]);
+                      setDateForm({ type: 'birthday', name: '', date: '' });
+                    }}
+                    className="rounded-xl bg-coral px-4 py-2 text-[12px] font-bold text-white shadow-btn transition active:scale-[.98]"
+                  >Add</button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      <WalletHistoryModal open={walletHistoryOpen} onClose={() => setWalletHistoryOpen(false)} />
+
+      {/* ── Invite Sheet ── */}
+      {inviteOpen && (
+        <div className="fixed inset-0 z-50 flex flex-col justify-end">
+          {/* Backdrop — opaque scrim, no blur */}
+          <div
+            className="absolute inset-0 bg-ink/45"
+            onClick={() => setInviteOpen(false)}
+          />
+
+          {/* Sheet */}
+          <div className="relative rounded-t-[22px] border-t border-border bg-surface px-6 pt-5 pb-10 shadow-float">
+
+            {/* Drag handle */}
+            <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-ink-100" />
+
+            {/* Header */}
+            <div className="flex items-center justify-between mb-5">
+              <div>
+                <h2 className="text-[18px] font-bold tracking-tight text-ink">
+                  Invite & Earn
+                </h2>
+                <p className="text-[12px] text-ink-200 mt-0.5">
+                  বন্ধুকে invite করো, দুজনেই পাও ৳100
+                </p>
+              </div>
+              <button
+                onClick={() => setInviteOpen(false)}
+                className="flex h-8 w-8 items-center justify-center rounded-full bg-ink-50 text-ink-200"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* How it works */}
+            <div className="mb-5 rounded-2xl bg-secondary px-4 py-3.5 space-y-2.5">
+              <div className="text-[11px] font-bold uppercase tracking-wider text-ink-200 mb-1">
+                কীভাবে কাজ করে
+              </div>
+              <Step n="1" text="নিচের লিংক বা কোড বন্ধুকে পাঠাও" />
+              <Step n="2" text="বন্ধু প্রথম অর্ডারে এই কোড ব্যবহার করলে সে পাবে ৳100 wallet bonus" />
+              <Step n="3" text="তুমিও পাবে ৳100 wallet bonus — সরাসরি তোমার wallet এ" />
+            </div>
+
+            {/* Referral code display */}
+            {referralCode && (
+              <div className="mb-3 rounded-2xl border border-coral/20 bg-coral-50/40 px-4 py-3">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-coral/70 mb-1">
+                  তোমার রেফারেল কোড
+                </div>
+                <div className="font-mono text-[22px] font-bold tracking-[0.15em] text-coral">
+                  {referralCode}
+                </div>
+              </div>
+            )}
+
+            {/* Link display */}
+            <div className="mb-4 flex items-center gap-2 rounded-2xl border border-border bg-surface px-3.5 py-2.5 shadow-card">
+              <span className="flex-1 truncate text-[11.5px] text-ink-200 font-medium">
+                {referralLink}
+              </span>
+              <button
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText(referralLink);
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 2000);
+                  } catch {
+                    // fallback: select text
+                  }
+                }}
+                className="flex items-center gap-1.5 rounded-xl bg-secondary px-3 py-1.5 text-[11px] font-bold text-coral active:scale-95 transition"
+              >
+                {copied
+                  ? <><Check className="h-3 w-3 text-success" /> Copied!</>
+                  : <><Copy className="h-3 w-3" /> Copy</>
+                }
+              </button>
+            </div>
+
+            {/* Share button */}
+            <button
+              onClick={async () => {
+                const shareText = `বেক আর্ট স্টাইল থেকে কেক অর্ডার করো! আমার রেফারেল কোড ${referralCode} দিয়ে অর্ডার করলে তুমি পাবে ৳100 ছাড়।`;
+                if (navigator.share) {
+                  try {
+                    await navigator.share({ title: 'বেক আর্ট স্টাইল', text: shareText, url: referralLink });
+                  } catch { /* user cancelled */ }
+                } else {
+                  await navigator.clipboard.writeText(shareText + '\n' + referralLink);
+                  setCopied(true);
+                  setTimeout(() => setCopied(false), 2000);
+                }
+              }}
+              className="btn-primary flex w-full h-13 items-center justify-center gap-2 rounded-2xl text-[14px] font-bold"
+            >
+              <Share2 className="h-4 w-4" />
+              Share করো
+            </button>
+
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Field({
+  label,
+  value,
+  onChange,
+  placeholder,
+  inputMode,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+  inputMode?: 'text' | 'tel';
+}) {
+  return (
+    <label className="block">
+      <span className="mb-1 block text-[10.5px] font-bold tracking-wider text-ink-200 uppercase">
+        {label}
+      </span>
+      <input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        inputMode={inputMode}
+        className="h-11 w-full rounded-xl border border-border bg-surface px-3 text-[13px] font-medium text-ink outline-none focus:border-coral focus:ring-2 focus:ring-coral/15"
+      />
+    </label>
+  );
+}
+
+function Stat({ label, value, onClick }: { label: string; value: number; onClick?: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className="rounded-2xl border border-border bg-surface p-3 text-center shadow-card transition active:scale-95"
+    >
+      <div className="text-[18px] font-bold tabular text-ink">{value}</div>
+      <div className="mt-0.5 text-[10px] font-semibold text-ink-200">{label} →</div>
+    </button>
+  );
+}
+
+function Step({ n, text }: { n: string; text: string }) {
+  return (
+    <div className="flex items-start gap-3">
+      <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-coral text-white text-[10px] font-bold">
+        {n}
+      </div>
+      <p className="text-[12px] text-ink leading-snug">{text}</p>
     </div>
   );
 }
