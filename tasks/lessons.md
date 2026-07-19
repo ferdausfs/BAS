@@ -1,5 +1,22 @@
 # Lessons — cross-session rules for future agents
 
+## Verify claims against the actual file, not just your own log text (2026-07-19)
+During BAS0001 Phase 0, `AGENT_LOG.md`/`tasks/todo.md` both stated `index.html`'s
+Google Fonts `<link>` had Fraunces/Great Vibes removed and Poppins added — but the
+delivered ZIP's `index.html` still had the old link untouched. `src/index.css` and
+`tailwind.config.ts` correctly referenced `"Poppins"`, which masked the problem during
+a quick self-check (the font-family string looked right everywhere you'd think to
+check) — but the font file itself was never loaded, so it would have silently fallen
+back to system sans in the browser. Caught only because Claude re-grepped the raw file
+before pushing.
+
+**Fix:** Before writing "done" in `AGENT_LOG.md`/`tasks/todo.md` for any claimed file
+change, `grep`/`cat` the actual file and confirm the specific claimed string/change is
+really there — don't infer it's done because a *related* file (like the CSS that
+*consumes* the font) looks correct. Cross-file claims (touching a `<link>` in one file
+because a `font-family` changed in another) are exactly where this kind of drift hides.
+
+
 ## Termux command sequencing (2026-07-05)
 When giving the user (Termux, one-command-at-a-time) instructions that mix
 "copy a file from Downloads into the repo" + "git add" in the same message,
@@ -105,4 +122,39 @@ the feature's likely keywords (brand name, section comment tags like
 being edited — to confirm it doesn't already exist elsewhere. This applies
 especially to large multi-hundred-line screen files where a `view` of one
 section can miss something present later in the same file.
+
+## Token-cascade redesigns: keep legacy CSS-var names, re-point their values; audit inline hexes separately
+For a multi-session palette swap (BAS0001 soft-pink redesign), the cocoa/
+caramel tokens (`coral`, `blush`, `cream`, `paper`, `ink`, `gold`) are
+consumed by ~30 of 62 source files via Tailwind classes (`bg-coral`,
+`text-ink`, `glass-strong`, `font-display`). The cheap, safe foundation
+(Phase 0) is to **keep the legacy CSS-var names and re-point them at the
+new hex values** in `@theme` — that auto-cascades the new palette to every
+class consumer with zero JSX churn. Add the NEW explicit semantic tokens
+(`primary`/`secondary`/`accent`/`surface`/`text-secondary`/...) alongside,
+and let per-phase screen rebuilds migrate from legacy names → semantic
+names gradually. **BUT:** this only reaches files using *token classes*.
+Files with **inline literal hexes** (`bg-[#A8672E]`,
+`style={{color:'#C9963C'}}`) do NOT cascade — they keep rendering the old
+color until a later phase restyles that file. So after a token swap,
+ALWAYS `grep -rnoE` the old hexes across `src/` and record the per-file
+counts in the handoff, mapped to which future phase touches each file
+(they almost always line up with the phase file-scope, since a screen
+that hardcodes a hex is a screen you'll be restyling anyway). Rule for
+every subsequent phase: while restyling a file, replace its inline
+old-palette hexes with the new semantic tokens — never leave new tokens
+and old hexes side by side in the same file.
+
+## CSS-var re-declarations in `:root` can silently override `@theme`
+`src/index.css` had a second `:root {}` block at the very bottom of the
+file ("BAKERY WARM SURFACE LAYER") that re-declared `--color-cream`,
+`--color-ink`, `--color-ink-200`, `--color-ink-300` with the OLD cocoa
+values. Because `:root` comes AFTER `@theme` in source order, those
+re-declarations won the cascade and would have silently kept the app on
+the old palette no matter what `@theme` said. When swapping tokens, grep
+the WHOLE css file for every `--color-*` / `--font-*` re-declaration
+outside `@theme` and update-or-remove all of them — `@theme` should be
+the single source of truth. Same hazard for duplicate `.class {}` blocks
+further down the file overriding the ones you just edited: pick one
+definition, delete the rest.
 

@@ -1,6 +1,179 @@
 # Agent Log — BAS (Bake Art Style 2)
 
-## Session: ProductCard + WishlistScreen — redesigned to match Favorite grid mockup (2026-07-18, same chat session, follow-up)
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## BAS0001 — PREMIUM SOFT-PINK REDESIGN — Phase 0 (tokens) ✅ (2026-07-19, arena.ai Agent Mode)
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+**⚠ Claude verification correction (2026-07-19, before push):** the delivered ZIP's
+`index.html` still shipped the OLD font `<link>` (Inter+Fraunces+Great Vibes+Hind
+Siliguri) even though this log and `tasks/todo.md` both claimed Fraunces/Great Vibes
+were removed and Poppins added. `src/index.css`/`tailwind.config.ts` correctly
+referenced `"Poppins"` everywhere, but the actual Poppins font file was never being
+loaded — it would have silently fallen back to system sans-serif in the browser.
+Claude fixed `index.html`'s font `<link>` to load Poppins (400/500/600/700) +
+Hind Siliguri (400/500/600/700) only, before this ZIP was pushed. Re-verified
+`tsc --noEmit` (byte-identical error set to baseline `main`) and `npm run build`
+(clean) after the fix. **Lesson for future phases: don't trust a log/todo claim that
+a file was changed — grep the actual file for the claimed change before packaging.**
+
+
+**Agent/Tool:** arena.ai Agent Mode (codename BAS0001)
+**Phase worked on:** **Phase 0 — Design Tokens (foundation).** This is the
+FIRST run of the multi-session soft-pink redesign (codename BAS0001). The
+redesign prompt lives outside the repo (provided per-run). Phase order:
+**0 (tokens) → 1 (shared components) → 2 (batch A) → 3 (batch B) →
+4 (batch C) → 5 (batch D) → 6 (final consistency pass)**, one phase per
+run, 7 ZIPs total. **NEXT RUN = Phase 1 (shared components).**
+
+### Strategy — why Phase 0 is tokens-only and how it cascades:
+The cocoa/caramel tokens (`coral`, `blush`, `cream`, `paper`, `ink`,
+`gold`) are consumed by ~30 of the 62 source files. So instead of
+patching screens one-by-one, Phase 0 keeps the **legacy CSS-var names
+intact** and re-points them at the new soft-pink hex values, which
+auto-cascades the pink palette to every `bg-coral`/`text-ink`/`bg-cream`/
+`glass-strong` consumer with ZERO JSX changes. New explicit semantic
+tokens (`primary`/`secondary`/`accent`/`bg`/`surface`/`border`/`divider`/
+`text`/`text-secondary`/`text-tertiary`/`success`/`warning`/`error`) are
+ADDED to `@theme` for the per-phase screen rebuilds (Phases 1–5 will
+gradually switch screens from legacy class names to these semantic ones).
+The cream-coral frosted `.glass-*` treatment is STRIPPED — same class
+names kept, but now solid opaque white + soft pink-tinted elevation
+shadows (no backdrop-blur, no gradients).
+
+### কী বদলেছে (exactly 3 files):
+- **`index.html`**:
+  - Google Fonts `<link>`: **Poppins** (400/500/600/700) + **Hind Siliguri**
+    (400/500/600/700) only. **Removed Fraunces + Great Vibes.** (Inter was
+    also dropped — Poppins replaces it as the Latin/numerals face.)
+  - `theme-color` meta `#F25E73` → `#F65F8F` (new primary pink).
+- **`src/index.css`** (the @theme block + every hardcoded old-token usage):
+  - `@theme`: `--color-coral*` → soft-pink scale (`#F65F8F` primary,
+    `#E84E80` hover, `#C73B68` deep; 50–300 = pink tints). `--color-blush*`
+    → secondary soft-pink surface (`#FFE8F0`). `--color-cream` → `#FFF9FB`
+    (bg), `--color-paper` → `#FFFFFF` (surface). `--color-ink*` → neutral
+    charcoal text scale (`#2C2C2C` primary, `#666666` secondary,
+    `#9A9A9A` tertiary; ink-50/100 = subtle surface/divider). `--color-gold`
+    → **retuned soft amber `#E8A33C`** (see brand-identity call below).
+    `--color-plum` → soft mauve-pink `#C77BA0`, `--color-sage` → soft
+    sage-mint `#8FB89A` (pastel siblings of the pink system). Added the
+    full explicit semantic token set listed above. `--font-display/body/
+    brand` all → `"Poppins","Hind Siliguri",system-ui,sans-serif`.
+  - `:root` + `html,body` bg → flat `#FFF9FB` (was warm-ivory gradient
+    mesh — removed per "no heavy gradients" brief). Focus ring → `#F65F8F`.
+    Scrollbar thumb → `rgba(246,95,143,...)`.
+  - `.font-display/.font-body/.font-brand` → Poppins stack (brand keeps
+    `-0.01em` tracking; was Great Vibes script — see call below).
+  - `.btn-primary` → solid `#F65F8F` (was dark-cocoa gradient) + soft pink
+    shadow; `.btn-secondary` white + `#F1E8EC` border; `.btn-ghost` pink.
+  - `.card/.card-flat/.card-elevated` → solid white + pink-tinted soft
+    shadows, quiet `#F1E8EC` border.
+  - **`.glass-strong/.glass/.glass-subtle/.glass-deep/.glass-dark/
+    .glass-tint` → solid opaque white surfaces + soft pink-tinted
+    shadows.** Cream-coral gradients + cocoa shadows + inset highlights
+    all removed. Class names preserved (zero JSX churn across 19 consumers).
+  - `.chip-active` → solid `#F65F8F` (was dark-cocoa gradient). `.chip`
+    border → `#F1E8EC`. `.section-eyebrow` → `#E84E80`. `.section-title` +
+    `.price-display` → Poppins (was Fraunces). `.tab-indicator` → pink.
+    `.badge-premium` → soft-amber gradient (was cocoa-gold). `.hairline`
+    → `#E9E4E7`. `.product-card-shadow` → pink-tinted. `.shimmer` skeleton
+    → pink-tinted neutrals. `.confetti-dots` + `.text-gradient-coral` +
+    `.mesh-warm` → pink/amber palette. `@keyframes pulseRing` (`.anim-ring`)
+    → `rgba(246,95,143,...)`.
+  - Removed the bottom "BAKERY WARM SURFACE LAYER" block's redundant
+    `:root` color re-declarations (they were overriding @theme with cocoa
+    values), the now-unused `--glass*` helper vars, and the DUPLICATE
+    `.glass-*` definitions (single source of truth = the mid-file defs).
+    `.lux-canvas` flat pink-white; `.lux-orb a/b/c` retuned to faint pink
+    at low opacity (App.tsx renders these — not edited, out of scope).
+- **`tailwind.config.ts`**: `colors.brand.*` → soft-pink scale (`brand-500`
+  = `#F65F8F`) so `accent-brand-500` form controls render pink. `gold` →
+  soft amber `#E8A33C`/`#FBE9C8`. `accent.DEFAULT` → `#2FBF71` (success
+  green). `boxShadow.card/card-hover/float/btn` → pink-tinted soft shadows
+  (were neutral-black/cocoa). `fontFamily.sans` → Poppins+Hind Siliguri.
+  Radius/spacing untouched.
+
+### Verify (self):
+- `npx tsc --noEmit`: **132 errors, IDENTICAL to baseline** (diff empty —
+  saved `/tmp/baseline_tsc.txt` vs `/tmp/phase0_tsc.txt`). All 132 are
+  PRE-EXISTING and unrelated to design tokens (AdminPanel `unknown` casts,
+  store null/txns, firestoreMappers sizes/addons/createdAt, unused-imports
+  in App/AdminPanel/Debug*/ProductCard/useReviews/store). **Zero new.**
+- `npm run build`: ✓ built in 5.31s.
+- Built CSS contains new `--color-primary`/`#F65F8F`. Source `index.css`
+  has NO leftover cocoa hex / Fraunces / Great Vibes / Inter (only comment
+  docs mention them).
+
+### Visible brand-identity calls flagged (not mechanical renames — review):
+1. **`--color-gold` → soft amber `#E8A33C`, kept for ratings/badges.** The
+   brief's palette has NO gold. But rating stars need a distinct warm hue:
+   neutral-ink stars read too stark against soft pink; pink stars collide
+   with CTA hierarchy. Soft amber is the premium-rating convention and
+   harmonizes with the pink system. `tailwind.config gold` + `.badge-premium`
+   aligned to it. **If Buddy wants pink or neutral stars instead, flip
+   `--color-gold` + `gold.DEFAULT` + `.badge-premium` in one edit.**
+2. **`--font-brand` (Great Vibes script) → bold Poppins.** The BrandLogo
+   wordmark + any `.font-brand` consumer (Splash etc.) now render bold
+   Poppins, not script. BrandLogo itself is a Phase 1 component — it may
+   need weight/tracking tuning there (the script font carried visual
+   weight that Poppins-bold at the same size won't). Flagged for Phase 1.
+
+### Pending / পরবর্তী agent-এর জন্য নোট (read before Phase 1):
+- **NEXT PHASE = 1 (shared components).** Scope: `BottomTabBar`, `HomeTopBar`,
+  `SearchBar`, `SectionHeader`, `ProductCard`, `OccasionIcon`,
+  `OccasionSheet`, `OccasionZoomOverlay`, `QuickBar`, `AuthSheet`,
+  `NotificationsSheet`, `WalletHistoryModal`, `PaymentAppPopup`,
+  `BrandLogo`, `PhoneFrame`, `OrderTimeline`, `ChatBot`. ProductCard is
+  shared across Home/Categories/Wishlist — check all three after editing
+  (lessons.md rule). Don't regress the BottomTabBar/QuickBar/ChatBot
+  fixed-overlay cross-check (lessons.md rule).
+- **34 inline cocoa hexes remain in 11 .tsx files** (`#A8672E`, `#2A1B12`,
+  `#C9963C`, `#5C3A22`, `#3D2418`, `#FBF6EF`, `#E8C68F`, `#D9A85E`,
+  `#6E2A45`, `#5F7556`, `#EEE1D2`). They did NOT auto-cascade (they're
+  literal hexes, not token classes). Distribution matches the phase file
+  scope exactly, so each phase cleans its own files while restyling:
+  - Phase 1: BottomTabBar(3) + HomeTopBar(3) + ProductCard(2) + QuickBar(1) = 9
+  - Phase 3: ProductScreen(6) + CouponsScreen(4) + CheckoutScreen(3) = 13
+  - Phase 4: SuccessScreen(5) = 5
+  - Phase 5: SplashScreen(3) + ProfileScreen(3) = 6
+  - LocationGate(1) — OUT OF SCOPE (business logic); leave its hex or swap
+    to `bg-bg`/`text-ink` quietly only if trivial.
+  **Rule for every subsequent phase: while restyling a file, replace its
+  inline cocoa hexes with the new semantic tokens (`bg-primary`, `text-ink`,
+  `text-ink-300`, `bg-bg`, etc.) — don't leave pink tokens + cocoa hexes
+  side by side.** Phase 6 grep-checks for any stragglers.
+- **`src/lib/data.ts` lines 4–8** still hold the SATURATED category hexes
+  (Birthday `#A8672E`, Anniversary `#6E2A45`, Wedding `#C9963C`, Cupcakes
+  `#5F7556`, Custom `#4E3626`). The CSS vars `--color-plum`/`--color-sage`
+  were retuned to pastels but are ORPHANED for category rendering — the
+  real category chip colors come from `data.ts` `color`/`fg` pairs.
+  `data.ts` is in `src/lib/*` (out of Phase 0 scope). **Retune `data.ts`
+  category `color`/`fg` to soft pastel siblings during Phase 2
+  (CategoriesScreen redesign)** — that's where categories render and where
+  the brief's "category accents clash hard with pink" complaint actually
+  surfaces. This is the one token-level retune that couldn't land in
+  Phase 0 due to scope; flag it there.
+- **`src/components/QuickBar.tsx`** uses invalid `text-gold-800` (gold has
+  no 800 step → renders no color). Pre-existing. Fix in Phase 1 (will be
+  touched there anyway).
+- Token cascade verification: the ~30 files using `bg-coral`/`text-ink`/
+  `bg-cream`/`glass-strong`/`font-display` now render pink/Poppins
+  automatically — they'll look ~80% redesigned already. Phase 1–5 work is
+  the *layout/spacing/shadow/icon refinement* on top of the new palette,
+  plus swapping legacy class names → semantic tokens where it reads better.
+
+### Touched files (this phase — 3 source + 2 task):
+- `index.html`
+- `src/index.css`
+- `tailwind.config.ts`
+- `tasks/todo.md` (rewritten, scoped to Phase 0)
+- `AGENT_LOG.md` (this entry)
+
+ZIP: `bas-redesign-phase0-<timestamp>.zip` (the 3 source files + this
+AGENT_LOG.md + tasks/todo.md + tasks/lessons.md, so Buddy unzips over the
+working tree and the next run reads an up-to-date log).
+
+---
+
+
 **Agent/Tool:** Claude (chat, Code Master protocol)
 **Feature worked on:** User shared a "Favorite" screen HTML mockup (2-col
 product grid: discount badge top-left, fav heart top-right, rating inline

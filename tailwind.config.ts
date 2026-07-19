@@ -5,33 +5,35 @@ export default {
   darkMode: 'class',
   theme: {
     extend: {
-      // ── Brand Palette — cocoa / caramel (PRIMARY brand identity) ──────
-      // Redesigned 2026-07-16 (Phase 2): was rose-pink, now mirrors the
-      // cocoa/caramel `--color-coral` scale in src/index.css @theme so
-      // `brand-*` classes render brown, not pink.
-      // Note: ink.*, cream, paper, blush are defined in src/index.css @theme
-      // Those take precedence in Tailwind v4 — don't redefine them here.
+      // ── Brand Palette — BAS0001 soft-pink (Phase 0, 2026-07-19) ───────
+      // `brand-*` mirrors the new `--color-coral` / `--color-primary` pink
+      // scale in src/index.css @theme so `bg-brand-500` / `accent-brand-500`
+      // (form controls, sliders) render pink, not the old cocoa.
+      // NOTE: ink.*, cream, paper, blush, coral, gold, primary/secondary/
+      // accent/bg/surface/border/divider/text*/success/warning/error are all
+      // defined in src/index.css @theme. Those take precedence in Tailwind v4
+      // — don't redefine them here.
       colors: {
         brand: {
-          50:  '#FBF3E7',
-          100: '#F3E1C4',
-          200: '#E8C68F',
-          300: '#D9A85E',
-          400: '#C68F3F',
-          500: '#A8672E',   // ← PRIMARY (cocoa/caramel base)
-          600: '#8A4F22',
-          700: '#6B3A18',
-          800: '#4E2A11',
-          900: '#33200F',
+          50:  '#FFF9FB',
+          100: '#FFE8F0',
+          200: '#FFD6E4',
+          300: '#FFC1D6',
+          400: '#FB9DC0',
+          500: '#F65F8F',   // ← PRIMARY (soft-pink base)
+          600: '#E84E80',   // hover / pressed
+          700: '#C73B68',
+          800: '#A82E54',
+          900: '#7E1F3E',
         },
         gold: {
-          DEFAULT: '#C9963C',   // aligned with --color-gold in src/index.css
-          light:   '#E8D3AC',
+          DEFAULT: '#E8A33C',   // retuned soft amber (ratings/badges) — was cocoa gold
+          light:   '#FBE9C8',
         },
         accent: {
-          DEFAULT: '#2C8C4C',
-          light:   '#E5F5EC',
-          dark:    '#1F6337',
+          DEFAULT: '#2FBF71',   // retuned to brief's success green (was brownish green)
+          light:   '#E5F7EE',
+          dark:    '#239957',
         },
       },
 
@@ -44,21 +46,24 @@ export default {
         'pill': '9999px',
       },
 
-      // ── Shadows ───────────────────────────────────────────────────────
+      // ── Shadows (soft, low-opacity, single-source, pink-tinted) ───────
+      // Replaced the neutral-black-tinted cocoa shadows with pink-tinted
+      // soft equivalents per the BAS0001 brief (depth ≠ hue, but the hue is
+      // now pink, not neutral-black).
       boxShadow: {
-        'card':       '0 2px 12px rgba(0,0,0,0.06)',
-        'card-hover': '0 8px 24px rgba(0,0,0,0.12)',
-        'float':      '0 -4px 20px rgba(0,0,0,0.08)',
-        'btn':        '0 4px 12px rgba(168,103,46,0.30)',
+        'card':       '0 2px 12px rgba(246,95,143,0.08)',
+        'card-hover': '0 10px 28px -8px rgba(246,95,143,0.16)',
+        'float':      '0 -4px 20px rgba(246,95,143,0.08)',
+        'btn':        '0 4px 14px -4px rgba(246,95,143,0.40)',
       },
 
       // ── Fonts ─────────────────────────────────────────────────────────
-      // Note: playfair/script tokens removed — not loaded in index.html and
-      // never used anywhere; real brand fonts (Fraunces/Great Vibes/Inter)
-      // live as font-display/font-brand/font-body in src/index.css @theme.
+      // Poppins governs Latin text/numerals; Hind Siliguri is the Bengali
+      // renderer + fallback (most copy is Bengali). Fraunces / Great Vibes /
+      // Inter removed from the stack (see index.html font <link>).
       fontFamily: {
         siliguri: ['"Hind Siliguri"', 'sans-serif'],
-        sans:     ['"Inter"', '"Hind Siliguri"', 'sans-serif'],
+        sans:     ['"Poppins"', '"Hind Siliguri"', 'sans-serif'],
       },
 
       // ── Spacing extras ────────────────────────────────────────────────

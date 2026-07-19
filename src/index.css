@@ -1,65 +1,105 @@
 @import "tailwindcss";
 
 @theme {
-  /* === Cocoa / Caramel — primary brand (was "coral" rose) ===
-     Warm chocolate-to-caramel scale pulled from the bakery reference:
-     dark espresso headers, caramel CTAs, gold highlights. */
-  --color-coral:     #A8672E;
-  --color-coral-50:  #FBF3E7;
-  --color-coral-100: #F3E1C4;
-  --color-coral-200: #E8C68F;
-  --color-coral-300: #D9A85E;
-  --color-coral-400: #C68F3F;
-  --color-coral-500: #A8672E;
-  --color-coral-600: #8A4F22;
-  --color-coral-700: #6B3A18;
+  /* ════════════════════════════════════════════════════════════════
+     BAS0001 — PREMIUM SOFT-PINK REDESIGN (Phase 0, 2026-07-19)
+     Replaces the cocoa/caramel palette. Legacy var names (coral/blush/
+     cream/paper/ink/gold) are KEPT and pointed at the new soft-pink
+     values so ~30 consuming screens auto-cascade without JSX edits;
+     each screen gets its layout/spacing/shadow refined in its own phase.
+     Explicit semantic tokens (primary/secondary/accent/bg/surface/
+     border/divider/text/text-secondary/text-tertiary/success/warning/
+     error) are added for the per-phase rebuilds.
+     ════════════════════════════════════════════════════════════════ */
 
-  /* === Latte surfaces (was "blush") — warm tan tints for chips/tags === */
-  --color-blush:     #F3E4D0;
-  --color-blush-50:  #FBF6EF;
-  --color-blush-100: #F3E4D0;
-  --color-blush-200: #E8CFAE;
-  --color-blush-300: #D9B183;
+  /* === Primary brand pink — `coral` family renamed-in-place === */
+  --color-coral:     #F65F8F;   /* PRIMARY (alias of --color-primary) */
+  --color-coral-50:  #FFF9FB;
+  --color-coral-100: #FFE8F0;
+  --color-coral-200: #FFD6E4;
+  --color-coral-300: #FFC1D6;
+  --color-coral-400: #FB9DC0;
+  --color-coral-500: #F65F8F;
+  --color-coral-600: #E84E80;   /* primary hover / pressed */
+  --color-coral-700: #C73B68;   /* deep pink for dark-on-pink text */
 
-  /* === Canvas — warm ivory, matches the reference's off-white bakery
-     backdrop. Cards sit on this as solid opaque surfaces, not glass. === */
-  --color-cream:  #FBF6EF;
-  --color-paper:  #FFFFFF;
+  --color-primary:       #F65F8F;
+  --color-primary-hover: #E84E80;
 
-  /* === Ink (warm espresso-black text) === */
-  --color-ink:     #2A1B12;
-  --color-ink-50:  #F4EFEA;
-  --color-ink-100: #D9CCC0;
-  --color-ink-200: #A8927F;
-  --color-ink-300: #7A6455;
-  --color-ink-400: #3D2A1E;
-  --color-ink-500: #4E3626;
+  /* === Secondary soft-pink surface — `blush` family renamed-in-place === */
+  --color-blush:     #FFE8F0;
+  --color-blush-50:  #FFF9FB;
+  --color-blush-100: #FFE8F0;
+  --color-blush-200: #FFD6E4;
+  --color-blush-300: #FFC1D6;
 
-  /* === Gold accent (ratings, badges, price highlights) === */
-  --color-gold: #C9963C;
+  --color-secondary: #FFE8F0;   /* chip fills, subtle backgrounds */
+  --color-accent:    #FFD6E4;   /* badges, highlights */
 
-  /* === Plum (Anniversary category — kept as a romantic accent) === */
-  --color-plum:      #6E2A45;
-  --color-plum-tint: #F5E7EC;
+  /* === Canvas === */
+  --color-cream:  #FFF9FB;      /* app background (alias of --color-bg) */
+  --color-paper:  #FFFFFF;      /* card surface (alias of --color-surface) */
+  --color-bg:     #FFF9FB;
+  --color-surface:#FFFFFF;
 
-  /* === Sage (Cupcakes category — fresh/ingredient) === */
-  --color-sage:      #5F7556;
-  --color-sage-tint: #ECF1E9;
+  /* === Borders / dividers (quiet hairlines) === */
+  --color-border:  #F1E8EC;
+  --color-divider: #E9E4E7;
 
-  /* === Typography === */
-  --font-display: "Fraunces", "Georgia", serif;
-  --font-body:    "Inter", "Hind Siliguri", system-ui, -apple-system, sans-serif;
-  --font-brand:   "Great Vibes", cursive;
+  /* === Ink / text scale — neutral charcoal (was warm espresso) ===
+     ink   → text primary
+     ink-200 → text tertiary | ink-300 → text secondary
+     ink-50  → subtle surface tint | ink-100 → divider */
+  --color-ink:     #2C2C2C;     /* text primary */
+  --color-ink-50:  #F8F5F7;     /* very light neutral-pink surface tint */
+  --color-ink-100: #E9E4E7;     /* divider */
+  --color-ink-200: #9A9A9A;     /* text tertiary */
+  --color-ink-300: #666666;     /* text secondary */
+  --color-ink-400: #404040;
+  --color-ink-500: #4A4A4A;
+
+  --color-text:           #2C2C2C;
+  --color-text-secondary: #666666;
+  --color-text-tertiary:  #9A9A9A;
+
+  /* === Status === */
+  --color-success: #2FBF71;
+  --color-warning: #F4B740;
+  --color-error:   #E74C3C;
+
+  /* === Rating / premium accent — retuned soft amber.
+     The brief's palette has no gold, but rating stars need a distinct
+     warm hue (neutral-ink stars read too stark against soft pink;
+     pink stars collide with CTA hierarchy). Soft amber harmonizes. === */
+  --color-gold:      #E8A33C;
+  --color-gold-light:#FBE9C8;
+
+  /* === Category accents — retuned to soft pastel siblings of the pink
+     system (still per-category distinguishable). NOTE: these CSS vars are
+     orphaned for category rendering — real category chip colors come from
+     `src/lib/data.ts` color/fg pairs (saturated hexes, to be retuned in
+     Phase 2 CategoriesScreen redesign). Kept here for consistency. === */
+  --color-plum:      #C77BA0;   /* Anniversary — soft mauve-pink */
+  --color-plum-tint: #FBE9F2;
+  --color-sage:      #8FB89A;   /* Cupcakes — soft sage-mint */
+  --color-sage-tint: #ECF4EE;
+
+  /* === Typography — Poppins governs Latin; Hind Siliguri renders Bengali
+     (most copy) and is the fallback. Fraunces + Great Vibes removed.
+     --font-brand (was Great Vibes script) now bold Poppins — see AGENT_LOG
+     flag: BrandLogo wordmark becomes a bold Poppins wordmark (Phase 1 fix). === */
+  --font-display: "Poppins", "Hind Siliguri", system-ui, -apple-system, sans-serif;
+  --font-body:    "Poppins", "Hind Siliguri", system-ui, -apple-system, sans-serif;
+  --font-brand:   "Poppins", "Hind Siliguri", system-ui, -apple-system, sans-serif;
 }
 
 :root {
-  font-family: "Inter", "Hind Siliguri", system-ui, -apple-system, sans-serif;
-  color: #2A1B12;
-  background: #FBF6EF;
+  font-family: "Poppins", "Hind Siliguri", system-ui, -apple-system, sans-serif;
+  color: #2C2C2C;
+  background: #FFF9FB;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
-  font-feature-settings: "ss01", "cv11";
 
   /* ===== Shared animation easing curves ===== */
   --ease-premium: cubic-bezier(.16,1,.3,1);
@@ -70,29 +110,33 @@
 html, body {
   margin: 0;
   padding: 0;
-  background: #FBF6EF;
+  background: #FFF9FB;
   overflow-x: hidden;
 }
 
 html { scroll-behavior: smooth; }
 
-.font-display { font-family: "Fraunces", "Georgia", serif; letter-spacing: -0.025em; font-feature-settings: "ss01"; }
-.font-body    { font-family: "Inter", "Hind Siliguri", system-ui, sans-serif; }
-.font-brand   { font-family: "Great Vibes", cursive; letter-spacing: 0; }
+/* All three font-* utilities now resolve to Poppins (with Hind Siliguri
+   Bengali fallback). Display/brand lose their serif/script optical sizing
+   but keep weight control via utility classes (font-display stays a class
+   hook for headings; brand wordmark is bold Poppins now). */
+.font-display { font-family: "Poppins", "Hind Siliguri", system-ui, sans-serif; letter-spacing: -0.01em; font-feature-settings: "ss01"; }
+.font-body    { font-family: "Poppins", "Hind Siliguri", system-ui, sans-serif; }
+.font-brand   { font-family: "Poppins", "Hind Siliguri", system-ui, sans-serif; letter-spacing: -0.01em; }
 .tabular      { font-variant-numeric: tabular-nums; }
 
-/* === Scrollbar === */
+/* === Scrollbar (pink-tinted) === */
 ::-webkit-scrollbar       { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(168,103,46,.22); border-radius: 999px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(168,103,46,.4); }
+::-webkit-scrollbar-thumb { background: rgba(246,95,143,.22); border-radius: 999px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(246,95,143,.4); }
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
 
-/* === Focus ring === */
+/* === Focus ring (pink) === */
 *:focus { outline: none; }
 *:focus-visible {
-  outline: 2px solid #A8672E;
+  outline: 2px solid #F65F8F;
   outline-offset: 3px;
   border-radius: 10px;
 }
@@ -124,9 +168,9 @@ button { -webkit-tap-highlight-color: transparent; }
   100% { opacity: 0; transform: translateY(120vh) rotate(720deg); }
 }
 @keyframes pulseRing {
-  0%   { box-shadow: 0 0 0 0 rgba(168,103,46,.38); }
-  70%  { box-shadow: 0 0 0 10px rgba(168,103,46,0); }
-  100% { box-shadow: 0 0 0 0 rgba(168,103,46,0); }
+  0%   { box-shadow: 0 0 0 0 rgba(246,95,143,.38); }
+  70%  { box-shadow: 0 0 0 10px rgba(246,95,143,0); }
+  100% { box-shadow: 0 0 0 0 rgba(246,95,143,0); }
 }
 
 .anim-rise      { animation: riseIn .5s var(--ease-premium) both; }
@@ -150,157 +194,152 @@ button { -webkit-tap-highlight-color: transparent; }
 .delay-6 { animation-delay: .36s; }
 
 /* ===== Buttons =====
-   Reference's CTAs are solid dark-cocoa buttons with white text
-   ("Add to Cart", "Sign Up", "Continue to Payment", "Write Review"). */
+   BAS0001: solid opaque CTAs in the primary pink with soft single-source
+   pink-tinted shadows (no gradients). Large tap targets, 16–20px radius. */
 .btn-primary {
-  background: linear-gradient(160deg, #5C3A22 0%, #3D2418 100%);
+  background: #F65F8F;
   color: #fff;
-  box-shadow: 0 4px 20px -6px rgba(61,36,24,.45), inset 0 1px 0 rgba(255,255,255,.10);
-  transition: transform .22s var(--ease-premium), box-shadow .22s var(--ease-premium), filter .22s var(--ease-premium);
+  box-shadow: 0 2px 12px rgba(246,95,143,0.28);
+  transition: transform .22s var(--ease-premium), box-shadow .22s var(--ease-premium), background .22s var(--ease-premium);
 }
-.btn-primary:hover  { filter: brightness(1.08); box-shadow: 0 8px 26px -6px rgba(61,36,24,.58); }
-.btn-primary:active { transform: scale(.97); box-shadow: 0 2px 10px -4px rgba(61,36,24,.35); }
+.btn-primary:hover  { background: #E84E80; box-shadow: 0 6px 20px -4px rgba(246,95,143,0.40); }
+.btn-primary:active { transform: scale(.97); box-shadow: 0 2px 8px -2px rgba(246,95,143,0.28); }
 
 .btn-secondary {
   background: #FFFFFF;
-  color: #2A1B12;
-  border: 1.5px solid #EEE1D2;
+  color: #2C2C2C;
+  border: 1px solid #F1E8EC;
   transition: all .22s var(--ease-premium);
 }
-.btn-secondary:hover { background: #FBF3E7; border-color: #E8C68F; }
+.btn-secondary:hover { background: #FFF9FB; border-color: #FFD6E4; }
 .btn-secondary:active { transform: scale(.98); }
 
 .btn-ghost {
   background: transparent;
-  color: #A8672E;
+  color: #F65F8F;
   transition: background .15s ease;
 }
-.btn-ghost:hover { background: rgba(168,103,46,.08); }
+.btn-ghost:hover { background: rgba(246,95,143,.08); }
 
-/* ===== Surfaces ===== */
+/* ===== Surfaces =====
+   BAS0001: solid opaque white cards, soft low-opacity single-source
+   pink-tinted shadows. Cards rely on shadow for separation, not border. */
 .card {
   background: #FFFFFF;
   border-radius: 24px;
-  border: 1.5px solid rgba(61,36,24,0.06);
+  border: 1px solid #F1E8EC;
   box-shadow:
-    0 1px 2px rgba(61,36,24,0.05),
-    0 6px 18px -8px rgba(61,36,24,0.12);
+    0 2px 12px rgba(246,95,143,0.08),
+    0 1px 2px rgba(44,44,44,0.04);
   transition: transform .35s var(--ease-premium), box-shadow .35s var(--ease-premium);
 }
 .card:hover {
   transform: translateY(-3px);
   box-shadow:
-    0 2px 4px rgba(61,36,24,0.06),
-    0 14px 34px -12px rgba(61,36,24,0.16);
+    0 10px 28px -8px rgba(246,95,143,0.16),
+    0 2px 6px rgba(44,44,44,0.05);
 }
 
 .card-flat {
   background: #FFFFFF;
   border-radius: 20px;
-  border: 1.5px solid rgba(61,36,24,0.07);
+  border: 1px solid #F1E8EC;
+  box-shadow: 0 2px 12px rgba(246,95,143,0.06);
   transition: transform .35s var(--ease-premium), box-shadow .35s var(--ease-premium);
 }
 .card-flat:hover {
   transform: translateY(-3px);
   box-shadow:
-    0 2px 4px rgba(61,36,24,0.06),
-    0 12px 28px -8px rgba(61,36,24,0.14);
+    0 8px 24px -8px rgba(246,95,143,0.14),
+    0 2px 6px rgba(44,44,44,0.05);
 }
 
 .card-elevated {
   background: #FFFFFF;
   border-radius: 28px;
-  border: 1.5px solid rgba(168,103,46,.08);
+  border: 1px solid #F1E8EC;
   box-shadow:
-    0 2px 8px rgba(61,36,24,0.05),
-    0 20px 48px -20px rgba(61,36,24,0.15);
+    0 6px 20px -6px rgba(246,95,143,0.12),
+    0 20px 48px -20px rgba(246,95,143,0.14);
 }
 
-/* ===== Warm Surface System =====
-   Reference cards are solid/opaque, not frosted glass — so glass-* now
-   renders as solid warm-white cards with a soft cocoa-tinted shadow.
-   Class names preserved so zero JSX changes are needed anywhere. */
+/* ===== Solid Surface System (BAS0001) =====
+   Cream-coral frosted-glass treatment STRIPPED. `.glass-*` class names
+   are kept (zero JSX changes across ~19 consumers) but now render as
+   solid opaque white surfaces with soft pink-tinted elevation shadows.
+   No backdrop-blur, no gradients — premium minimalist soft-luxury. */
 
 .glass-subtle {
   /* nav / header */
-  background: rgba(255,253,250,0.98);
-  border: 1px solid rgba(168,103,46,0.10);
-  box-shadow:
-    0 2px 8px -2px rgba(61,36,24,0.08),
-    inset 0 1px 0 rgba(255,255,255,0.9);
+  background: #FFFFFF;
+  border: 1px solid #F1E8EC;
+  box-shadow: 0 2px 12px rgba(246,95,143,0.06);
 }
 
 .glass-strong {
-  /* cards / modals — warm white gradient + cocoa-tinted shadow */
-  background: linear-gradient(158deg, #FFFFFF 0%, #FDF8F1 100%);
-  border: 1px solid rgba(168,103,46,0.10);
+  /* cards / modals */
+  background: #FFFFFF;
+  border: 1px solid #F1E8EC;
   box-shadow:
-    0 1px 2px rgba(61,36,24,0.05),
-    0 6px 20px -6px rgba(61,36,24,0.10),
-    0 20px 48px -16px rgba(168,103,46,0.12),
-    inset 0 1px 0 rgba(255,255,255,1);
+    0 2px 12px rgba(246,95,143,0.08),
+    0 12px 32px -10px rgba(246,95,143,0.12);
 }
 
 .glass-deep {
   /* bottom sheets */
-  background: linear-gradient(180deg, #FFFFFF 0%, #FBF3E7 100%);
-  border: 1px solid rgba(168,103,46,0.12);
-  box-shadow:
-    0 -4px 24px -4px rgba(61,36,24,0.09),
-    0 -16px 48px -12px rgba(168,103,46,0.10),
-    inset 0 1px 0 rgba(255,255,255,1);
+  background: #FFFFFF;
+  border-top: 1px solid #F1E8EC;
+  box-shadow: 0 -8px 32px -8px rgba(246,95,143,0.12);
 }
 
 /* Legacy alias */
 .glass {
-  background: linear-gradient(158deg, #FFFFFF 0%, #FDF8F1 100%);
-  border: 1px solid rgba(168,103,46,0.10);
-  box-shadow:
-    0 1px 2px rgba(61,36,24,0.05),
-    0 6px 20px -6px rgba(61,36,24,0.10);
+  background: #FFFFFF;
+  border: 1px solid #F1E8EC;
+  box-shadow: 0 2px 12px rgba(246,95,143,0.08);
 }
 
 .glass-dark {
-  /* Price chip on product images — keep dark, no change */
-  background: rgba(20,14,10,0.62);
+  /* Price chip on product images — keep dark, retuned neutral (was warm-dark) */
+  background: rgba(44,44,44,0.62);
   border: 1px solid rgba(255,255,255,0.14);
   box-shadow: 0 2px 8px rgba(0,0,0,0.20);
 }
 
 .glass-tint {
-  /* ProductScreen content panel — dominant color tint */
-  background: var(--tint, rgba(251,246,239,0.98));
-  border-top: 1px solid rgba(255,255,255,0.7);
-  box-shadow: 0 -4px 24px -6px rgba(61,36,24,0.09);
+  /* ProductScreen content panel — soft pink-tinted surface (was warm tint) */
+  background: #FFF9FB;
+  border-top: 1px solid #F1E8EC;
+  box-shadow: 0 -4px 24px -6px rgba(246,95,143,0.10);
   isolation: isolate;
 }
 
 /* ===== Confetti splash decoration ===== */
 .confetti-dots {
   background-image:
-    radial-gradient(circle at 12% 18%, #E8C68F 1.2px, transparent 1.5px),
-    radial-gradient(circle at 88% 12%, #A8672E 1.4px, transparent 2px),
-    radial-gradient(circle at 90% 60%, #E8C68F 1px, transparent 1.5px),
-    radial-gradient(circle at 8% 75%, #A8672E 1px, transparent 1.5px),
-    radial-gradient(circle at 50% 92%, #E8C68F 1.2px, transparent 1.5px),
-    radial-gradient(circle at 25% 50%, #D9A85E .8px, transparent 1.2px),
-    radial-gradient(circle at 75% 40%, #E8C68F 1px, transparent 1.5px);
+    radial-gradient(circle at 12% 18%, #FFD6E4 1.2px, transparent 1.5px),
+    radial-gradient(circle at 88% 12%, #F65F8F 1.4px, transparent 2px),
+    radial-gradient(circle at 90% 60%, #FFD6E4 1px, transparent 1.5px),
+    radial-gradient(circle at 8% 75%, #FB9DC0 1px, transparent 1.5px),
+    radial-gradient(circle at 50% 92%, #E8A33C 1.2px, transparent 1.5px),
+    radial-gradient(circle at 25% 50%, #FFC1D6 .8px, transparent 1.2px),
+    radial-gradient(circle at 75% 40%, #FFD6E4 1px, transparent 1.5px);
   background-size: 100% 100%;
 }
 
-/* ===== Premium mesh gradient ===== */
+/* ===== Soft canvas tint (was heavy warm mesh — flattened for minimalism) =====
+   BAS0001: no heavy gradients. A barely-there pink-tinted wash so screens
+   that use .mesh-warm as a backdrop still get a calm pink canvas. */
 .mesh-warm {
   background:
-    radial-gradient(ellipse at 18% 8%,  #F0D9B5 0%, transparent 30%),
-    radial-gradient(ellipse at 82% 82%, #E8C68F 0%, transparent 35%),
-    radial-gradient(ellipse at 55% 45%, rgba(168,103,46,0.14) 0%, transparent 38%),
-    radial-gradient(ellipse at 8%  75%, #F3E4D0 0%, transparent 28%),
-    #FBF6EF;
+    radial-gradient(ellipse at 18% 8%, #FFE8F0 0%, transparent 32%),
+    radial-gradient(ellipse at 82% 82%, #FFD6E4 0%, transparent 30%),
+    #FFF9FB;
 }
 
-/* ===== Gradient text ===== */
+/* ===== Gradient text (pink) ===== */
 .text-gradient-coral {
-  background: linear-gradient(135deg, #C68F3F 0%, #6B3A18 100%);
+  background: linear-gradient(135deg, #F65F8F 0%, #C73B68 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -315,18 +354,18 @@ button { -webkit-tap-highlight-color: transparent; }
   padding: 0 14px;
   border-radius: 999px;
   background: #FFFFFF;
-  border: 1.5px solid #EEE1D2;
-  color: #2A1B12;
+  border: 1px solid #F1E8EC;
+  color: #2C2C2C;
   font-size: 14px;
   font-weight: 600;
   transition: all .15s ease;
 }
-.chip:hover { background: #FBF3E7; border-color: #E8C68F; }
+.chip:hover { background: #FFF9FB; border-color: #FFD6E4; }
 .chip-active {
-  background: linear-gradient(160deg, #5C3A22 0%, #3D2418 100%);
+  background: #F65F8F;
   color: #fff;
   border-color: transparent;
-  box-shadow: 0 4px 14px -4px rgba(61,36,24,.45);
+  box-shadow: 0 4px 14px -4px rgba(246,95,143,.40);
 }
 
 /* ===== Section headings ===== */
@@ -335,45 +374,45 @@ button { -webkit-tap-highlight-color: transparent; }
   font-weight: 700;
   letter-spacing: .16em;
   text-transform: uppercase;
-  color: #A8672E;
+  color: #E84E80;
 }
 
 .section-title {
-  font-family: "Fraunces", "Georgia", serif;
+  font-family: "Poppins", "Hind Siliguri", system-ui, sans-serif;
   font-weight: 700;
   font-size: 22px;
-  letter-spacing: -0.02em;
-  color: #2A1B12;
+  letter-spacing: -0.01em;
+  color: #2C2C2C;
   line-height: 1.2;
 }
 
 /* ===== Price display ===== */
 .price-display {
-  font-family: "Fraunces", "Georgia", serif;
+  font-family: "Poppins", "Hind Siliguri", system-ui, sans-serif;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
-  letter-spacing: -0.02em;
-  color: #2A1B12;
+  letter-spacing: -0.01em;
+  color: #2C2C2C;
 }
 
 /* ===== Hairline divider ===== */
 .hairline {
-  background: linear-gradient(to right, transparent, rgba(61,36,24,0.09) 20%, rgba(61,36,24,0.09) 80%, transparent);
+  background: linear-gradient(to right, transparent, rgba(233,228,231,0.9) 20%, rgba(233,228,231,0.9) 80%, transparent);
   height: 1px;
 }
 
-/* ===== Product card shadow ===== */
+/* ===== Product card shadow (pink-tinted) ===== */
 .product-card-shadow {
   box-shadow:
-    0 1px 2px rgba(61,36,24,0.05),
-    0 8px 24px -10px rgba(61,36,24,0.15);
+    0 2px 12px rgba(246,95,143,0.08),
+    0 8px 24px -10px rgba(246,95,143,0.12);
 }
 
-/* ===== Premium badge (gold — ratings, "featured") ===== */
+/* ===== Premium badge (soft amber — ratings, "featured") ===== */
 .badge-premium {
-  background: linear-gradient(135deg, #C9963C 0%, #A8752C 100%);
+  background: linear-gradient(135deg, #E8A33C 0%, #C9872A 100%);
   color: #fff;
-  box-shadow: 0 2px 8px -3px rgba(201,150,60,.48);
+  box-shadow: 0 2px 8px -3px rgba(232,163,60,.48);
 }
 
 /* ===== Tab active glow dot ===== */
@@ -385,17 +424,17 @@ button { -webkit-tap-highlight-color: transparent; }
   width: 4px;
   height: 4px;
   border-radius: 999px;
-  background: #A8672E;
-  box-shadow: 0 0 8px 2px rgba(168,103,46,.5);
+  background: #F65F8F;
+  box-shadow: 0 0 8px 2px rgba(246,95,143,.5);
 }
 
-/* ===== Shimmer skeleton ===== */
+/* ===== Shimmer skeleton (soft pink-tinted) ===== */
 @keyframes shimmerSlide {
   0%   { background-position: -200% center; }
   100% { background-position:  200% center; }
 }
 .shimmer {
-  background: linear-gradient(90deg, #F0E9DE 25%, #FAF6EF 50%, #F0E9DE 75%);
+  background: linear-gradient(90deg, #F3EAEE 25%, #FBF3F6 50%, #F3EAEE 75%);
   background-size: 200% 100%;
   animation: shimmerSlide 1.6s ease-in-out infinite;
 }
@@ -411,54 +450,25 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 
 /* ═══════════════════════════════════════════════════════════
-   BAKERY WARM SURFACE LAYER (2026-07-16) — ivory canvas, solid cocoa/gold
-   cards, no frosted glass. Replaces the earlier pink frosted-glass layer.
-   Single source of truth for the redesign; every screen inherits this.
+   BAS0001 SOFT-PINK SURFACE LAYER (Phase 0, 2026-07-19) — replaces the
+   2026-07-16 bakery warm-ivory layer. Flat pink-white canvas (#FFF9FB),
+   solid white surfaces, soft pink-tinted shadows, no glass/gradient/blur.
+   The `.glass-*` class definitions live above (single source of truth);
+   this block only sets the base canvas + the faint decorative orbs that
+   App.tsx renders (kept extremely subtle for the minimalist brief).
    ═══════════════════════════════════════════════════════════ */
 
-:root{
-  --color-cream:  #FBF6EF;
-  --color-ink:     #2A1B12;
-  --color-ink-200: #A8927F;
-  --color-ink-300: #7A6455;
-
-  /* solid warm-surface tokens (kept var names for back-compat, no blur now) */
-  --glass:        rgba(255,255,255,.98);
-  --glass-strong: #FFFFFF;
-  --glass-line:   rgba(168,103,46,.12);
-  --glass-shadow: 0 10px 34px -14px rgba(61,36,24,.28);
-}
-
-/* full-screen warm ivory gradient base (was pink) */
+/* flat soft-pink canvas (no heavy gradient per brief) */
 html, body{
-  background:
-    radial-gradient(ellipse at 15% 0%,  #F6EBDD 0%, transparent 45%),
-    radial-gradient(ellipse at 90% 100%,#F2E4D0 0%, transparent 40%),
-    linear-gradient(165deg,#FDF9F3 0%,#FBF6EF 42%,#F6EBDD 100%);
+  background: #FFF9FB;
   background-attachment: fixed;
 }
 
-/* fixed gradient canvas + blurred glow orbs (rendered by App.tsx) */
+/* fixed canvas + barely-there pink glow orbs (rendered by App.tsx).
+   Opacity kept low so this reads as calm white-pink, not candy. */
 .lux-canvas{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;
-  background:linear-gradient(165deg,#FDF9F3 0%,#FBF6EF 42%,#F6EBDD 100%);}
-.lux-orb{position:absolute;border-radius:9999px;filter:blur(34px)}
-.lux-orb.a{width:190px;height:190px;background:#E8C68F;opacity:.45;top:-40px;right:-30px}
-.lux-orb.b{width:160px;height:160px;background:#D9A85E;opacity:.30;bottom:12%;left:-46px}
-.lux-orb.c{width:130px;height:130px;background:#C9963C;opacity:.25;top:42%;right:-34px}
-
-/* solid warm cards — same class names as before, no backdrop-filter now */
-.glass-strong{
-  background:var(--glass-strong);
-  border:1px solid var(--glass-line);
-  box-shadow:var(--glass-shadow), inset 0 1px 1px rgba(255,255,255,.7);
-}
-.glass, .glass-subtle{
-  background:var(--glass);
-  border:1px solid var(--glass-line);
-  box-shadow:0 8px 30px -12px rgba(61,36,24,.20), inset 0 1px 1px rgba(255,255,255,.6);
-}
-.glass-deep{
-  background:var(--glass-strong);
-  border-top:1px solid var(--glass-line);
-  box-shadow:0 -12px 40px -12px rgba(61,36,24,.22), inset 0 1px 1px rgba(255,255,255,.7);
-}
+  background:#FFF9FB;}
+.lux-orb{position:absolute;border-radius:9999px;filter:blur(40px)}
+.lux-orb.a{width:190px;height:190px;background:#FFD6E4;opacity:.40;top:-40px;right:-30px}
+.lux-orb.b{width:160px;height:160px;background:#FFE8F0;opacity:.45;bottom:12%;left:-46px}
+.lux-orb.c{width:130px;height:130px;background:#FFC1D6;opacity:.22;top:42%;right:-34px}
