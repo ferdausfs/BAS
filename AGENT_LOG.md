@@ -1,4 +1,53 @@
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## BAS0004 — Fix: Chrome mobile text auto-sizing inflating fonts app-wide (single phase, complete) ✅ (2026-07-19, chat agent, direct shell)
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**Task:** Buddy reported the live deployed app (bas.umuhammadiswa.workers.dev, opened directly in
+mobile Chrome, not installed as a PWA) rendering headings/labels visibly larger than the coded
+sizes on several screens (Wishlist called out specifically, with "half the screen taken by the
+title" — but described as app-wide/inconsistent, not one screen's JSX bug).
+
+**Root cause (confirmed, not guessed):** every affected screen's JSX already used correct,
+small, explicit px font sizes (`text-[24px]`, `text-[14px]`, etc. — verified in
+`WishlistScreen.tsx` and others). `src/index.css` had no `text-size-adjust` rule on `html`.
+Mobile Chrome's built-in text-autosizer ("font boosting") inflates font sizes at render time —
+independent of the coded CSS values — when a page is opened as a normal browser tab (not an
+installed/standalone PWA) and it judges the text column too narrow relative to viewport. This
+explains why it wasn't caught by `tsc`/`npm run build` (a browser rendering behavior, not a
+compile-time issue) and why the inflation looked inconsistent across blocks (the autosizer
+applies its own per-block heuristic, not a uniform scale).
+
+**In scope (only file touched):** `src/index.css` — one rule added to the existing `html`
+selector.
+**Out of scope:** no JSX/component file needed changes; the coded font sizes were already
+correct.
+
+### কী বদলেছে
+- `src/index.css`: `html { scroll-behavior: smooth; }` → added
+  `-webkit-text-size-adjust: 100%; text-size-adjust: 100%;` to the same rule, disabling Chrome's
+  mobile text-autosizer app-wide so rendered text always matches the coded px values, on every
+  screen, not just Wishlist.
+
+### Verification (self)
+- `npx tsc --noEmit`: re-verified on a **fresh clone** confirmed current with the just-landed
+  BAS0003 commit (`45e874c`) — 31 errors, identical (sorted-line diff) to the documented
+  pre-existing baseline.
+- `npm run build`: ✓ passed (Vite singlefile bundle, 10.76s).
+- Claim re-verified against the actual file: grepped `src/index.css` and confirmed both
+  `-webkit-text-size-adjust: 100%;` and `text-size-adjust: 100%;` lines are present exactly as
+  claimed.
+- `git diff --stat` on the fresh clone: only `src/index.css` changed (`package-lock.json` churn
+  from `npm install` reverted, not included).
+
+### Handoff / next
+- **Single, complete phase — no next phase.**
+- This is a global CSS fix; Buddy should reload/re-check the live app on the same real device
+  after deploying to confirm the visual size now matches the mockup screenshots. If any specific
+  screen still looks oversized after this fix, that would point to a real per-screen sizing bug
+  (worth a fresh screenshot to isolate) rather than the autosizing issue this phase addresses.
+- No judgment calls deferred; no cleanup suggested.
+
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ## BAS0003 — ProfileScreen Layout Restructure (single phase, complete) ✅ (2026-07-19, chat agent, direct shell)
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
