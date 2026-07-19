@@ -1,4 +1,44 @@
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## BAS0007 — Cake/Categories tab reference-style catalogue UI pass (single phase, complete) ✅ (2026-07-19, arena.ai Agent Mode)
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**Task:** Buddy showed the current live Cake tab (`All Cakes` browse page) and then supplied reference screenshots for a minimal grocery/favorites catalogue grid. Requested: redesign the Cake navigation-tab page UI/UX like the reference, while keeping BAS app colors (do not copy the reference grayscale palette).
+
+**In scope (files touched):** `src/screens/CategoriesScreen.tsx`, `src/components/ProductCard.tsx`, `src/App.tsx`, `AGENT_LOG.md`
+**Out of scope (untouched):** product data/filter logic, cart logic, wishlist logic, `BottomTabBar.tsx`, product detail/cart/checkout screens, Firebase/store code.
+
+### কী বদলেছে
+
+**CategoriesScreen.tsx**
+- Replaced the previous bulky marketing header (`Curated browse`, `All Cakes`, paragraph, always-visible search bar) with the reference-style compact top appbar: round back button, centered `Cake` title, and round search action.
+- Search now becomes a compact pill in the appbar when opened, closer to the reference search-results screenshot.
+- Category filters are now simple horizontal rounded pills (active = BAS primary coral, inactive = BAS surface), matching the reference's minimal chip row rather than the previous icon-heavy cards.
+- Results summary area now matches the reference pattern:
+  - Normal browse: small rounded `{n} results` pill.
+  - Search mode: `Results for “...”` title + `{n} Results Found` text.
+- Product grid spacing changed to the airier reference rhythm (`gap-x-8 gap-y-8`) with less surrounding chrome.
+- Empty state kept functional but simplified to match the new minimal catalogue style.
+- Existing filter bottom sheet preserved (same sort/rating/max-price behavior), only its trigger now sits as a round action at the end of the chip row.
+
+**ProductCard.tsx**
+- Added a new `variant="catalog"` used only by `CategoriesScreen`, so Home/Wishlist/search result cards keep their existing `grid` look.
+- Catalogue variant translates the reference card shape: tighter 18px card radius, 14px image radius, larger product title, visible weight line, larger price, round plus button, and larger heart chip — all using BAS semantic colors.
+- Discount badge text changed to `% OFF` in this catalogue card context to match the reference's label style; BAS color token remains primary/coral.
+
+**App.tsx**
+- Global `QuickBar` is hidden on the Cake/Categories tab, matching the supplied reference (no top-right floating cart badge over the catalogue header). BottomTabBar is untouched.
+
+### Verification (self)
+- `npx tsc --noEmit`: still reports the known **31 pre-existing errors**; no new errors from `CategoriesScreen.tsx` or `ProductCard.tsx`. The visible `App.tsx` unused `PhoneFrame` error is pre-existing.
+- `npm run build`: ✓ passed (Vite singlefile bundle built successfully).
+- `git diff --stat`: source changes are the intended Profile carryover + this Cake/Categories pass; `package-lock.json` churn from local `npm install` was reverted.
+
+### Handoff / next
+- Single complete phase. Review on real mobile width: the page intentionally removes the current large `Curated browse` header to match the reference's compact catalogue flow.
+- If Buddy wants the active tab title to say `Favorite`/`All Cakes` instead of `Cake`, that is a one-line copy tweak in `CategoriesScreen.tsx`.
+
+
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ## BAS0006 — Profile section reference-style UI pass (single phase, complete) ✅ (2026-07-19, arena.ai Agent Mode)
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
