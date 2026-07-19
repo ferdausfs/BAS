@@ -102,14 +102,14 @@ export default function CategoriesScreen() {
           </button>
 
           {searchOpen ? (
-            <div className="mx-14 flex h-12 flex-1 items-center gap-3 rounded-full bg-surface px-4 shadow-card ring-1 ring-border">
+            <div className="mx-14 flex h-11 flex-1 items-center gap-3 rounded-full bg-surface px-4 shadow-card ring-1 ring-border">
               <Search className="h-5 w-5 flex-shrink-0 text-text-secondary" strokeWidth={1.9} />
               <input
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
                 autoFocus
                 placeholder="Search cakes"
-                className="min-w-0 flex-1 bg-transparent text-[18px] font-medium text-text outline-none placeholder:text-text-tertiary"
+                className="min-w-0 flex-1 bg-transparent text-[14px] font-medium text-text outline-none placeholder:text-text-tertiary"
               />
               {search && (
                 <button
@@ -123,7 +123,7 @@ export default function CategoriesScreen() {
               )}
             </div>
           ) : (
-            <h1 className="text-[22px] font-semibold tracking-tight text-text">
+            <h1 className="text-[20px] font-semibold tracking-tight text-text">
               {hasSearch ? 'Search' : 'Cake'}
             </h1>
           )}
@@ -135,7 +135,7 @@ export default function CategoriesScreen() {
               className="absolute right-0 flex h-12 w-12 items-center justify-center rounded-full bg-surface text-text-secondary shadow-card transition active:scale-95"
               aria-label="Search cakes"
             >
-              <Search className="h-6 w-6" strokeWidth={1.8} />
+              <Search className="h-5 w-5" strokeWidth={1.8} />
             </button>
           )}
         </div>
@@ -151,7 +151,7 @@ export default function CategoriesScreen() {
                   key={category.id}
                   type="button"
                   onClick={() => setActive(category.id)}
-                  className={`flex h-12 shrink-0 items-center rounded-full px-5 text-[18px] font-medium shadow-card transition active:scale-95 ${
+                  className={`flex h-11 shrink-0 items-center rounded-full px-4 text-[14px] font-semibold shadow-card transition active:scale-95 ${
                     isActive
                       ? 'bg-primary text-white'
                       : 'bg-surface text-text-secondary'
@@ -166,10 +166,10 @@ export default function CategoriesScreen() {
           <button
             type="button"
             onClick={() => setFilterOpen(true)}
-            className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-surface text-text shadow-card transition active:scale-95"
+            className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-surface text-text shadow-card transition active:scale-95"
             aria-label="Open filters"
           >
-            <SlidersHorizontal className="h-[22px] w-[22px]" strokeWidth={1.9} />
+            <SlidersHorizontal className="h-5 w-5" strokeWidth={1.9} />
             {filterActive && <span className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-primary" />}
           </button>
         </div>
@@ -179,16 +179,16 @@ export default function CategoriesScreen() {
         <div className="mb-4 flex items-center justify-between gap-3">
           {hasSearch ? (
             <>
-              <h2 className="min-w-0 truncate text-[24px] font-medium tracking-[-0.03em] text-text">
+              <h2 className="min-w-0 truncate text-[20px] font-semibold tracking-[-0.03em] text-text">
                 Results for “{debouncedSearch.trim()}”
               </h2>
-              <span className="shrink-0 text-[17px] font-medium text-text-secondary">
+              <span className="shrink-0 text-[13px] font-medium text-text-secondary">
                 {filtered.length} Results Found
               </span>
             </>
           ) : (
             <>
-              <span className="rounded-full border border-border bg-surface px-4 py-2 text-[15px] font-medium text-text-secondary shadow-card">
+              <span className="rounded-full border border-border bg-surface px-3 py-1.5 text-[12px] font-medium text-text-secondary shadow-card">
                 {filtered.length} results
               </span>
               {filterActive && (
@@ -209,7 +209,7 @@ export default function CategoriesScreen() {
         </div>
 
         {loading ? (
-          <div className="grid grid-cols-2 gap-x-8 gap-y-8">
+          <div className="grid grid-cols-2 gap-4">
             {Array.from({ length: 6 }).map((_, index) => (
               <SkeletonCard key={index} />
             ))}
@@ -233,7 +233,7 @@ export default function CategoriesScreen() {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-x-8 gap-y-8">
+          <div className="grid grid-cols-2 gap-4">
             {filtered.map((product) => (
               <ProductCard
                 key={product.id}

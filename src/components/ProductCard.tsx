@@ -91,7 +91,7 @@ export default function ProductCard({ product, wished, onOpen, onWish, variant =
           <button
             type="button"
             onClick={handleWish}
-            className={`absolute right-2 top-2 flex items-center justify-center rounded-full border border-border bg-surface shadow-card transition active:scale-90 ${isCatalog ? 'h-10 w-10' : 'h-9 w-9'} ${wished ? 'text-primary' : 'text-text-secondary'}`}
+            className={`absolute right-2 top-2 flex items-center justify-center rounded-full border border-border bg-surface shadow-card transition active:scale-90 ${isCatalog ? 'h-9 w-9' : 'h-9 w-9'} ${wished ? 'text-primary' : 'text-text-secondary'}`}
             aria-label={wished ? 'Remove from wishlist' : 'Add to wishlist'}
           >
             <Heart key={heartKey} className={wished ? 'anim-pop h-4 w-4 fill-primary' : 'h-4 w-4'} strokeWidth={2} />
@@ -107,25 +107,25 @@ export default function ProductCard({ product, wished, onOpen, onWish, variant =
           </span>
         )}
         <div className="flex items-center justify-between gap-1.5">
-          <h3 className={isCatalog ? 'line-clamp-1 text-[18px] font-semibold tracking-[-0.025em] text-text' : 'line-clamp-1 text-[15px] font-semibold tracking-[-0.015em] text-text'}>{product.name}</h3>
-          <span className={isCatalog ? 'flex shrink-0 items-center gap-0.5 rounded-full bg-secondary/70 px-1.5 py-1 text-[12px] font-semibold text-text-secondary' : 'flex shrink-0 items-center gap-0.5 rounded-full bg-ink-50 px-1.5 py-1 text-[10px] font-semibold text-text-secondary'}>
+          <h3 className={isCatalog ? 'line-clamp-1 text-[15px] font-semibold tracking-[-0.015em] text-text' : 'line-clamp-1 text-[15px] font-semibold tracking-[-0.015em] text-text'}>{product.name}</h3>
+          <span className={isCatalog ? 'flex shrink-0 items-center gap-0.5 rounded-full bg-secondary/70 px-1.5 py-1 text-[10px] font-semibold text-text-secondary' : 'flex shrink-0 items-center gap-0.5 rounded-full bg-ink-50 px-1.5 py-1 text-[10px] font-semibold text-text-secondary'}>
             <Star className="h-3 w-3 fill-gold text-gold" />{product.rating}
           </span>
         </div>
-        {isCatalog && <div className="mt-1 text-[14px] font-medium text-text-tertiary">{safeWeights[0]?.size ?? '1 lb'}</div>}
+        {isCatalog && <div className="mt-1 text-[12px] font-medium text-text-tertiary">{safeWeights[0]?.size ?? '1 lb'}</div>}
         <div className={isCatalog ? 'mt-2 flex items-center justify-between gap-2' : 'mt-2.5 flex items-center justify-between gap-2'}>
           <span className="min-w-0">
-            <span className={isCatalog ? 'text-[19px] font-semibold tabular text-primary' : ' text-[16px] font-semibold tabular text-primary'}>{formatINR(product.price)}</span>
+            <span className={isCatalog ? 'text-[16px] font-semibold tabular text-primary' : ' text-[16px] font-semibold tabular text-primary'}>{formatINR(product.price)}</span>
             {product.oldPrice && product.oldPrice > product.price && <span className="ml-1.5 text-[11px] tabular text-text-tertiary line-through">{formatINR(product.oldPrice)}</span>}
           </span>
           {(product.inStock ?? true) && (
             <button
               type="button"
               onClick={handleAdd}
-              className={`flex shrink-0 items-center justify-center text-white shadow-btn transition active:scale-90 ${isCatalog ? 'h-10 w-10 rounded-full' : 'h-8 w-8 rounded-[12px]'} ${added ? 'bg-success' : 'bg-primary hover:bg-primary-hover'}`}
+              className={`flex shrink-0 items-center justify-center text-white shadow-btn transition active:scale-90 ${isCatalog ? 'h-9 w-9 rounded-full' : 'h-8 w-8 rounded-[12px]'} ${added ? 'bg-success' : 'bg-primary hover:bg-primary-hover'}`}
               aria-label="Add to cart"
             >
-              {added ? <Check className="h-4 w-4 anim-pop" strokeWidth={2.5} /> : <Plus className={isCatalog ? 'h-6 w-6' : 'h-4 w-4'} strokeWidth={2.4} />}
+              {added ? <Check className="h-4 w-4 anim-pop" strokeWidth={2.5} /> : <Plus className={isCatalog ? 'h-5 w-5' : 'h-4 w-4'} strokeWidth={2.4} />}
             </button>
           )}
         </div>

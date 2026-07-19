@@ -1,4 +1,38 @@
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## BAS0008 — Profile + Cake typography/spacing downscale to match HomeScreen rhythm (single phase, complete) ✅ (2026-07-19, arena.ai Agent Mode)
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**Task:** Buddy reviewed the newly updated Profile and Cake/Categories pages and reported the text/spacing felt too large compared with the existing HomeScreen. Requested: keep the new reference-style UI, but scale typography and spacing down so it matches HomeScreen's app rhythm.
+
+**In scope (files touched):** `src/screens/ProfileScreen.tsx`, `src/screens/CategoriesScreen.tsx`, `src/components/ProductCard.tsx`, `AGENT_LOG.md`
+**Out of scope (untouched):** business logic, navigation logic, `BottomTabBar.tsx`, modal internals, Firebase/store code.
+
+### কী বদলেছে
+- **ProfileScreen.tsx**
+  - Appbar title reduced `22px → 20px`.
+  - Profile avatar reduced from oversized `118px` to HomeScreen-compatible `96px`.
+  - Profile name reduced `25px → 20px` and tightened vertical gap.
+  - Main/settings/help list labels reduced from large reference sizes (`18–20px`) to BAS/Home-style `15–15.5px`.
+  - Row gaps/padding and icon sizes reduced (`gap-5 → gap-4`, `py-[18]/py-5 → py-4`, 24px icons → 20px icons) while keeping the reference layout.
+- **CategoriesScreen.tsx**
+  - Appbar/search/category chip typography reduced to HomeScreen-like sizing (`22px title → 20px`, `18px chips/search → 14px`).
+  - Category chips height reduced `48px → 44px`, filter button `48px → 44px`.
+  - Search-results title/count reduced and product grid gap returned from very airy reference spacing to BAS/HomeScreen-like `gap-4`.
+- **ProductCard.tsx**
+  - `catalog` variant text reduced: title `18px → 15px`, weight `14px → 12px`, price `19px → 16px`, rating `12px → 10px`.
+  - Heart/add buttons reduced from 40px to 36px, plus icon reduced accordingly.
+  - Card structure remains reference-style, but visual density now matches the rest of BAS better.
+
+### Verification (self)
+- `npx tsc --noEmit`: still reports the known **31 pre-existing errors**; no new errors from Profile/Categories/ProductCard.
+- `npm run build`: ✓ passed.
+- No business logic or data flow changed; this was a typography/spacing-only retune.
+
+### Handoff / next
+- Single complete adjustment. Buddy should re-check on live mobile after deploy; if still large, next tweak should be a very small per-section downscale only, not another full layout rewrite.
+
+
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ## BAS0007 — Cake/Categories tab reference-style catalogue UI pass (single phase, complete) ✅ (2026-07-19, arena.ai Agent Mode)
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 

@@ -490,7 +490,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
           >
             <ArrowLeft className="h-5 w-5" strokeWidth={1.9} />
           </button>
-          <h1 className="text-[22px] font-semibold tracking-tight text-ink">
+          <h1 className="text-[20px] font-semibold tracking-tight text-ink">
             {profileView === 'settings' ? 'Settings' : profileView === 'help' ? 'Help Center' : 'Profile'}
           </h1>
         </div>
@@ -499,17 +499,17 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
       {profileView === 'main' && (
         <div className="no-scrollbar flex-1 overflow-y-auto px-6 pb-32 pt-6 anim-up">
           <div className="flex flex-col items-center text-center">
-            <div className="flex h-[118px] w-[118px] items-center justify-center overflow-hidden rounded-full bg-secondary text-[34px] font-semibold text-coral shadow-card">
+            <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-full bg-secondary text-[28px] font-semibold text-coral shadow-card">
               {user.avatar && user.avatar.length > 2 ? (
                 <img src={user.avatar} alt="" className="h-full w-full object-cover" />
               ) : initials}
             </div>
-            <div className="mt-5 text-[25px] font-medium leading-none tracking-tight text-ink">
+            <div className="mt-4 text-[20px] font-semibold leading-none tracking-tight text-ink">
               {user.name}
             </div>
           </div>
 
-          <div className="mt-10">
+          <div className="mt-8">
             {profileRows.map((row, i) => (
               <ProfileReferenceRow
                 key={row.label}
@@ -565,13 +565,13 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
             <button
               type="button"
               onClick={() => setProfileView('help')}
-              className="flex w-full items-center gap-5 px-4 py-4 text-left transition active:bg-bg"
+              className="flex w-full items-center gap-4 px-4 py-3.5 text-left transition active:bg-bg"
             >
-              <span className="flex h-13 w-13 items-center justify-center rounded-full bg-secondary text-coral">
-                <HelpCircle className="h-6 w-6" strokeWidth={1.8} />
+              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-secondary text-coral">
+                <HelpCircle className="h-5 w-5" strokeWidth={1.8} />
               </span>
-              <span className="flex-1 text-[19px] font-medium text-ink">Help Center</span>
-              <ChevronRight className="h-6 w-6 text-ink-200" strokeWidth={1.8} />
+              <span className="flex-1 text-[15px] font-semibold text-ink">Help Center</span>
+              <ChevronRight className="h-5 w-5 text-ink-200" strokeWidth={1.8} />
             </button>
           </div>
 
@@ -589,9 +589,9 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
       {profileView === 'help' && (
         <div className="no-scrollbar flex-1 overflow-y-auto pb-10 pt-4 anim-up">
           <div className="px-6">
-            <div className="flex h-[54px] items-center gap-3 rounded-[18px] bg-secondary px-4 text-ink-200">
-              <HelpCircle className="h-6 w-6" strokeWidth={1.75} />
-              <span className="text-[18px] font-medium">Search</span>
+            <div className="flex h-12 items-center gap-3 rounded-[18px] bg-secondary px-4 text-ink-200">
+              <HelpCircle className="h-5 w-5" strokeWidth={1.75} />
+              <span className="text-[15px] font-medium">Search</span>
             </div>
           </div>
 
@@ -613,21 +613,21 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
                   <button
                     type="button"
                     onClick={() => setHelpOpen(open ? '' : row.id)}
-                    className="flex w-full items-center gap-5 px-4 py-5 text-left transition active:bg-bg"
+                    className="flex w-full items-center gap-4 px-4 py-4 text-left transition active:bg-bg"
                   >
-                    <span className="flex h-13 w-13 items-center justify-center rounded-full bg-secondary text-coral">
-                      <row.Icon className="h-6 w-6" strokeWidth={1.75} />
+                    <span className="flex h-12 w-12 items-center justify-center rounded-full bg-secondary text-coral">
+                      <row.Icon className="h-5 w-5" strokeWidth={1.75} />
                     </span>
-                    <span className="flex-1 text-[18px] font-medium text-ink">{row.label}</span>
+                    <span className="flex-1 text-[15px] font-semibold text-ink">{row.label}</span>
                     {open ? (
-                      <ChevronRight className="h-6 w-6 -rotate-90 text-ink-200 transition" strokeWidth={1.9} />
+                      <ChevronRight className="h-5 w-5 -rotate-90 text-ink-200 transition" strokeWidth={1.9} />
                     ) : (
-                      <ChevronRight className="h-6 w-6 rotate-90 text-ink-200 transition" strokeWidth={1.9} />
+                      <ChevronRight className="h-5 w-5 rotate-90 text-ink-200 transition" strokeWidth={1.9} />
                     )}
                   </button>
                   {open && (
                     <div className="border-t border-border px-6 pb-4 pt-3">
-                      <div className="flex items-center gap-3 text-[14px] font-medium text-ink-300">
+                      <div className="flex items-center gap-3 text-[12px] font-medium text-ink-300">
                         <span className="h-1.5 w-1.5 rounded-full bg-coral" />
                         {row.detail}
                       </div>
@@ -1161,13 +1161,13 @@ function ProfileReferenceRow({
         bordered ? 'border-b border-border' : ''
       }`}
     >
-      <span className="flex h-13 w-13 flex-shrink-0 items-center justify-center rounded-full bg-secondary text-coral">
-        <Icon className="h-6 w-6" strokeWidth={1.75} />
+      <span className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-secondary text-coral">
+        <Icon className="h-5 w-5" strokeWidth={1.75} />
       </span>
-      <span className="flex-1 text-[20px] font-medium leading-none tracking-tight text-ink">
+      <span className="flex-1 text-[15.5px] font-semibold leading-none tracking-tight text-ink">
         {label}
       </span>
-      <ChevronRight className="h-6 w-6 text-ink-200" strokeWidth={1.8} />
+      <ChevronRight className="h-5 w-5 text-ink-200" strokeWidth={1.8} />
     </button>
   );
 }
