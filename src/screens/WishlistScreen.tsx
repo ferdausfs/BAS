@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { ArrowLeft, Heart } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { ArrowLeft, ArrowRight, Heart, RotateCcw } from 'lucide-react';
 import { useUI, useUser, useAuthStore } from '../lib/store';
 import { useProducts } from '../hooks/useProducts';
 import { categories } from '../lib/data';
@@ -22,6 +22,15 @@ export default function WishlistScreen({
   const [activeCat, setActiveCat] = useState<string>('all');
   const [fadingIds, setFadingIds] = useState<Set<string>>(new Set());
 
+  const saved = useMemo(
+    () => safeArray<Product>(products).filter((product) => (product.approved ?? true) && wishlist.includes(product.id)),
+    [products, wishlist]
+  );
+  const list = activeCat === 'all' ? saved : saved.filter((product) => product.occasion === activeCat);
+  const activeCategoryName = activeCat === 'all'
+    ? 'All occasions'
+    : (categories.find((category) => category.id === activeCat)?.name ?? 'All occasions');
+
   const handleUnwish = (id: string) => {
     setFadingIds((prev) => new Set(prev).add(id));
     setTimeout(() => {
@@ -33,116 +42,176 @@ export default function WishlistScreen({
       });
     }, 220);
   };
-  const saved = safeArray<Product>(products).filter((p) => (p.approved ?? true) && wishlist.includes(p.id));
-  const list = activeCat === 'all' ? saved : saved.filter((p) => p.occasion === activeCat);
 
   return (
-    <div className="flex h-full flex-col">
-      <header className="flex flex-shrink-0 items-center justify-between px-5 pt-3 pb-3">
-        <button
-          onClick={back}
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-ink active:scale-90"
-          style={{ boxShadow: '0 1px 2px rgba(26,19,17,.03), 0 6px 16px -10px rgba(26,19,17,.2)' }}
-        >
-          <ArrowLeft className="h-[20px] w-[20px]" strokeWidth={2} />
-        </button>
-        <h1 className="font-display text-[16px] font-bold tracking-tight text-ink">Wishlist</h1>
-        <div className="w-10" />
+    <div className="flex h-full flex-col bg-bg">
+      <header className="flex-shrink-0 px-5 pb-4 pt-20 pr-18">
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={back}
+            className="flex h-11 w-11 items-center justify-center rounded-[16px] border border-border bg-surface text-text shadow-card transition active:scale-95"
+            aria-label="Go back"
+          >
+            <ArrowLeft className="h-5 w-5" strokeWidth={2} />
+          </button>
+          <div className="min-w-0">
+            <p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-primary">Saved collection</p>
+            <h1 className="mt-1 text-[24px] font-bold tracking-[-0.03em] text-text">Wishlist</h1>
+          </div>
+        </div>
+        <p className="mt-3 max-w-[26ch] text-[14px] leading-relaxed text-text-secondary">
+          {user
+            ? 'A calm place for every cake you want to come back to later.'
+            : 'Sign in to keep your saved cakes synced across visits and devices.'}
+        </p>
       </header>
 
-      <div className="no-scrollbar flex-1 overflow-y-auto px-5 pb-32 pt-1">
+      <div className="no-scrollbar flex-1 overflow-y-auto px-5 pb-28">
         {saved.length > 0 && (
-          <div className="no-scrollbar mb-3 flex gap-2 overflow-x-auto pb-1">
-            {[ALL_CAT, ...categories].map((c) => {
-              const isActive = activeCat === c.id;
-              return (
-                <button
-                  key={c.id}
-                  onClick={() => setActiveCat(c.id)}
-                  className={`chip flex-shrink-0 ${isActive ? 'chip-active' : ''}`}
-                >
-                  <OccasionIcon id={c.id} size={15} />
-                  <span>{c.name}</span>
-                </button>
-              );
-            })}
-          </div>
+          <section className="rounded-[30px] border border-border bg-surface p-4 shadow-card">
+            <div className="flex items-start justify-between gap-4">
+              <div className="min-w-0 flex-1">
+                <p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-primary">Saved cakes</p>
+                <h2 className="mt-1 text-[22px] font-semibold tracking-[-0.02em] text-text">
+                  {saved.length} item{saved.length > 1 ? 's' : ''}
+                </h2>
+                <p className="mt-1 text-[14px] leading-relaxed text-text-secondary">
+                  {activeCat === 'all'
+                    ? 'Tap the heart on any card to softly remove it from your collection.'
+                    : `Currently showing ${activeCategoryName.toLowerCase()} picks only.`}
+                </p>
+              </div>
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[18px] bg-secondary text-primary shadow-card">
+                <Heart className="h-5 w-5 fill-primary" strokeWidth={1.8} />
+              </div>
+            </div>
+
+            <div className="no-scrollbar mt-4 flex gap-2.5 overflow-x-auto pb-1">
+              {[ALL_CAT, ...categories].map((category) => {
+                const isActive = activeCat === category.id;
+                const tint = category.id === 'all'
+                  ? { background: 'var(--color-surface)', color: 'var(--color-text-secondary)' }
+                  : { background: category.color, color: category.fg };
+
+                return (
+                  <button
+                    key={category.id}
+                    type="button"
+                    onClick={() => setActiveCat(category.id)}
+                    className={`flex shrink-0 items-center gap-2.5 rounded-[20px] border px-3.5 py-2.5 text-[13px] font-semibold shadow-card transition active:scale-95 ${
+                      isActive ? 'border-primary bg-secondary text-primary' : 'border-border bg-bg text-text-secondary'
+                    }`}
+                  >
+                    <span className="flex h-8 w-8 items-center justify-center rounded-[12px]" style={tint}>
+                      <OccasionIcon id={category.id} size={16} />
+                    </span>
+                    <span>{category.name}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </section>
         )}
 
         {saved.length > 0 && list.length === 0 ? (
-          <div className="flex flex-col items-center justify-center pt-16 text-center anim-fade">
-            <p className="text-[13px] text-ink-200">এই ক্যাটেগরিতে কোনো saved cake নেই।</p>
+          <div className="mt-5 rounded-[30px] border border-border bg-surface px-6 py-9 text-center shadow-card anim-fade">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-[22px] bg-secondary text-primary shadow-card">
+              <Heart className="h-7 w-7" strokeWidth={1.75} />
+            </div>
+            <h2 className="mt-5 text-[22px] font-bold tracking-[-0.02em] text-text">No saved cakes in this filter</h2>
+            <p className="mt-2 text-[14px] leading-relaxed text-text-secondary">
+              Switch back to all occasions to see every cake you have saved so far.
+            </p>
+            <button
+              type="button"
+              onClick={() => setActiveCat('all')}
+              className="mt-6 inline-flex h-12 items-center justify-center gap-2 rounded-[18px] bg-primary px-5 text-[13px] font-semibold text-white shadow-btn transition hover:bg-primary-hover active:scale-95"
+            >
+              <RotateCcw className="h-4 w-4" strokeWidth={2} />
+              Show all saved cakes
+            </button>
           </div>
         ) : list.length === 0 ? (
-          <div className="flex flex-col items-center justify-center pt-16 text-center anim-fade">
-            <div
-              className="mx-auto flex h-24 w-24 items-center justify-center rounded-3xl"
-              style={{
-                background: 'linear-gradient(135deg, #FDF8F1 0%, #F3E4D0 100%)',
-                boxShadow: '0 1px 2px rgba(26,19,17,.03), 0 12px 30px -18px rgba(168,103,46,.18)',
-                border: '1px solid rgba(168,103,46,0.15)',
-              }}
-            >
-              <Heart className="h-11 w-11 fill-coral text-coral" strokeWidth={1.6} />
+          <div className="mt-6 rounded-[32px] border border-border bg-surface px-6 py-10 text-center shadow-card anim-fade">
+            <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-[28px] bg-secondary text-primary shadow-card">
+              <Heart className="h-11 w-11 fill-primary/15 text-primary" strokeWidth={1.6} />
             </div>
 
             {!user ? (
               <>
-                <div className="mt-4 font-brand text-[22px] text-coral/70">save what you love</div>
-                <h2 className="mt-1 font-display text-[22px] font-bold tracking-tight text-ink">
-                  Sign in to save favourites
-                </h2>
-                <p className="mt-1.5 max-w-xs text-[13px] text-ink-200">
-                  আপনার পছন্দের cake গুলো এক জায়গায় রাখুন।
+                <p className="mt-6 text-[12px] font-semibold uppercase tracking-[0.18em] text-primary">Save what you love</p>
+                <h2 className="mt-2 text-[24px] font-bold tracking-[-0.03em] text-text">Sign in to save favourites</h2>
+                <p className="mt-3 text-[14px] leading-relaxed text-text-secondary">
+                  আপনার পছন্দের cake, future ideas, আর quick re-order shortlist এক জায়গায় রাখুন।
                 </p>
-                <button
-                  onClick={onAuthOpen}
-                  className="btn-primary mt-6 h-12 rounded-2xl px-7 text-[13px] font-bold"
-                >
-                  Sign in / Sign up
-                </button>
+                <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:justify-center">
+                  <button
+                    type="button"
+                    onClick={() => onAuthOpen?.()}
+                    className="flex h-12 items-center justify-center rounded-[18px] bg-primary px-6 text-[13px] font-semibold text-white shadow-btn transition hover:bg-primary-hover active:scale-95"
+                  >
+                    Sign in / Sign up
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => go({ name: 'tabs', tab: 'categories' })}
+                    className="flex h-12 items-center justify-center gap-2 rounded-[18px] border border-border bg-bg px-6 text-[13px] font-semibold text-text transition active:scale-95"
+                  >
+                    Browse cakes
+                    <ArrowRight className="h-4 w-4" strokeWidth={2} />
+                  </button>
+                </div>
               </>
             ) : (
               <>
-                <div className="mt-4 font-brand text-[22px] text-coral/70">nothing saved yet</div>
-                <h2 className="mt-1 font-display text-[22px] font-bold tracking-tight text-ink">
-                  Your wishlist is empty
-                </h2>
-                <p className="mt-1.5 max-w-xs text-[13px] text-ink-200">
-                  যেকোনো cake এ ❤️ tap করে এখানে save করুন।
+                <p className="mt-6 text-[12px] font-semibold uppercase tracking-[0.18em] text-primary">Nothing saved yet</p>
+                <h2 className="mt-2 text-[24px] font-bold tracking-[-0.03em] text-text">Your wishlist is empty</h2>
+                <p className="mt-3 text-[14px] leading-relaxed text-text-secondary">
+                  যেকোনো cake card-এ থাকা heart icon tap করলেই সেটা এখানে নরম, organised collection হিসেবে জমা হবে।
                 </p>
-                <button onClick={back} className="btn-primary mt-6 h-12 rounded-2xl px-7 text-[13px] font-bold">
+                <button
+                  type="button"
+                  onClick={() => go({ name: 'tabs', tab: 'categories' })}
+                  className="mt-7 inline-flex h-12 items-center justify-center gap-2 rounded-[18px] bg-primary px-6 text-[13px] font-semibold text-white shadow-btn transition hover:bg-primary-hover active:scale-95"
+                >
                   Browse cakes
+                  <ArrowRight className="h-4 w-4" strokeWidth={2} />
                 </button>
               </>
             )}
           </div>
         ) : (
-          <>
-            <p className="mb-3 text-[12px] font-medium text-ink-200">
-              <span className="font-bold text-ink">{list.length}</span> saved cakes
-            </p>
-            <div className="grid grid-cols-2 gap-3">
-              {list.map((p) => (
+          <section className="mt-5">
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <p className="text-[13px] font-medium text-text-secondary">
+                Showing <span className="font-semibold text-text">{list.length}</span> of {saved.length} saved cake{saved.length > 1 ? 's' : ''}
+              </p>
+              <span className="rounded-full border border-border bg-surface px-3 py-1.5 text-[12px] font-medium text-text-secondary shadow-card">
+                {activeCategoryName}
+              </span>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              {list.map((product) => (
                 <div
-                  key={p.id}
+                  key={product.id}
                   style={{
-                    opacity: fadingIds.has(p.id) ? 0.45 : 1,
+                    opacity: fadingIds.has(product.id) ? 0.45 : 1,
                     transition: 'opacity .2s ease',
-                    pointerEvents: fadingIds.has(p.id) ? 'none' : 'auto',
+                    pointerEvents: fadingIds.has(product.id) ? 'none' : 'auto',
                   }}
                 >
                   <ProductCard
-                    product={p}
+                    product={product}
                     wished
                     onWish={handleUnwish}
-                    onOpen={() => go({ name: 'product', productId: p.id })}
+                    onOpen={() => go({ name: 'product', productId: product.id })}
                     variant="grid"
                   />
                 </div>
               ))}
             </div>
-          </>
+          </section>
         )}
       </div>
     </div>

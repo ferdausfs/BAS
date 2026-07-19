@@ -1,5 +1,21 @@
 # Lessons — cross-session rules for future agents
 
+## QuickBar-safe screen headers need explicit top/right clearance (2026-07-19)
+`QuickBar.tsx` is fixed at `top-4 right-4` on every screen except splash/product/home,
+so any non-home screen that also puts its own header action in the top-right corner
+(Categories filter button, Wishlist title row, future pushed screens) will visually fight
+that floating control unless the screen deliberately reserves space for it. During BAS0001
+Phase 2, the clean fix was **screen-level clearance**, not moving the global QuickBar:
+use extra top padding (`pt-20` range) and right padding (`pr-18` range) for the screen
+header, and avoid placing a second top-right action on the same vertical band unless it
+sits clearly below QuickBar.
+
+**Fix going forward:** whenever restyling any non-home screen, check it with QuickBar in
+mind first — especially pushed screens (`wishlist`, future account/admin pages) and tab
+screens with their own header buttons. Don’t assume the screen looks fine just because its
+layout works in isolation; it must coexist with the global floating chrome actually used in
+App.tsx.
+
 ## Verify claims against the actual file, not just your own log text (2026-07-19)
 During BAS0001 Phase 0, `AGENT_LOG.md`/`tasks/todo.md` both stated `index.html`'s
 Google Fonts `<link>` had Fraunces/Great Vibes removed and Poppins added — but the

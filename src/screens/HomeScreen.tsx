@@ -1,5 +1,5 @@
-import { useEffect, useState, useMemo } from 'react';
-import { ArrowRight, ChevronLeft, ChevronRight, Megaphone, RotateCcw, Cake, Search } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { ArrowRight, Cake, ChevronLeft, ChevronRight, Megaphone, RotateCcw, Search } from 'lucide-react';
 import { useDebounce } from '../hooks/useDebounce';
 import { useUI, useUser, useOrders, useAuthStore, useCart } from '../lib/store';
 import { ls, safeArray } from '../lib/utils';
@@ -12,7 +12,7 @@ import SectionHeader from '../components/SectionHeader';
 import OccasionSheet from '../components/OccasionSheet';
 import OccasionIcon from '../components/OccasionIcon';
 import { useModalDepth } from '../hooks/useModalDepth';
-import type { Banner, SpecialDate } from '../types';
+import type { Banner, CartItem, Product, SpecialDate } from '../types';
 
 const STAGGER_DELAYS = ['delay-1', 'delay-2', 'delay-3', 'delay-4', 'delay-5'];
 
@@ -30,14 +30,28 @@ const getUpcomingDate = (userId?: string): { name: string; daysLeft: number } | 
   return null;
 };
 
-export default function HomeScreen({ onAuthOpen, onNotificationsOpen }: { onAuthOpen?: () => void; onNotificationsOpen?: () => void }) {
+export default function HomeScreen({
+  onAuthOpen,
+  onNotificationsOpen,
+}: {
+  onAuthOpen?: () => void;
+  onNotificationsOpen?: () => void;
+}) {
   const { go } = useUI();
   const { wishlist, toggleWish } = useUser();
   const { orders } = useOrders();
   const { user } = useAuthStore();
   const { products } = useProducts();
   const { banners } = useBanners();
-  const activeBanners = useMemo(() => safeArray(banners).filter((b) => b.active !== false), [banners]);
+
+  const availableProducts = useMemo(
+    () => safeArray<Product>(products).filter((product) => (product.approved ?? true) && (product.inStock ?? true)),
+    [products]
+  );
+  const activeBanners = useMemo(
+    () => safeArray<Banner>(banners).filter((banner) => banner.active !== false),
+    [banners]
+  );
   const upcoming = getUpcomingDate(user?.id);
 
   const [bannerIdx, setBannerIdx] = useState(0);
@@ -50,78 +64,101 @@ export default function HomeScreen({ onAuthOpen, onNotificationsOpen }: { onAuth
   useModalDepth(!!activeNotice);
 
   const [recentSearches, setRecentSearches] = useState<string[]>(() => {
-    try { return JSON.parse(localStorage.getItem('bas-recent-searches') || '[]'); } catch { return []; }
+    try {
+      return JSON.parse(localStorage.getItem('bas-recent-searches') || '[]');
+    } catch {
+      return [];
+    }
   });
-  const saveSearch = (q: string) => {
-    if (!q.trim()) return;
-    const updated = [q, ...recentSearches.filter((s) => s !== q)].slice(0, 6);
+
+  const saveSearch = (query: string) => {
+    if (!query.trim()) return;
+    const updated = [query, ...recentSearches.filter((item) => item !== query)].slice(0, 6);
     setRecentSearches(updated);
     localStorage.setItem('bas-recent-searches', JSON.stringify(updated));
   };
-  const clearRecent = () => { setRecentSearches([]); localStorage.removeItem('bas-recent-searches'); };
+
+  const clearRecent = () => {
+    setRecentSearches([]);
+    localStorage.removeItem('bas-recent-searches');
+  };
 
   const GROW_DELAY = 260;
   const GROW_DURATION = 680;
-  const openOccasion = (c: (typeof categories)[number], btn: HTMLButtonElement) => {
+  const openOccasion = (category: (typeof categories)[number], button: HTMLButtonElement) => {
     if (pressedOccasion) return;
-    setPressedOccasion(c.id);
-    const rect = btn.getBoundingClientRect();
-    const { setOccasionZoom, go } = useUI.getState();
-    setOccasionZoom({ top: rect.top, left: rect.left, width: rect.width, height: rect.height, radius: 16, color: c.color, stage: 'start' });
+    setPressedOccasion(category.id);
+    const rect = button.getBoundingClientRect();
+    const { setOccasionZoom, go: navigate } = useUI.getState();
+    setOccasionZoom({ top: rect.top, left: rect.left, width: rect.width, height: rect.height, radius: 22, color: category.color, stage: 'start' });
     setTimeout(() => {
-      setOccasionZoom({ top: 0, left: 0, width: window.innerWidth, height: window.innerHeight, radius: 0, color: c.color, stage: 'grow' });
+      setOccasionZoom({ top: 0, left: 0, width: window.innerWidth, height: window.innerHeight, radius: 0, color: category.color, stage: 'grow' });
     }, GROW_DELAY);
     setTimeout(() => {
-      go({ name: 'tabs', tab: 'categories', categoryId: c.id });
-      setOccasionZoom({ top: 0, left: 0, width: window.innerWidth, height: window.innerHeight, radius: 0, color: c.color, stage: 'fadeout' });
+      navigate({ name: 'tabs', tab: 'categories', categoryId: category.id });
+      setOccasionZoom({ top: 0, left: 0, width: window.innerWidth, height: window.innerHeight, radius: 0, color: category.color, stage: 'fadeout' });
     }, GROW_DELAY + GROW_DURATION);
-    setTimeout(() => { setOccasionZoom(null); setPressedOccasion(null); }, GROW_DELAY + GROW_DURATION + 300);
+    setTimeout(() => {
+      setOccasionZoom(null);
+      setPressedOccasion(null);
+    }, GROW_DELAY + GROW_DURATION + 300);
   };
 
   const trending = useMemo(
-    () => safeArray(products).filter((p) => (p.approved ?? true) && (p.inStock ?? true) && (p.bestseller || p.newArrival)).slice(0, 8),
-    [products]
+    () => availableProducts.filter((product) => product.bestseller || product.newArrival).slice(0, 8),
+    [availableProducts]
   );
 
   const forYouProduct = useMemo(() => {
-    const allProducts = safeArray(products).filter((p) => (p.approved ?? true) && (p.inStock ?? true));
-    const lastOrderItems = safeArray(orders[0]?.items);
+    const lastOrderItems = safeArray<CartItem>(orders[0]?.items);
     if (lastOrderItems.length > 0) {
-      const found = allProducts.find((p) => p.id === lastOrderItems[0]?.id);
+      const found = availableProducts.find((product) => product.id === lastOrderItems[0]?.productId);
       if (found) return found;
     }
     if (wishlist.length > 0) {
-      const found = allProducts.find((p) => p.id === wishlist[0]);
+      const found = availableProducts.find((product) => product.id === wishlist[0]);
       if (found) return found;
     }
-    return allProducts[3] ?? allProducts[0] ?? null;
-  }, [products, orders, wishlist]);
+    return availableProducts[3] ?? availableProducts[0] ?? null;
+  }, [availableProducts, orders, wishlist]);
 
-  const forYouLabel = orders.length > 0 ? 'Based on your last order' : wishlist.length > 0 ? 'From your wishlist' : 'Trending this week';
+  const forYouLabel = orders.length > 0
+    ? 'Inspired by your last order'
+    : wishlist.length > 0
+      ? 'Pulled from your saved collection'
+      : 'A calm edit of best sellers this week';
 
   const searchResults = useMemo(() => {
-    const q = debouncedSearch.trim().toLowerCase();
-    if (!q) return [];
-    return safeArray(products).filter((p) => (p.approved ?? true) && (p.inStock ?? true)).filter((p) => p.name.toLowerCase().includes(q) || p.tagline.toLowerCase().includes(q)).slice(0, 8);
-  }, [products, debouncedSearch]);
+    const query = debouncedSearch.trim().toLowerCase();
+    if (!query) return [];
+    return availableProducts
+      .filter((product) => product.name.toLowerCase().includes(query) || product.tagline.toLowerCase().includes(query))
+      .slice(0, 8);
+  }, [availableProducts, debouncedSearch]);
 
   const suggestions = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    if (!q || q.length < 2) return [];
-    return safeArray(products).filter((p) => (p.approved ?? true) && p.name.toLowerCase().includes(q)).map((p) => p.name).slice(0, 5);
-  }, [products, search]);
+    const query = search.trim().toLowerCase();
+    if (!query || query.length < 2) return [];
+    return availableProducts
+      .filter((product) => product.name.toLowerCase().includes(query))
+      .map((product) => product.name)
+      .slice(0, 5);
+  }, [availableProducts, search]);
+
+  const hasSearch = search.trim().length > 0;
+  const searchTerm = debouncedSearch.trim();
+  const featuredProducts = trending.slice(0, 6);
 
   useEffect(() => {
     if (activeBanners.length === 0) return;
-    setBannerIdx((i) => (i >= activeBanners.length ? 0 : i));
-    const t = setInterval(() => setBannerIdx((i) => (i + 1) % activeBanners.length), 5500);
-    return () => clearInterval(t);
+    setBannerIdx((current) => (current >= activeBanners.length ? 0 : current));
+    const timer = setInterval(() => setBannerIdx((current) => (current + 1) % activeBanners.length), 5500);
+    return () => clearInterval(timer);
   }, [activeBanners.length]);
 
   return (
-    <div className="flex h-full flex-col">
-      <div className="no-scrollbar flex-1 overflow-y-auto pb-32">
-        {/* Brown/gold bakery home header (Phase 2 redesign) */}
+    <div className="flex h-full flex-col bg-bg">
+      <div className="no-scrollbar flex-1 overflow-y-auto pb-36">
         <HomeTopBar
           search={search}
           onSearchChange={setSearch}
@@ -133,228 +170,370 @@ export default function HomeScreen({ onAuthOpen, onNotificationsOpen }: { onAuth
           onNotificationsOpen={onNotificationsOpen}
         />
 
-        {/* Hero banner — reference layout: "Exclusive Offers / See all" header + carousel BEFORE Explore Categories, pagination dots OUTSIDE/below the card */}
-        {!search.trim() && activeBanners.length > 0 && (
-          <div className="mt-5 anim-up delay-1">
+        {!hasSearch && activeBanners.length > 0 && (
+          <section className="mt-6 anim-up delay-1">
             <SectionHeader
               title="Exclusive Offers"
+              subtitle="Seasonal picks, limited bundles, and soft-launch specials"
               action={{ label: 'See all', onClick: () => go({ name: 'tabs', tab: 'categories' }) }}
             />
-            <div className="mt-3 px-5">
-              <div className="relative overflow-hidden rounded-[26px]">
-                <div className="relative aspect-[1.7/1] w-full overflow-hidden">
-                  {activeBanners.map((b, i) => (
-                    <div
-                      key={b.id}
-                      onClick={() => {
-                        if (b.productId) go({ name: 'product', productId: b.productId });
-                        else if (b.link === 'customize') go({ name: 'customize' });
-                        else if (b.link === 'categories') go({ name: 'tabs', tab: 'categories' });
-                      }}
-                      className={`absolute inset-0 cursor-pointer transition-opacity duration-700 ${i === bannerIdx ? 'z-10 opacity-100' : 'z-0 opacity-0'}`}
-                    >
-                      <img src={b.image} alt={b.title} className="absolute inset-0 h-full w-full object-cover" />
-                      <div className="absolute inset-0 bg-gradient-to-r from-black/55 via-black/20 to-transparent" />
-                      <div className="absolute inset-0 flex flex-col justify-center p-5">
-                        <span className="mb-2 inline-flex w-fit items-center gap-1 rounded-full bg-white px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-ink">
-                          {b.tag}
-                        </span>
-                        <h3 className="max-w-[16ch] font-display text-[26px] font-semibold leading-[1.1] tracking-tight text-white">
-                          {b.title}
-                        </h3>
-                        <p className="mt-1 max-w-[22ch] text-[12px] leading-snug text-white/85">{b.subtitle}</p>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (b.type === 'discount') {
-                              if (b.promoCode) { navigator.clipboard?.writeText(b.promoCode); setCopiedId(b.id); setTimeout(() => setCopiedId(null), 1500); }
-                            } else if (b.type === 'notice') setActiveNotice(b);
-                            else if (b.productId) go({ name: 'product', productId: b.productId });
-                            else if (b.link === 'customize') go({ name: 'customize' });
-                            else if (b.link === 'categories') go({ name: 'tabs', tab: 'categories' });
-                            else go({ name: 'product', productId: safeArray(products)[0]?.id || 'p1' });
-                          }}
-                          className="mt-3 inline-flex h-9 w-fit items-center gap-1.5 rounded-full bg-gold px-4 text-[12.5px] font-bold text-white shadow-[0_6px_16px_-4px_rgba(201,150,60,.45)] transition active:scale-95"
-                        >
-                          {b.type === 'discount' ? (copiedId === b.id ? 'Copied!' : `Copy: ${b.promoCode || 'CODE'}`) : (<>Shop Now <ArrowRight className="h-3.5 w-3.5" strokeWidth={2.5} /></>)}
-                        </button>
+            <div className="mt-4 px-5">
+              <div className="rounded-[30px] border border-border bg-surface p-2 shadow-card">
+                <div className="relative overflow-hidden rounded-[24px]">
+                  <div className="relative aspect-[1.56/1] w-full overflow-hidden bg-secondary">
+                    {activeBanners.map((banner, index) => (
+                      <div
+                        key={banner.id}
+                        onClick={() => {
+                          if (banner.productId) go({ name: 'product', productId: banner.productId });
+                          else if (banner.link === 'customize') go({ name: 'customize' });
+                          else if (banner.link === 'categories') go({ name: 'tabs', tab: 'categories' });
+                        }}
+                        className={`absolute inset-0 cursor-pointer transition-opacity duration-700 ${index === bannerIdx ? 'z-10 opacity-100' : 'z-0 opacity-0'}`}
+                      >
+                        <img src={banner.image} alt={banner.title} className="absolute inset-0 h-full w-full object-cover" />
+                        <div
+                          className="absolute inset-0"
+                          style={{ background: 'linear-gradient(90deg, rgba(44,44,44,0.54) 0%, rgba(44,44,44,0.2) 56%, rgba(44,44,44,0) 100%)' }}
+                        />
+                        <div className="absolute inset-0 flex flex-col justify-center p-5 sm:p-6">
+                          <span className="mb-3 inline-flex w-fit items-center gap-1 rounded-full bg-white/92 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-text shadow-card">
+                            {banner.tag}
+                          </span>
+                          <h3 className="max-w-[16ch] text-[24px] font-bold leading-[1.08] tracking-[-0.03em] text-white sm:text-[26px]">
+                            {banner.title}
+                          </h3>
+                          <p className="mt-2 max-w-[23ch] text-[13px] leading-relaxed text-white/86">
+                            {banner.subtitle}
+                          </p>
+                          <button
+                            type="button"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              if (banner.type === 'discount') {
+                                if (banner.promoCode) {
+                                  navigator.clipboard?.writeText(banner.promoCode);
+                                  setCopiedId(banner.id);
+                                  setTimeout(() => setCopiedId(null), 1500);
+                                }
+                              } else if (banner.type === 'notice') {
+                                setActiveNotice(banner);
+                              } else if (banner.productId) {
+                                go({ name: 'product', productId: banner.productId });
+                              } else if (banner.link === 'customize') {
+                                go({ name: 'customize' });
+                              } else if (banner.link === 'categories') {
+                                go({ name: 'tabs', tab: 'categories' });
+                              } else {
+                                go({ name: 'product', productId: availableProducts[0]?.id || 'p1' });
+                              }
+                            }}
+                            className="mt-4 inline-flex h-11 w-fit items-center gap-2 rounded-[18px] bg-primary px-4 text-[13px] font-semibold text-white shadow-btn transition hover:bg-primary-hover active:scale-95"
+                          >
+                            {banner.type === 'discount'
+                              ? copiedId === banner.id
+                                ? 'Copied!'
+                                : `Copy: ${banner.promoCode || 'CODE'}`
+                              : <>{banner.ctaText || 'Shop Now'} <ArrowRight className="h-4 w-4" strokeWidth={2.2} /></>}
+                          </button>
+                        </div>
                       </div>
+                    ))}
+                    {activeBanners.length > 1 && (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => setBannerIdx((current) => (current - 1 + activeBanners.length) % activeBanners.length)}
+                          className="absolute left-3 top-1/2 z-20 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-[16px] border border-white/60 bg-white/90 text-text shadow-card transition active:scale-95 md:flex"
+                          aria-label="Previous"
+                        >
+                          <ChevronLeft className="h-4 w-4" strokeWidth={2.2} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setBannerIdx((current) => (current + 1) % activeBanners.length)}
+                          className="absolute right-3 top-1/2 z-20 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-[16px] border border-white/60 bg-white/90 text-text shadow-card transition active:scale-95 md:flex"
+                          aria-label="Next"
+                        >
+                          <ChevronRight className="h-4 w-4" strokeWidth={2.2} />
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+                {activeBanners.length > 1 && (
+                  <div className="mt-3 flex items-center justify-between gap-3 px-2 pb-1">
+                    <div className="flex items-center gap-1.5">
+                      {activeBanners.map((_, index) => (
+                        <button
+                          key={index}
+                          type="button"
+                          onClick={() => setBannerIdx(index)}
+                          className={`h-2 rounded-full transition-all ${index === bannerIdx ? 'w-7 bg-primary' : 'w-2 bg-accent'}`}
+                          aria-label={`Go to slide ${index + 1}`}
+                        />
+                      ))}
                     </div>
-                  ))}
-                  <button onClick={() => setBannerIdx((i) => (i - 1 + activeBanners.length) % activeBanners.length)} className="absolute top-1/2 left-3 z-20 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/80 text-ink backdrop-blur transition active:scale-95 md:flex" aria-label="Previous"><ChevronLeft className="h-4 w-4" strokeWidth={2.5} /></button>
-                  <button onClick={() => setBannerIdx((i) => (i + 1) % activeBanners.length)} className="absolute top-1/2 right-3 z-20 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/80 text-ink backdrop-blur transition active:scale-95 md:flex" aria-label="Next"><ChevronRight className="h-4 w-4" strokeWidth={2.5} /></button>
-                </div>
+                    <span className="rounded-full bg-secondary px-2.5 py-1 text-[11px] font-medium text-text-secondary">
+                      {bannerIdx + 1} / {activeBanners.length}
+                    </span>
+                  </div>
+                )}
               </div>
-              {/* Pagination dots — reference layout: OUTSIDE/below the card, not overlaid on the image */}
-              {activeBanners.length > 1 && (
-                <div className="mt-3 flex justify-center gap-1.5">
-                  {activeBanners.map((_, i) => (
-                    <button key={i} onClick={() => setBannerIdx(i)} className={`h-1.5 rounded-full transition-all ${i === bannerIdx ? 'w-6 bg-coral' : 'w-1.5 bg-ink-100'}`} aria-label={`Go to slide ${i + 1}`} />
-                  ))}
-                </div>
-              )}
             </div>
-          </div>
+          </section>
         )}
 
-        {/* Category row — reference layout: horizontal pill chips (icon + label), now AFTER Exclusive Offers */}
-        <div className="mt-7 px-5 anim-up delay-2">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="font-display text-[19px] font-bold tracking-tight text-ink">Explore Categories</h2>
-            <button
-              onClick={() => go({ name: 'tabs', tab: 'categories' })}
-              className="text-[12px] font-bold text-coral hover:underline"
-            >
-              See all
-            </button>
-          </div>
-          <div className="no-scrollbar flex gap-2.5 overflow-x-auto pb-1">
-            {categories.map((c) => (
+        <section className="mt-8 anim-up delay-2">
+          <SectionHeader
+            title="Explore Categories"
+            subtitle="Browse by occasion with soft pastel cues and quick jumps"
+            action={{ label: 'See all', onClick: () => go({ name: 'tabs', tab: 'categories' }) }}
+          />
+          <div className="no-scrollbar mt-4 flex gap-3 overflow-x-auto px-5 pb-1">
+            {categories.map((category) => (
               <button
-                key={c.id}
-                onClick={(e) => openOccasion(c, e.currentTarget)}
-                className="chip flex-shrink-0"
+                key={category.id}
+                type="button"
+                onClick={(event) => openOccasion(category, event.currentTarget)}
+                className="flex min-w-[98px] shrink-0 flex-col items-start gap-3 rounded-[24px] border border-border bg-surface p-3 text-left shadow-card transition duration-300 hover:-translate-y-0.5 hover:shadow-card-hover active:scale-[0.98]"
               >
                 <span
-                  className="flex h-6 w-6 items-center justify-center rounded-full"
-                  style={{ background: c.color, color: c.fg }}
+                  className="flex h-11 w-11 items-center justify-center rounded-[16px] ring-1 ring-white/70"
+                  style={{ background: category.color, color: category.fg }}
                 >
-                  <OccasionIcon id={c.icon} size={14} />
+                  <OccasionIcon id={category.icon} size={20} />
                 </span>
-                <span>{c.name}</span>
+                <span className="text-[13px] font-semibold leading-tight text-text">{category.name}</span>
               </button>
             ))}
           </div>
+        </section>
+
+        <OccasionSheet open={occasionSheetOpen} onClose={() => setOccasionSheetOpen(false)} onSelect={(category, button) => openOccasion(category, button)} />
+
+        <div className="mt-5 space-y-3 px-5">
+          {!user && (
+            <div className="anim-up rounded-[26px] border border-border bg-surface p-4 shadow-card">
+              <div className="flex items-center gap-3">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[18px] bg-secondary text-primary shadow-card">
+                  <Cake size={22} strokeWidth={1.9} />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[15px] font-semibold text-text">Save wishlist & track orders</p>
+                  <p className="mt-1 text-[13px] leading-relaxed text-text-secondary">Sign in once and keep every favourite cake, promo, and past order in one place.</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => onAuthOpen?.()}
+                  className="flex h-11 shrink-0 items-center justify-center rounded-[16px] bg-primary px-4 text-[13px] font-semibold text-white shadow-btn transition hover:bg-primary-hover active:scale-95"
+                >
+                  Sign in
+                </button>
+              </div>
+            </div>
+          )}
+
+          {upcoming && (
+            <div className="anim-up rounded-[26px] border border-border bg-surface p-4 shadow-card">
+              <div className="flex items-center gap-3">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[18px] bg-secondary text-primary shadow-card">
+                  <Cake size={22} strokeWidth={1.9} />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[15px] font-semibold text-text">
+                    {upcoming.name} {upcoming.daysLeft === 0 ? 'is today' : `is in ${upcoming.daysLeft} day${upcoming.daysLeft > 1 ? 's' : ''}`}
+                  </p>
+                  <p className="mt-1 text-[13px] leading-relaxed text-text-secondary">Plan a cake early to lock your preferred flavour, finish, and delivery slot.</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => go({ name: 'tabs', tab: 'categories' })}
+                  className="flex h-11 shrink-0 items-center justify-center rounded-[16px] border border-border bg-secondary px-4 text-[13px] font-semibold text-primary shadow-card transition active:scale-95"
+                >
+                  Order
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
-        <OccasionSheet open={occasionSheetOpen} onClose={() => setOccasionSheetOpen(false)} onSelect={(c, btn) => openOccasion(c, btn)} />
-
-        {!user && (
-          <div className="mx-5 mt-4 flex items-center gap-3 rounded-2xl glass px-4 py-3 anim-up">
-            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-white/60">
-              <Cake size={20} className="text-coral" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="text-[12px] font-bold text-ink">Save wishlist &amp; track orders</div>
-              <div className="text-[11px] text-ink-300">Sign in for personalized picks</div>
-            </div>
-            <button onClick={onAuthOpen} className="flex-shrink-0 rounded-xl bg-coral px-3 py-1.5 text-[11px] font-bold text-white">Sign in</button>
-          </div>
-        )}
-
-        {upcoming && (
-          <div className="mx-5 mt-4 flex items-center gap-3 rounded-2xl glass px-4 py-3 anim-up">
-            <Cake size={22} className="flex-shrink-0 text-coral" />
-            <div className="min-w-0 flex-1">
-              <div className="truncate text-[12px] font-bold text-ink">
-                {upcoming.name} {upcoming.daysLeft === 0 ? 'is today!' : `in ${upcoming.daysLeft} day${upcoming.daysLeft > 1 ? 's' : ''}!`}
-              </div>
-              <div className="text-[11px] text-ink-300">Order a special cake now</div>
-            </div>
-            <button onClick={() => go({ name: 'tabs', tab: 'categories' })} className="flex-shrink-0 rounded-xl bg-coral px-3 py-1.5 text-[11px] font-bold text-white">Order</button>
-          </div>
-        )}
-
-        {/* Search results */}
         {searchResults.length > 0 && (
-          <div className="mt-6 anim-up delay-2">
-            <SectionHeader eyebrow="Search" title={`Results for "${search.trim()}"`} action={{ label: 'See all', onClick: () => go({ name: 'tabs', tab: 'categories' }) }} />
-            <div className="no-scrollbar mt-3 flex gap-3 overflow-x-auto px-5 pb-2">
-              {searchResults.map((p, i) => (
-                <div key={p.id} className={`anim-up flex-shrink-0 ${STAGGER_DELAYS[i % STAGGER_DELAYS.length]}`}>
-                  <ProductCard product={p} wished={wishlist.includes(p.id)} onWish={toggleWish} onOpen={() => go({ name: 'product', productId: p.id })} />
+          <section className="mt-8 px-5 anim-up delay-2">
+            <div className="rounded-[28px] border border-border bg-surface p-4 shadow-card">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-primary">Search results</p>
+                  <h2 className="mt-1 text-[20px] font-semibold tracking-[-0.02em] text-text">Results for “{search.trim()}”</h2>
+                  <p className="mt-1 text-[14px] text-text-secondary">{searchResults.length} cakes match your taste right now.</p>
                 </div>
-              ))}
+                <button
+                  type="button"
+                  onClick={() => go({ name: 'tabs', tab: 'categories' })}
+                  className="rounded-full border border-border bg-bg px-3 py-2 text-[12px] font-semibold text-primary transition active:scale-95"
+                >
+                  View all
+                </button>
+              </div>
+              <div className="mt-4 grid grid-cols-2 gap-4">
+                {searchResults.map((product, index) => (
+                  <div key={product.id} className={`anim-up ${STAGGER_DELAYS[index % STAGGER_DELAYS.length]}`}>
+                    <ProductCard
+                      product={product}
+                      wished={wishlist.includes(product.id)}
+                      onWish={toggleWish}
+                      onOpen={() => go({ name: 'product', productId: product.id })}
+                      variant="grid"
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
+          </section>
         )}
 
-        {debouncedSearch.trim() && searchResults.length === 0 && (
-          <div className="mx-5 mt-4 flex flex-col items-center rounded-2xl glass py-8 text-center anim-up">
-            <Search className="h-8 w-8 text-ink-200 opacity-50" strokeWidth={1.5} />
-            <p className="mt-2 text-[14px] font-medium text-ink">No results for "{debouncedSearch.trim()}"</p>
-            <p className="text-[12px] text-ink-200">Try a different name or browse by occasion</p>
-            <button onClick={() => { setSearch(''); go({ name: 'tabs', tab: 'categories' }); }} className="mt-3 rounded-xl bg-coral px-4 py-1.5 text-[12px] font-bold text-white">Browse all cakes</button>
-          </div>
+        {searchTerm && searchResults.length === 0 && (
+          <section className="mt-8 px-5 anim-up delay-2">
+            <div className="rounded-[30px] border border-border bg-surface px-6 py-9 text-center shadow-card">
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-[22px] bg-secondary text-primary shadow-card">
+                <Search className="h-7 w-7" strokeWidth={1.75} />
+              </div>
+              <h2 className="mt-5 text-[22px] font-bold tracking-[-0.02em] text-text">No results for “{searchTerm}”</h2>
+              <p className="mt-2 text-[14px] leading-relaxed text-text-secondary">Try a simpler cake name, another flavour, or browse by occasion instead.</p>
+              <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
+                <button
+                  type="button"
+                  onClick={() => setSearch('')}
+                  className="flex h-12 items-center justify-center rounded-[18px] border border-border bg-bg px-5 text-[13px] font-semibold text-text transition active:scale-95"
+                >
+                  Clear search
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearch('');
+                    go({ name: 'tabs', tab: 'categories' });
+                  }}
+                  className="flex h-12 items-center justify-center rounded-[18px] bg-primary px-5 text-[13px] font-semibold text-white shadow-btn transition hover:bg-primary-hover active:scale-95"
+                >
+                  Browse all cakes
+                </button>
+              </div>
+            </div>
+          </section>
         )}
 
-        {/* Reorder — calm glass row */}
         {orders.length > 0 && (() => {
           const lastOrder = orders[0];
-          const firstItem = safeArray(lastOrder?.items)[0];
+          const orderItems = safeArray<CartItem>(lastOrder?.items);
+          const firstItem = orderItems[0];
           return (
-            <div className="mt-5 px-5 anim-up delay-2">
+            <section className="mt-8 px-5 anim-up delay-3">
               <button
-                onClick={() => { safeArray(lastOrder.items).forEach((item) => useCart.getState().add({ ...item })); go({ name: 'cart' }); }}
-                className="group flex w-full items-center gap-3 rounded-2xl glass p-3 text-left transition active:scale-[.98]"
+                type="button"
+                onClick={() => {
+                  orderItems.forEach((item) => useCart.getState().add({ ...item }));
+                  go({ name: 'cart' });
+                }}
+                className="group flex w-full items-center gap-4 rounded-[28px] border border-border bg-surface p-4 text-left shadow-card transition duration-300 hover:-translate-y-0.5 hover:shadow-card-hover active:scale-[0.99]"
               >
                 {firstItem?.image ? (
-                  <img src={firstItem.image} alt="" className="h-12 w-12 flex-shrink-0 rounded-xl object-cover" />
+                  <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-[20px] bg-secondary p-1.5 shadow-card">
+                    <img src={firstItem.image} alt="" className="h-full w-full rounded-[16px] object-cover" />
+                  </div>
                 ) : (
-                  <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-white/60"><RotateCcw className="h-5 w-5 text-coral" strokeWidth={1.75} /></div>
+                  <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-[20px] bg-secondary text-primary shadow-card">
+                    <RotateCcw className="h-6 w-6" strokeWidth={1.8} />
+                  </div>
                 )}
                 <div className="min-w-0 flex-1">
-                  <div className="text-[11px] font-bold uppercase tracking-[0.12em] text-ink-200">Order again</div>
-                  <div className="truncate font-display text-[15px] font-semibold text-ink">
-                    {firstItem?.name ?? 'Your last order'}{lastOrder.items.length > 1 ? ` + ${lastOrder.items.length - 1} more` : ''}
-                  </div>
+                  <p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-primary">Order again</p>
+                  <h3 className="mt-1 truncate text-[18px] font-semibold tracking-[-0.02em] text-text">
+                    {firstItem?.name ?? 'Your last order'}
+                    {lastOrder.items.length > 1 ? ` + ${lastOrder.items.length - 1} more` : ''}
+                  </h3>
+                  <p className="mt-1 text-[13px] text-text-secondary">Re-add everything from your most recent order in one tap.</p>
                 </div>
-                <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-white/60 text-coral transition group-hover:translate-x-0.5"><ArrowRight className="h-4 w-4" /></span>
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[16px] bg-secondary text-primary shadow-card transition group-hover:translate-x-0.5">
+                  <ArrowRight className="h-4 w-4" strokeWidth={2.1} />
+                </span>
               </button>
-            </div>
+            </section>
           );
         })()}
 
-        {/* Featured Products — wireframe layout: 2-column grid instead of horizontal scroll */}
-        <div className="mt-7 px-5 anim-up delay-3">
-          <SectionHeader title="Featured Products" action={{ label: 'See all', onClick: () => go({ name: 'tabs', tab: 'categories' }) }} />
-          <div className="mt-3 grid grid-cols-2 gap-3">
-            {trending.slice(0, 6).map((p) => (
+        <section className="mt-8 anim-up delay-3">
+          <SectionHeader
+            title="Featured Products"
+            subtitle="Best sellers and fresh arrivals in the BAS collection"
+            action={{ label: 'See all', onClick: () => go({ name: 'tabs', tab: 'categories' }) }}
+          />
+          <div className="mt-4 grid grid-cols-2 gap-4 px-5">
+            {featuredProducts.map((product) => (
               <ProductCard
-                key={p.id}
-                product={p}
-                wished={wishlist.includes(p.id)}
+                key={product.id}
+                product={product}
+                wished={wishlist.includes(product.id)}
                 onWish={toggleWish}
-                onOpen={() => go({ name: 'product', productId: p.id })}
+                onOpen={() => go({ name: 'product', productId: product.id })}
                 variant="grid"
               />
             ))}
           </div>
-        </div>
+        </section>
 
-        {/* For you — glass */}
-        <div className="mt-7 px-5 anim-up delay-4">
-          <div className="relative flex items-center gap-4 overflow-hidden rounded-[24px] glass-strong p-5">
-            <div className="flex-1">
-              <div className="inline-flex items-center gap-1 rounded-full bg-coral/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-coral">For you</div>
-              <h3 className="mt-2 font-display text-[19px] font-semibold leading-tight tracking-tight text-ink">Picked for your taste</h3>
-              <p className="mt-1 text-[12px] text-ink-300">{forYouLabel}</p>
-              <button
-                onClick={() => (forYouProduct ? go({ name: 'product', productId: forYouProduct.id }) : go({ name: 'customize' }))}
-                className="mt-3.5 inline-flex h-9 items-center gap-1.5 rounded-full bg-coral px-3.5 text-[12px] font-bold text-white transition active:scale-95"
-              >
-                {forYouProduct ? 'View cake' : 'Customize yours'} <ArrowRight className="h-3 w-3" strokeWidth={2.5} />
-              </button>
-            </div>
-            <div className="h-24 w-24 flex-shrink-0 overflow-hidden rounded-2xl">
-              <img loading="lazy" decoding="async" src={forYouProduct?.image || '/cakes/logo-cake.png'} alt={forYouProduct?.name || ''} className="h-full w-full object-cover" />
+        <section className="mt-8 px-5 anim-up delay-4">
+          <div className="overflow-hidden rounded-[30px] border border-border bg-surface p-5 shadow-card">
+            <div className="flex items-center gap-4">
+              <div className="min-w-0 flex-1">
+                <span className="inline-flex items-center gap-2 rounded-full bg-secondary px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-primary">
+                  For you
+                </span>
+                <h3 className="mt-3 text-[22px] font-bold tracking-[-0.02em] text-text">Picked for your taste</h3>
+                <p className="mt-2 text-[14px] leading-relaxed text-text-secondary">{forYouLabel}</p>
+                <button
+                  type="button"
+                  onClick={() => (forYouProduct ? go({ name: 'product', productId: forYouProduct.id }) : go({ name: 'customize' }))}
+                  className="mt-5 inline-flex h-11 items-center gap-2 rounded-[18px] bg-primary px-4 text-[13px] font-semibold text-white shadow-btn transition hover:bg-primary-hover active:scale-95"
+                >
+                  {forYouProduct ? 'View cake' : 'Customize yours'}
+                  <ArrowRight className="h-4 w-4" strokeWidth={2.2} />
+                </button>
+              </div>
+              <div className="flex h-28 w-28 shrink-0 items-center justify-center rounded-[24px] bg-secondary p-2 shadow-card">
+                <img
+                  loading="lazy"
+                  decoding="async"
+                  src={forYouProduct?.image || '/cakes/logo-cake.png'}
+                  alt={forYouProduct?.name || ''}
+                  className="h-full w-full rounded-[20px] object-cover"
+                />
+              </div>
             </div>
           </div>
-        </div>
+        </section>
 
-        <div className="mt-7 px-5 pb-3 text-center">
-          <div className="font-brand text-[22px] text-ink">Bake Art Style</div>
-          <div className="mt-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-200">Handcrafted since 2018</div>
+        <div className="mt-9 px-5 pb-4 text-center">
+          <div className="text-[18px] font-semibold tracking-[-0.02em] text-text">Bake Art Style</div>
+          <div className="mt-1 text-[12px] font-medium uppercase tracking-[0.18em] text-text-tertiary">Handcrafted since 2018</div>
         </div>
       </div>
 
       {activeNotice && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-5 backdrop-blur-sm anim-fade">
-          <div className="w-full max-w-sm overflow-hidden rounded-[28px] glass-strong p-6 anim-scale">
-            <div className="flex justify-center text-ink"><Megaphone size={40} strokeWidth={1.5} /></div>
-            <h3 className="mt-4 font-display text-[20px] font-bold tracking-tight text-ink">{activeNotice.title}</h3>
-            <p className="mt-2 text-[13.5px] leading-relaxed text-ink-300">{activeNotice.noticeText}</p>
-            <button onClick={() => setActiveNotice(null)} className="mt-6 flex h-11 w-full items-center justify-center rounded-2xl bg-coral text-[13px] font-bold text-white">Close</button>
+        <div className="fixed inset-0 z-[145] flex items-center justify-center bg-black/38 p-5 anim-fade" role="dialog" aria-modal="true">
+          <div className="w-full max-w-sm overflow-hidden rounded-[30px] border border-border bg-surface p-6 shadow-card-hover anim-scale">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-[22px] bg-secondary text-primary shadow-card">
+              <Megaphone size={28} strokeWidth={1.75} />
+            </div>
+            <h3 className="mt-5 text-center text-[22px] font-bold tracking-[-0.02em] text-text">{activeNotice.title}</h3>
+            <p className="mt-3 text-center text-[14px] leading-relaxed text-text-secondary">{activeNotice.noticeText}</p>
+            <button
+              type="button"
+              onClick={() => setActiveNotice(null)}
+              className="mt-6 flex h-12 w-full items-center justify-center rounded-[18px] bg-primary text-[13px] font-semibold text-white shadow-btn transition hover:bg-primary-hover active:scale-95"
+            >
+              Close
+            </button>
           </div>
         </div>
       )}

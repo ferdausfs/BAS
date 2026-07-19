@@ -1,11 +1,11 @@
 import type { Product, Category, Banner } from '../types';
 
 export const categories: Category[] = [
-  { id: 'birthday',    name: 'Birthday',    icon: 'birthday',    color: '#F3E4D0',           fg: '#A8672E' },
-  { id: 'anniversary', name: 'Anniversary', icon: 'anniversary', color: '#F5E7EC',           fg: '#6E2A45' },
-  { id: 'wedding',     name: 'Wedding',     icon: 'wedding',     color: 'rgba(201,150,60,0.16)', fg: '#C9963C' },
-  { id: 'cupcakes',    name: 'Cupcakes',    icon: 'cupcakes',    color: '#ECF1E9',           fg: '#5F7556' },
-  { id: 'gift',        name: 'Custom',      icon: 'gift',        color: '#F4EFEA',           fg: '#4E3626' },
+  { id: 'birthday',    name: 'Birthday',    icon: 'birthday',    color: '#FFF0F5', fg: '#E85E94' },
+  { id: 'anniversary', name: 'Anniversary', icon: 'anniversary', color: '#F8EEF5', fg: '#B77A9B' },
+  { id: 'wedding',     name: 'Wedding',     icon: 'wedding',     color: '#FFF4E2', fg: '#D29A43' },
+  { id: 'cupcakes',    name: 'Cupcakes',    icon: 'cupcakes',    color: '#EEF6F0', fg: '#7FA58A' },
+  { id: 'gift',        name: 'Custom',      icon: 'gift',        color: '#F3EFF8', fg: '#9277AE' },
 ];
 
 const weights = [

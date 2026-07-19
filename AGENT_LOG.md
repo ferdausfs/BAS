@@ -1,6 +1,74 @@
 # Agent Log — BAS (Bake Art Style 2)
 
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## BAS0001 — PREMIUM SOFT-PINK REDESIGN — Phase 2 (core browse screens) ✅ (2026-07-19, arena.ai Agent Mode)
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+**Agent/Tool:** arena.ai Agent Mode (codename BAS0001)
+**Phase worked on:** **Phase 2 — Core browse screens.** Phase 1 shared components was
+confirmed on `main` before work. **NEXT RUN = Phase 3 (purchase flow —
+`ProductScreen.tsx`, `CartScreen.tsx`, `CheckoutScreen.tsx`, `CouponsScreen.tsx`,
+`CustomizeScreen.tsx`).** One phase only; no Phase-3 purchase files were edited.
+
+### কী বদলেছে — premium soft-pink browse batch (exact Phase-2 source files)
+- **`src/lib/data.ts`**: Phase-1’s documented category-accent handoff is now closed.
+  `categories[]` `color`/`fg` pairs were retuned from the old cocoa/plum/sage clash to
+  soft pastel siblings of the pink system — birthday blush, anniversary mauve, wedding
+  butter, cupcakes sage, custom lilac. These now feed every real category chip/tile render
+  on Home/Categories/Wishlist/OccasionSheet without inventing parallel theme data.
+- **`src/screens/HomeScreen.tsx`**: rebuilt into solid white editorial browse sections with
+  real soft depth and 8px-grid spacing: framed promo carousel, soft-pastel category rail,
+  premium sign-in + upcoming-event cards, upgraded search-results card/grid, designed
+  no-results state, elevated reorder card, calmer “For you” feature module, and a plain
+  Poppins wordmark footer (no legacy `font-brand` script treatment). The old `glass-*`,
+  `font-display`, `font-brand`, `bg-coral`, `text-ink`, and blur-based notice modal are
+  gone from this file. Banner notice overlay now sits at **z145** so it actually covers the
+  floating BottomTabBar instead of rendering underneath it.
+- **`src/screens/CategoriesScreen.tsx`**: redesigned with **QuickBar-safe header spacing**
+  (`pt-20` / `pr-18` range), refined search-first hierarchy, premium icon category chips,
+  results summary chips, softer skeletons, and a full empty-state card with reset/browse
+  CTAs. The filter UI is now a solid opaque bottom sheet with semantic colors, no blur,
+  and **z135/z140** backdrop+sheet layering so it covers QuickBar/BottomTabBar correctly.
+  Also typed the browse pipelines with `safeArray<Product>(...)`, which removed the old
+  Categories `unknown`-type errors while restyling.
+- **`src/screens/WishlistScreen.tsx`**: confirmed the routed file is `src/screens/`
+  (the duplicate `src/components/WishlistScreen.tsx` is dead code and was deliberately not
+  touched). Rebuilt the real screen with QuickBar-safe header spacing, elevated saved-count
+  summary card, icon+tint filter rail, dedicated filtered-empty state, and polished guest /
+  signed-in empty states with explicit browse + auth CTAs. Existing soft fade-out on
+  un-wish is preserved; only the surface/layout language changed.
+
+### Overlay / shared-component cross-check
+- Home doesn’t render QuickBar, but its fixed notice modal now layers above the tab bar.
+- Categories and Wishlist do render QuickBar, so their headers now reserve explicit top/
+  right clearance instead of competing with that top-right floating control. This became a
+  new reusable lesson in `tasks/lessons.md`.
+- `ProductCard` is still the shared primitive across all three Phase-2 screens; layouts were
+  rechecked in Home featured/search grids, Categories browse grid, and Wishlist saved grid.
+  No swipe/drag code was touched anywhere in this phase.
+
+### Verification (self)
+- `npx tsc --noEmit`: clean-main baseline after a temporary stash = **159 error lines**;
+  Phase 2 = **85 lines**. Diff shows **zero new errors** and removes the old Home/Categories
+  browse-screen `unknown` issues via typed `safeArray<Product>` / `safeArray<CartItem>` use.
+  Remaining errors are still pre-existing and out of scope in App/AdminPanel/hooks/store/
+  checkout/orders/reviews/tracking.
+- `npm run build`: **✓ passed** (Vite production bundle built successfully in **5.94s**).
+- `git diff --check`: **✓ clean**. Scoped grep confirmed the touched Phase-2 screens no
+  longer carry `glass-*`, `backdrop-blur`, legacy `font-display` / `font-brand`, or old
+  `bg-coral` / `text-ink` style references.
+
+### Handoff / pending for Phase 3
+- **NEXT = Phase 3 (purchase flow only):** `ProductScreen.tsx`, `CartScreen.tsx`,
+  `CheckoutScreen.tsx`, `CouponsScreen.tsx`, `CustomizeScreen.tsx`.
+- Keep the native touch-listener lesson front-and-center: **do not regress** ProductScreen’s
+  gallery swipe or Cart’s swipe/delete behavior while restyling purchase surfaces.
+- Re-check fixed overlays again on purchase screens: QuickBar, BottomTabBar, payment popup,
+  and any sticky footer CTA bars can now visually collide after the new softer spacing pass.
+- `src/components/WishlistScreen.tsx` remains dead duplicate code; don’t “catch it up” in a
+  future phase unless routing actually changes.
+
+
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ## BAS0001 — PREMIUM SOFT-PINK REDESIGN — Phase 1 (shared components) ✅ (2026-07-19, arena.ai Agent Mode)
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 **Agent/Tool:** arena.ai Agent Mode (codename BAS0001)
