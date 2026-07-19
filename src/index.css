@@ -398,3 +398,103 @@ html, body{
 .lux-orb.a{width:190px;height:190px;background:#FFD6E4;opacity:.40;top:-40px;right:-30px}
 .lux-orb.b{width:160px;height:160px;background:#FFE8F0;opacity:.45;bottom:12%;left:-46px}
 .lux-orb.c{width:130px;height:130px;background:#FFC1D6;opacity:.22;top:42%;right:-34px}
+
+/* ===== BAS0002 — layout foundation (Phase L0) =====
+   Proportions translated from GroceryApp .appbar/.back/.round-act/.page/
+   .sec-row at the 390px reference viewport. These primitives intentionally
+   use BAS semantic tokens; screen batches adopt them in later phases. */
+.layout-page {
+  padding-inline: 1.5rem;
+}
+
+.layout-appbar {
+  min-height: 4.5rem;
+  padding: 1rem 1rem .9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  flex: none;
+}
+
+.layout-appbar-title {
+  color: var(--color-text);
+  font-size: 1.125rem;
+  font-weight: 500;
+  line-height: 1.35;
+  text-align: center;
+}
+
+.layout-back,
+.layout-round-action {
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 9999px;
+  background: var(--color-surface);
+  box-shadow: 0 2px 12px rgba(246,95,143,.08);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text);
+  flex: none;
+}
+
+.layout-back {
+  position: absolute;
+  left: 1.25rem;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.layout-back svg,
+.layout-round-action svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.layout-appbar-actions {
+  position: absolute;
+  right: 1.25rem;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+}
+
+.layout-badge-pill {
+  position: absolute;
+  right: 1.25rem;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: .32rem .72rem;
+  border-radius: 9999px;
+  background: var(--color-primary);
+  color: var(--color-surface);
+  font-size: .72rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.layout-section-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 1.5rem .2rem 1rem;
+}
+
+.layout-section-title {
+  color: var(--color-text);
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.layout-section-action {
+  color: var(--color-text-tertiary);
+  font-size: .69rem;
+  font-weight: 500;
+  line-height: 1.35;
+  white-space: nowrap;
+}

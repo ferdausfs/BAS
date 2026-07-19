@@ -75,3 +75,12 @@ Full-repo consistency + leftover-straggler hunt. Phases 0–5 are confirmed done
 - [ ] New AGENT_LOG.md entry at TOP: phase #, what changed, tsc/build results, NEXT=done.
 - [ ] `git checkout -- package-lock.json` (revert npm-install churn) before zip.
 - [ ] Add any new lesson to `tasks/lessons.md`.
+
+---
+
+# BAS0002 — Phase L0 TODO (2026-07-19)
+
+- [x] Read the BAS0002 handoff, lessons, and GroceryApp chrome/layout rules.
+- [x] Add reusable BAS semantic layout primitives for page edges, app bars, back/round actions, and section headers.
+- [x] Keep this foundation-only: no screen bodies, bottom tab bar, colors, or behavior changes.
+- [x] Run available verification (toolchain unavailable in fresh clone; see AGENT_LOG).

@@ -1,4 +1,35 @@
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## BAS0002 — Layout & Spacing Pass — Phase L0 (2026-07-19, arena.ai Agent Mode)
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+**Phase worked on:** **Phase L0 — Foundation.** No BAS0002 entry existed, so this run
+started at L0 as required. **NEXT RUN = Phase L1.**
+
+### কী বদলেছে — reusable layout foundation
+- **`src/index.css`**: added BAS semantic layout primitives, without changing any color
+  tokens or screen bodies: `.layout-page` (24px page edge), `.layout-appbar` (4.5rem
+  reference-proportioned chrome), `.layout-appbar-title`, `.layout-back`,
+  `.layout-round-action`, `.layout-appbar-actions`, `.layout-badge-pill`, and the
+  `.layout-section-*` row/title/action rhythm (1.5rem top / 1rem bottom).
+- Measurements were translated from GroceryApp `style.css` `.appbar`, `.back`,
+  `.round-act`, `.badge-pill`, `.page`, and `.sec-row`/`.sec-title`/`.see-all`.
+  Reference grayscale values were not copied; all styling uses existing BAS semantic
+  tokens and the finished BAS soft-pink shadow language.
+- **`tasks/todo.md`** updated for this one phase. No screen JSX, `BottomTabBar.tsx`,
+  gesture code, overlays, business logic, or `tailwind.config.ts` was changed.
+
+### Verification
+- `git diff --check`: ✓ passed.
+- `npx tsc --noEmit`: ⚠️ could not run against the fresh clone because dependencies are
+  not installed; `npx` attempted the unrelated deprecated `tsc` package and reported
+  “This is not the tsc command you are looking for”. No source error result is claimed.
+- `npm run build`: ⚠️ blocked for the same environment reason (`vite: not found`).
+- Reference-gray grep on the changed CSS additions: ✓ no listed reference gray literals.
+
+**Handoff:** Buddy/Claude should install the repo dependencies and rerun `npx tsc
+--noEmit` and `npm run build` before applying/pushing. **Next = Phase L1 — Browse (batch A).**
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ## BAS0001 — PREMIUM SOFT-PINK REDESIGN — Phase 6 (final consistency pass, ALL screens) ✅ (2026-07-19, arena.ai Agent Mode)
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 **Agent/Tool:** arena.ai Agent Mode (codename BAS0001)
