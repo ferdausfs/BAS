@@ -26,7 +26,7 @@ export default function CustomizeScreen() {
           onClick={back}
           className="flex h-11 w-11 items-center justify-center rounded-full bg-surface text-ink shadow-card transition active:scale-90"
         >
-          <ArrowLeft className="h-[18px] w-[18px] text-ink" strokeWidth={2} />
+          <ArrowLeft className="h-5 w-5 text-ink" strokeWidth={2} />
         </button>
         <h1 className="font-sans text-[16px] font-bold tracking-tight text-ink">Custom Cake</h1>
       </div>

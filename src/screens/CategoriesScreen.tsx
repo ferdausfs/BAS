@@ -266,7 +266,7 @@ export default function CategoriesScreen() {
             aria-label="Close filters"
           />
           <section
-            className="fixed bottom-0 left-0 right-0 z-[140] rounded-t-[32px] border border-border bg-surface px-5 pb-10 pt-5 shadow-float anim-up"
+            className="fixed bottom-0 left-0 right-0 z-[140] rounded-t-[22px] border border-border bg-surface px-6 pb-10 pt-5 shadow-float anim-up"
             aria-label="Filter and sort"
           >
             <div className="mx-auto mb-4 h-1.5 w-10 rounded-full bg-accent" />

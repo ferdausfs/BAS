@@ -1,4 +1,103 @@
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## BAS0002 — Layout & Spacing Pass — Phase L5 (Final consistency pass — ALL screens) ✅ (2026-07-19, arena.ai Agent Mode)
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**Phase worked on:** **Phase L5 — Final consistency pass.** The previous BAS0002 entry is Phase L4, so this
+run correctly starts at L5. **This is the LAST phase — BAS0002 is now complete.** No "next phase"; handoff
+below tells Buddy what to decide/apply.
+
+This was an audit-first pass (like BAS0001 Phase 6): a side-by-side check of every screen against the
+GroceryApp reference rhythm + the conventions established in L0–L4, fixing only genuine, low-risk
+stragglers and *proposing* (not auto-applying) the one high-magnitude judgment call.
+
+### কী বদলেছে — straggler cleanup (spacing/structure only, no color pass)
+All four auto-fixes translate the reference's measured proportions / the L0–L4 conventions; no color, no
+token, no business-logic, no gesture, no `BottomTabBar`, no auth-flow change.
+
+**Reference material re-read:** `style.css` `.back`/`.back svg` (2.75rem circle / 1.25rem icon = 44px / 20px),
+`.sheet`/`.btn-row.bar`/`.phero` radii, `.page` (1.5rem edge), `.pcard{1rem}`/`.pimg{.75rem}`; `screens.js`
+back-button + bottom-sheet structures.
+
+- **CouponsScreen.tsx** — back-button icon `h-[18px] w-[18px]` (18px) → `h-5 w-5` (20px). L2 had normalized
+  this button's *size* (`h-9→h-11`) and removed its border, but missed the icon; every other back button in
+  the app and the reference `.back svg` (1.25rem) use a 20px icon. Now consistent.
+- **CustomizeScreen.tsx** — same fix: back-button icon `h-[18px] w-[18px]` → `h-5 w-5` (20px).
+- **CategoriesScreen.tsx** (filter bottom sheet) — `rounded-t-[32px]` → `rounded-t-[22px]` and edge
+  `px-5` → `px-6`. Every in-scope sheet in BAS is `rounded-t-[22px]` + 24px edge (NotificationsSheet, the 5
+  ProfileScreen sheets, ProductScreen content sheet, both CartScreen sheets, CheckoutScreen bar = 10 instances);
+  this filter sheet (an L1-batch screen whose sheet L1 didn't address) was the lone `32px / px-5` outlier.
+- **OccasionSheet.tsx** (shared "Browse by occasion" bottom sheet) — `rounded-t-[28px]` → `rounded-t-[22px]`,
+  header `px-5`→`px-6`, occasion grid `p-5`→`p-6`. Same sheet convention; this shared sheet wasn't in any
+  per-phase batch and was overlooked. (It is NOT the auth flow — that stays untouched.)
+
+### Audit findings — confirmed CLEAN (the explicit L5 checks)
+- **Reference-gray hex across ALL of `src/`** (whole-tree, all extensions): **ZERO** literals
+  (`#909090 #7f7f7f #9b9b9b #969696 #8f8f8f #9c9c9c #acacac #c0c0c0 #f7f7f7 #f8f8f8 #f4f4f4 #f5f4f4
+  #d9d9d9 #e7e7e7 #ededed`).
+- **`BottomTabBar.tsx` zero diff across ALL of BAS0002:** `git log` shows its most recent commit is
+  `87a130f BAS0001 Phase 1` — **no BAS0002 commit ever touched it**. Current file also gray-hex-clean.
+- **No swipe/gesture regressions:** ProductScreen native touch listeners (lines ~97–104:
+  touchstart passive:true / touchmove passive:false / touchend) and CartScreen pointer-listener swipe
+  (~320–363: pointerdown/move/up/cancel + setPointerCapture) are both intact. `git diff 6c0e9df(BAS0001 P6)
+  → 980017a(BAS0002 L2)` for those two files shows **ZERO** touch/pointer/swipe lines changed (the 40/30
+  changed lines were spacing-only).
+- **App-bar back buttons (all 9 pushed screens):** CartScreen, CheckoutScreen, CouponsScreen, CustomizeScreen,
+  ProductScreen, ReviewsListScreen, TrackingScreen, WishlistScreen, WriteReviewScreen — every one is
+  `h-11 w-11 rounded-full bg-surface shadow-card`, **no border**, 20px icon (after the two fixes above).
+- **Page-edge wrappers:** all `px-6` (24px). Every surviving `px-4/px-5/px-7` was triaged and is
+  button-internal, form-input-internal, card-internal, or hero-floating (ProductScreen `px-5 pt-5` on the
+  image) — all correct and deliberately left per the page-edge-swap lesson.
+- **Sheet/bar top-radii landscape mapped:** 10× `rounded-t-[22px]` (in-scope convention). Remaining
+  non-`22px` are all deliberately out of scope: AuthSheet `28px` (auth flow), AdminPanel `rounded-t-3xl`
+  (internal tool). After this phase the only non-auth/non-admin sheets (CategoriesScreen filter,
+  OccasionSheet) are now `22px` too.
+- **Fixed-overlay z-index:** no z-index line changed this phase; OccasionSheet stays `z-[120]`, the
+  CategoriesScreen filter sheet stays `z-[140]` (backdrop `z-[135]`) — still below global QuickBar/BottomTabBar.
+
+### ⚠️ Proposal for Buddy — NOT auto-applied (high magnitude, BAS0001-set value)
+**Shared `ProductCard.tsx` radius `rounded-[22px]` (22px) → `rounded-2xl` (16px), and its inner image
+`rounded-[16px]` → `rounded-xl` (12px).** Reasoning: the reference `.pcard{border-radius:1rem}` is 16px and
+`.pimg{.75rem}` is 12px; the BAS0002 convention (lessons.md) is `rounded-2xl` for bordered content cards; and
+**every sibling content card** (ProductScreen addons/reviews, CartScreen items/bills, OrdersScreen order
+cards, CheckoutScreen, Coupons, Customize, Tracking, Success, ReviewsList, WriteReview) is already
+`rounded-2xl`/16px from L2/L3. `ProductCard` is the lone holdout at 22px — it survived the L2/L3
+`rounded-[20px]→rounded-2xl` sweep *because its value was 22px, not 20px*. **Why deferred:** it was set
+deliberately in `87a130f BAS0001 Phase 1` (and kept through Phase 6), it is the app's single most prominent
+component (every product tile on Home / Categories / Wishlist), and changing it is an app-wide visual change
+that overrides a BAS0001 choice. Buddy: if you want full reference/convention consistency, it's a 2-line
+change in `ProductCard.tsx` (lines 58–59 outer radius, line 63 image radius); if you prefer the softer 22px
+premium look from BAS0001, leave it — both are defensible. **Not touched this run.**
+
+### Suggestion for Buddy — optional cleanup (do NOT auto-delete)
+Now that BAS0002 is done, `design-reference/GroceryApp/` has served its purpose. It sits outside
+`src/`/`public/` so it never enters the Vite bundle (confirmed), but if you want a leaner repo you can
+`git rm -r design-reference/GroceryApp/`. **Suggestion only — left in place this run; Buddy decides.**
+
+### Verification (self)
+- `npx tsc --noEmit`: **✓ 31 errors, identical to the pre-phase baseline** — captured baseline before edits,
+  re-ran after; `diff` of sorted `error TS*` lines = **identical (zero new, zero removed)**. The 31 are the
+  same pre-existing out-of-scope logic errors (TS6133/TS18046/TS2339/TS2345/TS2698/TS2322/TS2571/TS2353).
+- `npm run build`: **✓ Passed** (Vite singlefile bundle, ~5.35s).
+- Reference-gray grep on the 4 changed files → **ZERO**; whole-`src/` grep → **ZERO**.
+- `git diff` cross-check: changed source = `OccasionSheet.tsx`, `CategoriesScreen.tsx`, `CouponsScreen.tsx`,
+  `CustomizeScreen.tsx` ONLY. **Zero diff** on `BottomTabBar.tsx`, `ProductScreen.tsx`, `CartScreen.tsx`,
+  `AuthSheet.tsx`, `NotificationsSheet.tsx`, `QuickBar.tsx`, `ChatBot.tsx`. No z-index changed.
+- Claims re-verified against the actual files (lesson): all four edits confirmed present via `grep`; no
+  `rounded-t-[28px]`/`rounded-t-[32px]`/`px-5 py-4`/`p-5 pb-8`/`h-[18px] w-[18px]` (back icons) remain.
+- `tasks/lessons.md`: added the L5 rule (triage straggler greps by category; auto-fix vs propose by magnitude;
+  sheet convention recap).
+
+### Handoff / next — BAS0002 COMPLETE
+- **There is no next phase.** Phases L0→L5 are all done. Buddy: apply this ZIP (4 source files + AGENT_LOG.md
+  + tasks/lessons.md + tasks/todo.md), have Claude run `npx tsc --noEmit` (expect the same 31 pre-existing
+  errors) and `npm run build`, then push to `github.com/ferdausfs/BAS`.
+- **Two Buddy decisions pending** (both logged above, neither auto-done): (1) the `ProductCard` 22px→16px
+  radius proposal; (2) optional `git rm -r design-reference/GroceryApp/`.
+- `package-lock.json` was churned by the fresh-clone `npm install` and is intentionally **NOT** in this ZIP
+  (per the lessons.md rule) — only intended files are packaged.
+
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ## BAS0002 — Layout & Spacing Pass — Phase L4 (Account/admin/splash/chrome batch D) (2026-07-19, arena.ai Agent Mode)
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━
 

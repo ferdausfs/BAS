@@ -286,3 +286,32 @@ Categories search chrome. **Fix going forward:** before changing shared chrome p
 HomeTopBar, section/header helpers), grep all consumers and explicitly record any outside-phase footprint
 in `AGENT_LOG.md`; keep the change purely structural/spacing and let the final consistency pass audit the
 convergent cross-screen result.
+
+## Final consistency pass: triage straggler greps by CATEGORY, and split "auto-fix" vs "propose" by magnitude (2026-07-19)
+During BAS0002 Phase L5 (final pass), broad greps for convention tokens are extremely noisy:
+`grep h-10 w-10` / `grep rounded-[20px]` returns dozens of hits, but the convention applies to ONE
+category each — the 44px round-action rule is for app-bar back/chrome buttons (NOT steppers, icon
+chips, empty-state icons, add buttons, or carousel arrows on imagery), and the `rounded-2xl` content-card
+rule is for bordered list/content cards (NOT icon tiles, filter chips, or the deliberately airy
+empty-state/hero cards from BAS0001). **Fix:** before changing ANY grep hit, classify it (back-button
+chrome? content card? sheet? button-internal padding? hero-floating? icon chip?) and only act on hits
+in the convention's actual category. Verify the real back buttons by finding the ArrowLeft/ChevronLeft
+icons and reading their parent `<button>`, not by grepping size tokens blind.
+
+**Auto-fix vs propose:** a final pass should AUTO-FIX unambiguous, low-risk convention violations
+(e.g. two back-button icons left at 18px while every other is 20px; two non-auth sheets at
+`rounded-t-[28/32px]` while 10 in-scope sheets are `rounded-t-[22px]`), but only PROPOSE (don't
+auto-apply) high-magnitude changes that touch a deliberate value set in an EARLIER pass on a prominent
+SHARED component. Concretely: the shared `ProductCard` is `rounded-[22px]` (set in BAS0001 Phase 1) while
+every sibling content card is `rounded-2xl`/16px (reference `.pcard{1rem}`); it survived the L2/L3
+`rounded-[20px]→rounded-2xl` sweep precisely because its value was 22px, not 20px. Changing it restyles
+every product tile app-wide and overrides a BAS0001 choice, so L5 logged it as a recommendation for Buddy
+rather than auto-applying. **Rule:** when a straggler is (a) app-wide in blast radius AND (b) a value a
+prior pass deliberately set, surface it with full reasoning and let Buddy decide; reserve auto-fixes for
+scoped, unambiguous violations.
+
+**Sheet convention recap (for future audits):** in-scope bottom sheets / sticky bars = `rounded-t-[22px]`
++ 24px (`px-6`) edge. AuthSheet stays `rounded-t-[28px]` (auth flow is out of scope), AdminPanel keeps its
+own radii (internal tool). Sheet *close* buttons legitimately come in two styles (NotificationsSheet's 44px
+round-action vs the `h-10 w-10 rounded-[14px] bg-secondary` rounded-square used by OccasionSheet /
+CategoriesScreen-filter / AuthSheet) — that variance is stylistic, not a spacing/rhythm violation.

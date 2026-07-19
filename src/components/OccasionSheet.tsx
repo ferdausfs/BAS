@@ -19,8 +19,8 @@ export default function OccasionSheet({ open, onClose, onSelect }: Props) {
   return (
     <div className={`absolute inset-0 z-[120] flex items-end justify-center ${closing ? 'anim-fade-out' : 'anim-fade'}`}>
       <button type="button" aria-label="Close occasions" className="absolute inset-0 bg-ink/45" onClick={onClose} />
-      <section className={`relative max-h-[76%] w-full overflow-hidden rounded-t-[28px] border border-border bg-surface shadow-float ${closing ? 'anim-down' : 'anim-up'}`} aria-label="Browse by occasion">
-        <header className="flex items-center justify-between border-b border-divider px-5 py-4">
+      <section className={`relative max-h-[76%] w-full overflow-hidden rounded-t-[22px] border border-border bg-surface shadow-float ${closing ? 'anim-down' : 'anim-up'}`} aria-label="Browse by occasion">
+        <header className="flex items-center justify-between border-b border-divider px-6 py-4">
           <div>
             <h2 className=" text-[20px] font-semibold text-text">Browse by occasion</h2>
             <p className="mt-0.5 text-[14px] text-text-secondary">Pick a category to explore</p>
@@ -30,7 +30,7 @@ export default function OccasionSheet({ open, onClose, onSelect }: Props) {
           </button>
         </header>
 
-        <div className="no-scrollbar grid grid-cols-3 gap-x-3 gap-y-5 overflow-y-auto p-5 pb-8">
+        <div className="no-scrollbar grid grid-cols-3 gap-x-3 gap-y-5 overflow-y-auto p-6 pb-8">
           {categories.map((category) => (
             <button
               key={category.id}

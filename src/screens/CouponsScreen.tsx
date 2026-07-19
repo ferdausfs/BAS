@@ -51,7 +51,7 @@ export default function CouponsScreen() {
           className="flex h-11 w-11 items-center justify-center rounded-full bg-surface text-ink shadow-card transition active:scale-90"
           aria-label="Back"
         >
-          <ArrowLeft className="h-[18px] w-[18px]" />
+          <ArrowLeft className="h-5 w-5" />
         </button>
         <div>
           <div className="section-eyebrow text-coral-700 uppercase tracking-wider text-[11px] font-bold">Rewards</div>
