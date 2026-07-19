@@ -1,4 +1,84 @@
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## BAS0005 — HomeScreen: header/categories/offer-card restyle to match GroceryApp reference (single phase, complete) ✅ (2026-07-19, chat agent, direct shell)
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**Task:** Buddy shared a screenshot that turned out to be `design-reference/GroceryApp`'s own home
+screen (already in the repo, previously used for BAS0001/BAS0002 spacing/rhythm passes). Requested:
+match layout, visual style, font size, and spacing to the reference image for Header, Explore
+Categories, and the Exclusive Offers card — but keep BAS's own color tokens (coral/pink), not the
+reference's gray/mono palette.
+
+**In scope (files touched):** `src/components/HomeTopBar.tsx`, `src/screens/HomeScreen.tsx`
+**Out of scope (untouched):** every other screen/component; `SearchBar.tsx` was NOT touched — it
+already matched the reference's `.hd-search`/`.flt-btn` pill-search-bar + circular-filter-button
+pattern from an earlier session, so no change was needed there.
+
+**Interpretation stated (per lessons.md rule):** the reference offer card has a hardcoded "Up to 30%"
+number; BAS's `Banner` type has no percent field (it's admin-editable: title/subtitle/tag/promoCode/
+image, type discount|new_item|notice). Took the reference's card SHAPE (flat solid card, tag pill,
+headline, CTA, decorative photo on the right, dots below the card) but kept BAS's real dynamic
+title/subtitle text instead of forcing a fake percent — translating structure, not literal content.
+
+### কী বদলেছে
+
+**HomeTopBar.tsx**
+- Header restructured into one solid `bg-primary` (coral) panel — matches reference `.hd{background:
+  var(--primary)}` — replacing the previous plain-bg header + separately-styled sticky search row.
+- Avatar: `rounded-[16px]` square → `rounded-full` circle, 50px, on `bg-white/20` (was `bg-secondary`)
+  to sit on the coral panel; initial/photo logic unchanged.
+- Location line: added `MapPin` icon inline before the district name (reference `.hd-loc .l2` has the
+  pin icon inline), label copy kept as "Delivery to" (business copy, not a visual element, so left as
+  BAS's own wording per the earlier "translate proportions, not literal values" convention).
+- Bell button: square-ish `shadow-card` surface circle → `bg-white/16` circle matching reference `.bell`,
+  unread-count badge only renders when `unreadCount > 0` now (was always rendering an empty pill).
+- Search row: removed the `sticky top-0` wrapper + border/shadow (reference keeps search inside the
+  static header panel, not stuck on scroll) — `SearchBar` component itself is unchanged, only its
+  wrapper. **Cross-check:** `SearchBar` is also used by `CategoriesScreen` — confirmed only the
+  HomeTopBar-local sticky wrapper was removed, not anything inside `SearchBar.tsx` itself, so
+  CategoriesScreen's search chrome is unaffected.
+
+**HomeScreen.tsx — Explore Categories**
+- Vertical icon-over-label cards (`min-w-[98px]`, `rounded-[24px]`, icon top / label below) → horizontal
+  pill chips (`h-[37px]`, `rounded-full`, `bg-secondary`, small icon-circle + label inline) matching
+  reference `.chip`. Kept BAS's existing per-category `color`/`fg` on the small icon bubble (own colors,
+  per Buddy's scope) instead of the reference's flat gray/primary chip fill.
+
+**HomeScreen.tsx — Exclusive Offers card**
+- Removed the outer bordered `p-2 shadow-card` wrapper + full-bleed photo-carousel-with-dark-gradient-
+  overlay-text treatment. Replaced with a flat `bg-secondary` card (reference `.offer{background:
+  var(--fill)}`) — tag pill, headline, subtitle, CTA button on the left; banner photo as a contained
+  96px rounded thumbnail on the right (reference's decorative-shape position), not full-bleed.
+- Dot pagination moved from inside the card (bottom-right, elongated-pill active state) to below the
+  card, centered, plain small circles (reference `.dots`) — the "X / Y" count badge was removed (not
+  present in the reference, purely decorative).
+- Prev/next arrow buttons kept (still `hidden md:flex`, desktop-only convenience) — reference screenshot
+  is single-viewport mobile so doesn't show these; left them since they predate this pass and aren't a
+  layout regression.
+- All banner `onClick` routing logic (discount copy-code, notice modal, product/customize/categories
+  links) is byte-identical, only the JSX wrapper/classes changed.
+
+### Verification (self)
+- `npx tsc --noEmit`: baseline captured before edit (31 pre-existing errors) → re-ran after edit →
+  sorted-line diff = **identical, zero new, zero removed**.
+- `npm run build`: ✓ passed (Vite singlefile bundle, 8.82s).
+- `git diff --stat`: only `src/components/HomeTopBar.tsx` + `src/screens/HomeScreen.tsx` changed
+  (`package-lock.json` churn from `npm install` reverted via `git checkout`, not in this ZIP).
+- Claims re-verified against the actual files (not inferred): grepped for the coral header panel class,
+  the circular avatar class, the pill category-chip class, and the plain-circle dots class — all present
+  exactly as claimed.
+- No touch/gesture/swipe listeners exist in either touched file, so no gesture-regression check applied.
+
+### Handoff / next
+- **Single, complete phase — no next phase.**
+- Apply the ZIP, run `npx tsc --noEmit` (expect the same 31 pre-existing errors) and `npm run build`,
+  then push to `github.com/ferdausfs/BAS`.
+- Worth a real-device check after deploy: the coral header panel is a visual departure from the previous
+  soft-pastel header, and the offer-card thumbnail is now a small contained photo instead of full-bleed —
+  confirm both read well against actual banner images in `Firebase`/admin data, not just placeholder art.
+- No judgment calls deferred; no cleanup suggested.
+
+
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ## BAS0004 — Fix: Chrome mobile text auto-sizing inflating fonts app-wide (single phase, complete) ✅ (2026-07-19, chat agent, direct shell)
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 

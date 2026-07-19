@@ -178,108 +178,99 @@ export default function HomeScreen({
               action={{ label: 'See all', onClick: () => go({ name: 'tabs', tab: 'categories' }) }}
             />
             <div className="mt-4 px-6">
-              <div className="rounded-[30px] border border-border bg-surface p-2 shadow-card">
-                <div className="relative overflow-hidden rounded-[24px]">
-                  <div className="relative aspect-[1.56/1] w-full overflow-hidden bg-secondary">
-                    {activeBanners.map((banner, index) => (
-                      <div
-                        key={banner.id}
-                        onClick={() => {
-                          if (banner.productId) go({ name: 'product', productId: banner.productId });
-                          else if (banner.link === 'customize') go({ name: 'customize' });
-                          else if (banner.link === 'categories') go({ name: 'tabs', tab: 'categories' });
+              <div className="relative overflow-hidden rounded-[18px]">
+                {activeBanners.map((banner, index) => (
+                  <div
+                    key={banner.id}
+                    onClick={() => {
+                      if (banner.productId) go({ name: 'product', productId: banner.productId });
+                      else if (banner.link === 'customize') go({ name: 'customize' });
+                      else if (banner.link === 'categories') go({ name: 'tabs', tab: 'categories' });
+                    }}
+                    className={`flex cursor-pointer items-center gap-3 bg-secondary py-[21px] pl-[21px] pr-4 transition-opacity duration-700 ${
+                      index === bannerIdx ? 'relative z-10 opacity-100' : 'absolute inset-0 z-0 opacity-0'
+                    }`}
+                  >
+                    <div className="min-w-0 flex-1">
+                      <span className="mb-3 inline-flex w-fit items-center rounded-[13px] bg-white/70 px-3 py-[5px] text-[11px] font-medium text-text-secondary">
+                        {banner.tag}
+                      </span>
+                      <h3 className="max-w-[15ch] text-[17px] font-semibold leading-[1.3] text-text">
+                        {banner.title}
+                      </h3>
+                      <p className="mt-1 max-w-[22ch] truncate text-[12px] text-text-tertiary">
+                        {banner.subtitle}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          if (banner.type === 'discount') {
+                            if (banner.promoCode) {
+                              navigator.clipboard?.writeText(banner.promoCode);
+                              setCopiedId(banner.id);
+                              setTimeout(() => setCopiedId(null), 1500);
+                            }
+                          } else if (banner.type === 'notice') {
+                            setActiveNotice(banner);
+                          } else if (banner.productId) {
+                            go({ name: 'product', productId: banner.productId });
+                          } else if (banner.link === 'customize') {
+                            go({ name: 'customize' });
+                          } else if (banner.link === 'categories') {
+                            go({ name: 'tabs', tab: 'categories' });
+                          } else {
+                            go({ name: 'product', productId: availableProducts[0]?.id || 'p1' });
+                          }
                         }}
-                        className={`absolute inset-0 cursor-pointer transition-opacity duration-700 ${index === bannerIdx ? 'z-10 opacity-100' : 'z-0 opacity-0'}`}
+                        className="mt-[14px] inline-flex h-[30px] w-fit items-center gap-1.5 rounded-[15px] bg-primary px-[18px] text-[12px] font-medium text-white transition active:scale-95"
                       >
-                        <img src={banner.image} alt={banner.title} className="absolute inset-0 h-full w-full object-cover" />
-                        <div
-                          className="absolute inset-0"
-                          style={{ background: 'linear-gradient(90deg, rgba(44,44,44,0.54) 0%, rgba(44,44,44,0.2) 56%, rgba(44,44,44,0) 100%)' }}
-                        />
-                        <div className="absolute inset-0 flex flex-col justify-center p-5 sm:p-6">
-                          <span className="mb-3 inline-flex w-fit items-center gap-1 rounded-full bg-white/92 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-text shadow-card">
-                            {banner.tag}
-                          </span>
-                          <h3 className="max-w-[16ch] text-[24px] font-bold leading-[1.08] tracking-[-0.03em] text-white sm:text-[26px]">
-                            {banner.title}
-                          </h3>
-                          <p className="mt-2 max-w-[23ch] text-[13px] leading-relaxed text-white/86">
-                            {banner.subtitle}
-                          </p>
-                          <button
-                            type="button"
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              if (banner.type === 'discount') {
-                                if (banner.promoCode) {
-                                  navigator.clipboard?.writeText(banner.promoCode);
-                                  setCopiedId(banner.id);
-                                  setTimeout(() => setCopiedId(null), 1500);
-                                }
-                              } else if (banner.type === 'notice') {
-                                setActiveNotice(banner);
-                              } else if (banner.productId) {
-                                go({ name: 'product', productId: banner.productId });
-                              } else if (banner.link === 'customize') {
-                                go({ name: 'customize' });
-                              } else if (banner.link === 'categories') {
-                                go({ name: 'tabs', tab: 'categories' });
-                              } else {
-                                go({ name: 'product', productId: availableProducts[0]?.id || 'p1' });
-                              }
-                            }}
-                            className="mt-4 inline-flex h-11 w-fit items-center gap-2 rounded-[18px] bg-primary px-4 text-[13px] font-semibold text-white shadow-btn transition hover:bg-primary-hover active:scale-95"
-                          >
-                            {banner.type === 'discount'
-                              ? copiedId === banner.id
-                                ? 'Copied!'
-                                : `Copy: ${banner.promoCode || 'CODE'}`
-                              : <>{banner.ctaText || 'Shop Now'} <ArrowRight className="h-4 w-4" strokeWidth={2.2} /></>}
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                    {activeBanners.length > 1 && (
-                      <>
-                        <button
-                          type="button"
-                          onClick={() => setBannerIdx((current) => (current - 1 + activeBanners.length) % activeBanners.length)}
-                          className="absolute left-3 top-1/2 z-20 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-[16px] border border-white/60 bg-white/90 text-text shadow-card transition active:scale-95 md:flex"
-                          aria-label="Previous"
-                        >
-                          <ChevronLeft className="h-4 w-4" strokeWidth={2.2} />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setBannerIdx((current) => (current + 1) % activeBanners.length)}
-                          className="absolute right-3 top-1/2 z-20 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-[16px] border border-white/60 bg-white/90 text-text shadow-card transition active:scale-95 md:flex"
-                          aria-label="Next"
-                        >
-                          <ChevronRight className="h-4 w-4" strokeWidth={2.2} />
-                        </button>
-                      </>
-                    )}
-                  </div>
-                </div>
-                {activeBanners.length > 1 && (
-                  <div className="mt-3 flex items-center justify-between gap-3 px-2 pb-1">
-                    <div className="flex items-center gap-1.5">
-                      {activeBanners.map((_, index) => (
-                        <button
-                          key={index}
-                          type="button"
-                          onClick={() => setBannerIdx(index)}
-                          className={`h-2 rounded-full transition-all ${index === bannerIdx ? 'w-7 bg-primary' : 'w-2 bg-accent'}`}
-                          aria-label={`Go to slide ${index + 1}`}
-                        />
-                      ))}
+                        {banner.type === 'discount'
+                          ? copiedId === banner.id
+                            ? 'Copied!'
+                            : `Copy: ${banner.promoCode || 'CODE'}`
+                          : (banner.ctaText || 'Shop Now')}
+                      </button>
                     </div>
-                    <span className="rounded-full bg-secondary px-2.5 py-1 text-[11px] font-medium text-text-secondary">
-                      {bannerIdx + 1} / {activeBanners.length}
-                    </span>
+                    <div className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white/40">
+                      <img src={banner.image} alt="" className="h-full w-full object-cover" />
+                    </div>
                   </div>
+                ))}
+                {activeBanners.length > 1 && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => setBannerIdx((current) => (current - 1 + activeBanners.length) % activeBanners.length)}
+                      className="absolute left-2 top-1/2 z-20 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/85 text-text shadow-card transition active:scale-95 md:flex"
+                      aria-label="Previous"
+                    >
+                      <ChevronLeft className="h-4 w-4" strokeWidth={2.2} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setBannerIdx((current) => (current + 1) % activeBanners.length)}
+                      className="absolute right-2 top-1/2 z-20 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/85 text-text shadow-card transition active:scale-95 md:flex"
+                      aria-label="Next"
+                    >
+                      <ChevronRight className="h-4 w-4" strokeWidth={2.2} />
+                    </button>
+                  </>
                 )}
               </div>
+              {activeBanners.length > 1 && (
+                <div className="flex justify-center gap-2 pt-3 pb-1">
+                  {activeBanners.map((_, index) => (
+                    <button
+                      key={index}
+                      type="button"
+                      onClick={() => setBannerIdx(index)}
+                      className={`h-2 w-2 rounded-full transition-colors ${index === bannerIdx ? 'bg-primary' : 'bg-border'}`}
+                      aria-label={`Go to slide ${index + 1}`}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
           </section>
         )}
@@ -296,15 +287,15 @@ export default function HomeScreen({
                 key={category.id}
                 type="button"
                 onClick={(event) => openOccasion(category, event.currentTarget)}
-                className="flex min-w-[98px] shrink-0 flex-col items-start gap-3 rounded-[24px] border border-border bg-surface p-3 text-left shadow-card transition duration-300 hover:-translate-y-0.5 hover:shadow-card-hover active:scale-[0.98]"
+                className="flex h-[37px] shrink-0 items-center gap-2 rounded-full bg-secondary pl-2 pr-4 text-left transition duration-200 active:scale-[0.97]"
               >
                 <span
-                  className="flex h-11 w-11 items-center justify-center rounded-[16px] ring-1 ring-white/70"
+                  className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full"
                   style={{ background: category.color, color: category.fg }}
                 >
-                  <OccasionIcon id={category.icon} size={20} />
+                  <OccasionIcon id={category.icon} size={13} />
                 </span>
-                <span className="text-[13px] font-semibold leading-tight text-text">{category.name}</span>
+                <span className="whitespace-nowrap text-[13px] font-medium text-text">{category.name}</span>
               </button>
             ))}
           </div>

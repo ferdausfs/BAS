@@ -1,4 +1,4 @@
-import { Bell, ChevronDown } from 'lucide-react';
+import { Bell, ChevronDown, MapPin } from 'lucide-react';
 import { useUI, useLocation, useAuthStore } from '../lib/store';
 import SearchBar from './SearchBar';
 
@@ -31,46 +31,51 @@ export default function HomeTopBar({
   const unreadCount = notifications.filter((notification) => !notification.read).length;
 
   return (
-    <div className="relative z-10 anim-up">
-      <div className="px-6 pt-5 pb-3">
-        <div className="flex items-center justify-between">
-          <button
-            type="button"
-            onClick={() => setTab('profile')}
-            className="flex min-h-11 items-center gap-3 rounded-[18px] text-left transition active:scale-[0.98]"
-            aria-label="Delivery location"
-          >
-            <span className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-[16px] bg-secondary text-primary shadow-card">
-              {user?.avatar ? (
-                <img src={user.avatar} alt="" className="h-full w-full object-cover" />
-              ) : (
-                <span className="text-[15px] font-bold">{initial}</span>
-              )}
-            </span>
-            <span className="leading-tight">
-              <span className="block text-[12px] font-medium text-text-tertiary">Delivery to</span>
-              <span className="flex items-center gap-0.5 text-[15px] font-semibold text-text">
-                {district || 'Set your location'}
-                <ChevronDown className="h-4 w-4 text-text-secondary" strokeWidth={2} />
-              </span>
-            </span>
-          </button>
+    <div className="relative z-10 anim-up bg-primary px-6 pb-[18px] pt-3">
+      <div className="flex items-center gap-3 py-[11px]">
+        <button
+          type="button"
+          onClick={() => setTab('profile')}
+          className="flex h-[50px] w-[50px] shrink-0 items-center justify-center overflow-hidden rounded-full bg-white/20 text-white transition active:scale-95"
+          aria-label="Profile"
+        >
+          {user?.avatar ? (
+            <img src={user.avatar} alt="" className="h-full w-full object-cover" />
+          ) : (
+            <span className="text-[16px] font-bold">{initial}</span>
+          )}
+        </button>
 
-          <button
-            type="button"
-            onClick={onNotificationsOpen ?? (() => setTab('profile'))}
-            className="relative flex h-11 w-11 items-center justify-center rounded-full bg-surface text-text shadow-card transition active:scale-95"
-            aria-label="Notifications"
-          >
-            <Bell className="h-5 w-5" strokeWidth={1.8} />
-            <span className="absolute right-1.5 top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[9px] font-bold text-white ring-2 ring-surface">
-              {unreadCount > 0 ? unreadCount : ''}
+        <button
+          type="button"
+          onClick={() => setTab('profile')}
+          className="min-w-0 flex-1 text-left leading-tight"
+          aria-label="Delivery location"
+        >
+          <span className="block text-[12px] text-white/75">Delivery to</span>
+          <span className="mt-[3px] flex items-center gap-[7px] text-[15px] font-medium text-white/95">
+            <MapPin className="h-[18px] w-[18px] shrink-0 text-white/95" strokeWidth={1.8} />
+            <span className="truncate">{district || 'Set your location'}</span>
+            <ChevronDown className="h-[14px] w-[14px] shrink-0 text-white/70" strokeWidth={2.2} />
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={onNotificationsOpen ?? (() => setTab('profile'))}
+          className="relative flex h-[50px] w-[50px] shrink-0 items-center justify-center rounded-full bg-white/16 text-white transition active:scale-95"
+          aria-label="Notifications"
+        >
+          <Bell className="h-[21px] w-[21px]" strokeWidth={1.8} />
+          {unreadCount > 0 && (
+            <span className="absolute right-[7px] top-[7px] flex h-4 min-w-4 items-center justify-center rounded-full bg-white px-1 text-[9px] font-bold text-primary">
+              {unreadCount}
             </span>
-          </button>
-        </div>
+          )}
+        </button>
       </div>
 
-      <div className="sticky top-0 z-20 border-b border-border bg-bg px-6 pb-3 pt-2 shadow-[0_8px_18px_-14px_rgba(246,95,143,0.24)]">
+      <div className="mt-1">
         <SearchBar
           value={search}
           onChange={onSearchChange}
