@@ -139,10 +139,10 @@ export default function App() {
 
         {showTabBar && <BottomTabBar />}
 
-        {/* Floating QuickBar on every screen EXCEPT Home (the new brown HomeTopBar
-            carries cart/bell there) and splash/product. */}
+        {/* Floating QuickBar on every screen EXCEPT Home/Profile (those tabs carry their
+            own chrome/bottom navigation) and splash/product. */}
         {view.name !== 'splash' && view.name !== 'product' &&
-          !(view.name === 'tabs' && activeTab === 'home') && (
+          !(view.name === 'tabs' && (activeTab === 'home' || activeTab === 'profile')) && (
           <QuickBar onNotificationsOpen={() => setNotificationsOpen(true)} />
         )}
 

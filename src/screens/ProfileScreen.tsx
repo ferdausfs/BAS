@@ -1,12 +1,11 @@
-import React, { useEffect, useMemo, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   Heart, MapPin, CreditCard, Bell, HelpCircle, Settings, LogOut,
-  ChevronRight, Star, Sparkles, LogIn, X, Save, Check, User, AlertTriangle,
-  Cake, Gift, Wallet as WalletIcon,
-  Copy, Share2, Navigation, Loader2, Tag
+  ChevronRight, ArrowLeft, KeyRound, Trash2, Sun, Headphones, MessageCircle, Globe2,
+  LogIn, X, Save, Check, User, AlertTriangle, Cake, Gift, Wallet as WalletIcon,
+  Copy, Share2, Navigation, Loader2, Tag, ClipboardList
 } from 'lucide-react';
-import { useUI, useUser, useOrders, useCart, useAuthStore, useWallet, getReferralCode, claimReferralRewards, WALLET_REFERRAL_BONUS } from '../lib/store';
-import { useProducts } from '../hooks/useProducts';
+import { useUI, useAuthStore, getReferralCode, claimReferralRewards, WALLET_REFERRAL_BONUS } from '../lib/store';
 import { useAuth } from '../hooks/useAuth';
 import { doc, setDoc } from 'firebase/firestore';
 import { db, isFirebaseConfigured } from '../lib/firebase';
@@ -118,14 +117,9 @@ class AdminErrorBoundary extends React.Component<{ children: React.ReactNode }, 
 
 export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
   const { go, setChatOpen } = useUI();
-  const { wishlist } = useUser();
-  const { orders } = useOrders();
-  const { items } = useCart();
   const { user } = useAuthStore();
   const effectiveIsAdmin = isAdmin || !!user?.isAdmin;
   const { signOut } = useAuth();
-  const { products } = useProducts();
-  const { balance, totalEarned } = useWallet();
   const referralCode = getReferralCode(user);
   const [walletHistoryOpen, setWalletHistoryOpen] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
@@ -136,10 +130,12 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
 
   const [contactOpen, setContactOpen] = useState(false);
   const [customerOpen, setCustomerOpen] = useState(false);
+  const [profileView, setProfileView] = useState<'main' | 'settings' | 'help'>('main');
+  const [helpOpen, setHelpOpen] = useState('whatsapp');
   const [showAdmin, setShowAdmin] = useState(false);
   const [, setLogoTapCount] = useState(0);
 
-  const [savedProfile, setSavedProfile] = useState<CustomerProfile>(() =>
+  const [, setSavedProfile] = useState<CustomerProfile>(() =>
     loadCustomerProfile(user?.id, user?.name ?? '')
   );
   const [draftProfile, setDraftProfile] = useState<CustomerProfile>(() =>
@@ -166,12 +162,6 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
   useModalDepth(contactOpen);
   useModalDepth(customerOpen);
 
-  const wishlistItems = (products ?? []).filter((p) => p && wishlist.includes(p.id));
-
-  const paymentLabel = useMemo(
-    () => PAYMENTS.find((p) => p.id === savedProfile.payment)?.label ?? 'Cash on Delivery',
-    [savedProfile.payment]
-  );
 
   useEffect(() => {
     const next = loadCustomerProfile(user?.id, user?.name ?? '');
@@ -391,43 +381,74 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
     });
   };
 
-  const menu = [
+  const profileRows = [
     {
-      Icon: Heart,
-      label: 'Wishlist',
-      sub: `${(wishlist ?? []).length} saved items`,
-      action: () => go({ name: 'wishlist' }),
+      Icon: User,
+      label: 'Your profile',
+      action: openCustomerEditor,
     },
     {
       Icon: MapPin,
-      label: 'Delivery address',
-      sub: savedProfile.address ? `${savedProfile.district} · default` : 'Set your delivery address',
-      action: openCustomerEditor,
+      label: 'Manage Address',
+      action: () => setShowAddressModal(true),
     },
     {
       Icon: CreditCard,
-      label: 'Payment methods',
-      sub: paymentLabel,
+      label: 'Payment Methods',
       action: openCustomerEditor,
     },
     {
-      Icon: Bell,
-      label: 'Notifications',
-      sub: 'Order & promo updates',
-      action: () => {},
+      Icon: ClipboardList,
+      label: 'My Orders',
+      action: () => go({ name: 'tabs', tab: 'orders' }),
     },
     {
-      Icon: HelpCircle,
-      label: 'Contact & Support',
-      sub: 'কোনো সমস্যা? আমাদের জানান',
-      action: () => setContactOpen(true),
+      Icon: Tag,
+      label: 'My Coupons',
+      action: () => go({ name: 'coupons' }),
+    },
+    {
+      Icon: WalletIcon,
+      label: 'My Wallet',
+      action: () => setWalletHistoryOpen(true),
     },
     {
       Icon: Settings,
       label: 'Settings',
-      sub: 'Customer info & preferences',
-      action: openCustomerEditor,
+      action: () => setProfileView('settings'),
     },
+  ];
+
+  const settingsRows = [
+    {
+      Icon: Bell,
+      label: 'Notification Settings',
+      action: () => useUI.getState().addNotification('Notifications', 'Notification preferences will be available soon.'),
+    },
+    {
+      Icon: KeyRound,
+      label: 'Password Manager',
+      action: () => useUI.getState().addNotification('Password Manager', 'Account security settings will be available soon.'),
+    },
+    {
+      Icon: Sun,
+      label: 'Theme',
+      action: () => useUI.getState().addNotification('Theme', 'Bake Art Style theme is already active.'),
+    },
+    {
+      Icon: Trash2,
+      label: 'Delete Account',
+      action: () => useUI.getState().addNotification('Delete Account', 'Please contact support to delete your account securely.'),
+    },
+  ];
+
+  const supportRows = [
+    { id: 'service', Icon: Headphones, label: 'Customer Service', detail: 'Chat with Bake Art Style support inside the app.' },
+    { id: 'whatsapp', Icon: MessageCircle, label: 'WhatsApp', detail: '+880 1XXXXXXXXX' },
+    { id: 'website', Icon: Globe2, label: 'Website', detail: 'bas.umuhammadiswa.workers.dev' },
+    { id: 'facebook', Icon: HelpCircle, label: 'Facebook', detail: 'Bake Art Style' },
+    { id: 'x', Icon: X, label: 'X', detail: 'Coming soon' },
+    { id: 'instagram', Icon: User, label: 'Instagram', detail: '@bakeartstyle' },
   ];
 
   if (!user) {
@@ -458,237 +479,175 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
     .toUpperCase();
 
   return (
-    <div className="flex h-full flex-col">
-      {/* Header — QuickBar-safe with right clearance */}
-      <header className="flex-shrink-0 px-6 pr-18 pt-6 pb-3">
-        <div className="text-[12px] font-semibold tracking-wider text-primary uppercase">Account</div>
-        <h1 className="mt-1 text-[24px] font-bold tracking-tight text-ink">
-          Profile
-        </h1>
+    <div className="flex h-full flex-col bg-bg">
+      <header className="flex-shrink-0 px-6 pt-6 pb-2">
+        <div className="relative flex h-14 items-center justify-center">
+          <button
+            type="button"
+            onClick={() => profileView === 'main' ? go({ name: 'tabs', tab: 'home' }) : setProfileView('main')}
+            className="absolute left-0 flex h-12 w-12 items-center justify-center rounded-full bg-surface text-ink-200 shadow-card transition active:scale-95"
+            aria-label="Back"
+          >
+            <ArrowLeft className="h-5 w-5" strokeWidth={1.9} />
+          </button>
+          <h1 className="text-[22px] font-semibold tracking-tight text-ink">
+            {profileView === 'settings' ? 'Settings' : profileView === 'help' ? 'Help Center' : 'Profile'}
+          </h1>
+        </div>
       </header>
 
-      <div className="no-scrollbar flex-1 overflow-y-auto pb-32">
-        <div className="px-6 anim-up">
-          <div className="relative overflow-hidden rounded-[22px] border border-border bg-surface px-5 pb-5 pt-7 shadow-card">
-            {/* quiet soft-pink decorative circle (solid, no blur) */}
-            <div className="absolute -top-10 -right-10 h-32 w-32 rounded-full bg-secondary" />
-            <div className="absolute -bottom-12 -left-12 h-40 w-40 rounded-full bg-accent/40" />
-
-            <div className="relative flex flex-col items-center text-center">
-              <div className="flex h-24 w-24 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-coral text-[28px] font-bold text-white shadow-btn">
-                {user.avatar && user.avatar.length > 2 ? (
-                  <img src={user.avatar} alt="" className="w-full h-full object-cover" />
-                ) : initials}
-              </div>
-
-              <div className="mt-3">
-                <div className="text-[18px] font-bold tracking-tight text-ink">
-                  {user.name}
-                </div>
-                {user.email && <div className="mt-0.5 text-[12px] text-ink-300">{user.email}</div>}
-                <div className="mt-2 inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-0.5 text-[10px] font-bold tracking-wider text-coral uppercase">
-                  <Star className="h-2.5 w-2.5 fill-coral text-coral" /> Member
-                </div>
-              </div>
+      {profileView === 'main' && (
+        <div className="no-scrollbar flex-1 overflow-y-auto px-6 pb-32 pt-6 anim-up">
+          <div className="flex flex-col items-center text-center">
+            <div className="flex h-[118px] w-[118px] items-center justify-center overflow-hidden rounded-full bg-secondary text-[34px] font-semibold text-coral shadow-card">
+              {user.avatar && user.avatar.length > 2 ? (
+                <img src={user.avatar} alt="" className="h-full w-full object-cover" />
+              ) : initials}
+            </div>
+            <div className="mt-5 text-[25px] font-medium leading-none tracking-tight text-ink">
+              {user.name}
             </div>
           </div>
-        </div>
 
-        {/* Wallet Card — solid brand-pink (bKash-pink money convention), no gradient */}
-        {user && (
-          <section className="px-6 pt-2 pb-1">
-            <div className="relative overflow-hidden rounded-[22px] bg-coral px-4 py-4 text-white shadow-btn">
-              <div className="pointer-events-none absolute -right-4 -top-4 h-20 w-20 rounded-full bg-white/15" />
-              <div className="pointer-events-none absolute -left-8 -bottom-10 h-24 w-24 rounded-full bg-white/10" />
-              <div className="relative flex items-center justify-between">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-white/80">My Wallet</div>
-                <WalletIcon className="h-4 w-4 text-white/80" />
-              </div>
-              <div className="relative mt-1.5 text-[26px] font-bold leading-none">
-                ৳{balance.toLocaleString()}
-              </div>
-              <button
-                onClick={() => setWalletHistoryOpen(true)}
-                className="relative mt-2.5 flex w-full items-center justify-between rounded-xl bg-white/15 px-3 py-2 text-[11px] font-medium text-white transition active:scale-[.98]"
-              >
-                <span>৳{totalEarned.toLocaleString()} earned · {referralCode ?? '—'}</span>
-                <span>History →</span>
-              </button>
-            </div>
-          </section>
-        )}
-
-
-        <div className="mt-4 grid grid-cols-3 gap-3 px-6 anim-up delay-1">
-          <Stat label="Orders" value={(orders ?? []).length} onClick={() => go({ name: 'tabs', tab: 'orders' })} />
-          <Stat label="Wishlist" value={(wishlist ?? []).length} onClick={() => go({ name: 'wishlist' })} />
-          <Stat label="In cart" value={(items ?? []).length} onClick={() => go({ name: 'cart' })} />
-        </div>
-
-        <div className="mt-5 px-6 anim-up delay-2">
-          <div className="mb-2.5 px-1 text-[10.5px] font-bold uppercase tracking-wider text-ink-200">
-            Quick Access
-          </div>
-          <div className="overflow-hidden rounded-2xl border border-border bg-surface shadow-card">
-            {/* Address book */}
-            {user && (
-              <button
-                onClick={() => setShowAddressModal(true)}
-                className="flex w-full items-center gap-3 border-b border-border px-4 py-4 text-left transition active:bg-bg"
-              >
-                <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-secondary text-coral">
-                  <MapPin className="h-4 w-4" />
-                </div>
-                <div className="flex-1">
-                  <div className="text-[13px] font-bold text-ink">Address book</div>
-                  <div className="text-[11px] text-ink-300">
-                    {addresses.length === 0 ? 'Save multiple addresses' : `${addresses.length} address${addresses.length > 1 ? 'es' : ''} saved`}
-                  </div>
-                </div>
-                <ChevronRight className="h-4 w-4 text-ink-200" />
-              </button>
-            )}
-
-            {/* Special Dates */}
-            {user && (
-              <button
-                onClick={() => setShowDatesModal(true)}
-                className="flex w-full items-center gap-3 border-b border-border px-4 py-4 text-left transition active:bg-bg"
-              >
-                <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-secondary text-coral">
-                  <Cake className="h-4 w-4" />
-                </div>
-                <div className="flex-1">
-                  <div className="text-[13px] font-bold text-ink">Special Dates</div>
-                  <div className="text-[11px] text-ink-300">
-                    {specialDates.length === 0 ? 'Birthdays, anniversaries' : `${specialDates.length} date${specialDates.length > 1 ? 's' : ''} saved`}
-                  </div>
-                </div>
-                <ChevronRight className="h-4 w-4 text-ink-200" />
-              </button>
-            )}
-
-            {/* My Coupons */}
-            <button
-              onClick={() => go({ name: 'coupons' })}
-              className="flex w-full items-center gap-3 px-4 py-4 text-left transition active:bg-bg"
-            >
-              <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-secondary text-coral">
-                <Tag className="h-4 w-4" />
-              </div>
-              <div className="flex-1">
-                <div className="text-[13px] font-bold text-ink">My Coupons</div>
-                <div className="text-[11px] text-ink-300">Offers you can use at checkout</div>
-              </div>
-              <ChevronRight className="h-4 w-4 text-ink-200" />
-            </button>
-          </div>
-        </div>
-
-        {wishlistItems.length > 0 && (
-          <div className="mt-5 anim-up delay-2">
-            <div className="flex items-center justify-between px-6">
-              <h3 className="text-[20px] font-semibold tracking-tight text-ink">
-                Wishlist
-              </h3>
-              <button
-                onClick={() => go({ name: 'wishlist' })}
-                className="text-[11px] font-medium text-text-tertiary underline-offset-4 hover:underline"
-              >
-                See all
-              </button>
-            </div>
-
-            <div className="no-scrollbar mt-3 flex gap-3 overflow-x-auto px-6 pb-1">
-              {wishlistItems.slice(0, 6).map((p) => (
-                <button
-                  key={p.id}
-                  onClick={() => go({ name: 'product', productId: p.id })}
-                  className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-2xl border border-border shadow-card transition active:scale-95"
-                >
-                  <img src={p.image} alt="" className="h-full w-full object-cover" />
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        <div className="mt-5 px-6 anim-up delay-3">
-          <div className="mb-2.5 px-1 text-[10.5px] font-bold uppercase tracking-wider text-ink-200">
-            Account
-          </div>
-          <div className="overflow-hidden rounded-2xl border border-border bg-surface shadow-card">
-            {menu.map((m, i) => (
-              <button
-                key={m.label}
-                onClick={m.action}
-                className={`flex w-full items-center gap-4 px-2 py-4 text-left transition active:bg-bg ${
-                  i !== menu.length - 1 ? 'border-b border-border' : ''
-                }`}
-              >
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-secondary text-coral">
-                  <m.Icon className="h-[17px] w-[17px]" strokeWidth={2} />
-                </div>
-                <div className="flex-1">
-                  <div className="text-[13.5px] font-bold text-ink">{m.label}</div>
-                  <div className="text-[11px] text-ink-300">{m.sub}</div>
-                </div>
-                <ChevronRight className="h-4 w-4 text-ink-200" />
-              </button>
+          <div className="mt-10">
+            {profileRows.map((row, i) => (
+              <ProfileReferenceRow
+                key={row.label}
+                Icon={row.Icon}
+                label={row.label}
+                onClick={row.action}
+                bordered={i !== profileRows.length - 1}
+              />
             ))}
           </div>
-        </div>
 
-        <div className="mt-4 px-6 anim-up delay-4">
-          <div className="flex items-center gap-4 rounded-2xl border border-dashed border-coral/40 bg-secondary/50 px-3.5 py-3 shadow-card">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-coral text-white shadow-btn">
-              <Sparkles className="h-4 w-4" strokeWidth={2} />
+          <button
+            type="button"
+            onClick={handleLogoTap}
+            className="mt-8 flex w-full items-center justify-center gap-2 text-ink-200 active:scale-[.99]"
+          >
+            <BrandLogo size={18} />
+            <span className="text-[11px] font-medium tracking-wider uppercase">
+              Bake Art Style · v2.0
+            </span>
+          </button>
+
+          {showAdmin && effectiveIsAdmin && user && (
+            <div className="mt-5 anim-up">
+              <div className="mb-3 flex items-center gap-2">
+                <Settings className="h-5 w-5 text-coral" strokeWidth={2} />
+                <h2 className="text-[17px] font-bold text-ink">Admin Dashboard</h2>
+                <span className="ml-auto rounded-full bg-coral px-2 py-0.5 text-[10px] font-bold text-white uppercase tracking-wide">Admin</span>
+              </div>
+              <AdminErrorBoundary>
+                <AdminPanel embedded />
+              </AdminErrorBoundary>
             </div>
-            <div className="flex-1">
-              <div className="text-[13px] font-bold text-ink">Invite friends, earn ৳100</div>
-              <div className="text-[11px] text-ink-300">Share your referral link</div>
-            </div>
+          )}
+        </div>
+      )}
+
+      {profileView === 'settings' && (
+        <div className="no-scrollbar flex-1 overflow-y-auto px-6 pb-32 pt-6 anim-up">
+          <div className="mt-2">
+            {settingsRows.map((row, i) => (
+              <ProfileReferenceRow
+                key={row.label}
+                Icon={row.Icon}
+                label={row.label}
+                onClick={row.action}
+                bordered={i !== settingsRows.length - 1}
+              />
+            ))}
+          </div>
+
+          <div className="mt-7 overflow-hidden rounded-[18px] border border-border bg-surface shadow-card">
             <button
-              onClick={() => setInviteOpen(true)}
-              className="rounded-full bg-coral px-3 py-1.5 text-[11px] font-bold text-white shadow-btn transition active:scale-95"
+              type="button"
+              onClick={() => setProfileView('help')}
+              className="flex w-full items-center gap-5 px-4 py-4 text-left transition active:bg-bg"
             >
-              Invite
+              <span className="flex h-13 w-13 items-center justify-center rounded-full bg-secondary text-coral">
+                <HelpCircle className="h-6 w-6" strokeWidth={1.8} />
+              </span>
+              <span className="flex-1 text-[19px] font-medium text-ink">Help Center</span>
+              <ChevronRight className="h-6 w-6 text-ink-200" strokeWidth={1.8} />
             </button>
           </div>
-        </div>
 
-        <div className="mt-4 px-6 anim-up delay-4">
           <button
+            type="button"
             onClick={signOut}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl border border-border bg-surface py-3.5 text-[13px] font-bold text-error shadow-card transition active:scale-[.98]"
+            className="mt-5 flex w-full items-center justify-center gap-2 rounded-[18px] border border-border bg-surface py-4 text-[15px] font-bold text-error shadow-card transition active:scale-[.98]"
           >
             <LogOut className="h-4 w-4" />
-
             Sign out
           </button>
         </div>
+      )}
 
-        {/* Admin Dashboard — only visible to admin users */}
-        {showAdmin && effectiveIsAdmin && user && (
-          <div className="px-4 pb-6 anim-up">
-            <div className="flex items-center gap-2 mb-3 mt-4">
-              <Settings className="h-5 w-5 text-coral" strokeWidth={2} />
-              <h2 className="text-[17px] font-bold text-ink">Admin Dashboard</h2>
-              <span className="ml-auto rounded-full bg-coral px-2 py-0.5 text-[10px] font-bold text-white uppercase tracking-wide">Admin</span>
+      {profileView === 'help' && (
+        <div className="no-scrollbar flex-1 overflow-y-auto pb-10 pt-4 anim-up">
+          <div className="px-6">
+            <div className="flex h-[54px] items-center gap-3 rounded-[18px] bg-secondary px-4 text-ink-200">
+              <HelpCircle className="h-6 w-6" strokeWidth={1.75} />
+              <span className="text-[18px] font-medium">Search</span>
             </div>
-            <AdminErrorBoundary>
-              <AdminPanel embedded />
-            </AdminErrorBoundary>
           </div>
-        )}
 
-        <button type="button" onClick={handleLogoTap} className="mt-6 flex w-full items-center justify-center gap-2 text-ink-200 active:scale-[.99]">
-          <BrandLogo size={18} />
-          <span className="text-[11px] font-medium tracking-wider uppercase">
-            Bake Art Style · v2.0
-          </span>
-        </button>
-      </div>
+          <div className="mt-7 flex items-end border-b border-border px-6">
+            <button className="flex-1 pb-4 text-center text-[19px] font-medium text-ink-200">
+              FAQ
+            </button>
+            <button className="relative flex-1 pb-4 text-center text-[19px] font-semibold text-ink">
+              Contact Us
+              <span className="absolute bottom-[-1px] left-1/2 h-1.5 w-[90%] -translate-x-1/2 rounded-t-full bg-coral" />
+            </button>
+          </div>
+
+          <div className="space-y-4 px-6 pt-5">
+            {supportRows.map((row) => {
+              const open = helpOpen === row.id;
+              return (
+                <div key={row.id} className="overflow-hidden rounded-[16px] border border-border bg-surface shadow-card">
+                  <button
+                    type="button"
+                    onClick={() => setHelpOpen(open ? '' : row.id)}
+                    className="flex w-full items-center gap-5 px-4 py-5 text-left transition active:bg-bg"
+                  >
+                    <span className="flex h-13 w-13 items-center justify-center rounded-full bg-secondary text-coral">
+                      <row.Icon className="h-6 w-6" strokeWidth={1.75} />
+                    </span>
+                    <span className="flex-1 text-[18px] font-medium text-ink">{row.label}</span>
+                    {open ? (
+                      <ChevronRight className="h-6 w-6 -rotate-90 text-ink-200 transition" strokeWidth={1.9} />
+                    ) : (
+                      <ChevronRight className="h-6 w-6 rotate-90 text-ink-200 transition" strokeWidth={1.9} />
+                    )}
+                  </button>
+                  {open && (
+                    <div className="border-t border-border px-6 pb-4 pt-3">
+                      <div className="flex items-center gap-3 text-[14px] font-medium text-ink-300">
+                        <span className="h-1.5 w-1.5 rounded-full bg-coral" />
+                        {row.detail}
+                      </div>
+                      {row.id === 'service' && (
+                        <button
+                          type="button"
+                          onClick={() => setContactOpen(true)}
+                          className="mt-3 rounded-full bg-coral px-4 py-2 text-[12px] font-bold text-white shadow-btn transition active:scale-95"
+                        >
+                          Open chat support
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {customerOpen && (
         <>
@@ -1183,14 +1142,32 @@ function Field({
   );
 }
 
-function Stat({ label, value, onClick }: { label: string; value: number; onClick?: () => void }) {
+function ProfileReferenceRow({
+  Icon,
+  label,
+  onClick,
+  bordered,
+}: {
+  Icon: React.ComponentType<{ className?: string; strokeWidth?: number }>;
+  label: string;
+  onClick: () => void;
+  bordered?: boolean;
+}) {
   return (
     <button
+      type="button"
       onClick={onClick}
-      className="rounded-2xl border border-border bg-surface p-3 text-center shadow-card transition active:scale-95"
+      className={`flex w-full items-center gap-5 px-0 py-[18px] text-left transition active:bg-secondary/40 ${
+        bordered ? 'border-b border-border' : ''
+      }`}
     >
-      <div className="text-[18px] font-bold tabular text-ink">{value}</div>
-      <div className="mt-0.5 text-[10px] font-semibold text-ink-200">{label} →</div>
+      <span className="flex h-13 w-13 flex-shrink-0 items-center justify-center rounded-full bg-secondary text-coral">
+        <Icon className="h-6 w-6" strokeWidth={1.75} />
+      </span>
+      <span className="flex-1 text-[20px] font-medium leading-none tracking-tight text-ink">
+        {label}
+      </span>
+      <ChevronRight className="h-6 w-6 text-ink-200" strokeWidth={1.8} />
     </button>
   );
 }

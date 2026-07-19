@@ -1,4 +1,46 @@
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## BAS0006 — Profile section reference-style UI pass (single phase, complete) ✅ (2026-07-19, arena.ai Agent Mode)
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**Task:** Buddy supplied three profile-area reference screenshots (Profile, Settings, Help Center) and asked to make BAS's profile section match that UI/UX closely while **not copying the reference colors** — keep BAS's existing coral/pink semantic color system.
+
+**Interpretation stated in-work:** Treat the screenshots as layout/spacing/structure reference only: centered profile header, large circular avatar, soft icon-list rows, full-screen settings/help subviews, and no extra floating QuickBar over the profile tab. BAS colors, icons, data, wallet/profile/address/payment handlers, support chat, modals, auth/admin hooks, and business logic remain BAS-native.
+
+**In scope (files touched):** `src/screens/ProfileScreen.tsx`, `src/App.tsx`
+**Out of scope (untouched):** `BottomTabBar.tsx`, wallet/history modal internals, address/date/customer editor modal internals, auth/admin/business logic, Firebase/store code, product/order/cart screens.
+
+### কী বদলেছে
+
+**ProfileScreen.tsx**
+- Main profile tab rebuilt toward the supplied Profile screenshot:
+  - Centered app-bar title (`Profile`) with 44–48px round back control.
+  - Large centered circular avatar (~118px) and name underneath.
+  - Replaced the previous dashboard-heavy stack (hero card, wallet card, stats grid, quick-access cards, wishlist preview, invite card) with the screenshot-style vertical row list: `Your profile`, `Manage Address`, `Payment Methods`, `My Orders`, `My Coupons`, `My Wallet`, `Settings`.
+  - Each row uses large circular BAS-colored icon chips (`bg-secondary text-coral`), 20px-ish label text, right chevron, and subtle dividers — translating the reference grayscale rows into BAS semantic colors.
+- Added internal full-screen `Settings` subview matching the second screenshot's structure: centered `Settings` title, round back button, four large rows (`Notification Settings`, `Password Manager`, `Theme`, `Delete Account`) plus BAS support/sign-out affordances below.
+- Added internal full-screen `Help Center` subview matching the third screenshot's structure: search pill, FAQ/Contact Us tabs, contact cards/accordions for Customer Service, WhatsApp, Website, Facebook, X, Instagram. The Customer Service accordion opens the existing BAS `ChatBot` support sheet rather than adding a new support system.
+- Existing feature handlers were preserved/relocated:
+  - `Your profile` / `Payment Methods` still open the checkout profile editor.
+  - `Manage Address` still opens the address manager modal.
+  - `My Orders`, `My Coupons`, `My Wallet` still route/open their existing destinations.
+  - Admin hidden logo-tap shortcut remains available from the profile footer.
+  - Customer editor, address modal, special dates modal, wallet history modal, invite sheet, and support chat code were not rewritten.
+
+**App.tsx**
+- Global `QuickBar` is now hidden on the Profile tab, matching the reference screenshots (no top-right floating quick action over the profile header). Home was already excluded; splash/product remain excluded as before. BottomTabBar is untouched.
+
+### Verification (self)
+- `npx tsc --noEmit`: still reports **31 pre-existing errors**; no `ProfileScreen.tsx` errors and no new errors from this phase. The visible `App.tsx` TS6133 `PhoneFrame` unused error is pre-existing.
+- `npm run build`: ✓ passed (Vite singlefile bundle built successfully).
+- `git diff --stat`: only `src/screens/ProfileScreen.tsx`, `src/App.tsx`, and this log entry are changed. `package-lock.json` churn from local `npm install` was reverted.
+- Claim checks: grepped build output/error output to confirm no `ProfileScreen` TypeScript errors; checked diff stat to confirm only intended source files changed.
+
+### Handoff / next
+- Single complete phase. Buddy should review on real mobile width because this intentionally makes Profile much closer to the supplied minimal reference and removes the previous profile dashboard density.
+- No pending code phase unless Buddy wants the Settings rows to become real functional pages instead of current safe placeholder notifications for Notification/Password/Theme/Delete.
+
+
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ## BAS0005 — HomeScreen: header/categories/offer-card restyle to match GroceryApp reference (single phase, complete) ✅ (2026-07-19, chat agent, direct shell)
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
