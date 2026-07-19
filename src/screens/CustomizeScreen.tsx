@@ -21,18 +21,18 @@ export default function CustomizeScreen() {
 
   return (
     <div className="flex h-full flex-col bg-bg">
-      <div className="flex items-center gap-3 px-5 pt-4 pb-3">
+      <div className="flex items-center gap-3 px-6 pt-4 pb-3">
         <button
           onClick={back}
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-ink shadow-card border border-border transition active:scale-90"
+          className="flex h-11 w-11 items-center justify-center rounded-full bg-surface text-ink shadow-card transition active:scale-90"
         >
           <ArrowLeft className="h-[18px] w-[18px] text-ink" strokeWidth={2} />
         </button>
         <h1 className="font-sans text-[16px] font-bold tracking-tight text-ink">Custom Cake</h1>
       </div>
 
-      <div className="no-scrollbar flex-1 overflow-y-auto px-5 pb-8">
-        <div className="mt-2 rounded-[20px] border border-border bg-surface p-4 shadow-card anim-up">
+      <div className="no-scrollbar flex-1 overflow-y-auto px-6 pb-8">
+        <div className="mt-2 rounded-2xl border border-border bg-surface p-4 shadow-card anim-up">
           <div className="flex items-center gap-2.5">
             <div className="flex h-9 w-9 items-center justify-center rounded-full bg-coral/10">
               <Sparkles className="h-4 w-4 text-coral" strokeWidth={2} />
@@ -44,7 +44,7 @@ export default function CustomizeScreen() {
           </div>
         </div>
 
-        <div className="mt-3.5 rounded-[20px] border border-border bg-surface p-4 shadow-card anim-up delay-1">
+        <div className="mt-3.5 rounded-2xl border border-border bg-surface p-4 shadow-card anim-up delay-1">
           <div className="mb-3 flex items-center gap-2.5">
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-secondary text-coral">
               <Camera className="h-4 w-4" strokeWidth={2} />
@@ -69,7 +69,7 @@ export default function CustomizeScreen() {
               </div>
             </div>
           ) : (
-            <label className="flex h-36 cursor-pointer flex-col items-center justify-center gap-2 rounded-[20px] border-2 border-dashed border-coral-200 bg-coral-50/50 active:bg-coral-100/50 transition">
+            <label className="flex h-36 cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-coral-200 bg-coral-50/50 active:bg-coral-100/50 transition">
               <Camera className="h-9 w-9 text-coral-400" strokeWidth={1.5} />
               <span className="text-[12px] font-semibold text-ink-300">ছবি আপলোড করতে ট্যাপ করুন</span>
               <span className="text-[10px] text-ink-200">JPG, PNG — সর্বোচ্চ ৫MB</span>
@@ -83,7 +83,7 @@ export default function CustomizeScreen() {
           )}
         </div>
 
-        <div className="mt-3.5 rounded-[20px] border border-border bg-surface p-4 shadow-card anim-up delay-2">
+        <div className="mt-3.5 rounded-2xl border border-border bg-surface p-4 shadow-card anim-up delay-2">
           <h3 className="mb-2 font-sans text-[14px] font-bold text-ink">বিস্তারিত লিখুন</h3>
           <textarea
             value={note}
@@ -100,7 +100,7 @@ export default function CustomizeScreen() {
           href={waLink}
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-5 flex h-13 w-full items-center justify-center gap-2.5 rounded-[20px] bg-[#25D366] py-3.5 text-[14px] font-bold text-white transition active:scale-[.98] anim-up delay-3 shadow-[0_8px_20px_-6px_rgba(37,211,102,0.55)]"
+          className="mt-5 flex h-13 w-full items-center justify-center gap-2.5 rounded-2xl bg-[#25D366] py-3.5 text-[14px] font-bold text-white transition active:scale-[.98] anim-up delay-3 shadow-[0_8px_20px_-6px_rgba(37,211,102,0.55)]"
         >
           <MessageCircle className="h-5 w-5" strokeWidth={2} fill="currentColor" />
           WhatsApp এ কথা বলুন

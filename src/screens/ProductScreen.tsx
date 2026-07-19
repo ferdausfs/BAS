@@ -331,7 +331,7 @@ export default function ProductScreen() {
         </div>
 
         {/* Content sheet below image — redesigned to be a solid premium card with soft shadow */}
-        <div className="bg-surface rounded-t-[28px] -mt-16 relative z-10 px-5 pt-6 border-t border-border shadow-card">
+        <div className="bg-surface rounded-t-[22px] -mt-16 relative z-10 px-6 pt-6 border-t border-border shadow-card">
           {/* Gallery Thumbnail Strip */}
           {galleryImages.length > 1 && (
             <div className="flex gap-2.5 overflow-x-auto pb-4 pt-1 scrollbar-hide">
@@ -341,7 +341,7 @@ export default function ProductScreen() {
                   <button
                     key={i}
                     onClick={() => setActiveImg(url)}
-                    className={`flex-shrink-0 w-14 h-14 rounded-2xl overflow-hidden transition-all duration-200 ${
+                    className={`flex-shrink-0 w-[60px] h-[60px] rounded-xl overflow-hidden transition-all duration-200 ${
                       isActive ? '-translate-y-1 ring-2 ring-coral ring-offset-2 ring-offset-white' : 'opacity-80'
                     }`}
                     style={{
@@ -440,7 +440,7 @@ export default function ProductScreen() {
           )}
 
           {/* Bake Art Style brand card — redesigned with soft-pink palette */}
-          <div className="mt-5 flex items-center justify-between rounded-[20px] border border-border bg-surface px-4 py-3.5 shadow-sm">
+          <div className="mt-5 flex items-center justify-between rounded-2xl border border-border bg-surface px-4 py-3.5 shadow-sm">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary text-xl font-bold text-coral">
                 🍞
@@ -470,7 +470,7 @@ export default function ProductScreen() {
 
           {/* Flavor selector */}
           {safeFlavors.length > 1 && (
-            <section className="mt-7">
+            <section className="mt-5">
               <h3 className="font-sans text-[15px] font-bold tracking-tight text-ink">Flavor</h3>
               <div className="mt-3 flex flex-wrap gap-2">
                 {safeFlavors.map((f) => {
@@ -494,7 +494,7 @@ export default function ProductScreen() {
           )}
 
           {/* Size selector */}
-          <section className="mt-7">
+          <section className="mt-5">
             <div className="flex items-center justify-between">
               <h3 className="font-sans text-[15px] font-bold tracking-tight text-ink">Select Weight</h3>
               <span className="text-[12.5px] font-bold text-coral">
@@ -508,7 +508,7 @@ export default function ProductScreen() {
             {product.pricePerUnit ? (
               /* Dynamic weight-based pricing */
               <div className="mt-3">
-                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
                   {WEIGHT_PRESETS.map((w) => {
                     const active = customWeight === w;
                     const unitWord = product.priceUnit === 'kg' ? 'kg' : 'lb';
@@ -553,7 +553,7 @@ export default function ProductScreen() {
               </div>
             ) : (
               /* Static weight selector */
-              <div className="mt-3 flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+              <div className="mt-3 flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
                 {safeWeights.map((w) => {
                   const fullPrice = product.price + w.price;
                   const active = size === w.size;
@@ -576,7 +576,7 @@ export default function ProductScreen() {
           </section>
 
           {/* Add-ons */}
-          <section className="mt-7">
+          <section className="mt-5">
             <h3 className="font-sans text-[15px] font-bold tracking-tight text-ink">Add-ons</h3>
             <div className="mt-3 space-y-2">
               {ADDONS.map((a) => {
@@ -586,7 +586,7 @@ export default function ProductScreen() {
                   <button
                     key={a.id}
                     onClick={() => setAddons((s) => ({ ...s, [a.id]: !s[a.id] }))}
-                    className={`flex min-h-[56px] w-full items-center gap-3 rounded-[20px] border border-border bg-surface p-3 text-left transition active:scale-[.99] shadow-sm ${
+                    className={`flex min-h-[56px] w-full items-center gap-3 rounded-2xl border border-border bg-surface p-3 text-left transition active:scale-[.99] shadow-sm ${
                       active ? 'ring-2 ring-coral/40 bg-secondary/30 border-coral/30' : ''
                     }`}
                   >
@@ -613,7 +613,7 @@ export default function ProductScreen() {
               })}
             </div>
             {addons['message'] && (
-              <div className="mt-3.5 overflow-hidden rounded-[20px] border border-border bg-surface p-3.5 shadow-sm">
+              <div className="mt-3.5 overflow-hidden rounded-2xl border border-border bg-surface p-3.5 shadow-sm">
                 <textarea
                   maxLength={40}
                   rows={2}
@@ -633,7 +633,7 @@ export default function ProductScreen() {
           {/* Customise CTA */}
           <button
             onClick={() => go({ name: 'customize', productId: product.id })}
-            className="mt-6 flex w-full items-center justify-center gap-2 rounded-[20px] border-2 border-dashed border-coral-200 bg-secondary/20 py-3.5 text-[13.5px] font-bold text-coral transition active:scale-[.98] hover:bg-secondary/35 shadow-sm"
+            className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-coral-200 bg-secondary/20 py-3.5 text-[13.5px] font-bold text-coral transition active:scale-[.98] hover:bg-secondary/35 shadow-sm"
           >
             <Sparkles className="h-4 w-4" strokeWidth={2} />
             Fully customize this cake
@@ -641,7 +641,7 @@ export default function ProductScreen() {
         </div>
 
         {/* Reviews Section inside scroll container */}
-        <section className="px-5 mt-7 pb-4">
+        <section className="px-6 mt-5 pb-4">
           <div className="flex items-center justify-between mb-3.5">
             <h2 className="font-sans text-[17px] font-bold text-ink">রিভিউ</h2>
             {!showReviewForm && (
@@ -673,7 +673,7 @@ export default function ProductScreen() {
 
           {/* Review form */}
           {showReviewForm && (
-            <div className="mb-4 rounded-[20px] border border-border bg-surface p-4 shadow-card space-y-3">
+            <div className="mb-4 rounded-2xl border border-border bg-surface p-4 shadow-card space-y-3">
               <div>
                 <div className="text-[11px] font-bold text-ink-300 uppercase tracking-wide mb-1">রেটিং</div>
                 <div className="flex gap-1.5">
@@ -740,7 +740,7 @@ export default function ProductScreen() {
           {reviews.length > 0 ? (
             <div className="space-y-3">
               {reviews.slice(0, 5).map((r) => (
-                <div key={r.id} className="rounded-[20px] border border-border bg-surface p-4 shadow-sm">
+                <div key={r.id} className="rounded-2xl border border-border bg-surface p-4 shadow-sm">
                   <div className="flex items-start gap-3">
                     <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-secondary font-bold text-coral text-[13px]">
                       {r.user_name.charAt(0).toUpperCase()}
@@ -778,21 +778,21 @@ export default function ProductScreen() {
       <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-5 pt-5 pb-2 pointer-events-none">
         <button
           onClick={back}
-          className="pointer-events-auto flex h-11 w-11 items-center justify-center rounded-full bg-white text-ink border border-border shadow-card transition active:scale-90"
+          className="pointer-events-auto flex h-11 w-11 items-center justify-center rounded-full bg-surface text-ink shadow-card transition active:scale-90"
           aria-label="Back"
         >
           <ArrowLeft className="h-[20px] w-[20px]" strokeWidth={2.2} />
         </button>
         <div className="flex gap-2.5 pointer-events-auto">
           <button
-            className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-ink border border-border shadow-card transition active:scale-90"
+            className="flex h-11 w-11 items-center justify-center rounded-full bg-surface text-ink shadow-card transition active:scale-90"
             aria-label="Share"
           >
             <Share2 className="h-[18px] w-[18px]" strokeWidth={2} />
           </button>
           <button
             onClick={handleWish}
-            className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-ink border border-border shadow-card transition active:scale-90"
+            className="flex h-11 w-11 items-center justify-center rounded-full bg-surface text-ink shadow-card transition active:scale-90"
             aria-label="Wishlist"
           >
             <Heart
@@ -806,7 +806,7 @@ export default function ProductScreen() {
       </div>
 
       {/* Sticky bottom CTA — solid surface (depth ≠ hue) */}
-      <div className="absolute right-0 bottom-0 left-0 z-30 border-t border-border bg-white/95 px-5 pt-3.5 pb-6 shadow-float">
+      <div className="absolute right-0 bottom-0 left-0 z-30 bg-white/95 px-6 pt-4 pb-6 shadow-float rounded-t-[22px]">
         <div className="flex items-center gap-3">
           <div>
             <div className="text-[11px] font-bold tracking-wider text-ink-300 uppercase">
@@ -822,11 +822,11 @@ export default function ProductScreen() {
           </div>
           {(product.inStock ?? true) ? (
             <div className="ml-auto flex flex-1 items-center gap-2">
-              <div className="flex flex-shrink-0 items-center gap-2.5 rounded-full border border-border bg-secondary/40 p-1 shadow-sm">
+              <div className="flex flex-shrink-0 items-center gap-2.5 rounded-full bg-secondary/40 p-1 shadow-sm">
                 <button
                   onClick={() => setQuantity((q) => Math.max(1, q - 1))}
                   disabled={quantity <= 1}
-                  className="flex h-8 w-8 items-center justify-center rounded-full bg-surface border border-border text-ink transition active:scale-90 disabled:opacity-40"
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-surface text-ink transition active:scale-90 disabled:opacity-40"
                   aria-label="Decrease quantity"
                 >
                   <Minus className="h-3.5 w-3.5" strokeWidth={2.5} />

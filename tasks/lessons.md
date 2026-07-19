@@ -235,3 +235,33 @@ buttons too. **Fix:** enumerate the exact page-edge substrings (section wrappers
 shared header's internal pad) and replace each with a count assertion; keep the button-internal `px-5`
 untouched. Always `grep` afterward to confirm zero page-edge `px-5` remain AND the button `px-5` count
 is unchanged.
+
+## Hero-floating controls are NOT page-edge wrappers — don't apply px-6 to them
+During BAS0002 Phase L2, the floating back/share/heart buttons on ProductScreen sit ON the hero
+image (`position:absolute; z-20; px-5`), not in the `.page` content flow. The reference `.p-top`
+uses `left:1.4rem; right:1.4rem` (≈22px) on the hero, while `.page` content uses `1.5rem` (24px).
+Converting these floating controls from `px-5` to `px-6` would be wrong — they're on the image,
+not in the page flow. **Fix:** when doing page-edge padding sweeps, distinguish between content
+that flows in the `.page` wrapper and fixed/absolute-positioned overlays on top of imagery. Each
+has its own proportion convention from the reference.
+
+## Back/round-action button convention: 44px circle, surface, shadow, NO border
+The GroceryApp reference `.back` and `.round-act` are 2.75rem (44px) circles with `background:#fff`
+and `box-shadow:var(--shadow)`, and NO border. BAS screens had accumulated various button sizes
+(h-9/h-10/h-11) and all had `border border-border`. The L0 `.layout-back`/`.layout-round-action`
+foundation defines the convention correctly. During L2, every back/round-action button across the
+5 purchase-flow screens was standardized to: `h-11 w-11 rounded-full bg-surface shadow-card` with
+NO border. The only exception is the `.round-act.g` ghost variant (for contact buttons on
+ProductScreen), which correctly keeps a light border and no shadow. **Fix going forward:** any
+new screen or component using back/round-action buttons must follow the L0 convention (44px circle,
+surface bg, shadow, no border) — don't reintroduce `border border-border` on floating chrome buttons.
+
+## Card radius convention: rounded-2xl (16px = 1rem) for bordered content cards
+The reference uses `border-radius:1rem` for most bordered content cards (`.pcard`, `.citem`,
+`.icard`, `.rcard`, `.ocard`, `.paycard`). BAS had accumulated `rounded-[20px]` across many card
+instances. During L2, all `rounded-[20px]` was normalized to `rounded-2xl` (16px) across the
+purchase-flow screens. The content sheet overlay radius (`rounded-t-[22px]`) and sticky CTA bar
+radius (`rounded-t-[22px]`) are a different convention — they match the reference `.phero` /
+`.btn-row.bar` radius of `1.4rem` ≈ 22px, which is for overlay sheets and footer bars, not
+content cards. **Fix going forward:** use `rounded-2xl` for bordered content cards, and
+`rounded-t-[22px]` for overlay sheets and sticky footer bars.

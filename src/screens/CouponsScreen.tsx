@@ -45,10 +45,10 @@ export default function CouponsScreen() {
   return (
     <div className="flex h-full flex-col bg-bg">
       {/* Header */}
-      <header className="flex flex-shrink-0 items-center gap-3 px-5 pt-14 pb-3">
+      <header className="flex flex-shrink-0 items-center gap-3 px-6 pt-14 pb-3">
         <button
           onClick={back}
-          className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-ink border border-border shadow-card transition active:scale-90"
+          className="flex h-11 w-11 items-center justify-center rounded-full bg-surface text-ink shadow-card transition active:scale-90"
           aria-label="Back"
         >
           <ArrowLeft className="h-[18px] w-[18px]" />
@@ -59,7 +59,7 @@ export default function CouponsScreen() {
         </div>
       </header>
 
-      <div className="no-scrollbar flex-1 overflow-y-auto px-5 pb-10">
+      <div className="no-scrollbar flex-1 overflow-y-auto px-6 pb-10">
         {coupons.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 text-center">
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-secondary text-coral shadow-card">
@@ -75,12 +75,12 @@ export default function CouponsScreen() {
               return (
                 <div
                   key={c.id}
-                  className="relative overflow-hidden rounded-[20px] bg-surface border border-border shadow-card"
+                  className="relative overflow-hidden rounded-2xl bg-surface border border-border shadow-card"
                 >
                   <div className="flex">
                     {/* Discount badge strip */}
                     <div
-                      className="flex w-[76px] flex-shrink-0 flex-col items-center justify-center gap-0.5 py-4 text-white"
+                      className="flex w-[62px] flex-shrink-0 flex-col items-center justify-center gap-0.5 py-4 text-white"
                       style={{ background: 'linear-gradient(160deg, #F65F8F 0%, #E84E80 100%)' }}
                     >
                       <span className="font-sans text-[20px] font-bold leading-none">{c.discount}%</span>
@@ -90,7 +90,7 @@ export default function CouponsScreen() {
                     {/* Dashed divider (ticket look) */}
                     <div className="relative w-0 border-l-2 border-dashed border-border" />
 
-                    <div className="flex-1 p-3.5">
+                    <div className="flex-1 px-4 py-4">
                       <div className="flex items-center gap-1.5">
                         <Tag className="h-3.5 w-3.5 text-coral" />
                         <span className="font-sans text-[14px] font-bold tracking-wide text-ink">{c.code}</span>
@@ -122,9 +122,9 @@ export default function CouponsScreen() {
                     </div>
                   </div>
 
-                  {/* Ticket notch circles */}
-                  <span className="absolute left-[70px] top-1/2 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-bg border-r border-border" />
-                  <span className="absolute left-[70px] bottom-0 h-3.5 w-3.5 -translate-x-1/2 translate-y-1/2 rounded-full bg-bg border-r border-border" />
+                  {/* Ticket notch circles — sit at the strip/body boundary */}
+                  <span className="absolute left-[62px] top-1/2 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-bg border-r border-border" />
+                  <span className="absolute left-[62px] bottom-0 h-3.5 w-3.5 -translate-x-1/2 translate-y-1/2 rounded-full bg-bg border-r border-border" />
                 </div>
               );
             })}

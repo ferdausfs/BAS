@@ -78,7 +78,7 @@ export default function CartScreen() {
       <div className="flex h-full flex-col bg-bg">
         <Header title="আমার কার্ট" onBack={back} />
         <div className="flex flex-1 flex-col items-center justify-center px-8 text-center">
-          <div className="flex h-24 w-24 items-center justify-center rounded-[24px] border border-border bg-surface text-coral shadow-card">
+          <div className="flex h-24 w-24 items-center justify-center rounded-2xl border border-border bg-surface text-coral shadow-card">
             <ShoppingCart size={40} strokeWidth={1.5} />
           </div>
           <h2 className="mt-6 font-sans text-[22px] font-bold tracking-tight text-ink">
@@ -102,10 +102,10 @@ export default function CartScreen() {
     <div className="flex h-full flex-col bg-bg">
       <Header title="আমার কার্ট" onBack={back} badge={`${items.length}`} />
 
-      <div className="no-scrollbar flex-1 overflow-y-auto px-5 pb-44 pt-1">
+      <div className="no-scrollbar flex-1 overflow-y-auto px-6 pb-44 pt-1">
         {/* Free delivery nudge */}
         {remaining > 0 ? (
-          <div className="mb-4 rounded-[20px] border border-border bg-surface p-4 shadow-card">
+          <div className="mb-4 rounded-2xl border border-border bg-surface p-4 shadow-card">
             <div className="flex items-center gap-2.5">
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-secondary text-coral">
                 <Truck className="h-4 w-4" strokeWidth={2} />
@@ -124,7 +124,7 @@ export default function CartScreen() {
             </div>
           </div>
         ) : (
-          <div className="mb-4 flex items-center gap-2.5 rounded-[20px] bg-emerald-50 px-3.5 py-3 text-emerald-700">
+          <div className="mb-4 flex items-center gap-2.5 rounded-2xl bg-emerald-50 px-3.5 py-3 text-emerald-700">
             <Shield className="h-4 w-4" />
             <span className="text-[13px] font-bold">আপনি ফ্রি ডেলিভারি পেয়ে গেছেন</span>
           </div>
@@ -166,7 +166,7 @@ export default function CartScreen() {
                       quantity: 1,
                     });
                   }}
-                  className="flex w-[104px] flex-shrink-0 flex-col items-start gap-1.5 rounded-[20px] border border-border bg-surface p-3 text-left transition active:scale-95 shadow-card"
+                  className="flex w-[104px] flex-shrink-0 flex-col items-start gap-1.5 rounded-2xl border border-border bg-surface p-3 text-left transition active:scale-95 shadow-card"
                 >
                   {(() => {
                     const AddonIcon = ADDON_ICON[addon.category] ?? Sparkles;
@@ -191,7 +191,7 @@ export default function CartScreen() {
 
         {/* Bill Details */}
         <section
-          className="mt-4 overflow-hidden rounded-[20px] border border-border bg-surface shadow-card"
+          className="mt-4 overflow-hidden rounded-2xl border border-border bg-surface shadow-card"
         >
           <div className="px-4 pt-4 pb-2 border-b border-divider">
             <div className="text-[11px] font-bold tracking-wider text-coral-700 uppercase">
@@ -235,7 +235,7 @@ export default function CartScreen() {
       </div>
 
       {/* Sticky CTA */}
-      <div className="absolute right-0 bottom-0 left-0 z-30 border-t border-border bg-white/95 px-5 pt-3.5 pb-6 shadow-float">
+      <div className="absolute right-0 bottom-0 left-0 z-30 bg-white/95 px-6 pt-4 pb-6 shadow-float rounded-t-[22px]">
         <button
           onClick={handleCheckout}
           className="btn-primary flex h-14 w-full items-center justify-center gap-2 rounded-2xl text-[14px] font-bold tracking-tight shadow-btn"
@@ -252,7 +252,7 @@ export default function CartScreen() {
           onClick={() => setConfirmIdx(null)}
         >
           <div
-            className="w-full rounded-t-[28px] border-t border-border bg-surface p-6 pb-8 shadow-float anim-up"
+            className="w-full rounded-t-[22px] border-t border-border bg-surface p-6 pb-8 shadow-float anim-up"
             onClick={(e) => e.stopPropagation()}
           >
             <h2 className="mb-4 font-sans text-[18px] font-bold text-ink">কার্ট থেকে সরাবেন?</h2>
@@ -365,7 +365,7 @@ function CartItemRow({
   }, []);
 
   return (
-    <div className="relative overflow-hidden rounded-[20px] anim-up">
+    <div className="relative overflow-hidden rounded-2xl anim-up">
       <button
         onClick={() => {
           onRequestRemove();
@@ -373,7 +373,7 @@ function CartItemRow({
           setTranslateX(0);
         }}
         aria-label="মুছুন"
-        className="absolute top-0 right-0 bottom-0 flex items-center justify-center rounded-[20px] bg-error text-white"
+        className="absolute top-0 right-0 bottom-0 flex items-center justify-center rounded-2xl bg-error text-white"
         style={{ width: SWIPE_MAX }}
       >
         <Trash2 className="h-5 w-5" strokeWidth={2} />
@@ -385,10 +385,10 @@ function CartItemRow({
           transition: drag.current.dragging ? 'none' : 'transform .25s ease',
           touchAction: 'pan-y',
         }}
-        className="relative flex cursor-grab gap-3 rounded-[20px] border border-border bg-surface p-3 shadow-card"
+        className="relative flex cursor-grab gap-4 rounded-2xl border border-border bg-surface p-3.5 shadow-card"
       >
-        <div className="h-24 w-24 flex-shrink-0 rounded-[18px] border border-border bg-white p-1.5 shadow-sm">
-          <div className="h-full w-full overflow-hidden rounded-[14px]">
+        <div className="h-[84px] w-[84px] flex-shrink-0 rounded-xl border border-border bg-white p-1.5 shadow-sm">
+          <div className="h-full w-full overflow-hidden rounded-lg">
             <img
               loading="lazy"
               decoding="async"
@@ -451,10 +451,10 @@ function CartItemRow({
 
 function Header({ title, onBack, badge }: { title: string; onBack: () => void; badge?: string }) {
   return (
-    <header className="flex flex-shrink-0 items-center justify-between px-5 pt-3 pb-3">
+    <header className="flex flex-shrink-0 items-center justify-between px-6 pt-3 pb-3">
       <button
         onClick={onBack}
-        className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-ink border border-border shadow-card transition active:scale-90"
+        className="flex h-11 w-11 items-center justify-center rounded-full bg-surface text-ink shadow-card transition active:scale-90"
       >
         <ArrowLeft className="h-[20px] w-[20px]" strokeWidth={2} />
       </button>

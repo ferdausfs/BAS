@@ -501,7 +501,7 @@ export default function CheckoutScreen({ onBack }: Props) {
     <div className="flex h-full flex-col">
       <Header title="চেকআউট" onBack={goPrevStep} step={step} onStepClick={goToStep} />
 
-      <div ref={scrollRef} className="no-scrollbar flex-1 overflow-y-auto px-5 pb-32 pt-1">
+      <div ref={scrollRef} className="no-scrollbar flex-1 overflow-y-auto px-6 pb-32 pt-1">
         {submitError && (
           <div className="mb-3 flex items-start gap-2 rounded-2xl bg-red-50 px-3.5 py-3 text-[12.5px] font-semibold text-red-600">
             <Shield className="mt-0.5 h-4 w-4 flex-shrink-0" />
@@ -598,7 +598,7 @@ export default function CheckoutScreen({ onBack }: Props) {
                 min={getMinDeliveryDate()}
                 value={form.date}
                 onChange={(e) => setForm({ ...form, date: e.target.value })}
-                className="w-full rounded-2xl border border-border bg-surface py-3.5 pl-12 pr-4 text-[14px] font-semibold text-ink outline-none focus:border-coral focus:ring-2 focus:ring-coral/15 transition shadow-sm"
+                className="w-full rounded-xl border border-border bg-surface py-3.5 pl-12 pr-4 text-[14px] font-semibold text-ink outline-none focus:border-coral focus:ring-2 focus:ring-coral/15 transition shadow-sm"
               />
             </div>
             <p className="mt-1.5 text-[11.5px] text-ink-200">
@@ -1019,7 +1019,7 @@ export default function CheckoutScreen({ onBack }: Props) {
                   <button
                     type="button"
                     onClick={() => { setAdvancePayment(method.id); setNumberCopied(false); }}
-                    className="flex w-full items-center gap-3 p-3.5"
+                    className="flex w-full items-center gap-4 p-3.5"
                   >
                     <div
                       className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl text-[13px] font-bold text-white"
@@ -1128,7 +1128,7 @@ export default function CheckoutScreen({ onBack }: Props) {
                 <button
                   key={method.id}
                   onClick={() => setForm({ ...form, payment: method.id })}
-                  className={`flex w-full items-center gap-3 rounded-2xl border-2 p-3.5 transition ${
+                  className={`flex w-full items-center gap-4 rounded-2xl border-2 p-3.5 transition ${
                     isSelected ? 'border-coral bg-coral-50' : 'border-ink-50 bg-white'
                   }`}
                 >
@@ -1164,7 +1164,7 @@ export default function CheckoutScreen({ onBack }: Props) {
       </div>
 
       {/* Sticky CTA */}
-      <div className="absolute right-0 bottom-0 left-0 z-30 border-t border-border bg-white/95 px-5 pt-3.5 pb-6 shadow-float">
+      <div className="absolute right-0 bottom-0 left-0 z-30 bg-white/95 px-6 pt-4 pb-6 shadow-float rounded-t-[22px]">
         <div className="flex items-center gap-3">
           <div>
             <div className="text-[11px] font-bold tracking-wider text-ink-300 uppercase">
@@ -1198,11 +1198,11 @@ function Header({
 }) {
   const steps = ['ঠিকানা', 'নিশ্চিত', 'পেমেন্ট'];
   return (
-    <header className="flex-shrink-0 border-b border-ink-50/80 px-5 pt-3 pb-3">
+    <header className="flex-shrink-0 border-b border-ink-50/80 px-6 pt-3 pb-3">
       <div className="flex items-center justify-between mb-3">
         <button
           onClick={onBack}
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-ink transition active:scale-90"
+          className="flex h-11 w-11 items-center justify-center rounded-full bg-surface text-ink transition active:scale-90"
           style={{ boxShadow: '0 1px 2px rgba(26,19,17,.03), 0 6px 16px -10px rgba(26,19,17,.2)' }}
         >
           <ArrowLeft className="h-[20px] w-[20px]" strokeWidth={2} />
@@ -1252,7 +1252,7 @@ function Section({
 }) {
   return (
     <section
-      className={`mt-3 overflow-hidden rounded-[20px] border border-border bg-surface shadow-card ${className}`}
+      className={`mt-3 overflow-hidden rounded-2xl border border-border bg-surface shadow-card ${className}`}
     >
       <div className="flex items-center gap-2.5 border-b border-divider px-4 py-3">
         {Icon && (

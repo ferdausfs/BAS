@@ -1,4 +1,92 @@
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## BAS0002 — Layout & Spacing Pass — Phase L2 (Purchase flow batch B) (2026-07-19, arena.ai Agent Mode)
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+**Phase worked on:** **Phase L2 — Purchase flow (batch B):** `ProductScreen.tsx`, `CartScreen.tsx`,
+`CheckoutScreen.tsx`, `CouponsScreen.tsx`, `CustomizeScreen.tsx`. The previous BAS0002 entry is Phase L1,
+so this run correctly starts at L2. **NEXT RUN = Phase L3 (Post-purchase batch C).**
+
+### কী বদলেছে — measured against the GroceryApp reference (no colors touched)
+All changes are spacing / structure only — the reference's *proportions* were translated into BAS's
+fixed-rem Tailwind scale; every color stays the finished soft-pink token set (no hex, no token swap).
+
+**Conventions adopted (matching L0 foundation + L1 patterns):**
+
+- **`.page` → 24px page edge** (`px-6`): applied on every page-edge wrapper / content div across
+  all five screens. Hero-floating controls (`px-5`) intentionally NOT changed — they sit on the
+  image, not in the page content flow (reference `.p-top` uses `left:1.4rem; right:1.4rem` ≈ 22px
+  on the hero, not in the `.page` wrapper).
+
+- **`.back` / `.round-act` → 44px circle, surface bg, shadow, NO border**:
+  - `ProductScreen` floating back / share / heart buttons: `border border-border` removed,
+    `bg-white` → `bg-surface` — matches reference `.back` / `.round-act` (2.75rem circle,
+    white bg, shadow only, no border).
+  - `CartScreen` header back button: same treatment + `h-10 w-10` → `h-11 w-11` (44px).
+  - `CheckoutScreen` header back button: `h-10 w-10` → `h-11 w-11` + `bg-white` → `bg-surface`.
+  - `CouponsScreen` back button: `h-9 w-9` → `h-11 w-11` + border removed.
+  - `CustomizeScreen` back button: `h-10 w-10` → `h-11 w-11` + border removed.
+  - Stepper container in ProductScreen bottom bar: `border border-border` removed.
+
+- **Section rhythm**: `ProductScreen` section headers (Flavor, Weight, Add-ons) `mt-7`(28px) →
+  `mt-5`(20px) — closer to reference `.flabel` 1.35rem(≈22px). Reviews section same treatment.
+
+- **Card radius**: `rounded-[20px]` → `rounded-2xl`(16px) across all five screens — matches
+  reference card radius `1rem`(`.pcard`, `.citem`, `.icard`, `.rcard`, `.ocard`, `.paycard`,
+  `.ticket` body). This affects: cart item cards, bill cards, addon suggestion cards, checkout
+  section cards, coupon ticket cards, customize cards, product addon cards, review cards.
+
+- **Content sheet radius**: `ProductScreen` content sheet `rounded-t-[28px]` → `rounded-t-[22px]`
+  — matches reference `.phero` bottom radius `1.4rem`(≈22px).
+
+- **Sticky CTA bar**: all three purchase-flow screens get `rounded-t-[22px]` on the sticky bottom
+  bar + `border-t border-border` removed + `pt-3.5` → `pt-4` — matches reference `.btn-row.bar`
+  radius `1.4rem` top / slightly roomier padding. The remove-confirmation sheet on CartScreen also
+  gets `rounded-t-[28px]` → `rounded-t-[22px]`.
+
+- **Cart item card spacing** (matching reference `.citem`):
+  - `gap-3`(12px) → `gap-4`(16px) — closer to reference `gap:1rem`.
+  - `p-3`(12px) → `p-3.5`(14px) — closer to reference `padding:.85rem`(≈14px).
+  - Image `h-24 w-24`(96px) → `h-[84px] w-[84px]` — closer to reference `.citem .oimg`
+    `5.2rem×4.9rem`(≈83×78px); inner radius `rounded-[14px]` → `rounded-lg`(8px).
+
+- **Gallery thumbnails** (matching reference `.ptb`):
+  - `w-14 h-14`(56px) → `w-[60px] h-[60px]` — closer to reference `3.7rem`(≈59px).
+  - `rounded-2xl`(16px) → `rounded-xl`(12px) — closer to reference `.7rem`(≈11px).
+
+- **Weight/chip gaps** (matching reference `.wchips` gap `.7rem` ≈ 12px):
+  - `gap-2`(8px) → `gap-3`(12px) on weight preset rows.
+
+- **Checkout payment rows** (matching reference `.payr` gap `1.05rem` ≈ 17px):
+  - `gap-3`(12px) → `gap-4`(16px) on payment method rows.
+
+- **Coupon ticket** (matching reference `.ticket`):
+  - Discount strip `w-[76px]` → `w-[62px]` — closer to reference `3.9rem`(≈62px).
+  - Body padding `p-3.5` → `px-4 py-4` — closer to reference `.bd` padding.
+  - Notch circles repositioned to `left-[62px]` matching new strip width.
+
+- **Checkout date input** radius: `rounded-2xl` → `rounded-xl` — matching reference `.inp`
+  radius `.65rem`(≈10px).
+
+### Verification (self)
+- `npx tsc --noEmit`: **✓ 31 errors, identical to the pre-phase baseline** — `diff` (sorted)
+  shows **zero new and zero removed** errors.
+- `npm run build`: **✓ Passed** (Vite production bundle built in ~5.6s).
+- Reference-gray grep across the 5 changed files → **ZERO** literals.
+- `git diff` cross-check: **no color hex, no `@theme` / token color change, `BottomTabBar.tsx`
+  ZERO diff, ProductScreen gesture code (native touch listeners 93–115) ZERO diff,
+  CartScreen gesture code (pointer listeners 354–357) ZERO diff, no business logic changed.**
+- `git diff --stat` (source): `ProductScreen.tsx` (40±), `CartScreen.tsx` (30±),
+  `CheckoutScreen.tsx` (16±), `CouponsScreen.tsx` (18±), `CustomizeScreen.tsx` (16±).
+- Z-index stacking verified: screen-level overlays (z-20/30/200) remain below global
+  QuickBar (z-45) and BottomTabBar (z-100).
+
+### Handoff / next
+- **NEXT RUN = Phase L3 — Post-purchase (batch C):** `OrdersScreen.tsx`, `TrackingScreen.tsx`,
+  `SuccessScreen.tsx`, `ReviewsListScreen.tsx`, `WriteReviewScreen.tsx`. Re-measure spacing /
+  structure against reference `orders` / `cancel-order` / `track-order` / `track-map` /
+  `payment-success` / `reviews` / `review-product`.
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ## BAS0002 — Layout & Spacing Pass — Phase L1 (Browse batch A) (2026-07-19, arena.ai Agent Mode)
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 **Phase worked on:** **Phase L1 — Browse (batch A):** `HomeScreen.tsx`, `CategoriesScreen.tsx`,
