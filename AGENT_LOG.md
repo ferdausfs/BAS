@@ -1,3 +1,73 @@
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## BAS0002 — Layout & Spacing Pass — Phase L3 (Post-purchase batch C) (2026-07-19, arena.ai Agent Mode)
+## ━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**Phase worked on:** **Phase L3 — Post-purchase (batch C):** `OrdersScreen.tsx`, `TrackingScreen.tsx`,
+`SuccessScreen.tsx`, `ReviewsListScreen.tsx`, `WriteReviewScreen.tsx`. The previous BAS0002 entry is Phase L2,
+so this run correctly starts at L3. **NEXT RUN = Phase L4 (Account/admin/splash/chrome).**
+
+### কী বদলেছে — measured against the GroceryApp reference (no colors touched)
+All changes are spacing / structure only — the reference's *proportions* were translated into BAS's
+fixed-rem Tailwind scale; every color stays the finished soft-pink token set (no hex, no token swap).
+
+**Conventions adopted (matching L0 foundation + L1/L2 patterns):**
+
+- **`.page` → 24px page edge (`px-6`)**: applied on every page-edge wrapper / content scroller across all
+  five screens. `SuccessScreen` outer `px-7`(28px) → `px-6`(24px) so it matches the BAS-wide 24px edge
+  (the reference `success()` / `.succ-wrap` uses 35px, but every other BAS screen is 24px — chose
+  consistency with the rest of BAS; noted here as an explicit interpretation). Button-internal `px-5`/`px-7`
+  (e.g. `btn-primary px-7` on the Orders empty-state CTA, `btn-primary px-5` on the Tracking "My orders"
+  CTA) deliberately LEFT untouched per the page-edge-swap lesson.
+
+- **`.back` / `.round-act` → 44px circle, surface bg, shadow, NO border**:
+  - `OrdersScreen` header search button `h-10 w-10` → `h-11 w-11`(44px) + icon `h-[18px] w-[18px]` → `h-5 w-5`(20px).
+  - `TrackingScreen` back button `h-10 w-10` → `h-11 w-11` + icon `h-[20px] w-[20px]` → `h-5 w-5`.
+  - `ReviewsListScreen` back button `h-10 w-10` → `h-11 w-11` (icon already `h-5 w-5`).
+  - `WriteReviewScreen` back button `h-10 w-10` → `h-11 w-11` (icon already `h-5 w-5`).
+  - All already had `bg-surface shadow-card` and NO border — only the size + icon were normalized to the
+    L0 convention. The `Package` empty-state *icon* (`h-10 w-10`) is not a button and was left as-is.
+
+- **Card radius**: `rounded-[20px]` → `rounded-2xl`(16px) across all five screens — matches reference card
+  radius `1rem` (`.ocard`, `.rcard`, `.bcard`, `.paycard`, `.ticket` body). Affects: order cards
+  (OrdersScreen / TrackingScreen), SuccessScreen order-ID + item-summary cards, ReviewsListScreen rating
+  summary + review cards, WriteReviewScreen order-summary card.
+
+- **Order item-row gap** (matching reference `.oitem`/`.citem` `gap:1rem` ≈ 16px):
+  - `OrdersScreen` item rows `gap-3`(12px) → `gap-4`(16px).
+  - `TrackingScreen` item rows `gap-3`(12px) → `gap-4`(16px).
+  - `WriteReviewScreen` order-summary card `flex items-center gap-3` → `gap-4` (matches reference
+    `review-product` `.bcard` `gap:1rem`).
+
+- **Review avatar** (matching reference `.rcard .rav` `2.9rem` ≈ 46px): `ReviewsListScreen` review-card
+  avatar `h-9 w-9`(36px) → `h-11 w-11`(44px).
+
+- **TrackingScreen cancelled box inset**: `mx-5`(20px) → `mx-4`(16px) so it aligns with the card's
+  `px-4` content padding (was sitting 4px further in than the Live-status section above it).
+
+- **WriteReviewScreen footer** (`p-5` → `px-6 py-4`): matches reference `.btn-row{padding:1rem 1.5rem}`
+  (16px vertical / 24px horizontal) for the sticky action bar.
+
+### Verification (self)
+- `npx tsc --noEmit`: **✓ 31 errors, identical to the pre-phase baseline** — verified via `git stash`
+  (pre) vs working tree (post); `diff` (sorted) shows **zero new and zero removed** errors. The 31 are
+  pre-existing logic errors (OrdersScreen/TrackingScreen `safeArray` `unknown` + spread-type, App.tsx,
+  hooks/*, lib/*, DebugMetrics, CheckoutScreen) — explicitly OUT of scope, none touched.
+- `npm run build`: **✓ Passed** (Vite production bundle built in ~6.0s).
+- Reference-gray grep across the 5 changed files → **ZERO** literals.
+- `git diff` cross-check: **no color hex, no `@theme` / token color change, `BottomTabBar.tsx`
+  ZERO diff, no business logic changed, no swipe/gesture code (none of these 5 screens has gestures).**
+- `git diff --stat` (source): `OrdersScreen.tsx` (6±), `TrackingScreen.tsx` (7±), `SuccessScreen.tsx` (3±),
+  `ReviewsListScreen.tsx` (6±), `WriteReviewScreen.tsx` (5±).
+- Claims re-verified against the actual file (lesson): `px-5`/`px-7` page-edge values gone where intended;
+  button-internal `px-5`/`px-7` preserved; `h-11 w-11` + `rounded-2xl` confirmed present; the only
+  surviving `h-10 w-10` is the `Package` empty-state *icon*, not a button.
+
+### Handoff / next
+- **NEXT RUN = Phase L4 — Account/admin/splash/chrome:** `ProfileScreen.tsx`, `AdminScreen.tsx` +
+  `AdminPanel.tsx`, `SplashScreen.tsx`, `NotificationsSheet.tsx` (structure only), search dropdown
+  structure in `HomeTopBar.tsx`/`SearchBar.tsx`. Re-measure spacing / structure against reference
+  `profile` / `your-profile` / `notifications` / `search` / `search-results` / general chrome + `splash`.
+
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ## BAS0002 — Layout & Spacing Pass — Phase L2 (Purchase flow batch B) (2026-07-19, arena.ai Agent Mode)
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

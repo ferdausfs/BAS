@@ -66,18 +66,18 @@ export default function TrackingScreen() {
 
   return (
     <div className="flex h-full flex-col">
-      <header className="flex flex-shrink-0 items-center justify-between px-5 pt-3 pb-3">
+      <header className="flex flex-shrink-0 items-center justify-between px-6 pt-3 pb-3">
         <button
           onClick={back}
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-surface text-ink shadow-card active:scale-90"
+          className="flex h-11 w-11 items-center justify-center rounded-full bg-surface text-ink shadow-card active:scale-90"
         >
-          <ArrowLeft className="h-[20px] w-[20px]" strokeWidth={2} />
+          <ArrowLeft className="h-5 w-5" strokeWidth={2} />
         </button>
         <h1 className="text-[16px] font-bold tracking-tight text-ink">Order tracking</h1>
         <div className="w-10" />
       </header>
 
-      <div className="no-scrollbar flex-1 overflow-y-auto px-5 pb-20 pt-1">
+      <div className="no-scrollbar flex-1 overflow-y-auto px-6 pb-20 pt-1">
         <div className="relative">
           <Search className="pointer-events-none absolute top-1/2 left-4 h-[18px] w-[18px] -translate-y-1/2 text-text-tertiary" />
           <input
@@ -99,7 +99,7 @@ export default function TrackingScreen() {
           </div>
         ) : match ? (
           <article
-            className="mt-4 overflow-hidden rounded-[20px] bg-surface border border-border shadow-card"
+            className="mt-4 overflow-hidden rounded-2xl bg-surface border border-border shadow-card"
           >
             <div className="flex items-center justify-between border-b border-border px-4 py-3.5">
               <div>
@@ -123,7 +123,7 @@ export default function TrackingScreen() {
 
             <div className="space-y-2.5 px-4 py-3.5">
               {safeArray(match.items).slice(0, 3).map((it, i) => (
-                <div key={i} className="flex items-center gap-3">
+                <div key={i} className="flex items-center gap-4">
                   <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-xl bg-bg ring-1 ring-border">
                     <img src={it.image} alt="" className="h-full w-full object-cover" />
                   </div>
@@ -136,7 +136,7 @@ export default function TrackingScreen() {
             </div>
 
             {match.status === 'cancelled' && (
-              <div className="mx-5 mb-4 overflow-hidden rounded-2xl border border-error/20 bg-error/5">
+              <div className="mx-4 mb-4 overflow-hidden rounded-2xl border border-error/20 bg-error/5">
                 <div className="flex items-center gap-3 px-4 py-3 border-b border-error/10">
                   <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-error/10">
                     <XCircle className="h-5 w-5 text-error" strokeWidth={2} />

@@ -54,7 +54,7 @@ export default function OrdersScreen() {
   return (
     <div className="flex h-full flex-col">
       {/* Header — QuickBar-safe with right clearance */}
-      <header className="flex-shrink-0 px-5 pr-18 pt-6 pb-3">
+      <header className="flex-shrink-0 px-6 pr-18 pt-6 pb-3">
         <div className="flex items-end justify-between">
           <div>
             <div className="text-[12px] font-semibold tracking-wider text-primary uppercase">Activity</div>
@@ -64,10 +64,10 @@ export default function OrdersScreen() {
           </div>
           <button
             onClick={() => setSearchOpen((v) => !v)}
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-surface text-text-tertiary shadow-card transition active:scale-90"
+            className="flex h-11 w-11 items-center justify-center rounded-full bg-surface text-text-tertiary shadow-card transition active:scale-90"
             aria-label="Search orders"
           >
-            <Search className="h-[18px] w-[18px]" />
+            <Search className="h-5 w-5" />
           </button>
         </div>
         <p className="mt-0.5 text-[12px] text-text-secondary">
@@ -107,7 +107,7 @@ export default function OrdersScreen() {
         </div>
       </header>
 
-      <div className="no-scrollbar flex-1 overflow-y-auto px-5 pb-32">
+      <div className="no-scrollbar flex-1 overflow-y-auto px-6 pb-32">
         {loading ? (
           <div className="flex flex-col items-center justify-center pt-16 text-center anim-fade">
             <div className="flex gap-1.5 justify-center py-4">
@@ -171,7 +171,7 @@ export default function OrdersScreen() {
               return (
                 <article
                   key={o.id}
-                  className="overflow-hidden rounded-[20px] bg-surface border border-border shadow-card anim-up"
+                  className="overflow-hidden rounded-2xl bg-surface border border-border shadow-card anim-up"
                 >
                   {/* Premium top accent — solid primary pink */}
                   <div className="h-[3px] w-full bg-coral" />
@@ -206,7 +206,7 @@ export default function OrdersScreen() {
                   {/* Items */}
                   <div className="space-y-2.5 px-4 pb-2">
                     {visibleItems.map((it, i) => (
-                      <div key={i} className="flex items-center gap-3">
+                      <div key={i} className="flex items-center gap-4">
                         <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-2xl bg-bg ring-1 ring-border">
                           <img src={it.image} alt="" className="h-full w-full object-cover" />
                         </div>

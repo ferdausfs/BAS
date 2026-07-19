@@ -45,11 +45,11 @@ export default function WriteReviewScreen() {
 
   return (
     <div className="flex h-full flex-col">
-      <header className="flex-shrink-0 px-5 pt-3 pb-3 border-b border-border">
+      <header className="flex-shrink-0 px-6 pt-3 pb-3 border-b border-border">
         <div className="flex items-center justify-between">
           <button
             onClick={back}
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-surface text-ink shadow-card"
+            className="flex h-11 w-11 items-center justify-center rounded-full bg-surface text-ink shadow-card"
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
@@ -58,9 +58,9 @@ export default function WriteReviewScreen() {
         </div>
       </header>
 
-      <div className="flex-1 overflow-y-auto px-5 pt-6 pb-10">
+      <div className="flex-1 overflow-y-auto px-6 pt-6 pb-10">
         {/* Order summary card — real product */}
-        <div className="rounded-[20px] bg-surface border border-border shadow-card p-4 mb-6 flex items-center gap-3">
+        <div className="rounded-2xl bg-surface border border-border shadow-card p-4 mb-6 flex items-center gap-4">
           {product?.image && (
             <img src={product.image} className="h-14 w-14 flex-shrink-0 rounded-xl object-cover ring-1 ring-border" />
           )}
@@ -128,7 +128,7 @@ export default function WriteReviewScreen() {
         </div>
       </div>
 
-      <div className="p-5 border-t border-border flex gap-3">
+      <div className="px-6 py-4 border-t border-border flex gap-3">
         <button
           onClick={back}
           className="flex-1 h-12 rounded-2xl border border-border font-bold text-ink"

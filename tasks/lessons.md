@@ -265,3 +265,15 @@ radius (`rounded-t-[22px]`) are a different convention — they match the refere
 `.btn-row.bar` radius of `1.4rem` ≈ 22px, which is for overlay sheets and footer bars, not
 content cards. **Fix going forward:** use `rounded-2xl` for bordered content cards, and
 `rounded-t-[22px]` for overlay sheets and sticky footer bars.
+
+## Hero / permission / success pages get wider reference side-padding — conform to the BAS-wide 24px edge and state the interpretation (2026-07-19)
+During BAS0002 Phase L3, `SuccessScreen.tsx` was the only post-purchase screen still using `px-7`(28px)
+for its outer side padding; every other BAS screen uses the L0/L1/L2-standard 24px edge (`px-6`). The
+GroceryApp reference gives permission/success/hero screens extra room (`.succ-wrap`/`.perm` use
+`padding:0 2.2rem` ≈ 35px) — but that does NOT mean BAS should widen those screens. For a multi-session
+spacing pass whose goal is *consistent cross-screen rhythm*, conform hero/permission/success pages to
+the established BAS-wide 24px page edge (`px-6`) so they match the rest of the app, and explicitly note
+the interpretation in `AGENT_LOG.md` (the reference is wider, but consistency won. **Fix going forward:**
+when a phase touches a hero/permission/success screen whose reference padding exceeds `.page`, default to
+the BAS-wide 24px edge for consistency, document the choice in the log, and only keep the wider padding if
+there's a strong screen-specific reason (e.g. a deliberately airy centered hero) — don't silently widen.

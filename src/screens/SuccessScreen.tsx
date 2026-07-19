@@ -28,7 +28,7 @@ export default function SuccessScreen() {
   };
 
   return (
-    <div className="relative flex h-full flex-col items-center justify-between overflow-hidden bg-bg px-7 pt-12 pb-10">
+    <div className="relative flex h-full flex-col items-center justify-between overflow-hidden bg-bg px-6 pt-12 pb-10">
       {/* Confetti — soft-pink + amber palette */}
       {showConfetti && (
         <div className="pointer-events-none absolute inset-0 z-50 overflow-hidden" aria-hidden="true">
@@ -79,7 +79,7 @@ export default function SuccessScreen() {
 
         {/* Order ID card */}
         <div
-          className="mt-5 w-full max-w-[300px] rounded-[20px] bg-surface border border-border shadow-card anim-rise delay-3"
+          className="mt-5 w-full max-w-[300px] rounded-2xl bg-surface border border-border shadow-card anim-rise delay-3"
         >
           <div className="flex items-center justify-between px-4 py-3">
             <div className="text-left">
@@ -110,7 +110,7 @@ export default function SuccessScreen() {
 
         {/* Item summary card */}
         {order && (
-          <div className="mt-2.5 w-full max-w-[300px] rounded-[20px] bg-surface border border-border px-4 py-3 shadow-card anim-rise delay-4 text-left">
+          <div className="mt-2.5 w-full max-w-[300px] rounded-2xl bg-surface border border-border px-4 py-3 shadow-card anim-rise delay-4 text-left">
             <div className="flex items-center justify-between text-[12px]">
               <span className="text-text-secondary">{itemCount}টি আইটেম</span>
               <span className="font-bold text-ink">৳{order.total?.toLocaleString()}</span>

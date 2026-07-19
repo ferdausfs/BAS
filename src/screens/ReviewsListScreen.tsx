@@ -29,11 +29,11 @@ export default function ReviewsListScreen() {
 
   return (
     <div className="flex h-full flex-col">
-      <header className="flex-shrink-0 px-5 pt-3 pb-3 border-b border-border">
+      <header className="flex-shrink-0 px-6 pt-3 pb-3 border-b border-border">
         <div className="flex items-center justify-between">
           <button
             onClick={back}
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-surface text-ink shadow-card"
+            className="flex h-11 w-11 items-center justify-center rounded-full bg-surface text-ink shadow-card"
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
@@ -42,9 +42,9 @@ export default function ReviewsListScreen() {
         </div>
       </header>
 
-      <div className="no-scrollbar flex-1 overflow-y-auto px-5 pt-4 pb-10">
+      <div className="no-scrollbar flex-1 overflow-y-auto px-6 pt-4 pb-10">
         {/* Big rating + breakdown */}
-        <div className="rounded-[20px] bg-surface border border-border shadow-card p-5 mb-6">
+        <div className="rounded-2xl bg-surface border border-border shadow-card p-5 mb-6">
           <div className="flex items-end gap-4">
             <div className="text-[52px] font-bold leading-none text-ink">{avgRating.toFixed(1)}</div>
             <div className="pb-2">
@@ -91,9 +91,9 @@ export default function ReviewsListScreen() {
         <div className="space-y-3">
           {filtered.length > 0 ? (
             filtered.map((r: any) => (
-              <div key={r.id} className="rounded-[20px] bg-surface border border-border shadow-card p-4">
+              <div key={r.id} className="rounded-2xl bg-surface border border-border shadow-card p-4">
                 <div className="flex items-start gap-3">
-                  <div className="h-9 w-9 rounded-full bg-secondary flex items-center justify-center font-bold text-sm text-coral">
+                  <div className="h-11 w-11 rounded-full bg-secondary flex items-center justify-center font-bold text-sm text-coral">
                     {r.user_name?.[0]?.toUpperCase() || 'U'}
                   </div>
                   <div className="flex-1 min-w-0">
