@@ -1,4 +1,32 @@
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## BAS0011 — Order success page reference-style redesign + success-check transition (single phase, complete) ✅ (2026-07-19, arena.ai Agent Mode)
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**Task:** Buddy showed the current order-success page and supplied a minimal payment-success reference plus a Transitions.dev self-contained success-check animation snippet. Requested: redesign the success page to match the reference style and use the success-check transition.
+
+**In scope (files touched):** `src/screens/SuccessScreen.tsx`, `src/components/SuccessCheckTransition.tsx`, `AGENT_LOG.md` plus earlier pending UI files already in this ZIP.
+**Out of scope (untouched):** order creation/store logic, tracking route behavior, cart/checkout logic, `BottomTabBar.tsx`.
+
+### কী বদলেছে
+- **SuccessScreen.tsx**
+  - Replaced the previous decorative blob/confetti-heavy success page with a cleaner reference-style layout: centered success badge, `Payment Successful!`, short confirmation text, compact order-id card, optional item summary, and bottom action buttons.
+  - Kept existing behavior: copy order ID still works, primary button still opens order tracking, secondary button returns home (label is `Back Home` because BAS does not have a separate e-receipt route).
+  - Typography/spacing uses the scaled BAS rhythm, not oversized reference text.
+- **SuccessCheckTransition.tsx**
+  - Added a self-contained success-check transition component adapted from Buddy's provided snippet.
+  - Auto-injects CSS once via `#transitions-p10`, with document guard and `prefers-reduced-motion` support.
+  - Runs fade + rotate + blur + Y-bob + stroke-draw animation when the success page mounts.
+
+### Verification (self)
+- `npx tsc --noEmit`: still reports the known **31 pre-existing errors**; no new errors from `SuccessScreen.tsx` or `SuccessCheckTransition.tsx`.
+- `npm run build`: ✓ passed.
+- `package-lock.json` churn from local `npm install` was reverted.
+
+### Handoff / next
+- Single complete pass for the order success page. Review after deploy by placing a test order and checking the success animation on real mobile Chrome.
+
+
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ## BAS0010 — Profile option subpages/sheets reference-style pass (single phase, complete) ✅ (2026-07-19, arena.ai Agent Mode)
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
