@@ -52,7 +52,7 @@ export default function SplashScreen() {
   const slide = SLIDES[slideIdx];
 
   return (
-    <div className="relative flex h-full w-full flex-col justify-between overflow-hidden bg-bg px-6 pt-12 pb-8">
+    <div className="relative flex h-full w-full flex-col justify-between overflow-hidden bg-bg px-6 pt-11 pb-6">
       {/* Top Bar — Skip button */}
       <div className="flex items-center justify-between z-10">
         <div className="flex items-center gap-2">
@@ -73,7 +73,7 @@ export default function SplashScreen() {
       {/* Main Card Graphic */}
       <div className="relative my-auto flex flex-col items-center justify-center text-center z-10 anim-fade">
         {/* Soft-pink hero card — solid opaque surface, real soft elevation, no gradient/blur */}
-        <div className="relative flex h-52 w-full max-w-xs items-center justify-center rounded-[32px] bg-secondary p-6 shadow-card">
+        <div className="relative flex h-52 w-full max-w-xs items-center justify-center rounded-[22px] bg-secondary p-6 shadow-card">
           {/* quiet decorative ring for depth (solid, no blur) */}
           <div className="absolute -top-4 -right-4 h-24 w-24 rounded-full border border-border bg-surface/60" />
           <div className="absolute -bottom-6 -left-6 h-16 w-16 rounded-full bg-accent/50" />
@@ -82,11 +82,11 @@ export default function SplashScreen() {
           </div>
         </div>
 
-        <span className="mt-6 inline-flex items-center gap-1 rounded-full bg-secondary px-3 py-1 text-[11px] font-bold text-coral uppercase tracking-wider">
+        <span className="mt-5 inline-flex items-center gap-1 rounded-full bg-secondary px-3 py-1 text-[11px] font-bold text-coral uppercase tracking-wider">
           {slide.tag}
         </span>
 
-        <h1 className="mt-3 max-w-[18ch] text-[24px] font-bold leading-tight tracking-tight text-ink">
+        <h1 className="mt-3 max-w-[18ch] text-[22px] font-bold leading-tight tracking-tight text-ink">
           {slide.title}
         </h1>
 
@@ -113,7 +113,7 @@ export default function SplashScreen() {
         {/* CTA Button */}
         <button
           onClick={handleNext}
-          className="btn-primary flex h-14 w-full items-center justify-center gap-2 rounded-2xl text-[14px] font-bold tracking-tight shadow-btn transition active:scale-95"
+          className="btn-primary flex h-12 w-full items-center justify-center gap-2 rounded-full text-[14px] font-bold tracking-tight shadow-btn transition active:scale-95"
         >
           {slideIdx === SLIDES.length - 1 ? (
             <>

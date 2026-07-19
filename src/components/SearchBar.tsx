@@ -1,5 +1,5 @@
 import { Search, SlidersHorizontal, X } from 'lucide-react';
-import { forwardRef } from 'react';
+import { forwardRef, useState } from 'react';
 
 type Props = {
   value: string;
@@ -14,43 +14,101 @@ type Props = {
 };
 
 const SearchBar = forwardRef<HTMLInputElement, Props>(
-  ({ value, onChange, onSearch, placeholder = 'Search cakes, flavors, occasions', className = '', onOpenOccasions }, ref) => (
-    <div className={`flex items-center gap-2 ${className}`}>
-      <div className="group relative flex-1">
-        <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-text-tertiary transition-colors group-focus-within:text-primary" strokeWidth={1.9} />
-        <input
-          ref={ref}
-          value={value}
-          onChange={(event) => onChange(event.target.value)}
-          onKeyDown={(event) => event.key === 'Enter' && onSearch?.(value)}
-          placeholder={placeholder}
-          className="h-13 w-full rounded-[18px] border border-border bg-surface pl-12 pr-11 text-[14px] font-medium text-text shadow-card outline-none transition placeholder:font-normal placeholder:text-text-tertiary focus:border-accent focus:ring-4 focus:ring-primary/10"
-        />
-        {value && (
+  ({
+    value,
+    onChange,
+    onSearch,
+    placeholder = 'Search cakes, flavors, occasions',
+    className = '',
+    suggestions = [],
+    recentSearches = [],
+    onClearRecent,
+    onOpenOccasions,
+  }, ref) => {
+    const [focused, setFocused] = useState(false);
+    const visibleSuggestions = (value ? suggestions : recentSearches).slice(0, 5);
+    const showDropdown = focused && visibleSuggestions.length > 0;
+
+    const chooseSearch = (term: string) => {
+      onChange(term);
+      onSearch?.(term);
+      setFocused(false);
+    };
+
+    return (
+      <div className={`flex items-center gap-2 ${className}`}>
+        <div className="group relative flex-1">
+          <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-text-tertiary transition-colors group-focus-within:text-primary" strokeWidth={1.9} />
+          <input
+            ref={ref}
+            value={value}
+            onChange={(event) => onChange(event.target.value)}
+            onFocus={() => setFocused(true)}
+            onBlur={() => window.setTimeout(() => setFocused(false), 120)}
+            onKeyDown={(event) => event.key === 'Enter' && onSearch?.(value)}
+            placeholder={placeholder}
+            className="h-11 w-full rounded-full border border-border bg-surface pl-12 pr-11 text-[14px] font-medium text-text shadow-card outline-none transition placeholder:font-normal placeholder:text-text-tertiary focus:border-accent focus:ring-4 focus:ring-primary/10"
+          />
+          {value && (
+            <button
+              type="button"
+              onMouseDown={(event) => event.preventDefault()}
+              onClick={() => onChange('')}
+              className="absolute right-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-secondary text-text-secondary transition active:scale-90"
+              aria-label="Clear search"
+            >
+              <X className="h-4 w-4" strokeWidth={2} />
+            </button>
+          )}
+
+          {showDropdown && (
+            <div className="absolute left-0 right-0 top-[calc(100%+0.75rem)] z-30 rounded-2xl border border-border bg-surface p-3 shadow-float">
+              <div className="mb-2 flex items-center justify-between px-1">
+                <span className="text-[13px] font-semibold text-text">{value ? 'Search Results' : 'Recent Search'}</span>
+                {!value && onClearRecent && (
+                  <button
+                    type="button"
+                    onMouseDown={(event) => event.preventDefault()}
+                    onClick={onClearRecent}
+                    className="text-[11px] font-medium text-text-tertiary"
+                  >
+                    Clear All
+                  </button>
+                )}
+              </div>
+              <div className="divide-y divide-divider">
+                {visibleSuggestions.map((term) => (
+                  <button
+                    type="button"
+                    key={term}
+                    onMouseDown={(event) => event.preventDefault()}
+                    onClick={() => chooseSearch(term)}
+                    className="flex w-full items-center gap-4 px-1 py-3 text-left transition active:bg-bg"
+                  >
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary text-primary">
+                      <Search className="h-4 w-4" strokeWidth={2} />
+                    </span>
+                    <span className="min-w-0 flex-1 truncate text-[14px] font-medium text-text">{term}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+        {onOpenOccasions && (
           <button
             type="button"
             onMouseDown={(event) => event.preventDefault()}
-            onClick={() => onChange('')}
-            className="absolute right-3 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-secondary text-text-secondary transition active:scale-90"
-            aria-label="Clear search"
+            onClick={onOpenOccasions}
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-surface text-primary shadow-card transition active:scale-95"
+            aria-label="Browse by occasion"
           >
-            <X className="h-4 w-4" strokeWidth={2} />
+            <SlidersHorizontal className="h-5 w-5" strokeWidth={1.9} />
           </button>
         )}
       </div>
-      {onOpenOccasions && (
-        <button
-          type="button"
-          onMouseDown={(event) => event.preventDefault()}
-          onClick={onOpenOccasions}
-          className="flex h-13 w-13 shrink-0 items-center justify-center rounded-[18px] border border-border bg-secondary text-primary shadow-card transition active:scale-95"
-          aria-label="Browse by occasion"
-        >
-          <SlidersHorizontal className="h-5 w-5" strokeWidth={1.9} />
-        </button>
-      )}
-    </div>
-  )
+    );
+  }
 );
 
 SearchBar.displayName = 'SearchBar';

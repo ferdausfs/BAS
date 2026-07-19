@@ -110,7 +110,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
     };
     return (
       <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-ink/60">
-        <div className="rounded-[24px] border border-border bg-surface p-8 w-full max-w-xs text-center shadow-card">
+        <div className="rounded-[22px] border border-border bg-surface p-8 w-full max-w-xs text-center shadow-card">
           <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-secondary text-coral">
             <Lock size={28} strokeWidth={1.75} />
           </div>
@@ -236,21 +236,21 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
 
   return (
     <div className={embedded
-      ? "flex flex-col bg-bg rounded-[24px] overflow-hidden border border-border mt-4 shadow-card"
+      ? "flex flex-col bg-bg rounded-[22px] overflow-hidden border border-border mt-4 shadow-card"
       : "fixed inset-0 z-[70] flex flex-col bg-bg"
     }>
       {/* Top bar — solid brand pink */}
-      <div className="flex items-center justify-between px-4 py-3 bg-coral text-white flex-shrink-0">
+      <div className="flex items-center justify-between px-6 py-4 bg-coral text-white flex-shrink-0">
         <div className="flex items-center gap-2">
           <Cake className="w-5 h-5" strokeWidth={1.75} />
           <span className="font-bold text-sm">Admin Dashboard</span>
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={fetchOrders} className="w-8 h-8 rounded-full bg-white/15 flex items-center justify-center">
+          <button onClick={fetchOrders} className="h-11 w-11 rounded-full bg-white/15 flex items-center justify-center">
             <RefreshCw className="w-4 h-4" />
           </button>
           {!embedded && onClose && (
-            <button onClick={onClose} className="w-8 h-8 rounded-full bg-white/15 flex items-center justify-center">
+            <button onClick={onClose} className="h-11 w-11 rounded-full bg-white/15 flex items-center justify-center">
               <X className="w-4 h-4" />
             </button>
           )}
@@ -258,7 +258,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
       </div>
 
       {/* Tabs */}
-      <div className="flex overflow-x-auto gap-1 px-3 py-2 bg-surface border-b border-border no-scrollbar flex-shrink-0">
+      <div className="flex overflow-x-auto gap-2 px-6 py-3 bg-surface border-b border-border no-scrollbar flex-shrink-0">
         {TABS.map((t) => (
           <button key={t.id} onClick={() => setTab(t.id)}
             className={`relative flex-shrink-0 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${tab === t.id ? 'bg-coral text-white shadow-btn' : 'text-ink-300 hover:bg-ink-50'}`}>
@@ -274,7 +274,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
 
       {/* Content */}
       <div
-        className={embedded ? "overflow-y-auto p-4" : "flex-1 overflow-y-auto p-4"}
+        className={embedded ? "overflow-y-auto p-6" : "flex-1 overflow-y-auto p-6"}
         style={{ maxHeight: embedded ? '80vh' : undefined }}
       >
 
@@ -288,16 +288,16 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                 { label: 'Today', value: todayCount },
                 { label: 'Products', value: safeProducts.length },
               ].map((s) => (
-                <div key={s.label} className="rounded-[20px] border border-border bg-surface p-4 shadow-card">
+                <div key={s.label} className="rounded-2xl border border-border bg-surface p-4 shadow-card">
                   <p className="text-xl font-black text-coral">{s.value}</p>
                   <p className="text-xs font-bold text-ink">{s.label}</p>
                 </div>
               ))}
             </div>
-            <div className="rounded-[20px] border border-border bg-surface p-4 shadow-card">
+            <div className="rounded-2xl border border-border bg-surface p-4 shadow-card">
               <p className="text-xs font-bold text-ink mb-3">Top Products</p>
               {topProducts.map(({ product, qty }) => (
-                <div key={product!.id} className="flex items-center gap-2.5 py-2 border-b border-border last:border-0">
+                <div key={product!.id} className="flex items-center gap-4 py-3 border-b border-border last:border-0">
                   <img src={product!.image} alt="" className="h-10 w-10 rounded-xl object-cover bg-blush" />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-xs font-bold text-ink">{product!.name || 'N/A'}</p>
@@ -309,7 +309,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
               {topProducts.length === 0 && <p className="text-center text-xs text-ink-200 py-4">No product sales yet</p>}
             </div>
 
-            <div className="rounded-[20px] border border-border bg-surface p-4 shadow-card">
+            <div className="rounded-2xl border border-border bg-surface p-4 shadow-card">
               <p className="text-xs font-bold text-ink mb-3">Recent Orders</p>
             {safeOrders.filter(Boolean).slice(0, 5).map((o) => (
               <div key={o.id} className="flex justify-between items-center py-2 border-b border-border last:border-0">
@@ -351,7 +351,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
             </div>
 
             {filteredOrders.map((o) => (
-              <div key={o.id} className="rounded-[20px] border border-border bg-surface p-4 shadow-card">
+              <div key={o.id} className="rounded-2xl border border-border bg-surface p-4 shadow-card">
                 <div className="flex justify-between items-start gap-3 mb-2">
                   <div className="min-w-0">
                     <p className="font-bold text-sm text-ink truncate">{o.customer?.name || 'Guest'}</p>
@@ -380,7 +380,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
 
                 <div className="mt-2 space-y-2">
                   {(o.items || []).map((i, idx) => (
-                    <div key={idx} className="flex items-start gap-2.5">
+                    <div key={idx} className="flex items-start gap-4">
                       {i?.image ? (
                         <button
                           onClick={() => setViewImage(i.image!)}
@@ -458,7 +458,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
               </div>
             ))}
             {filteredOrders.length === 0 && (
-              <div className="rounded-[20px] border border-border bg-surface py-12 text-center shadow-card">
+              <div className="rounded-2xl border border-border bg-surface py-12 text-center shadow-card">
                 <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-secondary text-coral">
                   <Package className="h-6 w-6" strokeWidth={1.75} />
                 </div>
@@ -478,7 +478,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
             </button>
 
             {editProduct && (
-              <div className="rounded-[20px] border-2 border-coral/30 bg-surface p-4 space-y-3 shadow-card">
+              <div className="rounded-2xl border-2 border-coral/30 bg-surface p-4 space-y-3 shadow-card">
                 <p className="font-bold text-sm text-ink">
                   {safeProducts.find((p) => p && p.id === editProduct.id) ? 'Edit' : 'New'} Product
                 </p>
@@ -803,7 +803,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
             )}
 
             {safeProducts.filter(Boolean).map((p) => (
-              <div key={p.id} className="rounded-[20px] border border-border bg-surface p-3 flex gap-3 items-center shadow-card">
+              <div key={p.id} className="rounded-2xl border border-border bg-surface p-3 flex gap-3 items-center shadow-card">
                 <img src={p.image} alt={p.name} className="w-14 h-14 rounded-xl object-cover flex-shrink-0 bg-blush" />
                 <div className="flex-1 min-w-0">
                   <p className="font-bold text-sm text-ink truncate">{p.name || 'N/A'}</p>
@@ -859,7 +859,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
             </button>
 
             {editBanner && (
-              <div className="rounded-[20px] border-2 border-coral/30 bg-surface p-4 space-y-3 shadow-card">
+              <div className="rounded-2xl border-2 border-coral/30 bg-surface p-4 space-y-3 shadow-card">
                 <p className="font-bold text-sm text-ink">
                   {safeBanners.find((b) => b && b.id === editBanner.id) ? 'Edit' : 'New'} Banner
                 </p>
@@ -946,7 +946,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
             )}
 
             {safeBanners.filter(Boolean).map((b) => (
-              <div key={b.id} className="rounded-[20px] border border-border bg-surface p-3 flex gap-3 items-center shadow-card">
+              <div key={b.id} className="rounded-2xl border border-border bg-surface p-3 flex gap-3 items-center shadow-card">
                 <img src={b.image} alt={b.title} className="w-14 h-14 rounded-xl object-cover flex-shrink-0 bg-blush" />
                 <div className="flex-1 min-w-0">
                   <p className="font-bold text-sm text-ink truncate">{b.title || 'N/A'}</p>
@@ -969,7 +969,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
         {/* Gallery */}
         {tab === 'gallery' && (
           <div className="space-y-3">
-            <div className="rounded-[20px] border border-border bg-surface p-4 shadow-card space-y-2">
+            <div className="rounded-2xl border border-border bg-surface p-4 shadow-card space-y-2">
               <p className="text-xs font-bold text-ink">Add Gallery Photo</p>
               <input className="w-full px-3 py-2 rounded-xl border border-border bg-surface text-xs focus:outline-none"
                 placeholder="Caption (optional)" value={newGalleryCaption} onChange={(e) => setNewGalleryCaption(e.target.value)} />
@@ -1001,7 +1001,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
               ))}
             </div>
             {safeGallery.length === 0 && (
-              <div className="rounded-[20px] border border-border bg-surface py-12 text-center shadow-card">
+              <div className="rounded-2xl border border-border bg-surface py-12 text-center shadow-card">
                 <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-secondary text-coral">
                   <ImageIcon className="h-6 w-6" strokeWidth={1.75} />
                 </div>
@@ -1016,7 +1016,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
         {tab === 'reviews' && (
           <div className="space-y-3">
             {safeReviews.filter(Boolean).map((r: any) => (
-              <div key={r.id} className="rounded-[20px] border border-border bg-surface p-4 shadow-card">
+              <div key={r.id} className="rounded-2xl border border-border bg-surface p-4 shadow-card">
                 <div className="flex justify-between items-start mb-1">
                   <p className="font-bold text-sm text-ink">{r.user_name || 'Anonymous'}</p>
                   <div className="flex gap-0.5">
@@ -1045,7 +1045,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
               </div>
             ))}
             {safeReviews.length === 0 && (
-              <div className="rounded-[20px] border border-border bg-surface py-12 text-center shadow-card">
+              <div className="rounded-2xl border border-border bg-surface py-12 text-center shadow-card">
                 <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-secondary text-coral">
                   <Star className="h-6 w-6" strokeWidth={1.75} />
                 </div>
@@ -1060,11 +1060,11 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
         {tab === 'customers' && (
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
-              <div className="rounded-[20px] border border-border bg-surface p-4 shadow-card">
+              <div className="rounded-2xl border border-border bg-surface p-4 shadow-card">
                 <p className="text-xl font-black text-coral">{safeCustomers.length}</p>
                 <p className="text-xs font-bold text-ink">Customers</p>
               </div>
-              <div className="rounded-[20px] border border-border bg-surface p-4 shadow-card">
+              <div className="rounded-2xl border border-border bg-surface p-4 shadow-card">
                 <p className="text-xl font-black text-coral">{formatINR(safeCustomers.reduce((s, c) => s + (c?.totalSpent || 0), 0))}</p>
                 <p className="text-xs font-bold text-ink">Total spent</p>
               </div>
@@ -1082,7 +1082,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                 .slice(0, 4);
 
               return (
-                <div key={c.id} className="rounded-[20px] border border-border bg-surface p-4 shadow-card">
+                <div key={c.id} className="rounded-2xl border border-border bg-surface p-4 shadow-card">
                   <div className="flex items-start gap-3">
                     <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-secondary text-coral">
                       {c.avatar ? <img src={c.avatar} alt="" className="h-full w-full rounded-full object-cover" /> : <Users className="h-5 w-5" />}
@@ -1128,7 +1128,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
               );
             })}
             {!customersLoading && safeCustomers.length === 0 && (
-              <div className="rounded-[20px] border border-border bg-surface py-12 text-center shadow-card">
+              <div className="rounded-2xl border border-border bg-surface py-12 text-center shadow-card">
                 <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-secondary text-coral">
                   <Users className="h-6 w-6" strokeWidth={1.75} />
                 </div>
@@ -1142,7 +1142,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
         {/* Zones */}
         {tab === 'zones' && (
           <div className="space-y-4">
-            <div className="rounded-[20px] border border-border bg-surface p-4 shadow-card">
+            <div className="rounded-2xl border border-border bg-surface p-4 shadow-card">
               <div className="mb-3 flex items-center justify-between">
                 <div>
                   <p className="text-sm font-bold text-ink">Delivery zone gating</p>
@@ -1187,7 +1187,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                 </button>
               </div>
             </div>
-            <div className="rounded-[20px] border border-border bg-surface p-4 shadow-card">
+            <div className="rounded-2xl border border-border bg-surface p-4 shadow-card">
               <label className="text-[10px] font-bold uppercase text-ink/50">Out-of-zone message</label>
               <textarea
                 value={safeSettings.outOfZoneMessage ?? ''}

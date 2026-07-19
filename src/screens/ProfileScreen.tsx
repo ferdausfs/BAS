@@ -460,7 +460,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
   return (
     <div className="flex h-full flex-col">
       {/* Header — QuickBar-safe with right clearance */}
-      <header className="flex-shrink-0 px-5 pr-18 pt-6 pb-3">
+      <header className="flex-shrink-0 px-6 pr-18 pt-6 pb-3">
         <div className="text-[12px] font-semibold tracking-wider text-primary uppercase">Account</div>
         <h1 className="mt-1 text-[24px] font-bold tracking-tight text-ink">
           Profile
@@ -468,8 +468,8 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
       </header>
 
       <div className="no-scrollbar flex-1 overflow-y-auto pb-32">
-        <div className="px-5 anim-up">
-          <div className="relative overflow-hidden rounded-[24px] border border-border bg-surface p-5 shadow-card">
+        <div className="px-6 anim-up">
+          <div className="relative overflow-hidden rounded-[22px] border border-border bg-surface p-5 shadow-card">
             {/* quiet soft-pink decorative circle (solid, no blur) */}
             <div className="absolute -top-10 -right-10 h-32 w-32 rounded-full bg-secondary" />
             <div className="absolute -bottom-12 -left-12 h-40 w-40 rounded-full bg-accent/40" />
@@ -496,8 +496,8 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
 
         {/* Wallet Card — solid brand-pink (bKash-pink money convention), no gradient */}
         {user && (
-          <section className="px-4 pt-2 pb-1">
-            <div className="relative overflow-hidden rounded-[24px] bg-coral px-4 py-4 text-white shadow-btn">
+          <section className="px-6 pt-2 pb-1">
+            <div className="relative overflow-hidden rounded-[22px] bg-coral px-4 py-4 text-white shadow-btn">
               <div className="pointer-events-none absolute -right-4 -top-4 h-20 w-20 rounded-full bg-white/15" />
               <div className="pointer-events-none absolute -left-8 -bottom-10 h-24 w-24 rounded-full bg-white/10" />
               <div className="relative flex items-center justify-between">
@@ -519,21 +519,21 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
         )}
 
 
-        <div className="mt-4 grid grid-cols-3 gap-2.5 px-5 anim-up delay-1">
+        <div className="mt-4 grid grid-cols-3 gap-3 px-6 anim-up delay-1">
           <Stat label="Orders" value={(orders ?? []).length} onClick={() => go({ name: 'tabs', tab: 'orders' })} />
           <Stat label="Wishlist" value={(wishlist ?? []).length} onClick={() => go({ name: 'wishlist' })} />
           <Stat label="In cart" value={(items ?? []).length} onClick={() => go({ name: 'cart' })} />
         </div>
 
-        <div className="mt-4 px-5 anim-up delay-2">
+        <div className="mt-4 px-6 anim-up delay-2">
           {/* Address book */}
           {user && (
             <button
               onClick={() => setShowAddressModal(true)}
-              className="mt-3 flex w-full items-center justify-between rounded-[20px] border border-border bg-surface p-4 text-left shadow-card transition active:scale-[.98]"
+              className="mt-3 flex w-full items-center justify-between rounded-2xl border border-border bg-surface px-4 py-4 text-left shadow-card transition active:scale-[.98]"
             >
               <div className="flex items-center gap-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-coral">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-secondary text-coral">
                   <MapPin className="h-4 w-4" />
                 </div>
                 <div>
@@ -551,10 +551,10 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
           {user && (
             <button
               onClick={() => setShowDatesModal(true)}
-              className="mt-3 flex w-full items-center justify-between rounded-[20px] border border-border bg-surface p-4 text-left shadow-card transition active:scale-[.98]"
+              className="mt-3 flex w-full items-center justify-between rounded-2xl border border-border bg-surface px-4 py-4 text-left shadow-card transition active:scale-[.98]"
             >
               <div className="flex items-center gap-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-coral">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-secondary text-coral">
                   <Cake className="h-4 w-4" />
                 </div>
                 <div>
@@ -571,10 +571,10 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
           {/* My Coupons */}
           <button
             onClick={() => go({ name: 'coupons' })}
-            className="mt-3 flex w-full items-center justify-between rounded-[20px] border border-border bg-surface p-4 text-left shadow-card transition active:scale-[.98]"
+            className="mt-3 flex w-full items-center justify-between rounded-2xl border border-border bg-surface px-4 py-4 text-left shadow-card transition active:scale-[.98]"
           >
             <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-coral">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-secondary text-coral">
                 <Tag className="h-4 w-4" />
               </div>
               <div>
@@ -588,19 +588,19 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
 
         {wishlistItems.length > 0 && (
           <div className="mt-5 anim-up delay-2">
-            <div className="flex items-center justify-between px-5">
-              <h3 className="text-[15px] font-bold tracking-tight text-ink">
+            <div className="flex items-center justify-between px-6">
+              <h3 className="text-[20px] font-semibold tracking-tight text-ink">
                 Wishlist
               </h3>
               <button
                 onClick={() => go({ name: 'wishlist' })}
-                className="text-[12px] font-bold text-coral underline-offset-4 hover:underline"
+                className="text-[11px] font-medium text-text-tertiary underline-offset-4 hover:underline"
               >
                 See all
               </button>
             </div>
 
-            <div className="no-scrollbar mt-3 flex gap-2.5 overflow-x-auto px-5 pb-1">
+            <div className="no-scrollbar mt-3 flex gap-3 overflow-x-auto px-6 pb-1">
               {wishlistItems.slice(0, 6).map((p) => (
                 <button
                   key={p.id}
@@ -614,17 +614,17 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
           </div>
         )}
 
-        <div className="mt-5 px-5 anim-up delay-3">
-          <div className="overflow-hidden rounded-[20px] border border-border bg-surface shadow-card">
+        <div className="mt-5 px-6 anim-up delay-3">
+          <div className="overflow-hidden rounded-2xl border border-border bg-surface shadow-card">
             {menu.map((m, i) => (
               <button
                 key={m.label}
                 onClick={m.action}
-                className={`flex w-full items-center gap-3 px-4 py-3.5 text-left transition active:bg-bg ${
+                className={`flex w-full items-center gap-4 px-2 py-4 text-left transition active:bg-bg ${
                   i !== menu.length - 1 ? 'border-b border-border' : ''
                 }`}
               >
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-secondary text-coral">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-secondary text-coral">
                   <m.Icon className="h-[17px] w-[17px]" strokeWidth={2} />
                 </div>
                 <div className="flex-1">
@@ -637,9 +637,9 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
           </div>
         </div>
 
-        <div className="mt-4 px-5 anim-up delay-4">
-          <div className="flex items-center gap-3 rounded-[20px] border border-dashed border-coral/40 bg-secondary/50 px-3.5 py-3 shadow-card">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-coral text-white shadow-btn">
+        <div className="mt-4 px-6 anim-up delay-4">
+          <div className="flex items-center gap-4 rounded-2xl border border-dashed border-coral/40 bg-secondary/50 px-3.5 py-3 shadow-card">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-coral text-white shadow-btn">
               <Sparkles className="h-4 w-4" strokeWidth={2} />
             </div>
             <div className="flex-1">
@@ -655,10 +655,10 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
           </div>
         </div>
 
-        <div className="mt-4 px-5 anim-up delay-4">
+        <div className="mt-4 px-6 anim-up delay-4">
           <button
             onClick={signOut}
-            className="flex w-full items-center justify-center gap-2 rounded-[20px] border border-border bg-surface py-3.5 text-[13px] font-bold text-error shadow-card transition active:scale-[.98]"
+            className="flex w-full items-center justify-center gap-2 rounded-2xl border border-border bg-surface py-3.5 text-[13px] font-bold text-error shadow-card transition active:scale-[.98]"
           >
             <LogOut className="h-4 w-4" />
 
@@ -694,10 +694,10 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
             className="fixed inset-0 bg-ink/45 z-[60]"
             onClick={() => setCustomerOpen(false)}
           />
-          <div className="fixed bottom-0 left-1/2 z-[61] max-h-[88vh] w-full max-w-[420px] -translate-x-1/2 overflow-hidden rounded-t-[28px] border-t border-border bg-surface shadow-float">
+          <div className="fixed bottom-0 left-1/2 z-[61] max-h-[88vh] w-full max-w-[420px] -translate-x-1/2 overflow-hidden rounded-t-[22px] border-t border-border bg-surface shadow-float">
             <div className="w-10 h-1 bg-ink-100 rounded-full mx-auto mt-3" />
 
-            <div className="px-5 pt-4 pb-2 flex items-center justify-between">
+            <div className="px-6 pt-4 pb-2 flex items-center justify-between">
               <div>
                 <h2 className="text-lg font-bold text-ink">Checkout Profile</h2>
                 <p className="text-[11px] text-ink-200">
@@ -712,7 +712,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
               </button>
             </div>
 
-            <div className="no-scrollbar max-h-[72vh] overflow-y-auto px-5 pb-6 pt-2 space-y-3">
+            <div className="no-scrollbar max-h-[72vh] overflow-y-auto px-6 pb-6 pt-2 space-y-3">
               <Field
                 label="আপনার নাম"
                 value={draftProfile.name}
@@ -823,9 +823,9 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
             className="fixed inset-0 bg-ink/45 z-[60]"
             onClick={() => setContactOpen(false)}
           />
-          <div className="fixed bottom-0 left-1/2 z-[61] w-full max-w-[420px] -translate-x-1/2 rounded-t-[28px] border-t border-border bg-surface shadow-float">
+          <div className="fixed bottom-0 left-1/2 z-[61] w-full max-w-[420px] -translate-x-1/2 rounded-t-[22px] border-t border-border bg-surface shadow-float">
             <div className="w-10 h-1 bg-ink-100 rounded-full mx-auto mt-3" />
-            <div className="px-5 pt-4 pb-2 flex items-center justify-between">
+            <div className="px-6 pt-4 pb-2 flex items-center justify-between">
               <h2 className="text-lg font-bold text-ink">যোগাযোগ ও সহায়তা</h2>
               <button
                 onClick={() => setContactOpen(false)}
@@ -834,7 +834,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
                 <X className="w-4 h-4 text-ink-300" />
               </button>
             </div>
-            <div className="px-5 pb-8">
+            <div className="px-6 pb-8">
               <ChatBot embedded />
             </div>
           </div>
@@ -844,7 +844,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
       {/* Address Manager Modal */}
       {showAddressModal && (
         <div className="fixed inset-0 z-[80] flex flex-col bg-ink/45" onClick={() => !editingAddress && setShowAddressModal(false)}>
-          <div className="mt-auto w-full rounded-t-[28px] border-t border-border bg-surface p-5 pb-8 shadow-float" onClick={(e) => e.stopPropagation()}>
+          <div className="mt-auto w-full rounded-t-[22px] border-t border-border bg-surface p-5 pb-8 shadow-float" onClick={(e) => e.stopPropagation()}>
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-[17px] font-bold text-ink">ঠিকানার তালিকা</h2>
               <button onClick={() => setShowAddressModal(false)} className="h-8 w-8 rounded-full bg-ink-50 flex items-center justify-center text-ink-300">
@@ -856,10 +856,10 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
               <>
                 <div className="space-y-2 max-h-64 overflow-y-auto">
                   {addresses.length === 0 && (
-                    <div className="rounded-[20px] border border-border bg-ink-50 py-6 text-center text-[13px] text-ink-200">এখনো কোনো ঠিকানা সংরক্ষণ করা হয়নি</div>
+                    <div className="rounded-2xl border border-border bg-ink-50 py-6 text-center text-[13px] text-ink-200">এখনো কোনো ঠিকানা সংরক্ষণ করা হয়নি</div>
                   )}
                   {addresses.map((addr) => (
-                    <div key={addr.id} className="flex items-center gap-3 rounded-[20px] border border-border bg-surface p-3 shadow-card">
+                    <div key={addr.id} className="flex items-center gap-4 rounded-2xl border border-border bg-surface p-3 shadow-card">
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
                           <span className="text-[12px] font-bold text-ink">{addr.name}</span>
@@ -985,7 +985,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
       {/* Special Dates Modal */}
       {showDatesModal && (
         <div className="fixed inset-0 z-[80] flex flex-col bg-ink/45" onClick={() => setShowDatesModal(false)}>
-          <div className="mt-auto w-full rounded-t-[28px] border-t border-border bg-surface p-5 pb-8 shadow-float" onClick={(e) => e.stopPropagation()}>
+          <div className="mt-auto w-full rounded-t-[22px] border-t border-border bg-surface p-5 pb-8 shadow-float" onClick={(e) => e.stopPropagation()}>
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-[17px] font-bold text-ink">Special Dates</h2>
               <button onClick={() => setShowDatesModal(false)} className="h-8 w-8 rounded-full bg-ink-50 flex items-center justify-center text-ink-300">
@@ -995,8 +995,8 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
             <p className="mb-3 text-[11px] text-ink-300">We'll remind you 7 days before to order a cake</p>
             <div className="space-y-2 max-h-48 overflow-y-auto mb-3">
               {specialDates.map((d) => (
-                <div key={d.id} className="flex items-center gap-3 rounded-[20px] border border-border bg-surface p-3 shadow-card">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-coral">
+                <div key={d.id} className="flex items-center gap-4 rounded-2xl border border-border bg-surface p-3 shadow-card">
+                  <span className="flex h-12 w-12 items-center justify-center rounded-full bg-secondary text-coral">
                     {d.type === 'birthday' ? <Cake className="h-4 w-4" /> : d.type === 'anniversary' ? <Heart className="h-4 w-4" /> : <Gift className="h-4 w-4" />}
                   </span>
                   <div className="flex-1">
@@ -1007,7 +1007,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
                     className="text-[11px] text-error font-bold">Remove</button>
                 </div>
               ))}
-              {specialDates.length === 0 && <div className="rounded-[20px] border border-border bg-ink-50 py-4 text-center text-[12px] text-ink-200">No dates saved yet</div>}
+              {specialDates.length === 0 && <div className="rounded-2xl border border-border bg-ink-50 py-4 text-center text-[12px] text-ink-200">No dates saved yet</div>}
             </div>
             {specialDates.length < 5 && (
               <div className="space-y-2 border-t border-border pt-3">
@@ -1056,7 +1056,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
           />
 
           {/* Sheet */}
-          <div className="relative rounded-t-[28px] border-t border-border bg-surface px-5 pt-5 pb-10 shadow-float">
+          <div className="relative rounded-t-[22px] border-t border-border bg-surface px-6 pt-5 pb-10 shadow-float">
 
             {/* Drag handle */}
             <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-ink-100" />
@@ -1080,7 +1080,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
             </div>
 
             {/* How it works */}
-            <div className="mb-5 rounded-[20px] bg-secondary px-4 py-3.5 space-y-2.5">
+            <div className="mb-5 rounded-2xl bg-secondary px-4 py-3.5 space-y-2.5">
               <div className="text-[11px] font-bold uppercase tracking-wider text-ink-200 mb-1">
                 কীভাবে কাজ করে
               </div>
@@ -1185,7 +1185,7 @@ function Stat({ label, value, onClick }: { label: string; value: number; onClick
   return (
     <button
       onClick={onClick}
-      className="rounded-[20px] border border-border bg-surface p-3 text-center shadow-card transition active:scale-95"
+      className="rounded-2xl border border-border bg-surface p-3 text-center shadow-card transition active:scale-95"
     >
       <div className="text-[18px] font-bold tabular text-ink">{value}</div>
       <div className="mt-0.5 text-[10px] font-semibold text-ink-200">{label} →</div>

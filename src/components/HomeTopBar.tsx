@@ -32,7 +32,7 @@ export default function HomeTopBar({
 
   return (
     <div className="relative z-10 anim-up">
-      <div className="px-5 pt-5 pb-3">
+      <div className="px-6 pt-5 pb-3">
         <div className="flex items-center justify-between">
           <button
             type="button"
@@ -59,7 +59,7 @@ export default function HomeTopBar({
           <button
             type="button"
             onClick={onNotificationsOpen ?? (() => setTab('profile'))}
-            className="relative flex h-11 w-11 items-center justify-center rounded-[16px] border border-border bg-surface text-text shadow-card transition active:scale-95"
+            className="relative flex h-11 w-11 items-center justify-center rounded-full bg-surface text-text shadow-card transition active:scale-95"
             aria-label="Notifications"
           >
             <Bell className="h-5 w-5" strokeWidth={1.8} />
@@ -70,7 +70,7 @@ export default function HomeTopBar({
         </div>
       </div>
 
-      <div className="sticky top-0 z-20 border-b border-border bg-bg px-5 pb-3 pt-2 shadow-[0_8px_18px_-14px_rgba(246,95,143,0.24)]">
+      <div className="sticky top-0 z-20 border-b border-border bg-bg px-6 pb-3 pt-2 shadow-[0_8px_18px_-14px_rgba(246,95,143,0.24)]">
         <SearchBar
           value={search}
           onChange={onSearchChange}

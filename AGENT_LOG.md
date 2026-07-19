@@ -1,4 +1,87 @@
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## BAS0002 — Layout & Spacing Pass — Phase L4 (Account/admin/splash/chrome batch D) (2026-07-19, arena.ai Agent Mode)
+## ━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**Phase worked on:** **Phase L4 — Account/admin/splash/chrome:** `ProfileScreen.tsx`, `AdminScreen.tsx` +
+`AdminPanel.tsx`, `SplashScreen.tsx`, `NotificationsSheet.tsx`, search chrome in `HomeTopBar.tsx` /
+`SearchBar.tsx`. The previous BAS0002 entry is Phase L3, so this run correctly starts at L4.
+**NEXT RUN = Phase L5 (Final consistency pass).**
+
+### কী বদলেছে — measured against GroceryApp reference (spacing/structure only, no color pass)
+All changes translate the reference's measured proportions into BAS's existing Tailwind/rem scale. Colors
+remain BAS semantic soft-pink tokens; no reference gray hexes were added.
+
+**Reference material re-read:** `style.css` `.page`, `.appbar`, `.back`, `.round-act`, `.badge-pill`,
+`.sec-row`, `.sec-title`, `.see-all`, `.mrow`, `.ic-chip`, `.nrow`, `.nhead`, `.sbar`, `.rchips`,
+`.btn-row.bar`, splash rules; `screens.js` `splash`, `profile`, `your-profile`, `notifications`,
+`search`, `search-results` render structures.
+
+- **ProfileScreen.tsx** (`profile` / `your-profile` + general `.mrow` rules):
+  - Page-edge wrappers moved from `px-5` / one wallet `px-4` to the BAS0002-wide `px-6` (24px) edge.
+  - Account/profile hero and wallet card radius normalized to `rounded-[22px]` (sheet/hero proportion),
+    while content/list cards and stat cards moved from `rounded-[20px]` to `rounded-2xl` (16px card rule).
+  - Profile quick rows/menu rows now use reference-like list rhythm: larger circular icon chips (`h-12 w-12`),
+    `gap-4`, and menu row `py-4` spacing, matching `.mrow{gap:1rem;padding:1.05rem .5rem}` /
+    `.ic-chip{3rem}` rather than the older tighter 36px icon chips.
+  - Wishlist mini section header retuned toward `.sec-row`/`.sec-title`/`.see-all` sizing (20px title,
+    11px action) without changing product data/flow.
+  - Profile-owned sheets/modals (`Checkout Profile`, contact/help, address manager, special dates,
+    invite sheet) changed `rounded-t-[28px]` → `rounded-t-[22px]` per the BAS0002 sticky/sheet convention;
+    sheet horizontal padding moved to 24px where relevant.
+
+- **AdminPanel.tsx / AdminScreen.tsx** (no direct reference counterpart, general conventions only):
+  - `AdminScreen.tsx` was checked and left unchanged because it only routes into `AdminPanel`.
+  - Internal admin panel got a light spacing pass only: 24px content edge (`p-6`), 24px tab padding,
+    44px top-bar round actions, `rounded-[24px]` containers → `rounded-[22px]`, and all admin
+    `rounded-[20px]` content cards → `rounded-2xl`.
+  - Dashboard/product/order list row gaps tightened to reference list-row rhythm (`gap-4`, roomier row
+    padding). Business/admin logic, Firestore calls, status updates, CSV export, uploads: **untouched**.
+
+- **SplashScreen.tsx** (`splash` + success/hero padding interpretation from lessons):
+  - Kept BAS's existing onboarding-style splash (not a full reference color/logo rewrite), but tuned the
+    layout proportions: 24px edge retained, vertical padding tightened (`pt-11 pb-6`), hero-card radius
+    `32px → 22px`, tag/title spacing tightened, title `24px → 22px`, and CTA `h-14 rounded-2xl` →
+    `h-12 rounded-full` to align with reference `.btn` height/radius.
+
+- **NotificationsSheet.tsx** (`notifications`, structure only — still a BAS sheet):
+  - Sheet radius `28px → 22px`, no conversion to a full screen.
+  - Header translated to a compact title + BAS semantic `NEW` badge-pill style; close action normalized to
+    44px round action with `bg-surface shadow-card` and no border.
+  - Notification cards converted into reference-like divided list rows: section header (`TODAY` + mark read),
+    48px circular icon chip, `gap-4`, `py-[18px]`, title/time baseline row, body below, unread dot.
+
+- **HomeTopBar.tsx / SearchBar.tsx** (`search` / `search-results`, dropdown structure not full route):
+  - Home search chrome side padding moved to 24px (`px-6`) and the notification bell is now the L0 44px
+    round-action convention (surface + shadow, no border).
+  - Search input and occasion/filter action retuned to 44px (`h-11`), rounded-full, 20px search icon;
+    occasion action also follows the round-action convention (surface + shadow, no border).
+  - Added the existing `suggestions` / `recentSearches` props into a visual dropdown: recent/search-results
+    header row, optional `Clear All`, divided rows with 40px icon chip and `gap-4`/`py-3` rhythm. This is
+    structural search UI only; data source and search handlers are unchanged.
+  - Cross-consumer check: `grep -R "<SearchBar" src` shows `SearchBar` is used by `HomeTopBar` and
+    `CategoriesScreen`. This shared chrome effect is logged deliberately and a lessons.md rule was added.
+
+### Verification (self)
+- `npx tsc --noEmit`: **✓ 31 errors, identical to the pre-phase baseline** — verified by running post-change,
+  stashing the phase diff, running baseline, popping the stash, and diffing sorted `error TS*` lines. There
+  are **zero new and zero removed** TypeScript errors; the 31 are pre-existing out-of-scope errors.
+- `npm run build`: **✓ Passed** (Vite production build completed, singlefile bundle generated).
+- Reference-gray grep across touched source files (`ProfileScreen.tsx`, `AdminPanel.tsx`, `SplashScreen.tsx`,
+  `NotificationsSheet.tsx`, `HomeTopBar.tsx`, `SearchBar.tsx`) → **ZERO** literal reference-gray hex leaks.
+- `git diff` cross-check: **no `BottomTabBar.tsx` diff**, **no `ProductScreen.tsx` / `CartScreen.tsx` diff**
+  (so native touch/swipe listener blocks remain untouched), no auth-sheet/login/onboarding flow conversion,
+  and no business logic/state/Firestore behavior changes intended.
+- Fixed-overlay z-index sanity: `NotificationsSheet` remains `z-[120]`; profile local sheets remain at
+  `z-[60]/[61]` or `z-[80]`; AdminPanel remains `z-[70]`; no app-bar z-index was raised over global overlays.
+- `tasks/lessons.md`: added shared SearchBar/chrome consumer-footprint rule.
+
+### Handoff / next
+- **NEXT RUN = Phase L5 — Final consistency pass:** full side-by-side spacing audit of every screen,
+  confirm zero reference-gray literals anywhere, confirm `BottomTabBar.tsx` stayed unchanged through BAS0002,
+  confirm no swipe/gesture regressions, `tsc` baseline/build clean, and optionally suggest (do not auto-delete)
+  removing `design-reference/GroceryApp/` after Buddy approves.
+
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ## BAS0002 — Layout & Spacing Pass — Phase L3 (Post-purchase batch C) (2026-07-19, arena.ai Agent Mode)
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━
 

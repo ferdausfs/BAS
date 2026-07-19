@@ -277,3 +277,12 @@ the interpretation in `AGENT_LOG.md` (the reference is wider, but consistency wo
 when a phase touches a hero/permission/success screen whose reference padding exceeds `.page`, default to
 the BAS-wide 24px edge for consistency, document the choice in the log, and only keep the wider padding if
 there's a strong screen-specific reason (e.g. a deliberately airy centered hero) — don't silently widen.
+
+## Shared search/dropdown chrome affects more than Home — log the cross-screen footprint (2026-07-19)
+During BAS0002 Phase L4, the search dropdown structure lived in the reusable `SearchBar` component,
+not only inside `HomeTopBar`. `grep -R "<SearchBar" src` showed it is also used by `CategoriesScreen`,
+so retuning input height, round-action sizing, and dropdown row rhythm necessarily affects both Home and
+Categories search chrome. **Fix going forward:** before changing shared chrome primitives (SearchBar,
+HomeTopBar, section/header helpers), grep all consumers and explicitly record any outside-phase footprint
+in `AGENT_LOG.md`; keep the change purely structural/spacing and let the final consistency pass audit the
+convergent cross-screen result.

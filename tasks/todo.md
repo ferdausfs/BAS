@@ -1,35 +1,21 @@
-# BAS0002 — Phase L3 (Post-purchase batch C) — todo
+# BAS0002 Phase L4 — Account/admin/splash/chrome todo
 
-Scope: re-measure spacing/structure of the 5 post-purchase screens against the
-GroceryApp reference (`orders` / `cancel-order` / `track-order` / `track-map` /
-`payment-success` / `reviews` / `review-product`). NO colors, NO logic, NO gestures,
-NO BottomTabBar, NO auth screens. Translate reference *proportions* into BAS's
-fixed-rem Tailwind scale (calibrated to ~390–430px), consistent with L0/L1/L2.
+Scope for this run only:
+- ProfileScreen.tsx
+- AdminScreen.tsx + AdminPanel.tsx
+- SplashScreen.tsx
+- NotificationsSheet.tsx (structure only; remains a sheet)
+- Search dropdown structure in HomeTopBar.tsx / SearchBar.tsx
 
-## Conventions being applied (established in L0/L1/L2)
-- [ ] Page edge → 24px (`px-6`); SuccessScreen `px-7`→`px-6` to match BAS-wide edge.
-- [ ] Back / round-action buttons → 44px circle (`h-11 w-11`), `rounded-full bg-surface
-      shadow-card`, NO border, icon `h-5 w-5` (20px). Already had shadow + no border;
-      only bumping 40→44px + icon size.
-- [ ] Content card radius `rounded-[20px]` → `rounded-2xl` (16px) ↔ reference
-      `.ocard`/`.rcard`/`.bcard`/`paycard`/`ticket` `border-radius:1rem`.
-- [ ] Order item-row gap → `gap-4` (16px) ↔ reference `.oitem`/`.citem` `gap:1rem`.
-- [ ] Review avatar → `h-11 w-11` ↔ reference `.rcard .rav` 2.9rem.
-- [ ] WriteReview footer padding `p-5` → `px-6 py-4` ↔ reference `.btn-row{padding:1rem 1.5rem}`.
+Completed:
+- [x] Re-read GroceryApp reference CSS and render functions for splash, profile / your-profile, notifications, search / search-results, plus general appbar/page/section/card/list-row conventions.
+- [x] Applied spacing / sizing / structural rhythm only; no color-token changes, no BottomTabBar, no auth flow.
+- [x] Profile account page now uses the 24px page edge, 44/48px list icon rhythm, rounded-2xl content cards, and 22px sheet radii.
+- [x] Admin internal panel got a light general-convention pass: 24px content edge, 44px header actions, rounded-2xl admin cards, list row gaps.
+- [x] Splash/onboarding first screen was tightened to BAS-wide 24px edge with reference-like 48px CTA and 22px hero-card radius.
+- [x] Notifications sheet was restructured into reference-like section header + divided list rows (sheet form preserved).
+- [x] Search chrome was retuned to 44px rounded search/action controls with a reference-like recent/search-results dropdown row structure.
+- [x] Self-verified: `npx tsc --noEmit` = same 31 pre-existing errors as baseline; `npm run build` passed; reference-gray grep passed; BottomTabBar/ProductScreen/CartScreen have zero diff.
+- [x] Added a new shared-search lesson to `tasks/lessons.md`.
 
-## Files
-- [ ] `src/screens/OrdersScreen.tsx`      (ref: orders / cancel-order)
-- [ ] `src/screens/TrackingScreen.tsx`    (ref: track-order / track-map)
-- [ ] `src/screens/SuccessScreen.tsx`     (ref: payment-success success() helper)
-- [ ] `src/screens/ReviewsListScreen.tsx` (ref: reviews)
-- [ ] `src/screens/WriteReviewScreen.tsx` (ref: review-product)
-
-## Verify (self)
-- [ ] `npx tsc --noEmit` — 31 errors, identical to baseline (zero new/removed).
-- [ ] `npm run build` — passes.
-- [ ] Reference-gray grep (`#909090 #7f7f7f #9b9b9b #969696 #8f8f8f #9c9c9c #acacac
-      #c0c0c0 #f7f7f7 #f8f8f8 #f4f4f4 #f5f4f4 #d9d9d9 #e7e7e7 #ededed`) → ZERO in changed files.
-- [ ] `git diff`: no color hex, no token change, `BottomTabBar.tsx` ZERO diff,
-      no business logic touched, claims re-verified against actual file.
-- [ ] Package only changed files into `bas0002-layout-phaseL3-<ts>.zip`.
-- [ ] New `AGENT_LOG.md` entry on top (next = Phase L4).
+Next phase after this ZIP: BAS0002 Phase L5 — Final consistency pass.
