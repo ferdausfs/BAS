@@ -1,10 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
-import type { CSSProperties } from 'react';
 import { ArrowLeft, Heart, Star, ShoppingBag, Check, Share2, Sparkles, Cake, Pencil, CheckCircle2, Camera, X, AlertTriangle, Bell, Eye, Clock, ChevronLeft, ChevronRight, Plus, Minus, Flame, MessageSquare, Gift, UtensilsCrossed, Phone } from 'lucide-react';
 import { useUI, formatINR, useCart, useUser, useAuthStore, useSettingsStore } from '../lib/store';
 import { useProducts } from '../hooks/useProducts';
 import { useReviews } from '../hooks/useReviews';
-import { useDominantColor } from '../hooks/useDominantColor';
+
 import { ls, safeArray, servingFor, servingForPounds, formatWeight } from '../lib/utils';
 import type { Product, Review } from '../types';
 
@@ -15,7 +14,7 @@ function DescriptionWithReadMore({ text }: { text: string }) {
 
   return (
     <div className="mt-4">
-      <p className={`text-[13.5px] leading-relaxed text-ink-200 ${!expanded && shouldClamp ? 'line-clamp-3' : ''}`}>
+      <p className={`text-[13.5px] leading-relaxed text-ink-300 ${!expanded && shouldClamp ? 'line-clamp-3' : ''}`}>
         {text}
       </p>
       {shouldClamp && (
@@ -37,9 +36,6 @@ const ADDONS = [
   { id: 'knife', name: 'Cake knife set', price: 80, icon: UtensilsCrossed },
 ];
 
-// Quick preset chips for weight-based (per-unit priced) products — tapping is
-// easier than typing a decimal, especially for less tech-savvy/older users.
-// Manual input stays available underneath for anything outside these presets.
 const WEIGHT_PRESETS = ['0.5', '1', '1.5', '2'];
 
 export default function ProductScreen() {
@@ -61,16 +57,10 @@ export default function ProductScreen() {
   const touchStartX = useRef(0);
   const touchStartY = useRef(0);
   const heroRef = useRef<HTMLDivElement>(null);
-  // Store gallery state in refs so native listeners always have latest values
-  // without being in the dependency array (which would cause hooks-order crash)
   const galleryRef = useRef<string[]>([]);
   const activeIndexRef = useRef(0);
 
   // Native touch listener — re-attaches once heroRef actually has an element.
-  // product loads async (Firestore); on first render product is null and the
-  // "Cake not found" early-return fires, so heroRef stays null and this effect
-  // used to run once with el === null and never again. Depending on product?.id
-  // makes it re-run on the render where the hero div actually mounts.
   useEffect(() => {
     const el = heroRef.current;
     if (!el) return;
@@ -113,7 +103,7 @@ export default function ProductScreen() {
       el.removeEventListener('touchmove', onMove);
       el.removeEventListener('touchend', onEnd);
     };
-  }, [product?.id]); // re-run when product loads and hero div actually mounts
+  }, [product?.id]);
 
   const handleWish = () => {
     setHeartKey(k => k + 1);
@@ -164,36 +154,22 @@ export default function ProductScreen() {
     }
   };
 
-  // Reset activeImg when product ID changes
   useEffect(() => {
     setActiveImg(null);
   }, [view.name === 'product' ? view.productId : '']);
 
-  // --- Everything below must run on EVERY render, even while `product` is still
-  // null (Firestore fetch in flight on first mount). These used to sit below the
-  // `if (!product) return` early-return, so the "loading" render called fewer
-  // hooks than the "loaded" render — React error #300, "Rendered fewer hooks
-  // than expected". This is the same class of bug as CustomizeScreen; see
-  // AGENT_LOG. Null-safe versions of the product-derived values below let the
-  // hooks execute unconditionally either way. ---
   const currentImg = activeImg || product?.image || '';
   const galleryImages = product ? [product.image, ...safeArray<string>(product.gallery)] : [];
   const activeIndex = galleryImages.indexOf(currentImg);
 
-  // Reset lightbox zoom whenever the lightbox closes or the shown image changes,
-  // so it never reopens/advances already zoomed-in.
   useEffect(() => {
     if (!lightboxOpen) setLightboxZoomed(false);
   }, [lightboxOpen]);
   useEffect(() => {
     setLightboxZoomed(false);
   }, [currentImg]);
-  // Keep refs in sync so native touch listeners always have latest values
   galleryRef.current = galleryImages;
   activeIndexRef.current = activeIndex;
-
-  // Dominant color extraction for glass-tint (Check 3)
-  const dominantColor = useDominantColor(currentImg);
 
   const productWeights = safeArray<{ size: string; price: number }>(product?.weights);
   const productFlavors = safeArray<string>(product?.flavors);
@@ -208,9 +184,6 @@ export default function ProductScreen() {
   const [weightError, setWeightError] = useState('');
   const [quantity, setQuantity] = useState(1);
 
-  // Product loads async — on first mount `product` is often still null, so the
-  // useState initial values above may have locked in the fallback defaults.
-  // Re-sync size/flavor once the real product data actually arrives.
   useEffect(() => {
     if (!product) return;
     setSize(safeWeights[1]?.size ?? safeWeights[0]?.size);
@@ -222,13 +195,13 @@ export default function ProductScreen() {
 
   if (!product) {
     return (
-      <div className="flex h-full flex-col items-center justify-center px-6 text-center">
-        <div className="flex justify-center text-ink-200 opacity-60">
+      <div className="flex h-full flex-col items-center justify-center px-6 text-center bg-bg">
+        <div className="flex justify-center text-coral opacity-60">
           <Cake size={48} strokeWidth={1.5} />
         </div>
-        <h2 className="mt-4 font-display text-[20px] font-bold text-ink">Cake not found</h2>
-        <p className="mt-1 text-[12px] text-ink-200">This item may have been removed.</p>
-        <button onClick={back} className="btn-primary mt-5 h-12 rounded-2xl px-6 text-[13px] font-bold">
+        <h2 className="mt-4 font-sans text-[20px] font-bold text-ink">Cake not found</h2>
+        <p className="mt-1 text-[12px] text-ink-300">This item may have been removed.</p>
+        <button onClick={back} className="btn-primary mt-5 h-12 rounded-full px-6 text-[13px] font-bold shadow-btn">
           Go back
         </button>
       </div>
@@ -237,8 +210,6 @@ export default function ProductScreen() {
 
   const wished = wishlist.includes(product.id);
 
-  // Trust: header এ আসল customer রিভিউর গড় ও সংখ্যা দেখাই (থাকলে); না থাকলে
-  // seed data fallback — তাতে header আর নিচের রিভিউ list কখনো স্ববিরোধী হয় না।
   const realReviewCount = reviews.length;
   const displayRating = realReviewCount > 0 ? avgRating : Number(product.rating ?? 0);
   const displayReviewCount = realReviewCount > 0 ? realReviewCount : Number(product.reviews ?? 0);
@@ -247,7 +218,6 @@ export default function ProductScreen() {
   const addonsCost = ADDONS.reduce((s, a) => s + (addons[a.id] ? a.price : 0), 0);
   const selectedAddons = ADDONS.filter((a) => addons[a.id]).map((a) => a.name);
 
-  // If weight-based pricing is set, compute dynamically
   const weightPrice = product.pricePerUnit && customWeight && +customWeight > 0
     ? +customWeight * product.pricePerUnit
     : 0;
@@ -292,14 +262,14 @@ export default function ProductScreen() {
   };
 
   return (
-    <div className="relative flex h-full flex-col">
-      {/* ONE scrollable area: image + all content (parallax scroll) */}
-      <div className="no-scrollbar relative flex-1 overflow-y-auto pb-28">
-        {/* Hero image — in normal flow so backdrop-filter on content sheet has real pixels behind it */}
+    <div className="relative flex h-full flex-col bg-bg">
+      {/* ONE scrollable area */}
+      <div className="no-scrollbar relative flex-1 overflow-y-auto pb-32">
+        {/* Hero image */}
         <div
           ref={heroRef}
           onClick={() => setLightboxOpen(true)}
-          className="relative w-full bg-blush-100 overflow-hidden"
+          className="relative w-full bg-secondary overflow-hidden"
           style={{ aspectRatio: '4/4.6' }}
         >
           <img
@@ -311,10 +281,10 @@ export default function ProductScreen() {
             style={{ display: 'block', pointerEvents: 'none' }}
           />
 
-          {/* Soft top fade for control legibility */}
-          <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-blush-100/85 to-transparent" />
+          {/* Soft top fade */}
+          <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-secondary/80 to-transparent" />
 
-          {/* Tier badge — floats on the hero image like a wax seal, keeps the title row uncluttered */}
+          {/* Tier badge */}
           {product.tier && product.tier !== 'normal' && (
             <div
               className={`absolute left-4 top-[74px] z-10 inline-flex items-center gap-1 rounded-full px-3 py-1 text-[10.5px] font-bold uppercase tracking-wide text-white ${
@@ -362,8 +332,8 @@ export default function ProductScreen() {
           )}
         </div>
 
-        {/* Content sheet below image — flows naturally as user scrolls */}
-        <div className="glass-tint rounded-t-[28px] -mt-16 relative z-10 px-5 pt-6" style={{ '--tint': dominantColor } as CSSProperties}>
+        {/* Content sheet below image — redesigned to be a solid premium card with soft shadow */}
+        <div className="bg-surface rounded-t-[28px] -mt-16 relative z-10 px-5 pt-6 border-t border-border shadow-card">
           {/* Gallery Thumbnail Strip */}
           {galleryImages.length > 1 && (
             <div className="flex gap-2.5 overflow-x-auto pb-4 pt-1 scrollbar-hide">
@@ -378,8 +348,8 @@ export default function ProductScreen() {
                     }`}
                     style={{
                       boxShadow: isActive
-                        ? '0 10px 20px -8px rgba(168,103,46,0.45), 0 2px 6px -2px rgba(26,19,17,0.12)'
-                        : '0 2px 8px -4px rgba(26,19,17,0.18)',
+                        ? '0 10px 20px -8px rgba(246,95,143,0.25), 0 2px 6px -2px rgba(246,95,143,0.12)'
+                        : '0 2px 8px -4px rgba(246,95,143,0.18)',
                     }}
                   >
                     <img loading="lazy" decoding="async" src={url} alt="" className="w-full h-full object-cover" />
@@ -391,14 +361,14 @@ export default function ProductScreen() {
 
           {/* Title row */}
           <div className="flex items-start justify-between gap-3">
-            <h1 className="flex-1 font-display text-[20px] font-bold leading-[1.1] tracking-tight text-ink">
+            <h1 className="flex-1 font-sans text-[22px] font-bold leading-[1.2] tracking-tight text-ink">
               {product.name}
             </h1>
           </div>
 
           {/* Rating + meta */}
-          <div className="mt-3 flex items-center gap-2 text-[12.5px]">
-            <div className="flex items-center gap-0.5 text-gold" style={{ filter: 'drop-shadow(0 1px 3px rgba(217,155,20,0.4))' }}>
+          <div className="mt-3.5 flex items-center gap-2 text-[12.5px]">
+            <div className="flex items-center gap-0.5 text-gold" style={{ filter: 'drop-shadow(0 1px 3px rgba(232,163,60,0.3))' }}>
               {[...Array(5)].map((_, i) => (
                 <Star
                   key={i}
@@ -408,7 +378,7 @@ export default function ProductScreen() {
               ))}
             </div>
             <span className="font-bold text-ink">{Number(displayRating).toFixed(1)}</span>
-            <span className="text-ink-200">
+            <span className="text-ink-300 font-medium">
               {displayReviewCount > 0
                 ? `(${Number(displayReviewCount).toLocaleString()} রিভিউ)`
                 : 'নতুন — এখনো রিভিউ নেই'}
@@ -417,11 +387,11 @@ export default function ProductScreen() {
 
           {/* Social proof strip */}
           {(product.soldCount || product.viewCount || product.lowStock || product.stockCount) && (
-            <div className="mt-2 flex flex-wrap items-center gap-2">
+            <div className="mt-2.5 flex flex-wrap items-center gap-2">
               {product.soldCount && product.soldCount > 0 && (
-                <div className="flex items-center gap-1 rounded-full bg-ink-50 px-2.5 py-1">
-                  <ShoppingBag className="h-3 w-3 text-ink-200" strokeWidth={2} />
-                  <span className="text-[11px] font-semibold text-ink-200">
+                <div className="flex items-center gap-1 rounded-full bg-secondary px-3 py-1">
+                  <ShoppingBag className="h-3 w-3 text-coral" strokeWidth={2.2} />
+                  <span className="text-[11px] font-bold text-coral-700">
                     {product.soldCount >= 1000
                       ? `${(product.soldCount / 1000).toFixed(1)}k+`
                       : `${product.soldCount}+`} বিক্রি
@@ -429,15 +399,15 @@ export default function ProductScreen() {
                 </div>
               )}
               {product.viewCount && product.viewCount > 0 && (
-                <div className="flex items-center gap-1 rounded-full bg-ink-50 px-2.5 py-1">
-                  <Eye className="h-3 w-3 text-ink-200" strokeWidth={2} />
-                  <span className="text-[11px] font-semibold text-ink-200">
+                <div className="flex items-center gap-1 rounded-full bg-secondary px-3 py-1">
+                  <Eye className="h-3 w-3 text-coral" strokeWidth={2.2} />
+                  <span className="text-[11px] font-bold text-coral-700">
                     {product.viewCount} জন দেখছে
                   </span>
                 </div>
               )}
               {product.inStock !== false && (product.lowStock || (product.stockCount !== undefined && product.stockCount <= 5)) && (
-                <div className="flex items-center gap-1 rounded-full bg-red-50 px-2.5 py-1">
+                <div className="flex items-center gap-1 rounded-full bg-red-50 px-3 py-1">
                   <span className="h-1.5 w-1.5 rounded-full bg-red-400 animate-pulse inline-block" />
                   <span className="text-[11px] font-bold text-red-500">
                     {product.stockCount ? `মাত্র ${product.stockCount}টি বাকি!` : 'মাত্র কয়েকটি বাকি!'}
@@ -449,37 +419,37 @@ export default function ProductScreen() {
 
           {/* Price */}
           <div className="mt-4 flex items-baseline gap-2">
-            <span className="font-display text-[26px] font-bold leading-none text-coral tabular">
+            <span className="font-sans text-[28px] font-bold leading-none text-coral tabular">
               {formatINR(base)}
             </span>
             {product.oldPrice && (
-              <span className="text-[14px] text-ink-200 line-through">
+              <span className="text-[14px] text-ink-300 line-through font-medium">
                 {formatINR(product.oldPrice)}
               </span>
             )}
           </div>
 
-          {/* Description with Read more */}
+          {/* Description */}
           <DescriptionWithReadMore text={product.description} />
 
           {settings?.deliveryEstimate && (
-            <div className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-green-50 px-3 py-1.5">
-              <Clock className="h-3.5 w-3.5 text-green-700 flex-shrink-0" strokeWidth={2.5} />
-              <p className="text-[11.5px] font-bold text-green-700">
+            <div className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3.5 py-1.5">
+              <Clock className="h-3.5 w-3.5 text-emerald-600 flex-shrink-0" strokeWidth={2.5} />
+              <p className="text-[11.5px] font-bold text-emerald-700">
                 আজ অর্ডার করলে {settings.deliveryEstimate} এর মধ্যে পৌঁছাবে
               </p>
             </div>
           )}
 
-          {/* Bake Art Style brand card (Check 1 Option 2) */}
-          <div className="mt-5 flex items-center justify-between rounded-2xl border border-ink-50 bg-white px-4 py-3">
+          {/* Bake Art Style brand card — redesigned with soft-pink palette */}
+          <div className="mt-5 flex items-center justify-between rounded-[20px] border border-border bg-surface px-4 py-3.5 shadow-sm">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-cocoa-100 text-xl font-bold text-cocoa-700">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary text-xl font-bold text-coral">
                 🍞
               </div>
               <div>
-                <div className="font-bold text-ink">Bake Art Style</div>
-                <div className="text-[12px] text-ink-200">Official Bakery • Since 2018</div>
+                <div className="font-bold text-ink text-[14px]">Bake Art Style</div>
+                <div className="text-[11px] text-ink-300 font-medium">Official Bakery • Since 2018</div>
               </div>
             </div>
             <div className="flex gap-2">
@@ -487,15 +457,15 @@ export default function ProductScreen() {
                 href={`https://wa.me/${settings?.whatsappNumber?.replace(/\D/g, '') || '8801XXXXXXXXX'}?text=Hi%20Bake%20Art%20Style`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 active:scale-95"
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 active:scale-95 transition shadow-sm border border-emerald-100"
               >
-                <MessageSquare size={18} />
+                <MessageSquare size={16} />
               </a>
               <a
                 href={`tel:${settings?.whatsappNumber || '+8801XXXXXXXXX'}`}
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-ink-50 text-ink active:scale-95"
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-coral active:scale-95 transition shadow-sm border border-coral-100"
               >
-                <Phone size={18} />
+                <Phone size={16} />
               </a>
             </div>
           </div>
@@ -503,7 +473,7 @@ export default function ProductScreen() {
           {/* Flavor selector */}
           {safeFlavors.length > 1 && (
             <section className="mt-7">
-              <h3 className="font-display text-[15px] font-bold tracking-tight text-ink">Flavor</h3>
+              <h3 className="font-sans text-[15px] font-bold tracking-tight text-ink">Flavor</h3>
               <div className="mt-3 flex flex-wrap gap-2">
                 {safeFlavors.map((f) => {
                   const active = selectedFlavor === f;
@@ -513,8 +483,8 @@ export default function ProductScreen() {
                       onClick={() => setSelectedFlavor(f)}
                       className={`min-h-[42px] rounded-full border px-4 py-2 text-[13px] font-bold transition active:scale-95 ${
                         active
-                          ? 'border-[#5C3A22] bg-[#5C3A22] text-white shadow-sm'
-                          : 'border-amber-900/15 bg-white text-ink hover:border-amber-900/30'
+                          ? 'border-coral bg-coral text-white shadow-md'
+                          : 'border-border bg-surface text-ink hover:border-coral-300'
                       }`}
                     >
                       {f}
@@ -528,8 +498,8 @@ export default function ProductScreen() {
           {/* Size selector */}
           <section className="mt-7">
             <div className="flex items-center justify-between">
-              <h3 className="font-display text-[15px] font-bold tracking-tight text-ink">Select Weight</h3>
-              <span className="text-[12.5px] font-semibold text-coral">
+              <h3 className="font-sans text-[15px] font-bold tracking-tight text-ink">Select Weight</h3>
+              <span className="text-[12.5px] font-bold text-coral">
                 {product.pricePerUnit
                   ? (customWeight && +customWeight > 0 && servingForPounds(+customWeight)
                       ? `≈ ${servingForPounds(+customWeight)} Servings`
@@ -538,7 +508,7 @@ export default function ProductScreen() {
               </span>
             </div>
             {product.pricePerUnit ? (
-              /* Dynamic weight-based pricing — horizontal chip row (reference style) */
+              /* Dynamic weight-based pricing */
               <div className="mt-3">
                 <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
                   {WEIGHT_PRESETS.map((w) => {
@@ -550,8 +520,8 @@ export default function ProductScreen() {
                         onClick={() => { setCustomWeight(w); setWeightError(''); }}
                         className={`flex-shrink-0 rounded-full border px-4 py-1.5 text-sm font-bold transition active:scale-95 ${
                           active
-                            ? 'border-[#5C3A22] bg-[#5C3A22] text-white shadow-sm'
-                            : 'border-amber-900/15 bg-white text-ink hover:border-amber-900/30'
+                            ? 'border-coral bg-coral text-white shadow-md'
+                            : 'border-border bg-surface text-ink hover:border-coral-300'
                         }`}
                       >
                         {w} {unitWord}
@@ -566,25 +536,25 @@ export default function ProductScreen() {
                     min="0.25"
                     step="0.25"
                     placeholder={`Custom weight (${product.priceUnit === 'kg' ? 'kg' : 'lb'})`}
-                    className="flex-1 min-h-[44px] px-3 py-2.5 rounded-xl border border-amber-900/15 bg-white text-sm font-bold text-ink focus:border-coral focus:outline-none"
+                    className="flex-1 min-h-[44px] px-4 py-2.5 rounded-2xl border border-border bg-surface text-sm font-bold text-ink focus:border-coral focus:ring-2 focus:ring-coral/15 focus:outline-none transition shadow-sm"
                     value={customWeight}
                     onChange={(e) => setCustomWeight(e.target.value)}
                   />
-                  <span className="text-sm font-bold text-ink/50">{product.priceUnit === 'kg' ? 'kg' : 'lb'}</span>
+                  <span className="text-sm font-bold text-ink-300">{product.priceUnit === 'kg' ? 'kg' : 'lb'}</span>
                 </div>
 
                 {weightError && (
-                  <div className="mt-1 text-[12.5px] text-red-500 font-semibold">{weightError}</div>
+                  <div className="mt-1.5 text-[12.5px] text-error font-semibold">{weightError}</div>
                 )}
                 {customWeight && +customWeight > 0 && (
-                  <div className="mt-2 rounded-xl bg-ink-50 px-3 py-2 flex items-center justify-between">
-                    <span className="text-[12.5px] text-ink/60">{customWeight} {product.priceUnit === 'kg' ? 'kg' : 'lb'} × ৳{product.pricePerUnit}</span>
-                    <span className="font-display text-base font-bold text-ink">৳{(+customWeight * (product.pricePerUnit ?? 0)).toLocaleString()}</span>
+                  <div className="mt-2.5 rounded-xl bg-secondary/30 border border-coral-100 px-3.5 py-2 flex items-center justify-between">
+                    <span className="text-[12.5px] text-coral-800 font-medium">{customWeight} {product.priceUnit === 'kg' ? 'kg' : 'lb'} × ৳{product.pricePerUnit}</span>
+                    <span className="font-sans text-base font-bold text-coral">৳{(+customWeight * (product.pricePerUnit ?? 0)).toLocaleString()}</span>
                   </div>
                 )}
               </div>
             ) : (
-              /* Static weight selector — horizontal chip row */
+              /* Static weight selector */
               <div className="mt-3 flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
                 {safeWeights.map((w) => {
                   const fullPrice = product.price + w.price;
@@ -595,8 +565,8 @@ export default function ProductScreen() {
                       onClick={() => setSize(w.size)}
                       className={`flex-shrink-0 rounded-full border px-4 py-1.5 text-sm font-bold transition active:scale-95 whitespace-nowrap ${
                         active
-                          ? 'border-[#5C3A22] bg-[#5C3A22] text-white shadow-sm'
-                          : 'border-amber-900/15 bg-white text-ink hover:border-amber-900/30'
+                          ? 'border-coral bg-coral text-white shadow-md'
+                          : 'border-border bg-surface text-ink hover:border-coral-300'
                       }`}
                     >
                       {formatWeight(w.size)} · {formatINR(fullPrice)}
@@ -609,7 +579,7 @@ export default function ProductScreen() {
 
           {/* Add-ons */}
           <section className="mt-7">
-            <h3 className="font-display text-[15px] font-bold tracking-tight text-ink">Add-ons</h3>
+            <h3 className="font-sans text-[15px] font-bold tracking-tight text-ink">Add-ons</h3>
             <div className="mt-3 space-y-2">
               {ADDONS.map((a) => {
                 const active = !!addons[a.id];
@@ -618,25 +588,24 @@ export default function ProductScreen() {
                   <button
                     key={a.id}
                     onClick={() => setAddons((s) => ({ ...s, [a.id]: !s[a.id] }))}
-                    className={`flex min-h-[56px] w-full items-center gap-3 rounded-2xl glass-strong p-3 text-left transition active:scale-[.99] ${
-                      active ? 'ring-2 ring-coral/40 bg-coral-50' : ''
+                    className={`flex min-h-[56px] w-full items-center gap-3 rounded-[20px] border border-border bg-surface p-3 text-left transition active:scale-[.99] shadow-sm ${
+                      active ? 'ring-2 ring-coral/40 bg-secondary/30 border-coral/30' : ''
                     }`}
-                    style={{ boxShadow: '0 1px 2px rgba(26,19,17,.02), 0 4px 16px -10px rgba(26,19,17,.18)' }}
                   >
                     <div
                       className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl transition ${
-                        active ? 'bg-coral-100' : 'bg-ink-50'
+                        active ? 'bg-secondary text-coral' : 'bg-secondary/40 text-ink-300'
                       }`}
                     >
-                      <Icon className={`h-4 w-4 ${active ? 'text-coral' : 'text-ink-200'}`} strokeWidth={2} />
+                      <Icon className="h-4 w-4" strokeWidth={2} />
                     </div>
                     <span className="flex-1 text-[14.5px] font-bold text-ink">{a.name}</span>
                     <span className="text-[14px] font-extrabold text-ink tabular">
                       {formatINR(a.price)}
                     </span>
                     <div
-                      className={`flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-lg border-2 transition ${
-                        active ? 'border-coral bg-coral' : 'border-ink-50 bg-white'
+                      className={`flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-lg border transition ${
+                        active ? 'border-coral bg-coral' : 'border-border bg-white'
                       }`}
                     >
                       {active && <Check className="h-3.5 w-3.5 text-white" strokeWidth={3} />}
@@ -646,16 +615,16 @@ export default function ProductScreen() {
               })}
             </div>
             {addons['message'] && (
-              <div className="mt-3 overflow-hidden rounded-2xl border-2 border-dashed border-white/40 glass-strong p-3.5">
+              <div className="mt-3.5 overflow-hidden rounded-[20px] border border-border bg-surface p-3.5 shadow-sm">
                 <textarea
                   maxLength={40}
                   rows={2}
                   value={cakeMessage}
                   onChange={(e) => setCakeMessage(e.target.value)}
                   placeholder="যেমন: শুভ জন্মদিন আম্মু"
-                  className="w-full resize-none rounded-xl bg-white px-3 py-2.5 text-[13px] outline-none placeholder:text-ink-100 focus:border-coral"
+                  className="w-full resize-none rounded-2xl border border-border bg-coral-50/20 px-4 py-3 text-[13px] text-ink outline-none placeholder:text-ink-200 focus:border-coral focus:ring-2 focus:ring-coral/15 transition"
                 />
-                <div className="mt-1.5 flex items-center justify-between text-[10.5px] text-ink-200">
+                <div className="mt-2 flex items-center justify-between text-[11px] text-ink-300 font-medium">
                   <span>কেকের উপরে লেখা হবে</span>
                   <span className="tabular">{cakeMessage.length}/40</span>
                 </div>
@@ -666,173 +635,166 @@ export default function ProductScreen() {
           {/* Customise CTA */}
           <button
             onClick={() => go({ name: 'customize', productId: product.id })}
-            className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-white/40 glass-strong py-3.5 text-[13.5px] font-bold text-ink transition active:scale-[.98]"
+            className="mt-6 flex w-full items-center justify-center gap-2 rounded-[20px] border-2 border-dashed border-coral-200 bg-secondary/20 py-3.5 text-[13.5px] font-bold text-coral transition active:scale-[.98] hover:bg-secondary/35 shadow-sm"
           >
-            <Sparkles className="h-4 w-4" />
+            <Sparkles className="h-4 w-4" strokeWidth={2} />
             Fully customize this cake
           </button>
         </div>
 
         {/* Reviews Section inside scroll container */}
-        <section className="px-5 mt-6 pb-4">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="font-display text-[17px] font-bold text-ink">রিভিউ</h2>
-          {!showReviewForm && (
-          <div className="flex gap-2">
-            <button
-              onClick={() => go({ name: 'reviews' })}
-              className="rounded-xl bg-ink-50 px-3 py-1.5 text-[11px] font-bold text-ink"
-            >
-              সব রিভিউ দেখুন
-            </button>
-            <button
-              onClick={() => user && go({ name: 'write-review', productId: product.id })}
-              disabled={!user}
-              className="rounded-xl bg-ink-50 px-3 py-1.5 text-[11px] font-bold text-ink disabled:opacity-50"
-            >
-              {user ? '+ রিভিউ লিখুন' : 'রিভিউ দিতে সাইন ইন করুন'}
-            </button>
+        <section className="px-5 mt-7 pb-4">
+          <div className="flex items-center justify-between mb-3.5">
+            <h2 className="font-sans text-[17px] font-bold text-ink">রিভিউ</h2>
+            {!showReviewForm && (
+              <div className="flex gap-2">
+                <button
+                  onClick={() => go({ name: 'reviews' })}
+                  className="rounded-xl border border-border bg-surface shadow-sm px-3.5 py-2 text-[11.5px] font-bold text-coral transition active:scale-95"
+                >
+                  সব রিভিউ দেখুন
+                </button>
+                <button
+                  onClick={() => user && go({ name: 'write-review', productId: product.id })}
+                  disabled={!user}
+                  className="rounded-xl border border-border bg-surface shadow-sm px-3.5 py-2 text-[11.5px] font-bold text-coral transition active:scale-95 disabled:opacity-50"
+                >
+                  {user ? '+ রিভিউ লিখুন' : 'রিভিউ দিতে সাইন ইন করুন'}
+                </button>
+              </div>
+            )}
           </div>
+
+          {/* Success message */}
+          {reviewSuccess && (
+            <div className="mb-4 flex items-center gap-2 rounded-2xl bg-emerald-50 border border-emerald-100 px-4 py-3 text-[12px] text-emerald-700 font-semibold shadow-sm">
+              <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+              রিভিউ যুক্ত হয়েছে, ধন্যবাদ! 🎉
+            </div>
           )}
-        </div>
 
-        {/* Success message */}
-        {reviewSuccess && (
-          <div className="mb-3 flex items-center gap-2 rounded-2xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-[12px] text-emerald-700 font-semibold">
-            <CheckCircle2 className="h-4 w-4" />
-            রিভিউ যুক্ত হয়েছে, ধন্যবাদ! 🎉
-          </div>
-        )}
-
-        {/* Review form */}
-        {showReviewForm && (
-          <div className="mb-4 rounded-2xl glass-strong p-4 space-y-3">
-            {/* Star rating */}
-            <div>
-              <div className="text-[11px] font-bold text-ink/50 mb-1">রেটিং</div>
-              <div className="flex gap-1">
-                {[1,2,3,4,5].map((s) => (
-                  <button key={s} onClick={() => setReviewRating(s)}>
-                    <Star className={`h-7 w-7 ${s <= reviewRating ? 'fill-amber-400 text-amber-400' : 'text-ink/20'}`} />
-                  </button>
-                ))}
+          {/* Review form */}
+          {showReviewForm && (
+            <div className="mb-4 rounded-[20px] border border-border bg-surface p-4 shadow-card space-y-3">
+              <div>
+                <div className="text-[11px] font-bold text-ink-300 uppercase tracking-wide mb-1">রেটিং</div>
+                <div className="flex gap-1.5">
+                  {[1,2,3,4,5].map((s) => (
+                    <button key={s} onClick={() => setReviewRating(s)}>
+                      <Star className={`h-7 w-7 ${s <= reviewRating ? 'fill-amber-400 text-amber-400' : 'text-ink/15'}`} />
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <textarea
+                placeholder="আপনার অভিজ্ঞতা লিখুন... স্বাদ, ডিজাইন, ডেলিভারি কেমন ছিল?"
+                rows={3}
+                maxLength={500}
+                className="w-full resize-none rounded-2xl border border-border bg-coral-50/20 px-4 py-3 text-[13px] text-ink placeholder:text-ink-200 focus:border-coral focus:ring-2 focus:ring-coral/15 focus:outline-none transition"
+                value={reviewComment}
+                onChange={(e) => setReviewComment(e.target.value)}
+              />
+              <div>
+                <div className="text-[11.5px] font-bold text-ink-300 uppercase tracking-wide mb-1.5">ছবি যোগ করুন (ঐচ্ছিক)</div>
+                {reviewImagePreview ? (
+                  <div className="relative w-20 h-20">
+                    <img loading="lazy" decoding="async" src={reviewImagePreview} alt="" className="w-20 h-20 rounded-xl object-cover" />
+                    <button
+                      onClick={() => { setReviewImageFile(null); setReviewImagePreview(''); }}
+                      className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-ink text-white flex items-center justify-center shadow-md"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ) : (
+                  <label className="flex h-16 w-16 cursor-pointer items-center justify-center rounded-xl border border-border bg-secondary/20 hover:bg-secondary/40 transition">
+                    <Camera className="h-6 w-6 text-coral" strokeWidth={1.5} />
+                    <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      if (file.size > 2 * 1024 * 1024) { alert('সর্বোচ্চ ২MB'); return; }
+                      setReviewImageFile(file);
+                      const url = URL.createObjectURL(file);
+                      setReviewImagePreview(url);
+                    }} />
+                  </label>
+                )}
+              </div>
+              <div className="flex gap-2 pt-1">
+                <button
+                  onClick={handleSubmitReview}
+                  disabled={!reviewComment.trim() || submittingReview}
+                  className="flex-1 py-2.5 rounded-full bg-coral text-white text-[13px] font-bold disabled:opacity-50 shadow-btn transition active:scale-95"
+                >
+                  {submittingReview ? 'পাঠানো হচ্ছে...' : 'রিভিউ দিন'}
+                </button>
+                <button
+                  onClick={() => setShowReviewForm(false)}
+                  className="px-4 py-2.5 rounded-full bg-secondary text-coral text-[13px] font-bold transition active:scale-95"
+                >
+                  বাতিল
+                </button>
               </div>
             </div>
-            {/* Comment */}
-            <textarea
-              placeholder="আপনার অভিজ্ঞতা লিখুন... স্বাদ, ডিজাইন, ডেলিভারি কেমন ছিল?"
-              rows={3}
-              maxLength={500}
-              className="w-full resize-none rounded-xl border border-ink/10 bg-cream px-3 py-2.5 text-[13px] text-ink placeholder:text-ink/30 focus:border-coral focus:outline-none"
-              value={reviewComment}
-              onChange={(e) => setReviewComment(e.target.value)}
-            />
-            {/* Photo upload */}
-            <div>
-              <div className="text-[11px] font-bold text-ink/50 mb-1">ছবি যোগ করুন (ঐচ্ছিক)</div>
-              {reviewImagePreview ? (
-                <div className="relative w-20 h-20">
-                  <img loading="lazy" decoding="async" src={reviewImagePreview} alt="" className="w-20 h-20 rounded-xl object-cover" />
-                  <button
-                    onClick={() => { setReviewImageFile(null); setReviewImagePreview(''); }}
-                    className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-ink text-white flex items-center justify-center"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                </div>
-              ) : (
-                <label className="flex h-16 w-16 cursor-pointer items-center justify-center rounded-xl border-2 border-dashed border-ink/20 bg-cream hover:border-coral">
-                  <Camera className="h-6 w-6 text-ink-200" strokeWidth={1.5} />
-                  <input type="file" accept="image/*" className="hidden" onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (!file) return;
-                    if (file.size > 2 * 1024 * 1024) { alert('সর্বোচ্চ ২MB'); return; }
-                    setReviewImageFile(file);
-                    const url = URL.createObjectURL(file);
-                    setReviewImagePreview(url);
-                  }} />
-                </label>
-              )}
-            </div>
-            {/* Buttons */}
-            <div className="flex gap-2">
-              <button
-                onClick={handleSubmitReview}
-                disabled={!reviewComment.trim() || submittingReview}
-                className="flex-1 py-2.5 rounded-xl bg-coral text-white text-[13px] font-bold disabled:opacity-50"
-              >
-                {submittingReview ? 'পাঠানো হচ্ছে...' : 'রিভিউ দিন'}
-              </button>
-              <button
-                onClick={() => setShowReviewForm(false)}
-                className="px-4 py-2.5 rounded-xl bg-ink/5 text-ink/60 text-[13px] font-bold"
-              >
-                বাতিল
-              </button>
-            </div>
-          </div>
-        )}
+          )}
 
-        {/* Approved reviews list */}
-        {reviews.length > 0 ? (
-          <div className="space-y-3">
-            {reviews.slice(0, 5).map((r) => (
-              <div key={r.id} className="rounded-2xl glass-strong p-4">
-                <div className="flex items-start gap-3">
-                  <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-ink-50 font-bold text-ink text-[13px]">
-                    {r.user_name.charAt(0).toUpperCase()}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between">
-                      <div className="text-[12px] font-bold text-ink">{r.user_name}</div>
-                      <div className="flex">
-                        {[1,2,3,4,5].map((s) => (
-                          <Star key={s} className={`h-3 w-3 ${s <= r.rating ? 'fill-amber-400 text-amber-400' : 'text-ink/15'}`} />
-                        ))}
+          {/* Approved reviews list */}
+          {reviews.length > 0 ? (
+            <div className="space-y-3">
+              {reviews.slice(0, 5).map((r) => (
+                <div key={r.id} className="rounded-[20px] border border-border bg-surface p-4 shadow-sm">
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-secondary font-bold text-coral text-[13px]">
+                      {r.user_name.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <div className="text-[12px] font-bold text-ink">{r.user_name}</div>
+                        <div className="flex">
+                          {[1,2,3,4,5].map((s) => (
+                            <Star key={s} className={`h-3 w-3 ${s <= r.rating ? 'fill-amber-400 text-amber-400' : 'text-ink/15'}`} />
+                          ))}
+                        </div>
+                      </div>
+                      <div className="mt-1 text-[12px] text-ink-300 leading-relaxed font-medium">{r.comment}</div>
+                      {r.image && (
+                        <img loading="lazy" decoding="async" src={r.image} alt="review" className="mt-2 h-24 w-24 rounded-xl object-cover border border-border" />
+                      )}
+                      <div className="mt-2 text-[10px] text-ink-200 font-semibold">
+                        {new Date(r.created_at).toLocaleDateString('en-BD', { day: 'numeric', month: 'short', year: 'numeric' })}
                       </div>
                     </div>
-                    <div className="mt-1 text-[12px] text-ink/70 leading-relaxed">{r.comment}</div>
-                    {r.image && (
-                      <img loading="lazy" decoding="async" src={r.image} alt="review" className="mt-2 h-24 w-24 rounded-xl object-cover" />
-                    )}
-                    <div className="mt-1.5 text-[10px] text-ink/30">
-                      {new Date(r.created_at).toLocaleDateString('en-BD', { day: 'numeric', month: 'short', year: 'numeric' })}
-                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-6 text-[13px] text-ink/40">
-            এখনো কোনো রিভিউ নেই। প্রথম রিভিউটা আপনিই দিন!
-          </div>
-        )}
-      </section>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-6 text-[13px] text-ink-300 font-medium">
+              এখনো কোনো রিভিউ নেই। প্রথম রিভিউটা আপনিই দিন!
+            </div>
+          )}
+        </section>
       </div>
 
-      {/* Sticky floating controls at top — visible above image, with pointer-events-auto on each button */}
+      {/* Sticky floating controls at top */}
       <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-5 pt-5 pb-2 pointer-events-none">
         <button
           onClick={back}
-          className="pointer-events-auto flex h-11 w-11 items-center justify-center rounded-full bg-white text-ink transition active:scale-90"
-          style={{ boxShadow: '0 8px 22px -10px rgba(26,19,17,.35)' }}
+          className="pointer-events-auto flex h-11 w-11 items-center justify-center rounded-full bg-white text-ink border border-border shadow-md transition active:scale-90"
           aria-label="Back"
         >
           <ArrowLeft className="h-[20px] w-[20px]" strokeWidth={2.2} />
         </button>
         <div className="flex gap-2.5 pointer-events-auto">
           <button
-            className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-ink transition active:scale-90"
-            style={{ boxShadow: '0 8px 22px -10px rgba(26,19,17,.35)' }}
+            className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-ink border border-border shadow-md transition active:scale-90"
             aria-label="Share"
           >
             <Share2 className="h-[18px] w-[18px]" strokeWidth={2} />
           </button>
           <button
             onClick={handleWish}
-            className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-ink transition active:scale-90"
-            style={{ boxShadow: '0 8px 22px -10px rgba(26,19,17,.35)' }}
+            className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-ink border border-border shadow-md transition active:scale-90"
             aria-label="Wishlist"
           >
             <Heart
@@ -845,39 +807,38 @@ export default function ProductScreen() {
         </div>
       </div>
 
-      {/* Sticky bottom CTA */}
-      <div className="absolute right-0 bottom-0 left-0 z-30 border-t border-white/40 glass-strong px-5 pt-3 pb-6">
+      {/* Sticky bottom CTA — replaced glass-strong with beautiful solid surface */}
+      <div className="absolute right-0 bottom-0 left-0 z-30 border-t border-border bg-white/95 px-5 pt-3.5 pb-6 shadow-float">
         <div className="flex items-center gap-3">
           <div>
-            <div className="text-[11px] font-bold tracking-wider text-ink-200 uppercase">
+            <div className="text-[11px] font-bold tracking-wider text-ink-300 uppercase">
               Total
             </div>
-            <div className="font-display text-[22px] font-bold text-coral tabular">
+            <div className="font-sans text-[22px] font-bold text-coral tabular">
               {formatINR(total * quantity)}
             </div>
-            <div className="text-[12px] text-ink-200 mt-0.5">
+            <div className="text-[11.5px] text-ink-300 font-bold mt-0.5 max-w-[120px] truncate">
               {product.pricePerUnit ? formatWeight(`${customWeight} ${product.priceUnit ?? 'lb'}`) : formatWeight(size)} · {selectedFlavor}
               {quantity > 1 ? ` · ×${quantity}` : ''}
             </div>
           </div>
           {(product.inStock ?? true) ? (
             <div className="ml-auto flex flex-1 items-center gap-2">
-              {/* Quantity stepper — moved here from mid-page (wireframe layout: quantity sits beside Add to Cart) */}
-              <div className="flex flex-shrink-0 items-center gap-2.5 rounded-2xl bg-ink-50 px-2.5 py-2">
+              <div className="flex flex-shrink-0 items-center gap-2.5 rounded-full border border-border bg-secondary/40 p-1 shadow-sm">
                 <button
                   onClick={() => setQuantity((q) => Math.max(1, q - 1))}
                   disabled={quantity <= 1}
-                  className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-ink transition active:scale-90 disabled:opacity-40"
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-surface border border-border text-ink transition active:scale-90 disabled:opacity-40"
                   aria-label="Decrease quantity"
                 >
                   <Minus className="h-3.5 w-3.5" strokeWidth={2.5} />
                 </button>
-                <span className="min-w-[14px] text-center font-display text-[14px] font-bold text-ink tabular">
+                <span className="min-w-[14px] text-center font-sans text-[14px] font-bold text-ink tabular">
                   {quantity}
                 </span>
                 <button
                   onClick={() => setQuantity((q) => q + 1)}
-                  className="flex h-8 w-8 items-center justify-center rounded-full bg-ink text-white transition active:scale-90"
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-coral text-white transition active:scale-90 shadow-sm"
                   aria-label="Increase quantity"
                 >
                   <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
@@ -885,7 +846,7 @@ export default function ProductScreen() {
               </div>
               <button
                 onClick={handleAdd}
-                className="btn-primary flex h-14 flex-1 items-center justify-center gap-2 rounded-2xl text-[14px] font-bold tracking-tight"
+                className="btn-primary flex h-14 flex-1 items-center justify-center gap-2 rounded-2xl text-[14px] font-bold tracking-tight shadow-btn"
               >
                 <ShoppingBag className="h-[18px] w-[18px]" strokeWidth={2.2} />
                 Add to Cart
@@ -910,7 +871,7 @@ export default function ProductScreen() {
                     `We'll notify you when ${product.name} is back in stock.`
                   );
                 }}
-                className="btn-primary flex w-full items-center justify-center gap-2 rounded-2xl py-4 text-[15px] font-bold"
+                className="btn-primary flex w-full items-center justify-center gap-2 rounded-2xl py-4 text-[15px] font-bold shadow-btn"
               >
                 <Bell size={16} />
                 Notify Me When Available
@@ -920,10 +881,10 @@ export default function ProductScreen() {
         </div>
       </div>
 
-      {/* Fullscreen image lightbox — tap hero image to open, swipe/arrows/dots for gallery */}
+      {/* Lightbox */}
       {lightboxOpen && (
         <div
-          className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-black/95 backdrop-blur-sm"
+          className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-black/95"
           onClick={() => setLightboxOpen(false)}
         >
           <button

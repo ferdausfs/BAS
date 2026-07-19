@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { ArrowLeft, MapPin, Clock, Wallet, Check, Shield, Navigation, Loader2, Phone, Banknote, ShoppingCart, Gift, Users, Image as ImageIcon, X, Calendar, Tag } from 'lucide-react';
+import { ArrowLeft, MapPin, Clock, Wallet, Check, Shield, Loader2, Banknote, ShoppingCart, Gift, Users, Image as ImageIcon, X, Calendar, Tag } from 'lucide-react';
 import {
   useCart, useOrders, useUI, formatINR,
   cartSubtotal, standardDeliveryFee,
@@ -598,7 +598,7 @@ export default function CheckoutScreen({ onBack }: Props) {
                 min={getMinDeliveryDate()}
                 value={form.date}
                 onChange={(e) => setForm({ ...form, date: e.target.value })}
-                className="w-full rounded-2xl border border-white/40 glass-strong py-3.5 pl-12 pr-4 text-[14px] font-semibold text-ink outline-none focus:border-coral"
+                className="w-full rounded-2xl border border-border bg-surface py-3.5 pl-12 pr-4 text-[14px] font-semibold text-ink outline-none focus:border-coral focus:ring-2 focus:ring-coral/15 transition shadow-sm"
               />
             </div>
             <p className="mt-1.5 text-[11.5px] text-ink-200">
@@ -634,15 +634,14 @@ export default function CheckoutScreen({ onBack }: Props) {
         {/* Gift Mode — collapsed toggle, optional */}
         <section className="mt-3 space-y-3">
           <div
-            className="flex items-center justify-between rounded-2xl glass-strong px-4 py-3.5 cursor-pointer"
-            style={{ boxShadow: '0 1px 2px rgba(26,19,17,.02), 0 4px 12px -8px rgba(26,19,17,.12)' }}
+            className="flex items-center justify-between rounded-2xl border border-border bg-surface px-4 py-3.5 shadow-card cursor-pointer hover:border-coral-200 transition"
             onClick={() => setGiftMode(!giftMode)}
           >
             <div className="flex items-center gap-3">
               <Gift className="h-6 w-6 text-ink" strokeWidth={1.75} />
               <div>
                 <div className="text-[13.5px] font-bold text-ink">This is a gift order</div>
-                <div className="text-[12px] text-ink/50">Add message, gift wrap & recipient details</div>
+                <div className="text-[12px] text-ink-300 font-medium">Add message, gift wrap & recipient details</div>
               </div>
             </div>
             <div className={`h-6 w-11 rounded-full transition-colors ${giftMode ? 'bg-coral' : 'bg-ink/15'} relative flex-shrink-0`}>
@@ -651,7 +650,7 @@ export default function CheckoutScreen({ onBack }: Props) {
           </div>
 
           {giftMode && (
-            <div className="space-y-3 rounded-2xl glass-strong px-4 py-4">
+            <div className="space-y-3 rounded-2xl border border-border bg-surface px-4 py-4 shadow-card">
               <div className="space-y-1.5">
                 <label htmlFor="gift-message" className="text-[12px] font-bold tracking-wider text-ink-200 uppercase">
                   গিফট মেসেজ (ঐচ্ছিক)
@@ -710,7 +709,7 @@ export default function CheckoutScreen({ onBack }: Props) {
         {/* Extras — wallet redeem / promo code / referral code, collapsed by
             default so the payment step doesn't overwhelm on first view.
             Auto-expands if one of these was already applied earlier. */}
-        <section className="mt-3 overflow-hidden rounded-2xl glass-strong">
+        <section className="mt-3 overflow-hidden rounded-2xl border border-border bg-surface shadow-card">
           <button
             type="button"
             onClick={() => setShowExtras((v) => !v)}
@@ -795,7 +794,7 @@ export default function CheckoutScreen({ onBack }: Props) {
 
               {/* Promo code — ported from CartScreen unchanged */}
               <div className="mb-3">
-                <div className="flex items-center gap-2.5 rounded-2xl border border-dashed border-ink-100 glass-strong px-3.5 py-3">
+                <div className="flex items-center gap-2.5 rounded-2xl border border-dashed border-coral-200 bg-coral-50/40 px-3.5 py-3">
                   <Tag className="h-4 w-4 text-ink-200" />
                   <input
                     value={promoInput}
@@ -987,8 +986,8 @@ export default function CheckoutScreen({ onBack }: Props) {
           </div>
         </Section>
 
-        <div className="mt-3 flex items-center justify-center gap-2 rounded-2xl glass-strong py-3 text-[11px] text-ink-200">
-          <Shield className="h-3.5 w-3.5" />
+        <div className="mt-4 flex items-center justify-center gap-2 rounded-2xl border border-border bg-surface py-3 text-[11px] text-ink-300 font-semibold shadow-sm">
+          <Shield className="h-3.5 w-3.5 text-coral/80" />
           নিরাপদ ও বিশ্বস্ত অর্ডার প্রসেসিং
         </div>
         </>
@@ -1079,9 +1078,9 @@ export default function CheckoutScreen({ onBack }: Props) {
             number={advancePayment === 'bkash' ? settings.bkashNumber : settings.nagadNumber}
           />
 
-          <div className="mt-4 rounded-2xl border border-white/40 glass-strong p-3">
+          <div className="mt-4 rounded-2xl border border-border bg-coral-50/10 p-4 shadow-sm">
             <div className="mb-2 text-[12.5px] font-bold text-ink">Payment screenshot</div>
-            <div className="text-[11.5px] text-ink-200">অগ্রিম ৳{advanceAmount} পাঠানোর পর screenshot upload করুন, admin verify করবে।</div>
+            <div className="text-[11.5px] text-ink-300 font-medium">অগ্রিম ৳{advanceAmount} পাঠানোর পর screenshot upload করুন, admin verify করবে।</div>
             {paymentScreenshotPreview ? (
               <div className="mt-3 relative inline-block">
                 <img src={paymentScreenshotPreview} alt="payment screenshot" className="h-24 w-24 rounded-xl object-cover" />
@@ -1094,8 +1093,8 @@ export default function CheckoutScreen({ onBack }: Props) {
                 </button>
               </div>
             ) : (
-              <label className="mt-3 flex h-20 w-20 cursor-pointer items-center justify-center rounded-xl border-2 border-dashed border-ink/20 bg-white hover:border-coral">
-                <ImageIcon className="h-6 w-6 text-ink-200" strokeWidth={1.5} />
+              <label className="mt-3 flex h-20 w-20 cursor-pointer items-center justify-center rounded-xl border-2 border-dashed border-coral-200 bg-white hover:border-coral transition shadow-sm">
+                <ImageIcon className="h-6 w-6 text-coral" strokeWidth={1.5} />
                 <input
                   type="file"
                   accept="image/*"
@@ -1156,8 +1155,8 @@ export default function CheckoutScreen({ onBack }: Props) {
           </div>
         </Section>
 
-        <div className="mt-3 flex items-center justify-center gap-2 rounded-2xl glass-strong py-3 text-[11px] text-ink-200">
-          <Shield className="h-3.5 w-3.5" />
+        <div className="mt-4 flex items-center justify-center gap-2 rounded-2xl border border-border bg-surface py-3 text-[11px] text-ink-300 font-semibold shadow-sm">
+          <Shield className="h-3.5 w-3.5 text-coral/80" />
           নিরাপদ ও বিশ্বস্ত অর্ডার প্রসেসিং
         </div>
         </>
@@ -1165,20 +1164,20 @@ export default function CheckoutScreen({ onBack }: Props) {
       </div>
 
       {/* Sticky CTA */}
-      <div className="absolute right-0 bottom-0 left-0 z-30 border-t border-ink-50/80 bg-white/95 px-5 pt-3 pb-6 backdrop-blur-xl">
+      <div className="absolute right-0 bottom-0 left-0 z-30 border-t border-border bg-white/95 px-5 pt-3.5 pb-6 shadow-float">
         <div className="flex items-center gap-3">
           <div>
-            <div className="text-[11px] font-bold tracking-wider text-ink-200 uppercase">
+            <div className="text-[11px] font-bold tracking-wider text-ink-300 uppercase">
               {step === 2 ? 'অগ্রিম দিন' : 'মোট'}
             </div>
-            <div className="font-display text-[20px] font-bold tabular text-ink">
+            <div className="font-sans text-[20px] font-bold tabular text-ink">
               {formatINR(step === 2 ? advanceAmount : total)}
             </div>
           </div>
           <button
             onClick={goNext}
             disabled={step === 2 ? (!form.name || !form.phone || !form.address || !paymentScreenshotFile || submitting) : false}
-            className="ml-auto flex h-14 flex-1 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#5C3A22] via-[#3D2418] to-[#5C3A22] text-white text-[14px] font-bold tracking-tight shadow-[0_8px_20px_-6px_rgba(92,58,34,0.55)] active:scale-[0.985] disabled:opacity-50"
+            className="ml-auto flex h-14 flex-1 items-center justify-center gap-2 rounded-2xl bg-coral hover:bg-coral-600 text-white text-[14px] font-bold tracking-tight shadow-btn active:scale-[0.985] disabled:opacity-50 transition"
           >
             {step < 2 ? 'পরবর্তী' : submitting ? 'Submitting...' : 'Continue to Payment'}
             {step < 2 ? null : submitting ? <Loader2 className="h-[18px] w-[18px] animate-spin" strokeWidth={2.5} /> : <Check className="h-[18px] w-[18px]" strokeWidth={2.5} />}
@@ -1253,17 +1252,17 @@ function Section({
 }) {
   return (
     <section
-      className={`mt-3 overflow-hidden rounded-2xl glass-strong ${className}`}
+      className={`mt-3 overflow-hidden rounded-[20px] border border-border bg-surface shadow-card ${className}`}
     >
-      <div className="flex items-center gap-2.5 border-b border-ink-50 px-4 py-3">
+      <div className="flex items-center gap-2.5 border-b border-divider px-4 py-3">
         {Icon && (
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-ink-50 text-ink-200">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-secondary text-coral">
             <Icon className="h-4 w-4" strokeWidth={2} />
           </div>
         )}
-        <h3 className="font-display text-[14px] font-bold tracking-tight text-ink">{title}</h3>
+        <h3 className="font-sans text-[14px] font-bold tracking-tight text-ink">{title}</h3>
         {badge && (
-          <span className="ml-auto rounded-full bg-ink-50 px-2 py-0.5 text-[10px] font-bold text-ink-200">
+          <span className="ml-auto rounded-full bg-secondary px-2.5 py-0.5 text-[10px] font-bold text-coral">
             {badge}
           </span>
         )}
@@ -1276,7 +1275,7 @@ function Section({
 function Row({ label, value, positive }: { label: string; value: string; positive?: boolean }) {
   return (
     <div className="flex items-center justify-between">
-      <span className="text-ink-200">{label}</span>
+      <span className="text-ink-300 font-medium">{label}</span>
       <span className={`tabular font-bold ${positive ? 'text-emerald-600' : 'text-ink'}`}>
         {value}
       </span>
@@ -1292,7 +1291,7 @@ function EditButton({ onClick }: { onClick: () => void }) {
     <button
       type="button"
       onClick={onClick}
-      className="flex-shrink-0 rounded-full bg-ink-50 px-2.5 py-1 text-[11px] font-bold text-ink active:scale-95 transition"
+      className="flex-shrink-0 rounded-full bg-secondary hover:bg-coral-100 px-3 py-1 text-[11px] font-bold text-coral active:scale-95 transition shadow-sm border border-coral-100"
     >
       Edit
     </button>

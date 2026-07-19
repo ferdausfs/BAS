@@ -42,7 +42,6 @@ export default function CartScreen() {
   const delivery = items.length === 0 ? 0 : (isFreeDelivery ? 0 : currentDeliveryFee);
 
   // Wallet: balance is in ৳ taka directly
-  // Max redeem = min(balance, WALLET_MAX_REDEEM, subtotal cap)
   const maxRedeemable = Math.min(balance, WALLET_MAX_REDEEM, subtotal);
   const walletDiscount = pendingLoyaltyRedeem; // pendingLoyaltyRedeem now stores ৳ directly
 
@@ -76,24 +75,21 @@ export default function CartScreen() {
       clearLoyalty();
     }
     return (
-      <div className="flex h-full flex-col">
+      <div className="flex h-full flex-col bg-bg">
         <Header title="আমার কার্ট" onBack={back} />
         <div className="flex flex-1 flex-col items-center justify-center px-8 text-center">
-          <div
-            className="flex h-24 w-24 items-center justify-center rounded-3xl glass-strong text-ink-200"
-            style={{ boxShadow: '0 1px 2px rgba(26,19,17,.03), 0 12px 30px -18px rgba(26,19,17,.14)' }}
-          >
-            <ShoppingCart size={44} strokeWidth={1.5} />
+          <div className="flex h-24 w-24 items-center justify-center rounded-[24px] border border-border bg-surface text-coral shadow-card">
+            <ShoppingCart size={40} strokeWidth={1.5} />
           </div>
-          <h2 className="mt-5 font-display text-[22px] font-bold tracking-tight text-ink">
+          <h2 className="mt-6 font-sans text-[22px] font-bold tracking-tight text-ink">
             আপনার কার্ট খালি
           </h2>
-          <p className="mt-1.5 text-[13.5px] text-ink-200">
+          <p className="mt-2 text-[13.5px] text-ink-300">
             শুরু করতে সুস্বাদু কিছু কেক যোগ করুন।
           </p>
           <button
             onClick={back}
-            className="btn-primary mt-6 flex h-12 items-center gap-2 rounded-2xl px-7 text-[13px] font-bold"
+            className="btn-primary mt-6 flex h-12 items-center gap-2 rounded-full px-7 text-[13px] font-bold shadow-btn"
           >
             <Sparkles className="h-4 w-4" /> কেক দেখুন
           </button>
@@ -103,24 +99,24 @@ export default function CartScreen() {
   }
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full flex-col bg-bg">
       <Header title="আমার কার্ট" onBack={back} badge={`${items.length}`} />
 
       <div className="no-scrollbar flex-1 overflow-y-auto px-5 pb-44 pt-1">
         {/* Free delivery nudge */}
         {remaining > 0 ? (
-          <div className="mb-4 rounded-2xl glass-strong p-3.5">
+          <div className="mb-4 rounded-[20px] border border-border bg-surface p-4 shadow-card">
             <div className="flex items-center gap-2.5">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-ink-50 text-ink-200">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-secondary text-coral">
                 <Truck className="h-4 w-4" strokeWidth={2} />
               </div>
               <div className="flex-1">
                 <div className="text-[13px] font-bold text-ink">
                   ফ্রি ডেলিভারির জন্য আরও {formatINR(remaining)} যোগ করুন
                 </div>
-                <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-ink-50">
+                <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-secondary">
                   <div
-                    className="h-full rounded-full bg-gradient-to-r from-ink-200 to-ink-300"
+                    className="h-full rounded-full bg-coral transition-all duration-300"
                     style={{ width: `${progress}%` }}
                   />
                 </div>
@@ -128,7 +124,7 @@ export default function CartScreen() {
             </div>
           </div>
         ) : (
-          <div className="mb-4 flex items-center gap-2.5 rounded-2xl bg-emerald-50 px-3.5 py-3 text-emerald-700">
+          <div className="mb-4 flex items-center gap-2.5 rounded-[20px] bg-emerald-50 px-3.5 py-3 text-emerald-700">
             <Shield className="h-4 w-4" />
             <span className="text-[13px] font-bold">আপনি ফ্রি ডেলিভারি পেয়ে গেছেন</span>
           </div>
@@ -152,7 +148,7 @@ export default function CartScreen() {
         {/* Suggested add-ons */}
         {settings?.customAddons && settings.customAddons.length > 0 && (
           <div className="mt-5">
-            <div className="mb-2.5 text-[11px] font-bold tracking-wider text-ink-200 uppercase">
+            <div className="mb-2.5 text-[11px] font-bold tracking-wider text-ink-300 uppercase">
               আরও কিছু যোগ করুন
             </div>
             <div className="no-scrollbar flex gap-2.5 overflow-x-auto pb-1">
@@ -170,12 +166,12 @@ export default function CartScreen() {
                       quantity: 1,
                     });
                   }}
-                  className="flex w-[104px] flex-shrink-0 flex-col items-start gap-1.5 rounded-2xl glass-strong p-3 text-left transition active:scale-95"
+                  className="flex w-[104px] flex-shrink-0 flex-col items-start gap-1.5 rounded-[20px] border border-border bg-surface p-3 text-left transition active:scale-95 shadow-card"
                 >
                   {(() => {
                     const AddonIcon = ADDON_ICON[addon.category] ?? Sparkles;
                     return (
-                      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-coral/10">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-secondary">
                         <AddonIcon className="h-[18px] w-[18px] text-coral" strokeWidth={2} />
                       </div>
                     );
@@ -193,18 +189,16 @@ export default function CartScreen() {
           </div>
         )}
 
-        {/* Promo/wallet discounts are now applied from the Checkout → পেমেন্ট step,
-            not here. Discount state itself is global (useUI store) so this page's
-            Bill below still reflects whatever was applied there. */}
+        {/* Bill Details */}
         <section
-          className="mt-4 overflow-hidden rounded-2xl glass-strong"
+          className="mt-4 overflow-hidden rounded-[20px] border border-border bg-surface shadow-card"
         >
-          <div className="px-4 pt-4 pb-2">
-            <div className="text-[11px] font-bold tracking-wider text-ink-200 uppercase">
+          <div className="px-4 pt-4 pb-2 border-b border-divider">
+            <div className="text-[11px] font-bold tracking-wider text-coral-700 uppercase">
               বিল বিবরণ
             </div>
           </div>
-          <div className="space-y-2.5 px-4 py-3 text-[13px]">
+          <div className="space-y-2.5 px-4 py-4 text-[13px]">
             <Row label={`সাবটোটাল (${items.length} আইটেম)`} value={formatINR(subtotal)} />
             <Row
               label="ডেলিভারি চার্জ"
@@ -221,12 +215,12 @@ export default function CartScreen() {
             {walletDiscount > 0 && (
               <Row label="Wallet discount" value={'-৳' + walletDiscount} positive />
             )}
-            <div className="h-px bg-ink-50" />
+            <div className="h-px bg-divider" />
             <div className="flex items-center justify-between pt-1">
-              <span className="font-display text-[15px] font-bold tracking-tight text-ink">
+              <span className="font-sans text-[15px] font-bold tracking-tight text-ink">
                 মোট
               </span>
-              <span className="font-display text-[18px] font-bold tabular text-ink">
+              <span className="font-sans text-[18px] font-bold tabular text-ink">
                 {formatINR(total)}
               </span>
             </div>
@@ -234,36 +228,36 @@ export default function CartScreen() {
         </section>
 
         {/* Trust */}
-        <div className="mt-4 flex items-center justify-center gap-2 text-[12px] text-ink-200">
-          <Shield className="h-3.5 w-3.5" />
+        <div className="mt-5 flex items-center justify-center gap-2 text-[12px] text-ink-300">
+          <Shield className="h-3.5 w-3.5 text-coral/80" />
           নিরাপদ ও বিশ্বস্ত অর্ডার প্রসেসিং
         </div>
       </div>
 
       {/* Sticky CTA */}
-      <div className="absolute right-0 bottom-0 left-0 z-30 border-t border-ink-50/80 bg-white/95 px-5 pt-3 pb-6 backdrop-blur-xl">
+      <div className="absolute right-0 bottom-0 left-0 z-30 border-t border-border bg-white/95 px-5 pt-3.5 pb-6 shadow-float">
         <button
           onClick={handleCheckout}
-          className="btn-primary flex h-14 w-full items-center justify-center gap-2 rounded-2xl text-[14px] font-bold tracking-tight"
+          className="btn-primary flex h-14 w-full items-center justify-center gap-2 rounded-2xl text-[14px] font-bold tracking-tight shadow-btn"
         >
           <ShoppingBag className="h-[18px] w-[18px]" strokeWidth={2.2} />
           চেকআউট · {formatINR(total)}
         </button>
       </div>
 
-      {/* Remove-item confirmation sheet (opened by swipe-to-delete tap) */}
+      {/* Remove-item confirmation sheet */}
       {confirmItem && confirmIdx !== null && (
         <div
-          className="fixed inset-0 z-50 flex items-end bg-ink/25 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-end bg-ink/40"
           onClick={() => setConfirmIdx(null)}
         >
           <div
-            className="w-full rounded-t-[26px] bg-white p-6 pb-8 anim-up"
+            className="w-full rounded-t-[28px] border-t border-border bg-surface p-6 pb-8 shadow-float anim-up"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 className="mb-4 font-display text-[18px] font-bold text-ink">কার্ট থেকে সরাবেন?</h2>
-            <div className="mb-5 flex gap-3 rounded-2xl border border-ink-50 p-3">
-              <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-xl">
+            <h2 className="mb-4 font-sans text-[18px] font-bold text-ink">কার্ট থেকে সরাবেন?</h2>
+            <div className="mb-5 flex gap-3 rounded-2xl border border-border p-3 bg-bg">
+              <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-xl border border-border bg-white">
                 <img
                   src={confirmItem.image || '/cakes/logo-cake.png'}
                   onError={(e) => {
@@ -275,7 +269,7 @@ export default function CartScreen() {
               </div>
               <div className="flex flex-col justify-center">
                 <div className="text-[14px] font-bold text-ink">{confirmItem.name}</div>
-                <div className="text-[12px] text-ink-200">
+                <div className="text-[12px] text-ink-300">
                   {confirmItem.size} · {confirmItem.flavor}
                 </div>
               </div>
@@ -283,7 +277,7 @@ export default function CartScreen() {
             <div className="flex gap-2.5">
               <button
                 onClick={() => setConfirmIdx(null)}
-                className="h-12 flex-1 rounded-full bg-ink-50 text-[14px] font-bold text-ink"
+                className="h-12 flex-1 rounded-full bg-secondary text-[14px] font-bold text-coral transition active:scale-95"
               >
                 বাতিল
               </button>
@@ -292,7 +286,7 @@ export default function CartScreen() {
                   remove(confirmIdx);
                   setConfirmIdx(null);
                 }}
-                className="h-12 flex-1 rounded-full bg-rose-500 text-[14px] font-bold text-white"
+                className="h-12 flex-1 rounded-full bg-error text-[14px] font-bold text-white transition active:scale-95"
               >
                 হ্যাঁ, সরান
               </button>
@@ -322,23 +316,10 @@ function CartItemRow({
   const cardRef = useRef<HTMLElement | null>(null);
   const openRef = useRef(open);
   openRef.current = open;
-  // dragging/startX/baseX/pointerId kept in a ref so the native listeners
-  // (attached once in the effect below) always see the latest values
-  // without needing to be re-attached on every render.
+  
   const drag = useRef({ dragging: false, startX: 0, baseX: 0, pointerId: -1 });
 
-  // Native Pointer Events + touch-action:'pan-y' — same mechanism as the
-  // approved HTML mockup. With this CSS value set, the browser's own
-  // gesture recognizer decides *before* dispatching anything to JS whether
-  // a touch is a vertical page-scroll (handled natively, we never see it)
-  // or a horizontal drag (forwarded to us as pointer events). That removes
-  // the touchmove/preventDefault race that broke the two earlier
-  // touch-event-based attempts (see AGENT_LOG.md) — there, JS only found
-  // out "this is horizontal" a frame or two after the first touchmove, and
-  // on iOS/many Android WebViews the browser had already committed to its
-  // own scroll by then, so preventDefault() no longer had any effect.
-  // Pointer Events sidestep that entirely: no manual dx/dy lock, no
-  // preventDefault needed, one code path covers touch, mouse, and pen.
+  // Native Pointer Events + touch-action:'pan-y'
   useEffect(() => {
     const el = cardRef.current;
     if (!el) return;
@@ -384,7 +365,7 @@ function CartItemRow({
   }, []);
 
   return (
-    <div className="relative overflow-hidden rounded-2xl anim-up">
+    <div className="relative overflow-hidden rounded-[20px] anim-up">
       <button
         onClick={() => {
           onRequestRemove();
@@ -392,7 +373,7 @@ function CartItemRow({
           setTranslateX(0);
         }}
         aria-label="মুছুন"
-        className="absolute top-0 right-0 bottom-0 flex items-center justify-center rounded-2xl bg-gradient-to-br from-rose-500 to-rose-600 text-white"
+        className="absolute top-0 right-0 bottom-0 flex items-center justify-center rounded-[20px] bg-gradient-to-br from-error to-red-600 text-white"
         style={{ width: SWIPE_MAX }}
       >
         <Trash2 className="h-5 w-5" strokeWidth={2} />
@@ -404,9 +385,9 @@ function CartItemRow({
           transition: drag.current.dragging ? 'none' : 'transform .25s ease',
           touchAction: 'pan-y',
         }}
-        className="relative flex cursor-grab gap-3 rounded-2xl border border-ink-50/80 bg-white p-3 product-card-shadow"
+        className="relative flex cursor-grab gap-3 rounded-[20px] border border-border bg-surface p-3 shadow-card"
       >
-        <div className="h-24 w-24 flex-shrink-0 rounded-2xl border border-ink-50/80 bg-white p-1.5 product-card-shadow">
+        <div className="h-24 w-24 flex-shrink-0 rounded-[18px] border border-border bg-white p-1.5 shadow-sm">
           <div className="h-full w-full overflow-hidden rounded-[14px]">
             <img
               loading="lazy"
@@ -423,7 +404,7 @@ function CartItemRow({
         <div className="flex flex-1 flex-col">
           <div className="flex-1">
             <h4 className="line-clamp-1 text-[14px] font-bold text-ink">{item.name}</h4>
-            <div className="mt-0.5 text-[12px] text-ink-200">
+            <div className="mt-0.5 text-[12px] text-ink-300">
               {item.size} · {item.flavor}
             </div>
             {item.message && (
@@ -433,17 +414,17 @@ function CartItemRow({
             )}
           </div>
           <div className="mt-auto flex items-center justify-between pt-1">
-            <div className="flex items-center rounded-full border border-ink-50 bg-white p-0.5">
+            <div className="flex items-center rounded-full border border-border bg-white p-0.5">
               <button
                 onClick={() => {
                   if (item.quantity <= 1) onRequestRemove();
                   else onDecrease();
                 }}
                 aria-label={item.quantity <= 1 ? 'মুছুন' : 'কমান'}
-                className="flex h-11 w-11 items-center justify-center rounded-full text-ink-200 transition hover:bg-cream"
+                className="flex h-10 w-10 items-center justify-center rounded-full text-ink-300 transition hover:bg-secondary/50"
               >
                 {item.quantity <= 1 ? (
-                  <Trash2 className="h-3.5 w-3.5" />
+                  <Trash2 className="h-3.5 w-3.5 text-error" />
                 ) : (
                   <Minus className="h-3.5 w-3.5" />
                 )}
@@ -453,12 +434,12 @@ function CartItemRow({
               </span>
               <button
                 onClick={onIncrease}
-                className="flex h-11 w-11 items-center justify-center rounded-full text-ink-200 transition hover:bg-cream"
+                className="flex h-10 w-10 items-center justify-center rounded-full text-ink-300 transition hover:bg-secondary/50"
               >
                 <Plus className="h-3.5 w-3.5" />
               </button>
             </div>
-            <span className="font-display text-[15px] font-bold tabular text-ink">
+            <span className="font-sans text-[15px] font-bold tabular text-ink">
               {formatINR(item.price * item.quantity)}
             </span>
           </div>
@@ -473,15 +454,14 @@ function Header({ title, onBack, badge }: { title: string; onBack: () => void; b
     <header className="flex flex-shrink-0 items-center justify-between px-5 pt-3 pb-3">
       <button
         onClick={onBack}
-        className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-ink transition active:scale-90"
-        style={{ boxShadow: '0 1px 2px rgba(26,19,17,.03), 0 6px 16px -10px rgba(26,19,17,.2)' }}
+        className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-ink border border-border shadow-card transition active:scale-90"
       >
         <ArrowLeft className="h-[20px] w-[20px]" strokeWidth={2} />
       </button>
       <div className="flex items-center gap-2">
-        <h1 className="font-display text-[16px] font-bold tracking-tight text-ink">{title}</h1>
+        <h1 className="font-sans text-[16px] font-bold tracking-tight text-ink">{title}</h1>
         {badge && (
-          <span className="rounded-full bg-ink-50 px-2 py-0.5 text-[11px] font-bold text-ink-200">
+          <span className="rounded-full bg-secondary px-2.5 py-0.5 text-[11px] font-bold text-coral">
             {badge}
           </span>
         )}
@@ -494,7 +474,7 @@ function Header({ title, onBack, badge }: { title: string; onBack: () => void; b
 function Row({ label, value, positive }: { label: string; value: string; positive?: boolean }) {
   return (
     <div className="flex items-center justify-between">
-      <span className="text-ink-200">{label}</span>
+      <span className="text-ink-300">{label}</span>
       <span className={`tabular font-bold ${positive ? 'text-emerald-600' : 'text-ink'}`}>
         {value}
       </span>

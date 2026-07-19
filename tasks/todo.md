@@ -3,28 +3,23 @@
 > One phase per run. Read `AGENT_LOG.md` first to find the next phase.
 > This file is rewritten each run to scope ONLY the current phase.
 
-## Current run → Phase 2: Core browse screens
+## Current run → Phase 3: Purchase flow
 
-Scope only: `HomeScreen.tsx`, `CategoriesScreen.tsx`, routed `src/screens/WishlistScreen.tsx`,
-and the documented category-accent handoff in `src/lib/data.ts` that Phase 1 explicitly
-left for this screen batch (plus this TODO, `AGENT_LOG.md`, optional new reusable lesson,
-and the phase ZIP).
+Scope only: `ProductScreen.tsx`, `CartScreen.tsx`, `CheckoutScreen.tsx`, `CouponsScreen.tsx`, `CustomizeScreen.tsx` (plus this TODO, `AGENT_LOG.md`, optional new reusable lesson, and the phase ZIP).
 
-### Phase 2 checklist
-- [x] Start clean: `git checkout -- . && git pull origin main`; confirmed BAS0001 Phase 1 is complete and **NEXT = Phase 2**.
-- [x] Read `AGENT_LOG.md` top-to-bottom and `tasks/lessons.md` in full; keep native touch gestures untouched and cross-check global overlays (BottomTabBar / QuickBar / modals) against these browse screens.
-- [x] Confirm which wishlist file is actually routed/imported. Result: `src/App.tsx` imports `./screens/WishlistScreen`; `src/components/WishlistScreen.tsx` is dead code and stays untouched.
-- [x] Retune `src/lib/data.ts` category `color` / `fg` pairs from the old saturated cocoa/plum/sage mix to soft pastel siblings of the new pink system.
-- [x] Rebuild `HomeScreen.tsx` into the premium soft-pink browse language: opaque white cards, generous spacing, soft elevation, refined banner/category rails, elegant reorder/for-you modules, and designed search-empty + notice modal states.
-- [x] Rebuild `CategoriesScreen.tsx` with the same system: overlay-safe header spacing, premium category chips, soft skeletons, improved results summary, and a solid filter sheet with no blur/glass regression.
-- [x] Rebuild routed `WishlistScreen.tsx`: overlay-safe header, elevated summary/chip rail, premium filtered-empty state, and polished guest/user empty states with explicit browse/sign-in CTAs.
-- [x] While touching each Phase-2 file, replace legacy `coral` / `ink` / `glass-*` / `font-display` / `font-brand` usage with semantic pink-system classes where practical; remove any leftover cocoa inline hexes in scoped files.
-- [x] Verify no Phase-2 modal/sheet sits under fixed global chrome (notably Home notice modal and Categories filter sheet vs BottomTabBar/QuickBar z-index).
-- [x] Run `npx tsc --noEmit` and compare with baseline; run `npm run build`; fix every new error now. Result: baseline clean-main = **159** TypeScript error lines, Phase 2 = **85** lines, diff showed **zero new errors** and removed the old Home/Categories browse-screen `unknown` errors; `npm run build` **✓ passed** in 5.94s.
-- [x] Re-read the touched files against `tasks/lessons.md`, verify every claimed change against source, package ONLY Phase-2 files into one timestamped ZIP, and prepend a Phase-2 handoff entry to `AGENT_LOG.md` with **NEXT = Phase 3**.
+### Phase 3 checklist
+- [ ] Start clean: `git checkout -- . && git pull origin main`; confirmed BAS0001 Phase 2 is complete and **NEXT = Phase 3**.
+- [ ] Read `AGENT_LOG.md` top-to-bottom and `tasks/lessons.md` in full; keep native touch gestures untouched and cross-check global overlays (BottomTabBar / QuickBar / modals) against these purchase screens.
+- [ ] Rebuild `CustomizeScreen.tsx` to remove `.glass-strong` / backdrop-blur treatment and replace with solid opaque white cards + soft elevation shadows. Eliminate legacy brown/cocoa styles, replace with premium soft-pink elements.
+- [ ] Rebuild `CouponsScreen.tsx`: replace old cocoa background (`#FBF6EF`) with premium background (`#FFF9FB`), replace cocoa gradient with premium pink gradient, fix ticket notches to match the page background.
+- [ ] Rebuild `CartScreen.tsx` into the premium soft-pink language: opaque white cards (`bg-surface`), generous 8px-grid spacing, soft pink-tinted shadows, and elegant empty-state / add-on designs. Keep native swipe-to-delete event handlers completely untouched to prevent regression.
+- [ ] Rebuild `ProductScreen.tsx`: replace `.glass-tint` and `.glass-strong` with solid opaque premium card surfaces, change active select state from cocoa (`#5C3A22`) to primary pink, retune brand/contact cards to soft-pink accents, and verify bottom sticky CTA layouts. Ensure image gallery swipe native listeners remain untouched.
+- [ ] Rebuild `CheckoutScreen.tsx`: remove `.glass-strong` from sections, inputs, and components. Change the checkout CTA button from the dark-cocoa gradient (`#5C3A22`) to primary brand pink (`bg-coral`) with `shadow-btn`. Tune section icons, edit buttons, and active states to soft-pink.
+- [ ] Verify that no checkout footer/button overlaps with BottomTabBar or QuickBar.
+- [ ] Run `npx tsc --noEmit` and compare with baseline; run `npm run build`; fix every new error now.
+- [ ] Re-read the touched files against `tasks/lessons.md`, verify every claimed change against source, package ONLY Phase-3 files into one timestamped ZIP, and prepend a Phase-3 handoff entry to `AGENT_LOG.md` with **NEXT = Phase 4**.
 
-### Explicit Phase-2 guardrails
-- `HomeScreen`, `CategoriesScreen`, and routed `WishlistScreen` all consume the shared Phase-1 `ProductCard`; re-check layout usage across all three after the screen-level spacing changes.
-- Do not touch Cart/Product swipe code or any other drag gesture. If a browse-screen visual change tempts a gesture rewrite, stop — that belongs elsewhere.
-- Keep `cart` vs `checkout` routing distinct. Any CTA from these browse screens that goes to shopping should still enter the existing BAS flow correctly.
-- `src/components/WishlistScreen.tsx` is not routed; do not waste scope editing the dead duplicate.
+### Explicit Phase-3 guardrails
+- Do not regress the native touch gallery/swipe gestures on ProductScreen and CartScreen.
+- Keep `cart` vs `checkout` routing distinct.
+- No editing of any other files outside Phase 3's scope.

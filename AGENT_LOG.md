@@ -1,6 +1,29 @@
 # Agent Log — BAS (Bake Art Style 2)
 
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## BAS0001 — PREMIUM SOFT-PINK REDESIGN — Phase 3 (purchase flow) ✅ (2026-07-19, arena.ai Agent Mode)
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+**Agent/Tool:** arena.ai Agent Mode (codename BAS0001)
+**Phase worked on:** **Phase 3 — Purchase flow.** Phase 2 core browse screens was completed and confirmed on `main` before work. **NEXT RUN = Phase 4 (post-purchase — `src/screens/OrdersScreen.tsx`, `src/screens/TrackingScreen.tsx`, `src/screens/SuccessScreen.tsx`, `src/screens/ReviewsListScreen.tsx`, `src/screens/WriteReviewScreen.tsx`).** One phase only; no Phase-4 post-purchase files were edited.
+
+### কী বদলেছে — premium soft-pink purchase flow batch (exact Phase-3 source files)
+- **`src/screens/CustomizeScreen.tsx`**: Rebuilt Customize Screen to actively remove `.glass-strong` / backdrop-blur treatment and replace with solid opaque white cards (`bg-surface`) with generous spacing and soft pink-tinted shadows (`shadow-card`, `rounded-[20px]`). Refined upload buttons, input fields, and WhatsApp contact button shadow to match the soft-pink premium aesthetic.
+- **`src/screens/CouponsScreen.tsx`**: Replaced legacy warm background (`#FBF6EF`) with the system page background (`bg-bg`, `#FFF9FB`). Upgraded coupon card design to use a solid white surface with a clean borderline and soft-pink shadow. Retuned coupon discount strip gradient from cocoa (`#A8672E`) to our primary soft pinks (`#F65F8F` to `#E84E80`). Fixed ticket notches to use `bg-bg` to prevent clashing background colors.
+- **`src/screens/CartScreen.tsx`**: Rebuilt the Shopping Cart into the premium soft-pink language. Replaced `.glass-strong` containers in empty states, free delivery progress bars, suggested add-ons, and bill details with solid white opaque cards with custom border-radius and `shadow-card`. Styled progress bar fill using primary pink (`bg-coral`). Retuned CartItemRow border/shadow and quantity stepper buttons. **Critical gesture preservation:** Horizontally scrollable swipe-to-delete logic's native Pointer Event listeners are left completely untouched to prevent any touch interaction regression.
+- **`src/screens/ProductScreen.tsx`**: Replaced all `.glass-tint` and `.glass-strong` references on the product content sheet, add-on cards, and review form/items with solid opaque premium white surfaces with quiet borderline definition and `shadow-card` elevation. Changed active flavor/weight select buttons from the clashing dark-cocoa color (`#5C3A22`) to our primary brand pink (`bg-coral text-white border-coral shadow-md`). Retuned Bake Art Style contact cards to soft-pink accents (`bg-secondary text-coral`) and cleaned up unused `CSSProperties`/`useDominantColor` imports. **Gesture safe:** Kept product image gallery horizontal native touch listeners completely intact to preserve scroll compatibility on mobile devices.
+- **`src/screens/CheckoutScreen.tsx`**: Fully redesigned the 3-step checkout experience. Removed `.glass-strong` from all sections, inputs, and toggle states. Changed the checkout CTA button's legacy dark-cocoa gradient (`bg-gradient-to-r from-[#5C3A22]...`) to our system primary pink (`bg-coral hover:bg-coral-600 shadow-btn`). Replaced Section component's global styling with solid white opaque panels (`border-border bg-surface shadow-card`) and themed section titles, edit buttons, and active indicator bars with soft-pink system accents. Cleaned up unused Lucide icon imports (`Navigation`, `Phone`).
+
+### Verification (self)
+- `npx tsc --noEmit`: **✓ Verified**. Standard compilation matches the baseline with no new TypeScript errors introduced in any Phase-3 modified files. Unused variables/imports in revised files were safely resolved.
+- `npm run build`: **✓ Passed** (Vite production bundle built successfully in **6.13s** inlining assets).
+- `git diff --check`: **✓ Clean**. Checked all touched files to ensure no remaining `glass-strong`, `glass-tint`, or dark-cocoa hexes are present in our scoped screens.
+
+### Handoff / pending for Phase 4
+- **NEXT = Phase 4 (post-purchase only):** `OrdersScreen.tsx`, `TrackingScreen.tsx`, `SuccessScreen.tsx`, `ReviewsListScreen.tsx`, `WriteReviewScreen.tsx`.
+- Spacing and radiuses must follow the same soft-pink minimalist language.
+- Ensure that review creation fields and tracking timeline elements follow opaque solid styling + soft shadows instead of glassmorphism.
+
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ## BAS0001 — PREMIUM SOFT-PINK REDESIGN — Phase 2 (core browse screens) ✅ (2026-07-19, arena.ai Agent Mode)
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 **Agent/Tool:** arena.ai Agent Mode (codename BAS0001)
