@@ -1,4 +1,32 @@
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## BAS0009 — Notification badge transition integration (single phase, complete) ✅ (2026-07-19, arena.ai Agent Mode)
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**Task:** Buddy provided a Transitions.dev-style self-contained notification badge animation snippet and asked to use it for notifications.
+
+**In scope (files touched):** `src/components/NotificationBadge.tsx`, `src/components/HomeTopBar.tsx`, `src/components/QuickBar.tsx`, `AGENT_LOG.md`
+**Out of scope (untouched):** notification data/store behavior, `NotificationsSheet.tsx`, cart/wishlist badge behavior, business logic.
+
+### কী বদলেছে
+- Added `src/components/NotificationBadge.tsx`, adapted from Buddy's provided snippet:
+  - Self-injects the transition CSS once via `#transitions-p1`.
+  - SSR/document guard included.
+  - Uses the slide + pop/fade/blur open/close transition with `prefers-reduced-motion` support.
+  - Controlled by real notification count instead of demo click-toggle state.
+  - Supports `primary` and `light` tone so HomeTopBar can keep its white-on-coral badge style.
+- `HomeTopBar.tsx`: unread notification badge now uses `NotificationBadge` on the bell button.
+- `QuickBar.tsx`: notification action badge in the quick actions popover now uses `NotificationBadge`.
+
+### Verification (self)
+- `npx tsc --noEmit`: still reports the known **31 pre-existing errors**; no new errors from `NotificationBadge`, `HomeTopBar`, or `QuickBar`.
+- `npm run build`: ✓ passed.
+- No notification read/unread logic changed; this is animation/presentation only.
+
+### Handoff / next
+- If Buddy wants the same transition on cart/wishlist count badges too, that should be a separate small pass because this request was specifically for notification.
+
+
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ## BAS0008 — Profile + Cake typography/spacing downscale to match HomeScreen rhythm (single phase, complete) ✅ (2026-07-19, arena.ai Agent Mode)
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 

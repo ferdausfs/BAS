@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Bell, Heart, ShoppingBag, Wallet } from 'lucide-react';
 import { useUI, useCart, useUser, useAuthStore, useWallet, formatINR, cartSubtotal } from '../lib/store';
+import NotificationBadge from './NotificationBadge';
 
 interface Props { onNotificationsOpen: () => void; }
 
@@ -59,7 +60,7 @@ export default function QuickBar({ onNotificationsOpen }: Props) {
         <div className={`absolute right-0 top-[calc(100%+8px)] rounded-[20px] border border-border bg-surface p-3 ${showCheckout && hasWallet ? 'w-64' : 'w-52'}`} style={popoverSurface}>
           <div className="flex gap-2">
             <button type="button" onClick={() => { setOpen(false); onNotificationsOpen(); }} className={actionCard}>
-              {unreadCount > 0 && <span className="absolute right-1.5 top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[9px] font-bold text-white">{unreadCount}</span>}
+              <NotificationBadge count={unreadCount} />
               <span className={actionIcon}><Bell className="h-4 w-4" strokeWidth={1.8} /></span>
               <span className="text-[10px] font-medium text-text-secondary">Notif</span>
             </button>

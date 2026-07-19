@@ -1,6 +1,7 @@
 import { Bell, ChevronDown, MapPin } from 'lucide-react';
 import { useUI, useLocation, useAuthStore } from '../lib/store';
 import SearchBar from './SearchBar';
+import NotificationBadge from './NotificationBadge';
 
 interface Props {
   search: string;
@@ -67,11 +68,7 @@ export default function HomeTopBar({
           aria-label="Notifications"
         >
           <Bell className="h-[21px] w-[21px]" strokeWidth={1.8} />
-          {unreadCount > 0 && (
-            <span className="absolute right-[7px] top-[7px] flex h-4 min-w-4 items-center justify-center rounded-full bg-white px-1 text-[9px] font-bold text-primary">
-              {unreadCount}
-            </span>
-          )}
+          <NotificationBadge count={unreadCount} tone="light" className="right-[7px] top-[7px]" />
         </button>
       </div>
 
