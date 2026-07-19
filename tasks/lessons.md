@@ -213,3 +213,25 @@ token (e.g. `font-display`) across many files, collapse ONLY internal multi-spac
 runs with a leading-non-space guard — `re.sub(r'(\S)[ \t]{2,}', r'\1 ', s)` —
 NEVER a bare `re.sub(r'\s{2,}',' ',s)`, or you destroy JSX indentation (leading
 line whitespace is a horizontal run with no `\S` before it, so the guard skips it).
+
+
+## Phase-scoped spacing pass: retuning a shared component is only safe if it lives inside the current batch
+During BAS0002 Phase L1 (browse batch A: HomeScreen / Categories / Wishlist), the reusable
+`SectionHeader` component needed retuning to adopt the L0 `.layout-section-*` rhythm. Before editing
+it, `grep` its usages: it turned out `SectionHeader` is imported by **only HomeScreen** (3 uses), so
+retuning it was safely inside the L1 batch. If it had also been used by ProductScreen / CartScreen
+(later phases), changing it would have leaked unverifiable spacing regressions into screens this run
+must not touch. **Fix going forward:** when a phase wants to adopt a foundation primitive via a SHARED
+component (SectionHeader, ProductCard, etc.), first `grep -rn` every consumer; if any consumer is
+outside the current phase's screen set, either (a) apply the change per-screen inline instead, or
+(b) explicitly note the cross-phase effect in `AGENT_LOG.md` and accept it's a convergent change the
+final-consistency phase will audit.
+
+## Page-edge padding swaps (px-5 to px-6) must target page-edge wrappers only, never blanket-replace
+When bringing screens to the reference's 24px page edge (`.page{padding:0 1.5rem}` -> Tailwind `px-6`),
+the SAME class token `px-5` is also used for BUTTON-internal horizontal padding (e.g. `...rounded-[18px]
+bg-primary px-5 text-[13px]...`). A blanket `s.replace('px-5','px-6')` therefore silently widens
+buttons too. **Fix:** enumerate the exact page-edge substrings (section wrappers, content divs, the
+shared header's internal pad) and replace each with a count assertion; keep the button-internal `px-5`
+untouched. Always `grep` afterward to confirm zero page-edge `px-5` remain AND the button `px-5` count
+is unchanged.

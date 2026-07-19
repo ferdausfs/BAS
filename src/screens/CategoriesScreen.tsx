@@ -135,7 +135,7 @@ export default function CategoriesScreen() {
 
   return (
     <div className="flex h-full flex-col bg-bg">
-      <header className="flex-shrink-0 px-5 pb-4 pt-20 pr-18">
+      <header className="flex-shrink-0 px-6 pb-4 pt-20 pr-18">
         <div>
           <p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-primary">Curated browse</p>
           <h1 className="mt-2 text-[24px] font-bold tracking-[-0.03em] text-text">
@@ -159,7 +159,7 @@ export default function CategoriesScreen() {
         </div>
       </header>
 
-      <div className="flex items-center gap-3 px-5 pb-3">
+      <div className="flex items-center gap-3 px-6 pb-3">
         <div className="no-scrollbar flex flex-1 gap-2.5 overflow-x-auto pb-1">
           {[ALL_CAT, ...categories].map((category) => {
             const isActive = active === category.id;
@@ -191,7 +191,7 @@ export default function CategoriesScreen() {
         <button
           type="button"
           onClick={() => setFilterOpen(true)}
-          className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-[18px] border border-border bg-surface text-text shadow-card transition active:scale-95"
+          className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-surface text-text shadow-card transition active:scale-95"
           aria-label="Open filters"
         >
           <SlidersHorizontal className="h-[18px] w-[18px]" strokeWidth={1.9} />
@@ -199,7 +199,7 @@ export default function CategoriesScreen() {
         </button>
       </div>
 
-      <div className="no-scrollbar flex-1 overflow-y-auto px-5 pb-36">
+      <div className="no-scrollbar flex-1 overflow-y-auto px-6 pb-36">
         <div className="mb-4 flex flex-wrap items-center gap-2">
           {activeChips.map((chip) => (
             <span key={chip} className="rounded-full border border-border bg-surface px-3 py-1.5 text-[12px] font-medium text-text-secondary shadow-card">

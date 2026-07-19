@@ -1,4 +1,65 @@
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## BAS0002 — Layout & Spacing Pass — Phase L1 (Browse batch A) (2026-07-19, arena.ai Agent Mode)
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+**Phase worked on:** **Phase L1 — Browse (batch A):** `HomeScreen.tsx`, `CategoriesScreen.tsx`,
+`WishlistScreen.tsx` (the routed one at `src/screens/`). The previous BAS0002 entry is Phase L0, so this
+run correctly starts at L1. **NEXT RUN = Phase L2 (Purchase flow batch B).**
+
+### কী বদলেছে — measured against the GroceryApp reference (no colors touched)
+All changes are spacing / structure only — the reference's *proportions* were translated into BAS's
+fixed-rem Tailwind scale; every color stays the finished soft-pink token set (no hex, no token swap).
+
+- **`.page` → 24px page edge** (`padding:0 1.5rem`): applied `px-5`(20px) → `px-6`(24px) on every
+  page-edge wrapper / content div across the three screens, AND on `SectionHeader`'s internal padding
+  (it is HomeScreen-only — 3 uses — so retuning it is safely inside this phase). The L0
+  `.layout-page` (1.5rem) primitive is now actually adopted on these screens.
+- **`.back` / `.round-act` → 44px circle, white surface, shadow, NO border**:
+  - `WishlistScreen` back button `rounded-[16px] border border-border` → `rounded-full` (border
+    dropped) — matches reference `.back` (2.75rem circle, `background:#fff`, shadow).
+  - `CategoriesScreen` filter button `rounded-[18px] border border-border` → `rounded-full`
+    (border dropped) — matches reference `.round-act`.
+  - `WishlistScreen` "Saved cakes" inline round action `rounded-[18px]` → `rounded-full`.
+  - Icons kept at 20px (`h-5 w-5`) = reference `.back svg` 1.25rem.
+- **`.sec-row` / `.sec-title` / `.see-all` rhythm**: `SectionHeader` trailing "See all" action tuned
+  toward reference `.see-all` (≈11px / weight 500) — `text-[13px] font-semibold` → `text-[12px]
+  font-medium`, chevron `h-4` → `h-3.5`. Color intentionally kept `text-primary` (a semantic token,
+  NOT a literal hex — no color change). Title stays 20px / 600 (= `.sec-title`).
+- **Section vertical rhythm**: `HomeScreen` browse-section top gaps `mt-8`(32px) → `mt-6`(24px) to
+  match reference `.sec-row` `margin:1.5rem .2rem 1rem` (1.5rem top). Content gap below each header
+  stays `mt-4`(16px) = reference 1rem bottom. First banner (`mt-6`) and footer (`mt-9`) unchanged.
+- **`.chip-row` gap .8rem (≈12.8px)**: `WishlistScreen` category chip-row `gap-2.5` → `gap-3`.
+- **QuickBar-safe headers preserved**: `pt-20 pr-18` clearance on `CategoriesScreen` & `WishlistScreen`
+  headers left intact (lesson: floating QuickBar sits at `top-4 right-4 z-[45]`, must not be crowded).
+- **Dead duplicate deleted**: `src/components/WishlistScreen.tsx` (unrouted — confirmed `grep` finds
+  zero imports; BAS0001 Phase 2 / 6 already flagged it dead). Logged here per the brief's cleanup
+  note. Buddy / Claude: also `git rm` it when applying / pushing this phase.
+
+### Verification (self)
+- `npx tsc --noEmit`: **✓ 31 errors, identical to the pre-phase baseline** (`/tmp/baseline_tsc.txt`)
+  — `diff` (sorted) shows **zero new and zero removed** errors. All 31 are pre-existing logic errors
+  (App.tsx / DebugMetrics / hooks / etc.) — explicitly OUT of scope, none touched.
+- `npm run build`: **✓ Passed** (Vite production bundle built in ~5.9s).
+- Reference-gray grep (`#909090 #7f7f7f #9b9b9b #969696 #8f8f8f #9c9c9c #acacac #c0c0c0 #f7f7f7
+  #f8f8f8 #f4f4f4 #f5f4f4 #d9d9d9 #e7e7e7 #ededed`) across the 4 changed files → **ZERO** literals.
+- `git diff` cross-check: **no color hex, no `@theme` / token color change, `BottomTabBar.tsx` ZERO
+  diff, `ProductScreen` / `CartScreen` (gesture / overlay) files untouched, no business logic changed.**
+- `git diff --stat` (source): `SectionHeader.tsx` (6±), `HomeScreen.tsx` (22±), `CategoriesScreen.tsx`
+  (8±), `WishlistScreen.tsx` (10±), + deleted `src/components/WishlistScreen.tsx`.
+- Claims re-verified against the actual file (lesson): `px-6` counts confirmed; `pt-20 pr-18` still
+  present; the page-edge `px-5`→`px-6` swap did NOT bleed into HomeScreen CTA button-internal `px-5`
+  (those were left intact).
+
+### Handoff / next
+- **NEXT RUN = Phase L2 — Purchase flow (batch B):** `ProductScreen.tsx`, `CartScreen.tsx`,
+  `CheckoutScreen.tsx`, `CouponsScreen.tsx`, `CustomizeScreen.tsx`. Re-measure spacing / structure
+  against reference `product` / `cart` / `order-type`+`delivery-address`+`review-summary`+`payments` /
+  `payments` list-rows / general conventions. **Do NOT touch ProductScreen / CartScreen gesture code**
+  (native touch listeners) — only padding / spacing around them.
+- Buddy / Claude verify-then-push loop: apply the 4 modified source files + this log, and
+  `git rm src/components/WishlistScreen.tsx` (dead duplicate deleted this phase).
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ## BAS0002 — Layout & Spacing Pass — Phase L0 (2026-07-19, arena.ai Agent Mode)
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 **Phase worked on:** **Phase L0 — Foundation.** No BAS0002 entry existed, so this run

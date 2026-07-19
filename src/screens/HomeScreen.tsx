@@ -177,7 +177,7 @@ export default function HomeScreen({
               subtitle="Seasonal picks, limited bundles, and soft-launch specials"
               action={{ label: 'See all', onClick: () => go({ name: 'tabs', tab: 'categories' }) }}
             />
-            <div className="mt-4 px-5">
+            <div className="mt-4 px-6">
               <div className="rounded-[30px] border border-border bg-surface p-2 shadow-card">
                 <div className="relative overflow-hidden rounded-[24px]">
                   <div className="relative aspect-[1.56/1] w-full overflow-hidden bg-secondary">
@@ -284,13 +284,13 @@ export default function HomeScreen({
           </section>
         )}
 
-        <section className="mt-8 anim-up delay-2">
+        <section className="mt-6 anim-up delay-2">
           <SectionHeader
             title="Explore Categories"
             subtitle="Browse by occasion with soft pastel cues and quick jumps"
             action={{ label: 'See all', onClick: () => go({ name: 'tabs', tab: 'categories' }) }}
           />
-          <div className="no-scrollbar mt-4 flex gap-3 overflow-x-auto px-5 pb-1">
+          <div className="no-scrollbar mt-4 flex gap-3 overflow-x-auto px-6 pb-1">
             {categories.map((category) => (
               <button
                 key={category.id}
@@ -312,7 +312,7 @@ export default function HomeScreen({
 
         <OccasionSheet open={occasionSheetOpen} onClose={() => setOccasionSheetOpen(false)} onSelect={(category, button) => openOccasion(category, button)} />
 
-        <div className="mt-5 space-y-3 px-5">
+        <div className="mt-5 space-y-3 px-6">
           {!user && (
             <div className="anim-up rounded-[26px] border border-border bg-surface p-4 shadow-card">
               <div className="flex items-center gap-3">
@@ -359,7 +359,7 @@ export default function HomeScreen({
         </div>
 
         {searchResults.length > 0 && (
-          <section className="mt-8 px-5 anim-up delay-2">
+          <section className="mt-6 px-6 anim-up delay-2">
             <div className="rounded-[28px] border border-border bg-surface p-4 shadow-card">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
@@ -393,7 +393,7 @@ export default function HomeScreen({
         )}
 
         {searchTerm && searchResults.length === 0 && (
-          <section className="mt-8 px-5 anim-up delay-2">
+          <section className="mt-6 px-6 anim-up delay-2">
             <div className="rounded-[30px] border border-border bg-surface px-6 py-9 text-center shadow-card">
               <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-[22px] bg-secondary text-primary shadow-card">
                 <Search className="h-7 w-7" strokeWidth={1.75} />
@@ -428,7 +428,7 @@ export default function HomeScreen({
           const orderItems = safeArray<CartItem>(lastOrder?.items);
           const firstItem = orderItems[0];
           return (
-            <section className="mt-8 px-5 anim-up delay-3">
+            <section className="mt-6 px-6 anim-up delay-3">
               <button
                 type="button"
                 onClick={() => {
@@ -462,13 +462,13 @@ export default function HomeScreen({
           );
         })()}
 
-        <section className="mt-8 anim-up delay-3">
+        <section className="mt-6 anim-up delay-3">
           <SectionHeader
             title="Featured Products"
             subtitle="Best sellers and fresh arrivals in the BAS collection"
             action={{ label: 'See all', onClick: () => go({ name: 'tabs', tab: 'categories' }) }}
           />
-          <div className="mt-4 grid grid-cols-2 gap-4 px-5">
+          <div className="mt-4 grid grid-cols-2 gap-4 px-6">
             {featuredProducts.map((product) => (
               <ProductCard
                 key={product.id}
@@ -482,7 +482,7 @@ export default function HomeScreen({
           </div>
         </section>
 
-        <section className="mt-8 px-5 anim-up delay-4">
+        <section className="mt-6 px-6 anim-up delay-4">
           <div className="overflow-hidden rounded-[30px] border border-border bg-surface p-5 shadow-card">
             <div className="flex items-center gap-4">
               <div className="min-w-0 flex-1">
@@ -513,7 +513,7 @@ export default function HomeScreen({
           </div>
         </section>
 
-        <div className="mt-9 px-5 pb-4 text-center">
+        <div className="mt-9 px-6 pb-4 text-center">
           <div className="text-[18px] font-semibold tracking-[-0.02em] text-text">Bake Art Style</div>
           <div className="mt-1 text-[12px] font-medium uppercase tracking-[0.18em] text-text-tertiary">Handcrafted since 2018</div>
         </div>

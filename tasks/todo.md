@@ -1,86 +1,50 @@
-# Phase 6 — Final consistency pass (ALL screens) — soft-pink redesign
+# BAS0002 — Phase L1 TODO (Browse batch A: HomeScreen, CategoriesScreen, WishlistScreen)
 
 ## Scope
-Full-repo consistency + leftover-straggler hunt. Phases 0–5 are confirmed done on
-`main`. This run is the dedicated final pass. One phase only; stop after.
+Layout/spacing precision pass for the three browse screens, measured against the
+GroceryApp reference (`design-reference/GroceryApp/css/style.css` + `js/screens.js`
+`home` function). Re-measure & correct: page-edge padding, app-bar / back-button /
+round-action geometry, section-header rhythm, section vertical rhythm, chip-row gap.
+NO color values, NO behavior/logic, NO BottomTabBar, NO gesture/overlay code, NO ProductCard.
 
 ## Pre-flight (done at start)
-- [x] `git checkout -- . && git pull origin main` — clean, up to date.
-- [x] Read `AGENT_LOG.md` top → Phase 5 done; NEXT = Phase 6.
-- [x] Read `tasks/lessons.md` fully — bulk-replace w/ count assertions, QuickBar-safe
-      headers, verify claims against real file, native touch listeners, etc.
-- [x] Baseline `tsc --noEmit` = 63 lines (all pre-existing logic errors in
-      App/hooks/lib/some-screens — OUT of scope, do NOT fix). `npm run build` = ✓.
-- [x] Confirm `src/components/WishlistScreen.tsx` is DEAD (App.tsx:17 imports
-      `./screens/WishlistScreen`; nothing imports the components/ duplicate) → leave it.
+- [x] `git checkout -- . && git pull origin main` — clean; L0 already merged.
+- [x] Read `AGENT_LOG.md` → newest BAS0002 entry = Phase L0 → NEXT = Phase L1.
+- [x] Read `tasks/lessons.md` fully (QuickBar-safe headers, bulk-replace w/ counts,
+      verify-claim-against-file, native touch, search-whole-file, etc.).
+- [x] Read reference `style.css` (`.appbar/.back/.round-act/.badge-pill/.page/.sec-row/
+      .sec-title/.see-all/.chip-row`) and `screens.js` `home`.
+- [x] `npm ci` + baseline `npx tsc --noEmit` = 31 pre-existing logic errors (out of scope).
+- [x] Confirm `SectionHeader` is HomeScreen-only (3 uses) → safe to retune in this phase.
 
-## Straggler hunt (grep -rn across src/) — STATUS
-### A. `backdrop-blur` (must be zero)
-- [x] `ProductScreen.tsx:316` "Out of Stock" badge `backdrop-blur` → solid
-      `bg-surface shadow-card`. (Native touch listeners at 97–103 UNTOUCHED.)
-
-### B. `bg-gradient` / `linear-gradient` JSX (cocoa-era → remove; functional → keep)
-- [x] `CartScreen.tsx:376` delete button `bg-gradient-to-br from-error to-red-600`
-      → `bg-error` (solid).
-- [x] `ProductScreen.tsx:292` premium tier badge
-      `bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600` → `bg-gold` (solid).
-- [x] `ProductScreen.tsx:285` decorative top `from-secondary/80 to-transparent` scrim
-      (no text on image; controls are solid) → REMOVED.
-- [x] `LocationGate.tsx:84` inline cocoa `linear-gradient(#FDF8F1,#F3E4D0,#E8C68F)`
-      → solid `background:'#FFF9FB'` (Phase-0 permitted trivial swap; presentation-only).
-- [~] KEEP (documented intentional): `HomeScreen.tsx:197` dark legibility scrim behind
-      white banner text; `CouponsScreen.tsx:84` brand-pink discount strip (Phase 3
-      deliberate); `index.css` `.shimmer` skeleton infra. None are cocoa-era leftovers.
-
-### C. `font-display` / `font-brand` (must be zero in live code)
-- [x] Remove class token from: AuthSheet(2), ErrorBoundary(1), NotificationsSheet(1),
-      OccasionSheet(1), PaymentAppPopup(1), ProductCard(2), SectionHeader(1),
-      WalletHistoryModal(2), CheckoutScreen(8). Default body font is already
-      Poppins+Hind Siliguri, so removal is render-safe (weights/sizes preserved).
-- [x] `src/index.css`: remove `--font-display` / `--font-brand` from `@theme`; remove
-      `.font-display` / `.font-brand` class defs; update the two comments that named them.
-- [~] `src/components/WishlistScreen.tsx` (dead) keeps its old `font-display` — left
-      untouched per handoff (unrouted).
-
-### D. Dead CSS class defs (no JSX consumer → remove for grep-zero)
-- [x] `src/index.css`: remove `.glass-strong`, `.glass-deep`, `.glass-tint`, `.glass`,
-      `.glass-subtle`, `.glass-dark` (all unused after phases 1–5 solid-surface swap).
-- [x] `src/index.css`: remove `.mesh-warm` (unused).
-- [x] `src/index.css`: remove unused `.hairline`, `.text-gradient-coral`,
-      `.badge-premium`, `.confetti-dots` (verified 0 JSX usages). Keep `.shimmer`.
-
-### E. Off-system shadow normalization (3 files, 9 hits)
-- [x] `ProductScreen.tsx`: active flavor/weight chips (486/523/568) `shadow-md` →
-      `shadow-btn` (pressed/active pink). Floating control + count badge
-      (704/783/790/797) `shadow-md` → `shadow-card`.
-- [x] `AdminPanel.tsx:1333` close button `shadow-lg` → `shadow-card`.
-
-### F. Gesture / fixed-overlay regression check
-- [x] `ProductScreen.tsx` native `touchstart`/`touchmove`(passive:false)/`touchend`
-      at 97–103 UNTOUCHED.
-- [x] `CartScreen.tsx` swipe/delete listeners (354–357) UNTOUCHED (pre-existing
-      pointer-based impl left as-is; noted as pending behavior fix, NOT a visual
-      regression).
-- [x] No fixed-overlay (BottomTabBar z100 / QuickBar z45 / sheets) edits this phase.
+## Edits (this phase)
+- [x] `src/components/SectionHeader.tsx`: adopt L0 `.layout-section-*` rhythm — internal
+      page-edge px-5→px-6 (matches new 24px convention); trailing "See all" action tuned
+      toward reference `.see-all` (text-[13px] font-semibold → text-[12px] font-medium,
+      chevron h-4→h-3.5). No color change (stays `text-primary`).
+- [x] `src/screens/HomeScreen.tsx`: page-edge px-5→px-6 on all page-edge wrappers/content
+      divs (NOT button-internal px-5). Normalize browse-section top rhythm mt-8→mt-6 to
+      match reference `.sec-row` 1.5rem top margin (content gap below header stays mt-4=16px).
+- [x] `src/screens/CategoriesScreen.tsx`: page-edge px-5→px-6 (header, chips row, scroll
+      container) — KEEP `pt-20 pr-18` QuickBar clearance. Filter button → reference
+      `.round-act` 44px circle (rounded-full, shadow-card, drop border).
+- [x] `src/screens/WishlistScreen.tsx`: page-edge px-5→px-6 (header, scroll container) —
+      KEEP `pt-20 pr-18`. Back button → reference `.back` 44px circle (rounded-full,
+      shadow-card, drop border). Saved-cakes inline round action → rounded-full.
+      Category chip-row gap-2.5→gap-3 (reference `.chip-row` .8rem).
+- [x] Delete dead `src/components/WishlistScreen.tsx` (unrouted duplicate confirmed in
+      BAS0001 Phase 2/6). Clearly logged.
 
 ## Verify (self)
-- [ ] `npx tsc --noEmit` — zero NEW errors vs `/tmp/baseline_tsc.txt` (63 lines).
+- [ ] `npx tsc --noEmit` — zero NEW errors vs /tmp/baseline_tsc.txt (31 lines).
 - [ ] `npm run build` — must pass.
-- [ ] grep-zero check: `glass-*`, `backdrop-blur`, `Fraunces`(code), `Great Vibes`(code),
-      inline cocoa hexes, `bg-gradient`(cocoa) → only documented intentional exceptions.
-- [ ] Re-read each touched file for lesson compliance (depth≠hue, native touch, etc.).
+- [ ] `git diff` — no color hex / no BottomTabBar / no gesture / no logic changes.
+- [ ] Grep for reference-gray literals (#909090 etc.) in changed files → zero.
+- [ ] Re-read each touched file vs lessons (QuickBar-safe header, verify claims, etc.).
 
 ## Package & handoff
-- [ ] ZIP only files changed this phase → `bas-redesign-phase6-<ts>.zip`.
-- [ ] New AGENT_LOG.md entry at TOP: phase #, what changed, tsc/build results, NEXT=done.
-- [ ] `git checkout -- package-lock.json` (revert npm-install churn) before zip.
+- [ ] ZIP only files changed this phase → `bas0002-layout-phaseL1-<ts>.zip`.
+- [ ] New AGENT_LOG.md entry at TOP: phase #, what changed + reference rules, verify
+      results, NEXT = Phase L2 (Purchase flow batch B).
+- [ ] `git checkout -- package-lock.json` (revert npm-ci churn) before zip.
 - [ ] Add any new lesson to `tasks/lessons.md`.
-
----
-
-# BAS0002 — Phase L0 TODO (2026-07-19)
-
-- [x] Read the BAS0002 handoff, lessons, and GroceryApp chrome/layout rules.
-- [x] Add reusable BAS semantic layout primitives for page edges, app bars, back/round actions, and section headers.
-- [x] Keep this foundation-only: no screen bodies, bottom tab bar, colors, or behavior changes.
-- [x] Run available verification (toolchain unavailable in fresh clone; see AGENT_LOG).

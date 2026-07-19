@@ -45,12 +45,12 @@ export default function WishlistScreen({
 
   return (
     <div className="flex h-full flex-col bg-bg">
-      <header className="flex-shrink-0 px-5 pb-4 pt-20 pr-18">
+      <header className="flex-shrink-0 px-6 pb-4 pt-20 pr-18">
         <div className="flex items-center gap-3">
           <button
             type="button"
             onClick={back}
-            className="flex h-11 w-11 items-center justify-center rounded-[16px] border border-border bg-surface text-text shadow-card transition active:scale-95"
+            className="flex h-11 w-11 items-center justify-center rounded-full bg-surface text-text shadow-card transition active:scale-95"
             aria-label="Go back"
           >
             <ArrowLeft className="h-5 w-5" strokeWidth={2} />
@@ -67,7 +67,7 @@ export default function WishlistScreen({
         </p>
       </header>
 
-      <div className="no-scrollbar flex-1 overflow-y-auto px-5 pb-28">
+      <div className="no-scrollbar flex-1 overflow-y-auto px-6 pb-28">
         {saved.length > 0 && (
           <section className="rounded-[30px] border border-border bg-surface p-4 shadow-card">
             <div className="flex items-start justify-between gap-4">
@@ -82,12 +82,12 @@ export default function WishlistScreen({
                     : `Currently showing ${activeCategoryName.toLowerCase()} picks only.`}
                 </p>
               </div>
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[18px] bg-secondary text-primary shadow-card">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-secondary text-primary shadow-card">
                 <Heart className="h-5 w-5 fill-primary" strokeWidth={1.8} />
               </div>
             </div>
 
-            <div className="no-scrollbar mt-4 flex gap-2.5 overflow-x-auto pb-1">
+            <div className="no-scrollbar mt-4 flex gap-3 overflow-x-auto pb-1">
               {[ALL_CAT, ...categories].map((category) => {
                 const isActive = activeCat === category.id;
                 const tint = category.id === 'all'
