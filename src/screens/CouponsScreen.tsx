@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { ArrowLeft, Tag, Copy, Check, Ticket } from 'lucide-react';
+import { ArrowLeft, Ticket } from 'lucide-react';
 import { useUI, useSettingsStore } from '../lib/store';
 
 function isExpired(expiresAt: string) {
@@ -44,22 +44,21 @@ export default function CouponsScreen() {
 
   return (
     <div className="flex h-full flex-col bg-bg">
-      {/* Header */}
-      <header className="flex flex-shrink-0 items-center gap-3 px-6 pt-14 pb-3">
-        <button
-          onClick={back}
-          className="flex h-11 w-11 items-center justify-center rounded-full bg-surface text-ink shadow-card transition active:scale-90"
-          aria-label="Back"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </button>
-        <div>
-          <div className="section-eyebrow text-coral-700 uppercase tracking-wider text-[11px] font-bold">Rewards</div>
-          <h1 className="font-sans text-[20px] font-bold tracking-tight text-ink">My Coupons</h1>
+      <header className="flex-shrink-0 px-6 pt-6 pb-4">
+        <div className="relative flex h-14 items-center justify-center">
+          <button
+            onClick={back}
+            className="absolute left-0 flex h-12 w-12 items-center justify-center rounded-full bg-surface text-ink-200 shadow-card transition active:scale-90"
+            aria-label="Back"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+          <h1 className="text-[20px] font-semibold tracking-tight text-ink">Coupon</h1>
         </div>
       </header>
 
       <div className="no-scrollbar flex-1 overflow-y-auto px-6 pb-10">
+        <h2 className="mb-5 text-[22px] font-medium tracking-[-0.02em] text-ink-300">Best offers for you</h2>
         {coupons.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 text-center">
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-secondary text-coral shadow-card">
@@ -69,62 +68,39 @@ export default function CouponsScreen() {
             <p className="mt-1 text-[12px] text-ink-200">Check back soon for new offers</p>
           </div>
         ) : (
-          <div className="mt-2 space-y-3">
+          <div className="space-y-4">
             {coupons.map((c) => {
               const left = daysLeft(c.expiresAt);
               return (
-                <div
-                  key={c.id}
-                  className="relative overflow-hidden rounded-2xl bg-surface border border-border shadow-card"
-                >
-                  <div className="flex">
-                    {/* Discount badge strip */}
-                    <div
-                      className="flex w-[62px] flex-shrink-0 flex-col items-center justify-center gap-0.5 py-4 text-white"
-                      style={{ background: 'linear-gradient(160deg, #F65F8F 0%, #E84E80 100%)' }}
-                    >
-                      <span className="font-sans text-[20px] font-bold leading-none">{c.discount}%</span>
-                      <span className="text-[9px] font-bold uppercase tracking-wider opacity-90">off</span>
+                <div key={c.id} className="relative overflow-hidden rounded-[18px] border border-border bg-surface shadow-card">
+                  <div className="flex min-h-[132px]">
+                    <div className="relative flex w-[70px] shrink-0 items-center justify-center bg-coral text-white">
+                      <span className="-rotate-90 whitespace-nowrap text-[18px] font-semibold tracking-wide">{c.discount}% OFF</span>
+                      {Array.from({ length: 4 }).map((_, index) => (
+                        <span key={index} className="absolute -left-2 h-4 w-4 rounded-full bg-bg" style={{ top: `${30 + index * 23}px` }} />
+                      ))}
                     </div>
-
-                    {/* Dashed divider (ticket look) */}
-                    <div className="relative w-0 border-l-2 border-dashed border-border" />
-
-                    <div className="flex-1 px-4 py-4">
-                      <div className="flex items-center gap-1.5">
-                        <Tag className="h-3.5 w-3.5 text-coral" />
-                        <span className="font-sans text-[14px] font-bold tracking-wide text-ink">{c.code}</span>
-                      </div>
-                      <p className="mt-1 text-[11.5px] text-ink-300">
-                        Enjoy {c.discount}% off your order — apply at checkout
-                      </p>
-                      <div className="mt-3 flex items-center justify-between">
-                        <span className="text-[10.5px] font-semibold text-ink-200">
-                          {left === null ? 'No expiry' : left === 0 ? 'Expires today' : `Expires in ${left} day${left > 1 ? 's' : ''}`}
-                        </span>
+                    <div className="min-w-0 flex-1 px-4 py-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <h3 className="text-[18px] font-semibold tracking-wide text-ink">{c.code}</h3>
+                          <p className="mt-1 text-[13px] font-medium text-ink-300">Enjoy {c.discount}% OFF on cake orders</p>
+                        </div>
                         <button
+                          type="button"
                           onClick={() => handleCopy(c.id, c.code)}
-                          className={`flex items-center gap-1 rounded-full px-3 py-1.5 text-[10.5px] font-bold transition active:scale-95 ${
-                            copiedId === c.id ? 'bg-emerald-50 text-emerald-600' : 'bg-coral-100 text-coral'
-                          }`}
+                          className="rounded-full bg-secondary px-3 py-1.5 text-[11px] font-bold text-coral transition active:scale-95"
                         >
-                          {copiedId === c.id ? (
-                            <>
-                              <Check className="h-3 w-3" /> Copied
-                            </>
-                          ) : (
-                            <>
-                              <Copy className="h-3 w-3" /> Copy code
-                            </>
-                          )}
+                          {copiedId === c.id ? 'Copied' : 'Copy'}
                         </button>
                       </div>
+                      <div className="my-3 border-t border-dashed border-border" />
+                      <p className="text-[13px] font-medium text-ink-300">Add items to unlock this sweet offer</p>
+                      <p className="mt-2 text-[12px] font-medium text-ink-200">
+                        {left === null ? 'No expiry' : left === 0 ? 'Ends today' : `Ends in ${left} day${left > 1 ? 's' : ''}`} • T&Cs Apply
+                      </p>
                     </div>
                   </div>
-
-                  {/* Ticket notch circles — sit at the strip/body boundary */}
-                  <span className="absolute left-[62px] top-1/2 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-bg border-r border-border" />
-                  <span className="absolute left-[62px] bottom-0 h-3.5 w-3.5 -translate-x-1/2 translate-y-1/2 rounded-full bg-bg border-r border-border" />
                 </div>
               );
             })}

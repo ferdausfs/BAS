@@ -1,4 +1,35 @@
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## BAS0010 — Profile option subpages/sheets reference-style pass (single phase, complete) ✅ (2026-07-19, arena.ai Agent Mode)
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**Task:** Buddy showed the current Profile → Your profile bottom sheet and provided reference screens for profile edit, manage address, payment methods, wallet, coupons, settings, help/contact, FAQ, and location/search-style pages. Requested: redesign the Profile option destinations so the whole Profile area follows the same reference-style UI, while keeping BAS colors and existing logic.
+
+**In scope (files touched):** `src/screens/ProfileScreen.tsx`, `src/components/WalletHistoryModal.tsx`, `src/screens/CouponsScreen.tsx`, `AGENT_LOG.md` plus earlier pending UI files already in this ZIP (`App.tsx`, `HomeTopBar.tsx`, `QuickBar.tsx`, `NotificationBadge.tsx`, `CategoriesScreen.tsx`, `ProductCard.tsx`).
+**Out of scope (untouched):** store/Firebase logic, auth logic, order/cart/product detail flows, `BottomTabBar.tsx`.
+
+### কী বদলেছে
+- **ProfileScreen.tsx**
+  - `Your profile` no longer opens the old checkout-profile bottom sheet first; it now opens a full-page `Your Profile` subview like the reference: centered title/back, avatar with edit chip, Name/Email/Phone/Address/District fields, and bottom `Update` action.
+  - `Manage Address` now opens a full-page address list view like the reference: saved address rows with icon bubbles, details, default pill, and a dashed `Add New Shipping Address` action. Existing address add/edit logic is preserved by launching the existing editor when editing/adding.
+  - `Payment Methods` now opens a full-page payment method view like the reference: grouped Cash, Mobile Payment, and Add Card rows with radio indicators and a `Confirm Payment` action. Existing `draftProfile.payment` + save behavior is preserved.
+  - Existing main Profile, Settings, and Help Center reference-style subviews remain; typography stays downscaled to match HomeScreen rhythm.
+- **WalletHistoryModal.tsx**
+  - Restyled to a reference-like full-screen wallet page: centered `My Wallet` header, round back, balance card, Add Money CTA, and transaction cards grouped in a simple list.
+  - Wallet data and transaction logic unchanged.
+- **CouponsScreen.tsx**
+  - Restyled to match the supplied coupon ticket reference: centered `Coupon` header, `Best offers for you`, vertical discount strip, dashed divider, expiry/T&C line, and copy button.
+  - Coupon filtering/copy logic unchanged.
+
+### Verification (self)
+- `npx tsc --noEmit`: still reports the known **31 pre-existing errors**; no new errors from ProfileScreen, WalletHistoryModal, or CouponsScreen.
+- `npm run build`: ✓ passed.
+- `package-lock.json` churn from local `npm install` was reverted.
+
+### Handoff / next
+- Single complete pass for the Profile option destinations Buddy supplied. Review the Profile → Your profile / Manage Address / Payment Methods / My Wallet / My Coupons paths on a real mobile viewport after deploy.
+
+
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ## BAS0009 — Notification badge transition integration (single phase, complete) ✅ (2026-07-19, arena.ai Agent Mode)
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 

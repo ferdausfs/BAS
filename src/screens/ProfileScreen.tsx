@@ -3,7 +3,7 @@ import {
   Heart, MapPin, CreditCard, Bell, HelpCircle, Settings, LogOut,
   ChevronRight, ArrowLeft, KeyRound, Trash2, Sun, Headphones, MessageCircle, Globe2,
   LogIn, X, Save, Check, User, AlertTriangle, Cake, Gift, Wallet as WalletIcon,
-  Copy, Share2, Navigation, Loader2, Tag, ClipboardList
+  Copy, Share2, Navigation, Loader2, Tag, ClipboardList, Camera, Mail, Phone, Banknote
 } from 'lucide-react';
 import { useUI, useAuthStore, getReferralCode, claimReferralRewards, WALLET_REFERRAL_BONUS } from '../lib/store';
 import { useAuth } from '../hooks/useAuth';
@@ -130,7 +130,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
 
   const [contactOpen, setContactOpen] = useState(false);
   const [customerOpen, setCustomerOpen] = useState(false);
-  const [profileView, setProfileView] = useState<'main' | 'settings' | 'help'>('main');
+  const [profileView, setProfileView] = useState<'main' | 'edit' | 'address' | 'payment' | 'settings' | 'help'>('main');
   const [helpOpen, setHelpOpen] = useState('whatsapp');
   const [showAdmin, setShowAdmin] = useState(false);
   const [, setLogoTapCount] = useState(0);
@@ -229,11 +229,6 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
     if (changed) setSpecialDates(updated);
   }, [user?.id]); // eslint-disable-line
 
-  const openCustomerEditor = () => {
-    const latest = loadCustomerProfile(user?.id, user?.name ?? '');
-    setDraftProfile(latest);
-    setCustomerOpen(true);
-  };
 
   const handleSaveCustomer = useCallback(async () => {
     const next: CustomerProfile = {
@@ -385,17 +380,17 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
     {
       Icon: User,
       label: 'Your profile',
-      action: openCustomerEditor,
+      action: () => setProfileView('edit'),
     },
     {
       Icon: MapPin,
       label: 'Manage Address',
-      action: () => setShowAddressModal(true),
+      action: () => setProfileView('address'),
     },
     {
       Icon: CreditCard,
       label: 'Payment Methods',
-      action: openCustomerEditor,
+      action: () => setProfileView('payment'),
     },
     {
       Icon: ClipboardList,
@@ -491,7 +486,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
             <ArrowLeft className="h-5 w-5" strokeWidth={1.9} />
           </button>
           <h1 className="text-[20px] font-semibold tracking-tight text-ink">
-            {profileView === 'settings' ? 'Settings' : profileView === 'help' ? 'Help Center' : 'Profile'}
+            {profileView === 'settings' ? 'Settings' : profileView === 'help' ? 'Help Center' : profileView === 'edit' ? 'Your Profile' : profileView === 'address' ? 'Manage Address' : profileView === 'payment' ? 'Payment Methods' : 'Profile'}
           </h1>
         </div>
       </header>
@@ -646,6 +641,121 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
               );
             })}
           </div>
+        </div>
+      )}
+
+      {profileView === 'edit' && (
+        <div className="no-scrollbar flex-1 overflow-y-auto px-6 pb-32 pt-6 anim-up">
+          <div className="flex flex-col items-center">
+            <div className="relative">
+              <div className="flex h-28 w-28 items-center justify-center overflow-hidden rounded-full bg-secondary text-[30px] font-semibold text-coral shadow-card">
+                {user.avatar && user.avatar.length > 2 ? <img src={user.avatar} alt="" className="h-full w-full object-cover" /> : initials}
+              </div>
+              <span className="absolute bottom-1 right-1 flex h-9 w-9 items-center justify-center rounded-full bg-coral text-white shadow-btn ring-4 ring-bg">
+                <Camera className="h-4 w-4" strokeWidth={1.8} />
+              </span>
+            </div>
+          </div>
+
+          <div className="mt-8 space-y-4">
+            <ProfileInput label="Name" icon={User} value={draftProfile.name} onChange={(value) => setDraftProfile({ ...draftProfile, name: value })} placeholder="Your name" />
+            <ProfileInput label="Email" icon={Mail} value={user.email ?? ''} readOnly action="Change" />
+            <ProfileInput label="Phone Number" icon={Phone} value={draftProfile.phone} onChange={(value) => setDraftProfile({ ...draftProfile, phone: value })} placeholder="01XXXXXXXXX" inputMode="tel" />
+            <label className="block">
+              <span className="mb-2 block text-[13px] font-semibold text-ink-300">Delivery Address</span>
+              <textarea
+                value={draftProfile.address}
+                onChange={(event) => setDraftProfile({ ...draftProfile, address: event.target.value })}
+                placeholder="বাসা/রোড/এলাকা"
+                rows={3}
+                className="w-full resize-none rounded-[18px] border border-border bg-surface px-4 py-3 text-[14px] font-medium text-ink outline-none focus:border-coral focus:ring-2 focus:ring-coral/15"
+              />
+            </label>
+            <label className="block">
+              <span className="mb-2 block text-[13px] font-semibold text-ink-300">District / Area</span>
+              <select
+                value={draftProfile.district}
+                onChange={(event) => setDraftProfile({ ...draftProfile, district: event.target.value })}
+                className="h-12 w-full rounded-[18px] border border-border bg-surface px-4 text-[14px] font-medium text-ink outline-none focus:border-coral focus:ring-2 focus:ring-coral/15"
+              >
+                {BD_DISTRICTS.map((districtName) => <option key={districtName} value={districtName}>{districtName}</option>)}
+              </select>
+            </label>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => void handleSaveCustomer().then(() => setProfileView('main'))}
+            className="mt-6 flex h-12 w-full items-center justify-center rounded-full bg-coral text-[14px] font-bold text-white shadow-btn transition active:scale-[.98]"
+          >
+            Update
+          </button>
+        </div>
+      )}
+
+      {profileView === 'address' && (
+        <div className="no-scrollbar flex-1 overflow-y-auto px-6 pb-32 pt-6 anim-up">
+          <div className="overflow-hidden rounded-[20px] border border-border bg-surface shadow-card">
+            {addresses.length === 0 ? (
+              <div className="px-5 py-8 text-center">
+                <MapPin className="mx-auto h-8 w-8 text-coral" strokeWidth={1.8} />
+                <p className="mt-3 text-[14px] font-semibold text-ink">No saved address</p>
+                <p className="mt-1 text-[12px] text-ink-300">Add your delivery places for faster checkout.</p>
+              </div>
+            ) : addresses.map((addr, index) => (
+              <button
+                key={addr.id}
+                type="button"
+                onClick={() => { setAddrForm({ name: addr.name, address: addr.address, district: addr.district, phone: addr.phone }); setAddrLocateError(''); setEditingAddress(addr); setShowAddressModal(true); }}
+                className={`flex w-full items-start gap-4 px-4 py-4 text-left transition active:bg-bg ${index !== addresses.length - 1 ? 'border-b border-border' : ''}`}
+              >
+                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-secondary text-coral">
+                  <MapPin className="h-5 w-5" strokeWidth={1.8} />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[15px] font-semibold text-ink">{addr.name || 'Address'}</span>
+                  <span className="mt-1 block text-[13px] leading-snug text-ink-300">{addr.address}, {addr.district}</span>
+                  {addr.isDefault && <span className="mt-2 inline-flex rounded-full bg-secondary px-2 py-0.5 text-[10px] font-bold text-coral">Default</span>}
+                </span>
+                <ChevronRight className="mt-3 h-5 w-5 text-ink-200" strokeWidth={1.8} />
+              </button>
+            ))}
+          </div>
+
+          <button
+            type="button"
+            onClick={() => { setAddrForm({ name: '', address: '', district: '', phone: '' }); setAddrLocateError(''); setEditingAddress({ id: `addr-${Date.now()}`, name: '', address: '', district: '', phone: '', isDefault: addresses.length === 0 }); setShowAddressModal(true); }}
+            className="mt-5 flex h-13 w-full items-center justify-center gap-2 rounded-[18px] border border-dashed border-border bg-surface text-[14px] font-semibold text-ink-300 shadow-card transition active:scale-[.98]"
+          >
+            <span className="text-[22px] leading-none">+</span>
+            Add New Shipping Address
+          </button>
+        </div>
+      )}
+
+      {profileView === 'payment' && (
+        <div className="no-scrollbar flex-1 overflow-y-auto px-6 pb-32 pt-6 anim-up">
+          <PaymentSection title="Cash">
+            <PaymentOption icon={Banknote} label="Cash" active={draftProfile.payment === 'cash'} onClick={() => setDraftProfile({ ...draftProfile, payment: 'cash' })} />
+          </PaymentSection>
+          <PaymentSection title="Mobile Payment">
+            <PaymentOption icon={WalletIcon} label="bKash" active={draftProfile.payment === 'bkash'} onClick={() => setDraftProfile({ ...draftProfile, payment: 'bkash' })} />
+            <PaymentOption icon={WalletIcon} label="Nagad" active={draftProfile.payment === 'nagad'} onClick={() => setDraftProfile({ ...draftProfile, payment: 'nagad' })} />
+          </PaymentSection>
+          <PaymentSection title="Credit & Debit Card">
+            <button type="button" className="flex h-14 w-full items-center gap-4 rounded-[18px] border border-border bg-surface px-4 text-left shadow-card active:scale-[.98]">
+              <CreditCard className="h-5 w-5 text-coral" strokeWidth={1.8} />
+              <span className="flex-1 text-[15px] font-semibold text-ink">Add Card</span>
+              <ChevronRight className="h-5 w-5 text-ink-200" />
+            </button>
+          </PaymentSection>
+          <button
+            type="button"
+            onClick={() => void handleSaveCustomer().then(() => setProfileView('main'))}
+            className="mt-8 flex h-12 w-full items-center justify-center rounded-full bg-coral text-[14px] font-bold text-white shadow-btn transition active:scale-[.98]"
+          >
+            Confirm Payment
+          </button>
         </div>
       )}
 
@@ -1157,7 +1267,7 @@ function ProfileReferenceRow({
     <button
       type="button"
       onClick={onClick}
-      className={`flex w-full items-center gap-5 px-0 py-[18px] text-left transition active:bg-secondary/40 ${
+      className={`flex w-full items-center gap-4 px-0 py-4 text-left transition active:bg-secondary/40 ${
         bordered ? 'border-b border-border' : ''
       }`}
     >
@@ -1168,6 +1278,79 @@ function ProfileReferenceRow({
         {label}
       </span>
       <ChevronRight className="h-5 w-5 text-ink-200" strokeWidth={1.8} />
+    </button>
+  );
+}
+
+function ProfileInput({
+  label,
+  icon: Icon,
+  value,
+  onChange,
+  placeholder,
+  inputMode,
+  readOnly,
+  action,
+}: {
+  label: string;
+  icon: React.ComponentType<{ className?: string; strokeWidth?: number }>;
+  value: string;
+  onChange?: (v: string) => void;
+  placeholder?: string;
+  inputMode?: 'text' | 'tel';
+  readOnly?: boolean;
+  action?: string;
+}) {
+  return (
+    <label className="block">
+      <span className="mb-2 block text-[13px] font-semibold text-ink-300">{label}</span>
+      <span className="flex h-12 items-center gap-3 rounded-[18px] border border-border bg-surface px-4 shadow-card">
+        <Icon className="h-4 w-4 shrink-0 text-coral" strokeWidth={1.8} />
+        <input
+          value={value}
+          onChange={(event) => onChange?.(event.target.value)}
+          placeholder={placeholder}
+          inputMode={inputMode}
+          readOnly={readOnly}
+          className="min-w-0 flex-1 bg-transparent text-[14px] font-medium text-ink outline-none placeholder:text-ink-200"
+        />
+        {action && <span className="text-[12px] font-semibold text-coral">{action}</span>}
+      </span>
+    </label>
+  );
+}
+
+function PaymentSection({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section className="mb-7">
+      <h2 className="mb-3 text-[20px] font-medium tracking-[-0.02em] text-ink-300">{title}</h2>
+      <div className="space-y-3">{children}</div>
+    </section>
+  );
+}
+
+function PaymentOption({
+  icon: Icon,
+  label,
+  active,
+  onClick,
+}: {
+  icon: React.ComponentType<{ className?: string; strokeWidth?: number }>;
+  label: string;
+  active: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex h-14 w-full items-center gap-4 rounded-[18px] border border-border bg-surface px-4 text-left shadow-card transition active:scale-[.98]"
+    >
+      <Icon className="h-5 w-5 text-coral" strokeWidth={1.8} />
+      <span className="flex-1 text-[15px] font-semibold text-ink">{label}</span>
+      <span className={`flex h-7 w-7 items-center justify-center rounded-full border-2 ${active ? 'border-coral' : 'border-border'}`}>
+        {active && <span className="h-4 w-4 rounded-full bg-coral" />}
+      </span>
     </button>
   );
 }
