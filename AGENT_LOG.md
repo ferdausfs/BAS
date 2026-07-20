@@ -1,4 +1,32 @@
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## BAS0017 — Orders pending-checkout tab + remove global QuickBar (single phase, complete) ✅ (2026-07-20, arena.ai Agent Mode)
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**Task:** Buddy requested functional/UI changes on the Orders page: add a `Pending` section before Active for checkout/cart items not paid/submitted yet, and remove the top floating QuickBar (notification/wallet/wishlist/checkout bubble) so the app feels more premium.
+
+**In scope (files touched):** `src/screens/OrdersScreen.tsx`, `src/App.tsx`, `AGENT_LOG.md` plus earlier pending cumulative UI files already in this ZIP.
+**Out of scope (untouched):** order placement/payment logic, cart store logic, BottomTabBar, NotificationsSheet.
+
+### কী বদলেছে
+- **OrdersScreen.tsx**
+  - Added a new first tab: `Pending`, before `Active / Completed / Cancelled`.
+  - Pending tab shows current cart/checkout items as a pending checkout card when payment/order submission has not happened yet.
+  - Pending card includes item thumbnails, quantity/size, pending total, `View cart`, and `Continue checkout` actions.
+  - It is explicitly treated as *not a placed order yet*; once submitted successfully, the order appears under Active as before.
+- **App.tsx**
+  - Removed the global floating `QuickBar` render from the app. This removes the top-right floating notification/wallet/wishlist/checkout bubble from Orders and all remaining screens.
+  - Existing bottom navigation remains untouched; Home notification bell / normal sheets remain available where already built.
+
+### Verification (self)
+- `npx tsc --noEmit`: **30 known pre-existing errors** remain; no new errors from the pending-card additions. (OrdersScreen's existing `unknown` item/spread errors are pre-existing baseline issues.)
+- `npm run build`: ✓ passed.
+- `package-lock.json` churn from local install was reverted.
+
+### Handoff / next
+- After deploy, test: add items to cart → open Orders → Pending tab shows pending checkout → Continue checkout works → submit order → Pending clears when cart clears and placed order appears under Active.
+
+
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ## BAS0016 — Checkout address single-select + Profile default-address fix (single phase, complete) ✅ (2026-07-20, arena.ai Agent Mode)
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 

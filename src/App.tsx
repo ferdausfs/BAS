@@ -22,7 +22,6 @@ import WriteReviewScreen from './screens/WriteReviewScreen';
 import CouponsScreen from './screens/CouponsScreen';
 import AppErrorBoundary from './components/AppErrorBoundary';
 import { ChatBot } from './components/ChatBot';
-import QuickBar from './components/QuickBar';
 import OccasionZoomOverlay from './components/OccasionZoomOverlay';
 
 export default function App() {
@@ -138,13 +137,6 @@ export default function App() {
         </main>
 
         {showTabBar && <BottomTabBar />}
-
-        {/* Floating QuickBar on every screen EXCEPT Home/Cake/Profile (those tabs carry
-            their own reference-style chrome/bottom navigation) and splash/product. */}
-        {view.name !== 'splash' && view.name !== 'product' &&
-          !(view.name === 'tabs' && (activeTab === 'home' || activeTab === 'categories' || activeTab === 'profile')) && (
-          <QuickBar onNotificationsOpen={() => setNotificationsOpen(true)} />
-        )}
 
         <NotificationsSheet open={notificationsOpen} onClose={() => setNotificationsOpen(false)} />
         <AuthSheet open={authOpen} onClose={() => setAuthOpen(false)} />

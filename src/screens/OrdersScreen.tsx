@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Check, Package, ChefHat, Truck, Receipt, Search, RefreshCw, ShoppingCart, ChevronDown, ChevronUp } from 'lucide-react';
-import { useUI, formatINR, useAuthStore, useCart, useUser } from '../lib/store';
+import { useUI, formatINR, useAuthStore, useCart, useUser, cartSubtotal } from '../lib/store';
 import { useOrdersHook } from '../hooks/useOrders';
 import { safeArray } from '../lib/utils';
-import type { Order } from '../types';
+import type { CartItem, Order } from '../types';
 
 const STATUSES: { key: string; label: string; icon: any }[] = [
   { key: 'placed',    label: 'Placed',    icon: Check },
@@ -19,13 +19,18 @@ export default function OrdersScreen() {
   const user = useAuthStore((s) => s.user);
   const { setTab, go } = useUI();
   const { wishlist } = useUser();
+  const { items: cartItems } = useCart();
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
-  const [activeTab, setActiveTab] = useState<'active' | 'completed' | 'cancelled'>('active');
+  const [activeTab, setActiveTab] = useState<'pending' | 'active' | 'completed' | 'cancelled'>('pending');
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState('');
 
   const categorize = (status: string) =>
     status === 'cancelled' ? 'cancelled' : status === 'delivered' ? 'completed' : 'active';
+
+  const hasPendingCheckout = cartItems.length > 0;
+  const pendingTotal = cartSubtotal(cartItems);
+  const pendingItemCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
   useEffect(() => {
     if (user) {
@@ -41,7 +46,9 @@ export default function OrdersScreen() {
     });
   };
 
-  const tabbedOrders = safeArray<Order>(orders)
+  const tabbedOrders = activeTab === 'pending'
+    ? []
+    : safeArray<Order>(orders)
     .filter(Boolean)
     .filter((o) => categorize(o.status) === activeTab)
     .filter((o) => {
@@ -53,8 +60,8 @@ export default function OrdersScreen() {
 
   return (
     <div className="flex h-full flex-col">
-      {/* Header — QuickBar-safe with right clearance */}
-      <header className="flex-shrink-0 px-6 pr-18 pt-6 pb-3">
+      {/* Header */}
+      <header className="flex-shrink-0 px-6 pt-6 pb-3">
         <div className="flex items-end justify-between">
           <div>
             <div className="text-[12px] font-semibold tracking-wider text-primary uppercase">Activity</div>
@@ -71,7 +78,7 @@ export default function OrdersScreen() {
           </button>
         </div>
         <p className="mt-0.5 text-[12px] text-text-secondary">
-          {orders.length} {orders.length === 1 ? 'order' : 'orders'} · tracked live
+          {orders.length + (hasPendingCheckout ? 1 : 0)} {orders.length + (hasPendingCheckout ? 1 : 0) === 1 ? 'order' : 'orders'} · tracked live
         </p>
 
         {searchOpen && (
@@ -87,6 +94,7 @@ export default function OrdersScreen() {
         {/* Active / Completed / Cancelled tabs */}
         <div className="mt-3 flex gap-5 border-b border-border">
           {([
+            { v: 'pending', label: 'Pending' },
             { v: 'active', label: 'Active' },
             { v: 'completed', label: 'Completed' },
             { v: 'cancelled', label: 'Cancelled' },
@@ -117,6 +125,14 @@ export default function OrdersScreen() {
             </div>
             <p className="text-[12px] text-text-tertiary">Loading your orders...</p>
           </div>
+        ) : activeTab === 'pending' && hasPendingCheckout ? (
+          <PendingCheckoutCard
+            items={cartItems}
+            itemCount={pendingItemCount}
+            total={pendingTotal}
+            onCheckout={() => go({ name: 'checkout' })}
+            onCart={() => go({ name: 'cart' })}
+          />
         ) : orders.length === 0 ? (
           /* Full empty state — no orders at all */
           <div className="flex flex-col items-center justify-center pt-16 text-center anim-fade">
@@ -152,6 +168,7 @@ export default function OrdersScreen() {
               এই ট্যাবে কোনো অর্ডার নেই
             </h2>
             <p className="mt-1.5 max-w-xs text-[12.5px] text-text-secondary leading-relaxed">
+              {activeTab === 'pending' && 'পেমেন্ট হয়নি এমন কোনো checkout/cart item নেই।'}
               {activeTab === 'active' && 'এখন কোনো চলমান অর্ডার নেই।'}
               {activeTab === 'completed' && 'এখনো কোনো অর্ডার সম্পন্ন হয়নি।'}
               {activeTab === 'cancelled' && 'কোনো বাতিল অর্ডার নেই।'}
@@ -329,6 +346,70 @@ export default function OrdersScreen() {
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+
+function PendingCheckoutCard({
+  items,
+  itemCount,
+  total,
+  onCheckout,
+  onCart,
+}: {
+  items: CartItem[];
+  itemCount: number;
+  total: number;
+  onCheckout: () => void;
+  onCart: () => void;
+}) {
+  const visibleItems = items.slice(0, 3);
+  return (
+    <div className="space-y-4 pt-2 anim-up">
+      <article className="overflow-hidden rounded-2xl border border-coral/25 bg-surface shadow-card">
+        <div className="h-[3px] w-full bg-coral" />
+        <div className="flex items-start justify-between px-4 pt-4 pb-3">
+          <div>
+            <div className="text-[10px] font-bold uppercase tracking-wider text-coral">Pending checkout</div>
+            <h2 className="mt-1 text-[16px] font-bold text-ink">Payment not completed</h2>
+            <p className="mt-0.5 text-[12px] text-text-secondary">{itemCount} item{itemCount > 1 ? 's' : ''} waiting for payment</p>
+          </div>
+          <div className="text-right">
+            <div className="text-[20px] font-bold tabular text-ink">{formatINR(total)}</div>
+            <span className="mt-1 inline-flex rounded-full bg-secondary px-2 py-0.5 text-[10px] font-bold uppercase text-coral">Pending</span>
+          </div>
+        </div>
+
+        <div className="space-y-2.5 px-4 pb-3">
+          {visibleItems.map((item, index) => (
+            <div key={`${item.productId ?? item.name}-${index}`} className="flex items-center gap-4">
+              <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-2xl bg-bg ring-1 ring-border">
+                <img src={item.image} alt="" className="h-full w-full object-cover" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="line-clamp-1 text-[13px] font-bold text-ink">{item.name}</div>
+                <div className="text-[11px] text-text-secondary">{item.size || '—'} · ×{item.quantity}</div>
+              </div>
+              <div className="text-[13px] font-bold tabular text-ink">{formatINR(item.price * item.quantity)}</div>
+            </div>
+          ))}
+          {items.length > 3 && <div className="text-center text-[11px] text-ink-200">+{items.length - 3} আরও আইটেম</div>}
+        </div>
+
+        <div className="mx-4 border-t border-dashed border-divider" />
+        <div className="grid grid-cols-2 gap-2 px-4 py-4">
+          <button onClick={onCart} className="flex h-11 items-center justify-center gap-1.5 rounded-2xl border border-border bg-surface text-[12px] font-bold text-ink transition active:scale-[.98]">
+            <ShoppingCart className="h-3.5 w-3.5" /> View cart
+          </button>
+          <button onClick={onCheckout} className="flex h-11 items-center justify-center gap-1.5 rounded-2xl bg-coral text-[12px] font-bold text-white shadow-btn transition active:scale-[.98]">
+            <Receipt className="h-3.5 w-3.5" /> Continue checkout
+          </button>
+        </div>
+      </article>
+      <p className="px-1 text-[12px] leading-relaxed text-text-secondary">
+        This is not a placed order yet. It will move to Active after payment/order submission.
+      </p>
     </div>
   );
 }
