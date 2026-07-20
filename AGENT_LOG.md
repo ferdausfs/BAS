@@ -1,4 +1,33 @@
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## BAS0030 — Product cards full-image light-glass overlay style (single phase, complete) ✅ (2026-07-20, arena.ai Agent Mode)
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**Task:** Buddy wanted all app product cards to move toward the supplied image-first reference style. After mockup iteration, Buddy clarified the correct design: the full card should be the cake image, and the details should sit on top of that same image with a light glass/blur overlay — not a separate image/details split card and not a heavy muddy glass layer.
+
+**In scope (files touched):** `src/components/ProductCard.tsx`, `AGENT_LOG.md` plus earlier pending cumulative UI files already in this ZIP.
+**Out of scope (untouched):** product data, cart add logic, wishlist logic, product detail screen, checkout/order logic.
+
+### কী বদলেছে
+- Rebuilt `ProductCard` visual structure so every `grid` / `catalog` / `horizontal` product-card usage shares one image-first card system.
+- The product image now fills the entire card as the background.
+- Details now overlay the image at the bottom using a small/light frosted panel:
+  - gentle white/pink fade for readability
+  - low blur (`backdrop-blur-[7px]`) instead of heavy blur
+  - dark readable text
+  - BAS primary/coral price and add button
+- Badge and heart remain floating over the image.
+- Add-to-cart behavior, wishlist behavior, image fallback, low-stock badge, bestseller/new badges, and duplicate-cart logic are unchanged.
+
+### Verification (self)
+- `npx tsc --noEmit`: **30 known pre-existing errors** remain; no new ProductCard errors.
+- `npm run build`: ✓ passed.
+- `package-lock.json` churn from local install was reverted.
+
+### Handoff / next
+- After deploy, review Home featured/search cards, Cake tab catalog cards, and Wishlist cards. The same full-image/light-glass style should be used consistently.
+
+
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ## BAS0029 — Replace onboarding slides with 2s glass heartbeat logo splash (single phase, complete) ✅ (2026-07-20, arena.ai Agent Mode)
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
