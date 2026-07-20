@@ -1,4 +1,33 @@
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## BAS0023 — Move Help Center to Profile main list + profile-style help UI (single phase, complete) ✅ (2026-07-20, arena.ai Agent Mode)
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**Task:** Buddy requested moving the Help Center function out to the main Profile screen and making Help Center UI/UX match the Profile list style.
+
+**In scope (files touched):** `src/screens/ProfileScreen.tsx`, `AGENT_LOG.md` plus earlier pending cumulative UI files already in this ZIP.
+**Out of scope (untouched):** support/chat logic, auth/sign-out logic, order/cart/payment logic.
+
+### কী বদলেছে
+- Added `Help Center` as a main Profile list row, between `My Wallet` and `Settings`.
+- Removed the separate boxed Help Center shortcut from Settings, so Settings stays focused on account settings only.
+- Rebuilt Help Center subview to match Profile's row-based style:
+  - icon circle on left
+  - label + short detail
+  - chevron on right
+  - divider rows, no large tab/card layout
+- `Customer Service` still opens the existing support/chat sheet.
+- Other help rows currently trigger safe informational notifications until final links/pages are added.
+
+### Verification (self)
+- `npx tsc --noEmit`: **30 known pre-existing errors** remain; no new ProfileScreen errors.
+- `npm run build`: ✓ passed.
+- `package-lock.json` churn from local install was reverted.
+
+### Handoff / next
+- After deploy, test Profile → Help Center row → profile-style Help Center screen → Customer Service opens support sheet.
+
+
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ## BAS0022 — Checkout summary edit opens in-place pickers (single phase, complete) ✅ (2026-07-20, arena.ai Agent Mode)
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 

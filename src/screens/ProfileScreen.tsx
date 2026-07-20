@@ -131,7 +131,6 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
   const [contactOpen, setContactOpen] = useState(false);
   const [customerOpen, setCustomerOpen] = useState(false);
   const [profileView, setProfileView] = useState<'main' | 'edit' | 'address' | 'payment' | 'settings' | 'help'>('main');
-  const [helpOpen, setHelpOpen] = useState('whatsapp');
   const [showAdmin, setShowAdmin] = useState(false);
   const [, setLogoTapCount] = useState(0);
 
@@ -408,6 +407,11 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
       action: () => setWalletHistoryOpen(true),
     },
     {
+      Icon: HelpCircle,
+      label: 'Help Center',
+      action: () => setProfileView('help'),
+    },
+    {
       Icon: Settings,
       label: 'Settings',
       action: () => setProfileView('settings'),
@@ -437,14 +441,6 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
     },
   ];
 
-  const supportRows = [
-    { id: 'service', Icon: Headphones, label: 'Customer Service', detail: 'Chat with Bake Art Style support inside the app.' },
-    { id: 'whatsapp', Icon: MessageCircle, label: 'WhatsApp', detail: '+880 1XXXXXXXXX' },
-    { id: 'website', Icon: Globe2, label: 'Website', detail: 'bas.umuhammadiswa.workers.dev' },
-    { id: 'facebook', Icon: HelpCircle, label: 'Facebook', detail: 'Bake Art Style' },
-    { id: 'x', Icon: X, label: 'X', detail: 'Coming soon' },
-    { id: 'instagram', Icon: User, label: 'Instagram', detail: '@bakeartstyle' },
-  ];
 
   if (!user) {
     return (
@@ -556,19 +552,6 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
             ))}
           </div>
 
-          <div className="mt-7 overflow-hidden rounded-[18px] border border-border bg-surface shadow-card">
-            <button
-              type="button"
-              onClick={() => setProfileView('help')}
-              className="flex w-full items-center gap-4 px-4 py-3.5 text-left transition active:bg-bg"
-            >
-              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-secondary text-coral">
-                <HelpCircle className="h-5 w-5" strokeWidth={1.8} />
-              </span>
-              <span className="flex-1 text-[15px] font-semibold text-ink">Help Center</span>
-              <ChevronRight className="h-5 w-5 text-ink-200" strokeWidth={1.8} />
-            </button>
-          </div>
 
           <button
             type="button"
@@ -582,64 +565,49 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
       )}
 
       {profileView === 'help' && (
-        <div className="no-scrollbar flex-1 overflow-y-auto pb-10 pt-4 anim-up">
-          <div className="px-6">
-            <div className="flex h-12 items-center gap-3 rounded-[18px] bg-secondary px-4 text-ink-200">
-              <HelpCircle className="h-5 w-5" strokeWidth={1.75} />
-              <span className="text-[15px] font-medium">Search</span>
-            </div>
-          </div>
-
-          <div className="mt-7 flex items-end border-b border-border px-6">
-            <button className="flex-1 pb-4 text-center text-[19px] font-medium text-ink-200">
-              FAQ
-            </button>
-            <button className="relative flex-1 pb-4 text-center text-[19px] font-semibold text-ink">
-              Contact Us
-              <span className="absolute bottom-[-1px] left-1/2 h-1.5 w-[90%] -translate-x-1/2 rounded-t-full bg-coral" />
-            </button>
-          </div>
-
-          <div className="space-y-4 px-6 pt-5">
-            {supportRows.map((row) => {
-              const open = helpOpen === row.id;
-              return (
-                <div key={row.id} className="overflow-hidden rounded-[16px] border border-border bg-surface shadow-card">
-                  <button
-                    type="button"
-                    onClick={() => setHelpOpen(open ? '' : row.id)}
-                    className="flex w-full items-center gap-4 px-4 py-4 text-left transition active:bg-bg"
-                  >
-                    <span className="flex h-12 w-12 items-center justify-center rounded-full bg-secondary text-coral">
-                      <row.Icon className="h-5 w-5" strokeWidth={1.75} />
-                    </span>
-                    <span className="flex-1 text-[15px] font-semibold text-ink">{row.label}</span>
-                    {open ? (
-                      <ChevronRight className="h-5 w-5 -rotate-90 text-ink-200 transition" strokeWidth={1.9} />
-                    ) : (
-                      <ChevronRight className="h-5 w-5 rotate-90 text-ink-200 transition" strokeWidth={1.9} />
-                    )}
-                  </button>
-                  {open && (
-                    <div className="border-t border-border px-6 pb-4 pt-3">
-                      <div className="flex items-center gap-3 text-[12px] font-medium text-ink-300">
-                        <span className="h-1.5 w-1.5 rounded-full bg-coral" />
-                        {row.detail}
-                      </div>
-                      {row.id === 'service' && (
-                        <button
-                          type="button"
-                          onClick={() => setContactOpen(true)}
-                          className="mt-3 rounded-full bg-coral px-4 py-2 text-[12px] font-bold text-white shadow-btn transition active:scale-95"
-                        >
-                          Open chat support
-                        </button>
-                      )}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+        <div className="no-scrollbar flex-1 overflow-y-auto px-6 pb-32 pt-6 anim-up">
+          <div className="mt-2">
+            <HelpProfileRow
+              Icon={Headphones}
+              label="Customer Service"
+              detail="Chat with Bake Art Style support"
+              onClick={() => setContactOpen(true)}
+              bordered
+            />
+            <HelpProfileRow
+              Icon={MessageCircle}
+              label="WhatsApp"
+              detail="Order help and quick support"
+              onClick={() => useUI.getState().addNotification('WhatsApp', 'WhatsApp support will open from product/contact cards.')}
+              bordered
+            />
+            <HelpProfileRow
+              Icon={Globe2}
+              label="Website"
+              detail="bas.umuhammadiswa.workers.dev"
+              onClick={() => useUI.getState().addNotification('Website', 'You are already browsing the Bake Art Style website.')}
+              bordered
+            />
+            <HelpProfileRow
+              Icon={HelpCircle}
+              label="FAQ"
+              detail="Delivery, payment, reorder and promo questions"
+              onClick={() => useUI.getState().addNotification('FAQ', 'FAQ page will be available soon.')}
+              bordered
+            />
+            <HelpProfileRow
+              Icon={User}
+              label="Facebook"
+              detail="Bake Art Style"
+              onClick={() => useUI.getState().addNotification('Facebook', 'Facebook link will be available soon.')}
+              bordered
+            />
+            <HelpProfileRow
+              Icon={User}
+              label="Instagram"
+              detail="@bakeartstyle"
+              onClick={() => useUI.getState().addNotification('Instagram', 'Instagram link will be available soon.')}
+            />
           </div>
         </div>
       )}
@@ -1291,6 +1259,38 @@ function ProfileReferenceRow({
     </button>
   );
 }
+
+function HelpProfileRow({
+  Icon,
+  label,
+  detail,
+  onClick,
+  bordered,
+}: {
+  Icon: React.ComponentType<{ className?: string; strokeWidth?: number }>;
+  label: string;
+  detail: string;
+  onClick: () => void;
+  bordered?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`flex w-full items-center gap-4 px-0 py-4 text-left transition active:bg-secondary/40 ${bordered ? 'border-b border-border' : ''}`}
+    >
+      <span className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-secondary text-coral">
+        <Icon className="h-5 w-5" strokeWidth={1.75} />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block text-[15.5px] font-semibold leading-none tracking-tight text-ink">{label}</span>
+        <span className="mt-1.5 block line-clamp-1 text-[12px] font-medium text-ink-300">{detail}</span>
+      </span>
+      <ChevronRight className="h-5 w-5 text-ink-200" strokeWidth={1.8} />
+    </button>
+  );
+}
+
 
 function ProfileInput({
   label,
