@@ -4,6 +4,7 @@ import { useAuthStore, useOrders, useSettingsStore, useUI } from '../lib/store';
 import { useProducts } from '../hooks/useProducts';
 import { waLink } from '../lib/utils';
 import { uploadToCloudinary } from '../lib/firebase';
+import TransitionClearInput from './TransitionClearInput';
 
 interface Message {
   role: 'user' | 'bot';
@@ -584,14 +585,16 @@ ${productList}
       <div className="flex shrink-0 items-center gap-2 border-t border-divider bg-surface px-3 py-3">
         <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageSelect} className="hidden" />
         <button type="button" onClick={() => fileInputRef.current?.click()} disabled={imageUploading} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-secondary text-primary transition active:scale-90 disabled:opacity-40" aria-label="Send reference image" title="রেফারেন্স ছবি পাঠান"><Camera className="h-4 w-4" /></button>
-        <input
-          ref={inputRef}
-          type="text"
+        <TransitionClearInput
+          inputRef={inputRef}
           value={input}
-          onChange={(event) => setInput(event.target.value)}
+          onChange={setInput}
           onKeyDown={(event) => event.key === 'Enter' && send()}
           placeholder="মেসেজ লিখুন..."
-          className="h-10 min-w-0 flex-1 rounded-[14px] border border-border bg-bg px-3 text-[12px] text-text outline-none transition placeholder:text-text-tertiary focus:border-accent focus:ring-4 focus:ring-primary/10"
+          className="min-w-0 flex-1"
+          inputClassName="h-10 w-full rounded-[14px] border border-border bg-bg px-3 pr-10 text-[12px] text-text outline-none transition placeholder:text-transparent focus:border-accent focus:ring-4 focus:ring-primary/10"
+          textLayerClassName="px-3 pr-10 text-[12px] text-text-tertiary"
+          clearButtonClassName="absolute right-1.5 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full bg-secondary text-text-secondary transition active:scale-90"
         />
         <button type="button" onClick={() => send()} disabled={!input.trim() || loading} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-primary text-white shadow-btn transition hover:bg-primary-hover disabled:opacity-40 active:scale-90" aria-label="Send message"><Send className="h-4 w-4" /></button>
       </div>

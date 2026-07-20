@@ -1,5 +1,6 @@
-import { Search, SlidersHorizontal, X } from 'lucide-react';
+import { Search, SlidersHorizontal } from 'lucide-react';
 import { forwardRef, useState } from 'react';
+import TransitionClearInput from './TransitionClearInput';
 
 type Props = {
   value: string;
@@ -39,27 +40,17 @@ const SearchBar = forwardRef<HTMLInputElement, Props>(
       <div className={`flex items-center gap-2 ${className}`}>
         <div className="group relative flex-1">
           <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-text-tertiary transition-colors group-focus-within:text-primary" strokeWidth={1.9} />
-          <input
-            ref={ref}
+          <TransitionClearInput
+            inputRef={ref}
             value={value}
-            onChange={(event) => onChange(event.target.value)}
+            onChange={onChange}
             onFocus={() => setFocused(true)}
             onBlur={() => window.setTimeout(() => setFocused(false), 120)}
             onKeyDown={(event) => event.key === 'Enter' && onSearch?.(value)}
             placeholder={placeholder}
-            className="h-11 w-full rounded-full border border-border bg-surface pl-12 pr-11 text-[14px] font-medium text-text shadow-card outline-none transition placeholder:font-normal placeholder:text-text-tertiary focus:border-accent focus:ring-4 focus:ring-primary/10"
+            inputClassName="h-11 w-full rounded-full border border-border bg-surface pl-12 pr-11 text-[14px] font-medium text-text shadow-card outline-none transition placeholder:font-normal placeholder:text-transparent focus:border-accent focus:ring-4 focus:ring-primary/10"
+            textLayerClassName="pl-12 pr-11 text-[14px] font-medium text-text placeholder:font-normal text-text-tertiary"
           />
-          {value && (
-            <button
-              type="button"
-              onMouseDown={(event) => event.preventDefault()}
-              onClick={() => onChange('')}
-              className="absolute right-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-secondary text-text-secondary transition active:scale-90"
-              aria-label="Clear search"
-            >
-              <X className="h-4 w-4" strokeWidth={2} />
-            </button>
-          )}
 
           {showDropdown && (
             <div className="absolute left-0 right-0 top-[calc(100%+0.75rem)] z-30 rounded-2xl border border-border bg-surface p-3 shadow-float">
