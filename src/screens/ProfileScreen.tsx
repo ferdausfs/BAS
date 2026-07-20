@@ -3,7 +3,7 @@ import {
   Heart, MapPin, CreditCard, Bell, HelpCircle, Settings, LogOut,
   ChevronRight, ArrowLeft, KeyRound, Trash2, Sun, Headphones, MessageCircle, Globe2,
   LogIn, X, Save, Check, User, AlertTriangle, Cake, Gift, Wallet as WalletIcon,
-  Copy, Share2, Navigation, Loader2, Tag, ClipboardList, Camera, Mail, Phone, Banknote
+  Copy, Share2, Navigation, Loader2, Tag, ClipboardList, Camera, Mail, Phone, Banknote, Search
 } from 'lucide-react';
 import { useUI, useAuthStore, getReferralCode, claimReferralRewards, WALLET_REFERRAL_BONUS } from '../lib/store';
 import { useAuth } from '../hooks/useAuth';
@@ -914,124 +914,127 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
 
       {/* Address Manager Modal */}
       {showAddressModal && (
-        <div className="fixed inset-0 z-[80] flex flex-col bg-ink/45" onClick={() => !editingAddress && setShowAddressModal(false)}>
-          <div className="mt-auto w-full rounded-t-[22px] border-t border-border bg-surface p-5 pb-8 shadow-float" onClick={(e) => e.stopPropagation()}>
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-[17px] font-bold text-ink">ঠিকানার তালিকা</h2>
-              <button onClick={() => setShowAddressModal(false)} className="h-8 w-8 rounded-full bg-ink-50 flex items-center justify-center text-ink-300">
-                <X className="h-4 w-4" />
+        <div className="fixed inset-0 z-[80] flex flex-col bg-bg anim-right" onClick={() => !editingAddress && setShowAddressModal(false)}>
+          <header className="flex-shrink-0 px-6 pt-6 pb-4" onClick={(event) => event.stopPropagation()}>
+            <div className="relative flex h-14 items-center justify-center">
+              <button
+                type="button"
+                onClick={() => { setAddrLocateError(''); setEditingAddress(null); setShowAddressModal(false); }}
+                className="absolute left-0 flex h-12 w-12 items-center justify-center rounded-full bg-surface text-ink-200 shadow-card transition active:scale-95"
+                aria-label="Back"
+              >
+                <ArrowLeft className="h-5 w-5" strokeWidth={1.9} />
               </button>
+              <h2 className="text-[20px] font-semibold tracking-tight text-ink">
+                {editingAddress ? 'Enter Your Location' : 'Manage Address'}
+              </h2>
             </div>
+          </header>
 
+          <div className="no-scrollbar flex-1 overflow-y-auto px-6 pb-8" onClick={(event) => event.stopPropagation()}>
             {!editingAddress ? (
               <>
-                <div className="space-y-2 max-h-64 overflow-y-auto">
-                  {addresses.length === 0 && (
-                    <div className="rounded-2xl border border-border bg-ink-50 py-6 text-center text-[13px] text-ink-200">এখনো কোনো ঠিকানা সংরক্ষণ করা হয়নি</div>
-                  )}
-                  {addresses.map((addr) => (
-                    <div key={addr.id} className="flex items-center gap-4 rounded-2xl border border-border bg-surface p-3 shadow-card">
-                      <div className="flex-1">
+                <div className="overflow-hidden rounded-[20px] border border-border bg-surface shadow-card">
+                  {addresses.length === 0 ? (
+                    <div className="px-5 py-10 text-center">
+                      <span className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-secondary text-coral">
+                        <MapPin className="h-9 w-9" strokeWidth={1.7} />
+                      </span>
+                      <p className="mt-4 text-[16px] font-semibold text-ink">No saved address</p>
+                      <p className="mt-1 text-[13px] text-ink-300">Add your delivery places for faster checkout.</p>
+                    </div>
+                  ) : addresses.map((addr, index) => (
+                    <div key={addr.id} className={`flex items-start gap-4 px-4 py-4 ${index !== addresses.length - 1 ? 'border-b border-border' : ''}`}>
+                      <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-secondary text-coral">
+                        <MapPin className="h-5 w-5" strokeWidth={1.8} />
+                      </span>
+                      <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
-                          <span className="text-[12px] font-bold text-ink">{addr.name}</span>
-                          {addr.isDefault && <span className="rounded-full bg-coral px-2 py-0.5 text-[9px] font-bold text-white">ডিফল্ট</span>}
+                          <span className="text-[15px] font-semibold text-ink">{addr.name || 'Address'}</span>
+                          {addr.isDefault && <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-bold text-coral">Default</span>}
                         </div>
-                        <div className="text-[11px] text-ink-300 mt-0.5">{addr.address}, {addr.district}</div>
-                        <div className="text-[11px] text-ink-200">{addr.phone}</div>
-                      </div>
-                      <div className="flex gap-1">
-                        {!addr.isDefault && (
-                          <button onClick={() => setAddresses(prev => prev.map(a => ({ ...a, isDefault: a.id === addr.id })))}
-                            className="rounded-lg bg-ink-50 px-2 py-1 text-[10px] font-bold text-ink-300">ডিফল্ট করুন</button>
-                        )}
-                        <button onClick={() => { setAddrForm({ name: addr.name, address: addr.address, district: addr.district, phone: addr.phone }); setAddrLocateError(''); setEditingAddress(addr); }}
-                          className="rounded-lg bg-secondary px-2 py-1 text-[10px] font-bold text-coral">এডিট</button>
-                        <button onClick={() => setAddresses(prev => prev.filter(a => a.id !== addr.id))}
-                          className="rounded-lg bg-error/10 px-2 py-1 text-[10px] font-bold text-error">×</button>
+                        <p className="mt-1 text-[13px] leading-snug text-ink-300">{addr.address}, {addr.district}</p>
+                        <p className="mt-1 text-[12px] text-ink-200">{addr.phone}</p>
+                        <div className="mt-3 flex gap-2">
+                          {!addr.isDefault && (
+                            <button onClick={() => setAddresses(prev => prev.map(a => ({ ...a, isDefault: a.id === addr.id })))} className="rounded-full bg-ink-50 px-3 py-1.5 text-[11px] font-bold text-ink-300">Default</button>
+                          )}
+                          <button onClick={() => { setAddrForm({ name: addr.name, address: addr.address, district: addr.district, phone: addr.phone }); setAddrLocateError(''); setEditingAddress(addr); }} className="rounded-full bg-secondary px-3 py-1.5 text-[11px] font-bold text-coral">Edit</button>
+                          <button onClick={() => setAddresses(prev => prev.filter(a => a.id !== addr.id))} className="rounded-full bg-error/10 px-3 py-1.5 text-[11px] font-bold text-error">Remove</button>
+                        </div>
                       </div>
                     </div>
                   ))}
                 </div>
+
                 {addresses.length < 5 && (
                   <button
                     onClick={() => { setAddrForm({ name: '', address: '', district: '', phone: '' }); setAddrLocateError(''); setEditingAddress({ id: `addr-${Date.now()}`, name: '', address: '', district: '', phone: '', isDefault: addresses.length === 0 }); }}
-                    className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl bg-coral py-3 text-[13px] font-bold text-white shadow-btn transition active:scale-[.98]"
+                    className="mt-5 flex h-13 w-full items-center justify-center gap-2 rounded-[18px] border border-dashed border-border bg-surface text-[14px] font-semibold text-ink-300 shadow-card transition active:scale-[.98]"
                   >
-                    + নতুন ঠিকানা যোগ করুন
+                    <span className="text-[22px] leading-none">+</span>
+                    Add New Shipping Address
                   </button>
                 )}
               </>
             ) : (
-              <div className="space-y-3">
-                <h3 className="text-[14px] font-bold text-ink">{addresses.find(a => a.id === editingAddress.id) ? 'ঠিকানা এডিট করুন' : 'নতুন ঠিকানা'}</h3>
-
-                <div>
-                  <label className="text-[10px] font-bold text-ink-200 uppercase">লেবেল (যেমন: বাসা, অফিস)</label>
+              <div className="space-y-5">
+                <div className="flex h-12 items-center gap-3 rounded-[18px] bg-secondary px-4 text-ink-300">
+                  <Search className="h-5 w-5" strokeWidth={1.8} />
                   <input
-                    value={addrForm.name}
-                    onChange={(e) => setAddrForm(prev => ({ ...prev, name: e.target.value }))}
-                    placeholder="বাসা"
-                    className="mt-1 w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-[13px] font-medium text-ink outline-none focus:border-coral focus:ring-2 focus:ring-coral/15"
+                    value={addrForm.address}
+                    onChange={(event) => setAddrForm(prev => ({ ...prev, address: event.target.value }))}
+                    placeholder="Enter your address"
+                    className="min-w-0 flex-1 bg-transparent text-[14px] font-medium text-ink outline-none placeholder:text-ink-200"
                   />
-                </div>
-
-                <div className="flex flex-col gap-1.5 pt-0.5">
-                  <button
-                    type="button"
-                    onClick={handleLocateAddress}
-                    disabled={addrLocating}
-                    className="flex items-center justify-center gap-1.5 self-start rounded-full bg-secondary px-3.5 py-1.5 text-[11px] font-bold text-coral transition active:scale-95 disabled:opacity-50"
-                  >
-                    {addrLocating ? (
-                      <Loader2 className="h-3 w-3 animate-spin" />
-                    ) : (
-                      <Navigation className="h-3 w-3" />
-                    )}
-                    {addrLocating ? 'লোকেশন খোঁজা হচ্ছে...' : 'বর্তমান অবস্থান ব্যবহার করুন'}
-                  </button>
-                  {addrLocateError && (
-                    <span className="text-[11px] text-error font-semibold px-1">{addrLocateError}</span>
+                  {addrForm.address && (
+                    <button type="button" onClick={() => setAddrForm(prev => ({ ...prev, address: '' }))} className="flex h-7 w-7 items-center justify-center rounded-full bg-surface text-ink-300">
+                      <X className="h-3.5 w-3.5" />
+                    </button>
                   )}
                 </div>
 
-                <div>
-                  <label className="text-[10px] font-bold text-ink-200 uppercase">সম্পূর্ণ ঠিকানা</label>
-                  <textarea
-                    value={addrForm.address}
-                    onChange={(e) => setAddrForm(prev => ({ ...prev, address: e.target.value }))}
-                    placeholder="বাসা ৫, রোড ৩, কুমিল্লা"
-                    rows={2}
-                    className="mt-1 w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-[13px] font-medium text-ink outline-none focus:border-coral focus:ring-2 focus:ring-coral/15 resize-none"
-                  />
-                </div>
+                <button
+                  type="button"
+                  onClick={handleLocateAddress}
+                  disabled={addrLocating}
+                  className="flex w-full items-center gap-4 border-b border-border pb-4 text-left text-[16px] font-semibold text-ink-300 disabled:opacity-50"
+                >
+                  {addrLocating ? <Loader2 className="h-6 w-6 animate-spin text-coral" /> : <Navigation className="h-6 w-6 text-coral" strokeWidth={1.9} />}
+                  {addrLocating ? 'লোকেশন খোঁজা হচ্ছে...' : 'Use my current location'}
+                </button>
+                {addrLocateError && <p className="text-[12px] font-semibold text-error">{addrLocateError}</p>}
 
                 <div>
-                  <label className="text-[10px] font-bold text-ink-200 uppercase">জেলা</label>
-                  <select
-                    value={addrForm.district}
-                    onChange={(e) => setAddrForm(prev => ({ ...prev, district: e.target.value }))}
-                    className="mt-1 w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-[13px] font-medium text-ink outline-none focus:border-coral focus:ring-2 focus:ring-coral/15"
-                  >
-                    <option value="">জেলা বাছাই করুন</option>
-                    {BD_DISTRICTS.map((d) => (
-                      <option key={d} value={d}>{d}</option>
-                    ))}
-                  </select>
+                  <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.18em] text-ink-200">Address Details</p>
+                  <div className="space-y-3">
+                    <Field label="লেবেল (যেমন: বাসা, অফিস)" value={addrForm.name} onChange={(value) => setAddrForm(prev => ({ ...prev, name: value }))} placeholder="বাসা" />
+                    <label className="block">
+                      <span className="mb-1 block text-[10.5px] font-bold tracking-wider text-ink-200 uppercase">সম্পূর্ণ ঠিকানা</span>
+                      <textarea
+                        value={addrForm.address}
+                        onChange={(event) => setAddrForm(prev => ({ ...prev, address: event.target.value }))}
+                        placeholder="বাসা ৫, রোড ৩, কুমিল্লা"
+                        rows={3}
+                        className="w-full resize-none rounded-xl border border-border bg-surface px-3 py-2.5 text-[13px] font-medium text-ink outline-none focus:border-coral focus:ring-2 focus:ring-coral/15"
+                      />
+                    </label>
+                    <label className="block">
+                      <span className="mb-1 block text-[10.5px] font-bold tracking-wider text-ink-200 uppercase">জেলা</span>
+                      <select
+                        value={addrForm.district}
+                        onChange={(event) => setAddrForm(prev => ({ ...prev, district: event.target.value }))}
+                        className="h-11 w-full rounded-xl border border-border bg-surface px-3 text-[13px] font-medium text-ink outline-none focus:border-coral focus:ring-2 focus:ring-coral/15"
+                      >
+                        <option value="">জেলা বাছাই করুন</option>
+                        {BD_DISTRICTS.map((districtName) => <option key={districtName} value={districtName}>{districtName}</option>)}
+                      </select>
+                    </label>
+                    <Field label="মোবাইল নম্বর" value={addrForm.phone} onChange={(value) => setAddrForm(prev => ({ ...prev, phone: value }))} placeholder="01700000000" inputMode="tel" />
+                  </div>
                 </div>
 
-                <div>
-                  <label className="text-[10px] font-bold text-ink-200 uppercase">মোবাইল নম্বর</label>
-                  <input
-                    type="tel"
-                    inputMode="numeric"
-                    value={addrForm.phone}
-                    onChange={(e) => setAddrForm(prev => ({ ...prev, phone: e.target.value }))}
-                    placeholder="01700000000"
-                    className="mt-1 w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-[13px] font-medium text-ink outline-none focus:border-coral focus:ring-2 focus:ring-coral/15"
-                  />
-                </div>
-
-                <div className="flex gap-2">
+                <div className="flex gap-3 pt-2">
                   <button
                     onClick={() => {
                       if (!addrForm.name || !addrForm.address) return;
@@ -1041,11 +1044,18 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
                         return exists ? prev.map(a => a.id === updated.id ? updated : a) : [...prev, updated];
                       });
                       setEditingAddress(null);
+                      setShowAddressModal(false);
                     }}
-                    className="flex-1 rounded-xl bg-coral py-2.5 text-[13px] font-bold text-white shadow-btn transition active:scale-[.98]"
-                  >সেভ করুন</button>
-                  <button onClick={() => { setAddrLocateError(''); setEditingAddress(null); }}
-                    className="flex-1 rounded-xl bg-ink-50 py-2.5 text-[13px] font-bold text-ink-300">বাতিল</button>
+                    className="flex h-12 flex-1 items-center justify-center rounded-full bg-coral text-[14px] font-bold text-white shadow-btn transition active:scale-[.98]"
+                  >
+                    সেভ করুন
+                  </button>
+                  <button
+                    onClick={() => { setAddrLocateError(''); setEditingAddress(null); }}
+                    className="flex h-12 flex-1 items-center justify-center rounded-full bg-ink-50 text-[14px] font-bold text-ink-300 transition active:scale-[.98]"
+                  >
+                    বাতিল
+                  </button>
                 </div>
               </div>
             )}

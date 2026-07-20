@@ -1,4 +1,57 @@
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## BAS0013 — Product detail floating thumbnail strip adjustment (single phase, complete) ✅ (2026-07-20, arena.ai Agent Mode)
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**Task:** Buddy reviewed the product-page mockup and requested the multiple product images/thumbnails to sit **above the product card/sheet**, like the supplied reference.
+
+**In scope (files touched):** `src/screens/ProductScreen.tsx`, `AGENT_LOG.md` plus earlier pending cumulative UI files already in this ZIP.
+**Out of scope (untouched):** ProductScreen native touch/swipe listener blocks, lightbox swipe behavior, cart/add-to-cart logic, wishlist/share logic, product data.
+
+### কী বদলেছে
+- Moved the gallery thumbnail strip out of the content sheet body and into a floating strip positioned over the top edge of the product card/sheet.
+- Floating strip now uses a translucent surface, rounded 18px container, 56px thumbnail tiles, active coral ring/lift, and a `+N` tile when there are more than five gallery images.
+- Product sheet top padding is conditionally increased when thumbnails exist, so the product title/rating starts below the floating thumbnails without crowding.
+- Existing image selection logic is preserved: tapping a thumbnail still calls `setActiveImg(url)`; hero swipe and lightbox code are unchanged.
+
+### Verification (self)
+- `npx tsc --noEmit`: still reports the known **31 pre-existing errors**; no new `ProductScreen.tsx` errors.
+- `npm run build`: ✓ passed.
+- `package-lock.json` churn from local install was reverted.
+
+### Handoff / next
+- Single focused adjustment. Review product detail on real mobile viewport, especially products with 2–5 images and products with 6+ images to confirm the `+N` tile reads correctly.
+
+
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## BAS0012 — Manage Address editor + Product detail rhythm retune (single phase, complete) ✅ (2026-07-20, arena.ai Agent Mode)
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**Task:** Buddy selected two more areas for UI work: the Manage Address add/edit flow and Product detail page. Supplied reference screens for location permission / enter-location and product detail. Requested HomeScreen-sized typography/spacing, not oversized reference text.
+
+**In scope (files touched):** `src/screens/ProfileScreen.tsx`, `src/screens/ProductScreen.tsx`, `AGENT_LOG.md` plus earlier pending UI files already in this cumulative ZIP.
+**Out of scope (untouched):** ProductScreen native touch/swipe listener logic, cart/add-to-cart logic, address save/geolocation logic, store/Firebase code, `BottomTabBar.tsx`.
+
+### কী বদলেছে
+- **Manage Address add/edit flow (`ProfileScreen.tsx`)**
+  - Address add/edit modal changed from the older bottom sheet into a cleaner full-screen `Enter Your Location` / `Manage Address` flow inspired by the reference.
+  - Added compact centered header + round back control, search-style address field, `Use my current location` row, address details section, and HomeScreen-scale field/button typography.
+  - Existing address list, add/edit, default, delete, GPS lookup, validation, and local save behavior are preserved.
+- **Product detail (`ProductScreen.tsx`)**
+  - Product detail layout retuned closer to the supplied reference while preserving the existing BAS product image/gallery behavior.
+  - Reduced large title/price/section typography to better match HomeScreen rhythm.
+  - Tightened content-sheet spacing, thumbnail size, rating/price/description spacing, and bottom add-to-cart bar.
+  - Top action buttons remain circular reference-style controls; native image swipe/touch listeners were not changed.
+
+### Verification (self)
+- `npx tsc --noEmit`: still reports the known **31 pre-existing errors**; no new errors from `ProfileScreen.tsx` or `ProductScreen.tsx`.
+- `npm run build`: ✓ passed.
+- `package-lock.json` churn from local `npm install` was reverted.
+
+### Handoff / next
+- Single complete pass. Real-device review should focus on: (1) Address add/edit full-screen flow, (2) Product detail hero/content-sheet balance, (3) Product image swipe still working.
+
+
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ## BAS0011 — Order success page reference-style redesign + success-check transition (single phase, complete) ✅ (2026-07-19, arena.ai Agent Mode)
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 

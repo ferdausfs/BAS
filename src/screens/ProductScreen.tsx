@@ -14,7 +14,7 @@ function DescriptionWithReadMore({ text }: { text: string }) {
 
   return (
     <div className="mt-4">
-      <p className={`text-[13.5px] leading-relaxed text-ink-300 ${!expanded && shouldClamp ? 'line-clamp-3' : ''}`}>
+      <p className={`text-[13px] leading-relaxed text-ink-300 ${!expanded && shouldClamp ? 'line-clamp-3' : ''}`}>
         {text}
       </p>
       {shouldClamp && (
@@ -270,7 +270,7 @@ export default function ProductScreen() {
           ref={heroRef}
           onClick={() => setLightboxOpen(true)}
           className="relative w-full bg-secondary overflow-hidden"
-          style={{ aspectRatio: '4/4.6' }}
+          style={{ aspectRatio: '1/1.05' }}
         >
           <img
             loading="lazy"
@@ -317,7 +317,7 @@ export default function ProductScreen() {
 
           {/* Pagination dots */}
           {galleryImages.length > 1 && (
-            <div className="absolute right-0 bottom-20 left-0 flex justify-center gap-1.5 pointer-events-none">
+            <div className="absolute right-0 bottom-24 left-0 flex justify-center gap-1.5 pointer-events-none">
               {galleryImages.map((_, i) => (
                 <span
                   key={i}
@@ -330,42 +330,44 @@ export default function ProductScreen() {
           )}
         </div>
 
-        {/* Content sheet below image — redesigned to be a solid premium card with soft shadow */}
-        <div className="bg-surface rounded-t-[22px] -mt-16 relative z-10 px-6 pt-6 border-t border-border shadow-card">
-          {/* Gallery Thumbnail Strip */}
-          {galleryImages.length > 1 && (
-            <div className="flex gap-2.5 overflow-x-auto pb-4 pt-1 scrollbar-hide">
-              {galleryImages.map((url, i) => {
-                const isActive = currentImg === url;
-                return (
-                  <button
-                    key={i}
-                    onClick={() => setActiveImg(url)}
-                    className={`flex-shrink-0 w-[60px] h-[60px] rounded-xl overflow-hidden transition-all duration-200 ${
-                      isActive ? '-translate-y-1 ring-2 ring-coral ring-offset-2 ring-offset-white' : 'opacity-80'
-                    }`}
-                    style={{
-                      boxShadow: isActive
-                        ? '0 10px 20px -8px rgba(246,95,143,0.25), 0 2px 6px -2px rgba(246,95,143,0.12)'
-                        : '0 2px 8px -4px rgba(246,95,143,0.18)',
-                    }}
-                  >
-                    <img loading="lazy" decoding="async" src={url} alt="" className="w-full h-full object-cover" />
-                  </button>
-                );
-              })}
-            </div>
-          )}
+        {/* Floating gallery thumbnails — sit above the product card like the reference */}
+        {galleryImages.length > 1 && (
+          <div className="relative z-20 mx-auto -mt-[86px] mb-3 flex max-w-[292px] gap-2 overflow-x-auto rounded-[18px] bg-white/85 p-2 shadow-card scrollbar-hide">
+            {galleryImages.slice(0, 5).map((url, i) => {
+              const isActive = currentImg === url;
+              const remaining = galleryImages.length - 4;
+              const showMoreTile = i === 4 && galleryImages.length > 5;
+              return (
+                <button
+                  key={i}
+                  onClick={() => setActiveImg(url)}
+                  className={`flex h-14 w-14 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl transition-all duration-200 ${
+                    isActive ? '-translate-y-1 ring-2 ring-coral ring-offset-2 ring-offset-white' : 'opacity-85'
+                  } ${showMoreTile ? 'bg-secondary text-[13px] font-bold text-coral' : 'bg-secondary'}`}
+                  style={{
+                    boxShadow: isActive
+                      ? '0 10px 20px -8px rgba(246,95,143,0.25), 0 2px 6px -2px rgba(246,95,143,0.12)'
+                      : '0 2px 8px -4px rgba(246,95,143,0.18)',
+                  }}
+                >
+                  {showMoreTile ? `+${remaining}` : <img loading="lazy" decoding="async" src={url} alt="" className="h-full w-full object-cover" />}
+                </button>
+              );
+            })}
+          </div>
+        )}
 
+        {/* Content sheet below image — solid product card under floating thumbnails */}
+        <div className={`bg-surface rounded-t-[22px] relative z-10 px-6 border-t border-border shadow-card ${galleryImages.length > 1 ? '-mt-10 pt-16' : '-mt-14 pt-5'}`}>
           {/* Title row */}
           <div className="flex items-start justify-between gap-3">
-            <h1 className="flex-1 font-sans text-[22px] font-bold leading-[1.2] tracking-tight text-ink">
+            <h1 className="flex-1 font-sans text-[20px] font-semibold leading-[1.2] tracking-tight text-ink">
               {product.name}
             </h1>
           </div>
 
           {/* Rating + meta */}
-          <div className="mt-3.5 flex items-center gap-2 text-[12.5px]">
+          <div className="mt-3 flex items-center gap-2 text-[12px]">
             <div className="flex items-center gap-0.5 text-gold" style={{ filter: 'drop-shadow(0 1px 3px rgba(232,163,60,0.3))' }}>
               {[...Array(5)].map((_, i) => (
                 <Star
@@ -416,8 +418,8 @@ export default function ProductScreen() {
           )}
 
           {/* Price */}
-          <div className="mt-4 flex items-baseline gap-2">
-            <span className="font-sans text-[28px] font-bold leading-none text-coral tabular">
+          <div className="mt-3.5 flex items-baseline gap-2">
+            <span className="font-sans text-[24px] font-bold leading-none text-coral tabular">
               {formatINR(base)}
             </span>
             {product.oldPrice && (
@@ -440,13 +442,13 @@ export default function ProductScreen() {
           )}
 
           {/* Bake Art Style brand card — redesigned with soft-pink palette */}
-          <div className="mt-5 flex items-center justify-between rounded-2xl border border-border bg-surface px-4 py-3.5 shadow-sm">
+          <div className="mt-5 flex items-center justify-between rounded-2xl border border-border bg-surface px-4 py-3 shadow-sm">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary text-xl font-bold text-coral">
                 🍞
               </div>
               <div>
-                <div className="font-bold text-ink text-[14px]">Bake Art Style</div>
+                <div className="font-semibold text-ink text-[13.5px]">Bake Art Style</div>
                 <div className="text-[11px] text-ink-300 font-medium">Official Bakery • Since 2018</div>
               </div>
             </div>
@@ -471,7 +473,7 @@ export default function ProductScreen() {
           {/* Flavor selector */}
           {safeFlavors.length > 1 && (
             <section className="mt-5">
-              <h3 className="font-sans text-[15px] font-bold tracking-tight text-ink">Flavor</h3>
+              <h3 className="font-sans text-[14px] font-semibold tracking-tight text-ink">Flavor</h3>
               <div className="mt-3 flex flex-wrap gap-2">
                 {safeFlavors.map((f) => {
                   const active = selectedFlavor === f;
@@ -496,7 +498,7 @@ export default function ProductScreen() {
           {/* Size selector */}
           <section className="mt-5">
             <div className="flex items-center justify-between">
-              <h3 className="font-sans text-[15px] font-bold tracking-tight text-ink">Select Weight</h3>
+              <h3 className="font-sans text-[14px] font-semibold tracking-tight text-ink">Select Weight</h3>
               <span className="text-[12.5px] font-bold text-coral">
                 {product.pricePerUnit
                   ? (customWeight && +customWeight > 0 && servingForPounds(+customWeight)
@@ -577,7 +579,7 @@ export default function ProductScreen() {
 
           {/* Add-ons */}
           <section className="mt-5">
-            <h3 className="font-sans text-[15px] font-bold tracking-tight text-ink">Add-ons</h3>
+            <h3 className="font-sans text-[14px] font-semibold tracking-tight text-ink">Add-ons</h3>
             <div className="mt-3 space-y-2">
               {ADDONS.map((a) => {
                 const active = !!addons[a.id];
@@ -778,21 +780,21 @@ export default function ProductScreen() {
       <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-5 pt-5 pb-2 pointer-events-none">
         <button
           onClick={back}
-          className="pointer-events-auto flex h-11 w-11 items-center justify-center rounded-full bg-surface text-ink shadow-card transition active:scale-90"
+          className="pointer-events-auto flex h-12 w-12 items-center justify-center rounded-full bg-surface text-ink shadow-card transition active:scale-90"
           aria-label="Back"
         >
           <ArrowLeft className="h-[20px] w-[20px]" strokeWidth={2.2} />
         </button>
         <div className="flex gap-2.5 pointer-events-auto">
           <button
-            className="flex h-11 w-11 items-center justify-center rounded-full bg-surface text-ink shadow-card transition active:scale-90"
+            className="flex h-12 w-12 items-center justify-center rounded-full bg-surface text-ink shadow-card transition active:scale-90"
             aria-label="Share"
           >
             <Share2 className="h-[18px] w-[18px]" strokeWidth={2} />
           </button>
           <button
             onClick={handleWish}
-            className="flex h-11 w-11 items-center justify-center rounded-full bg-surface text-ink shadow-card transition active:scale-90"
+            className="flex h-12 w-12 items-center justify-center rounded-full bg-surface text-ink shadow-card transition active:scale-90"
             aria-label="Wishlist"
           >
             <Heart
@@ -806,13 +808,13 @@ export default function ProductScreen() {
       </div>
 
       {/* Sticky bottom CTA — solid surface (depth ≠ hue) */}
-      <div className="absolute right-0 bottom-0 left-0 z-30 bg-white/95 px-6 pt-4 pb-6 shadow-float rounded-t-[22px]">
+      <div className="absolute right-0 bottom-0 left-0 z-30 rounded-t-[22px] border-t border-border bg-white/95 px-6 pt-4 pb-6 shadow-float">
         <div className="flex items-center gap-3">
           <div>
             <div className="text-[11px] font-bold tracking-wider text-ink-300 uppercase">
               Total
             </div>
-            <div className="font-sans text-[22px] font-bold text-coral tabular">
+            <div className="font-sans text-[20px] font-bold text-coral tabular">
               {formatINR(total * quantity)}
             </div>
             <div className="text-[11.5px] text-ink-300 font-bold mt-0.5 max-w-[120px] truncate">
@@ -844,7 +846,7 @@ export default function ProductScreen() {
               </div>
               <button
                 onClick={handleAdd}
-                className="btn-primary flex h-14 flex-1 items-center justify-center gap-2 rounded-2xl text-[14px] font-bold tracking-tight shadow-btn"
+                className="btn-primary flex h-13 flex-1 items-center justify-center gap-2 rounded-full text-[14px] font-bold tracking-tight shadow-btn"
               >
                 <ShoppingBag className="h-[18px] w-[18px]" strokeWidth={2.2} />
                 Add to Cart
