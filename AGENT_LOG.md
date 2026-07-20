@@ -1,4 +1,31 @@
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## BAS0033 — Product cards no-box shadow-text overlay style (single phase, complete) ✅ (2026-07-20, arena.ai Agent Mode)
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**Task:** Buddy clarified the desired Option-B product-card style: do not create a visible inner card/glass box. The full cake image should fill the card, and product details should be written directly over a bottom shadow/gradient on the image.
+
+**In scope (files touched):** `src/components/ProductCard.tsx`, `AGENT_LOG.md` plus earlier pending cumulative UI files already in this ZIP.
+**Out of scope (untouched):** product data, cart add logic, wishlist logic, product detail screen, checkout/order logic.
+
+### কী বদলেছে
+- Removed the inner frosted details box from ProductCard.
+- Product image now fills the entire card.
+- Added only a bottom shadow/gradient overlay for readability.
+- Product name, size/flavor, rating, price, and Add action are now written directly over that shadow.
+- Add action is now a white pill (`Add +`) matching the Option-B reference direction.
+- Badge and heart remain floating over the image.
+- Add-to-cart, wishlist, image fallback, low-stock, bestseller/new logic unchanged.
+
+### Verification (self)
+- `npx tsc --noEmit`: **30 known pre-existing errors** remain; no new ProductCard errors.
+- `npm run build`: ✓ passed.
+- `package-lock.json` churn from local install was reverted.
+
+### Handoff / next
+- After deploy, review product cards across Home/Cake/Wishlist/Search. Details should no longer look like a separate card; they should sit directly on the image shadow.
+
+
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ## BAS0031 — Product cards thin edgeless glass detail overlay (single phase, complete) ✅ (2026-07-20, arena.ai Agent Mode)
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
