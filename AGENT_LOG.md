@@ -1,4 +1,32 @@
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## BAS0019 — Checkout custom delivery date/time picker (single phase, complete) ✅ (2026-07-20, arena.ai Agent Mode)
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**Task:** Buddy reported the checkout delivery date currently opens the browser/system calendar. Requested an in-app date/time picker styled like the supplied pickup-time reference, matching BAS UI.
+
+**In scope (files touched):** `src/screens/CheckoutScreen.tsx`, `AGENT_LOG.md` plus earlier pending cumulative UI files already in this ZIP.
+**Out of scope (untouched):** checkout validation/order submission logic, payment logic, delivery slot values, store/Firebase code.
+
+### কী বদলেছে
+- Replaced the native `<input type="date">` with a BAS-styled button that opens a custom bottom sheet.
+- Added in-app delivery date/time picker sheet:
+  - rounded bottom sheet with drag handle
+  - 14 upcoming delivery-date cards from `getMinDeliveryDate()`
+  - delivery slot buttons using existing `SLOTS`
+  - Reset and Confirm actions
+  - BAS coral/pink styling, no system calendar UI
+- Existing `form.date` and `form.time` state are still used, so checkout submission behavior remains unchanged.
+
+### Verification (self)
+- `npx tsc --noEmit`: **30 known pre-existing errors** remain; no new CheckoutScreen errors. Remaining Checkout warnings are the existing unused location-helper declarations.
+- `npm run build`: ✓ passed.
+- `package-lock.json` churn from local install was reverted.
+
+### Handoff / next
+- After deploy, test checkout step 1: tap delivery date row → custom sheet opens → choose date/slot → Confirm → selected values remain through next steps.
+
+
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ## BAS0018 — Orders tab active-label scale animation (single phase, complete) ✅ (2026-07-20, arena.ai Agent Mode)
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 

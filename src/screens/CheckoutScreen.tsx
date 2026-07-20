@@ -162,6 +162,7 @@ export default function CheckoutScreen({ onBack }: Props) {
     payment: 'cash' as typeof PAYMENT_METHODS[number]['id'],
   });
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
+  const [datePickerOpen, setDatePickerOpen] = useState(false);
 
 
   const savedAddresses = useMemo(() => {
@@ -206,6 +207,22 @@ export default function CheckoutScreen({ onBack }: Props) {
       phone: prev.phone || preferred.phone,
     }));
   }, [checkoutAddressCards, selectedAddressId]);
+
+  const dateOptions = useMemo(() => {
+    const start = new Date(getMinDeliveryDate());
+    return Array.from({ length: 14 }).map((_, index) => {
+      const date = new Date(start);
+      date.setDate(start.getDate() + index);
+      const value = date.toISOString().split('T')[0];
+      const label = index === 0 ? 'Tomorrow' : date.toLocaleDateString('en-BD', { weekday: 'short' });
+      const day = date.toLocaleDateString('en-BD', { day: '2-digit' });
+      const month = date.toLocaleDateString('en-BD', { month: 'short' });
+      const full = date.toLocaleDateString('en-BD', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+      return { value, label, day, month, full };
+    });
+  }, []);
+
+  const selectedDateOption = dateOptions.find((option) => option.value === form.date) ?? dateOptions[0];
 
   // Autofill name, phone and address for logged in users
   useEffect(() => {
@@ -657,19 +674,20 @@ export default function CheckoutScreen({ onBack }: Props) {
             <label htmlFor="checkout-date" className="text-[12px] font-bold tracking-wider text-ink-200 uppercase">
               ডেলিভারি তারিখ
             </label>
-            <div className="relative">
-              <div className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 flex h-7 w-7 items-center justify-center rounded-lg bg-coral/10">
-                <Calendar className="h-4 w-4 text-coral" strokeWidth={2} />
-              </div>
-              <input
-                id="checkout-date"
-                type="date"
-                min={getMinDeliveryDate()}
-                value={form.date}
-                onChange={(e) => setForm({ ...form, date: e.target.value })}
-                className="w-full rounded-xl border border-border bg-surface py-3.5 pl-12 pr-4 text-[14px] font-semibold text-ink outline-none focus:border-coral focus:ring-2 focus:ring-coral/15 transition shadow-sm"
-              />
-            </div>
+            <button
+              id="checkout-date"
+              type="button"
+              onClick={() => setDatePickerOpen(true)}
+              className="flex w-full items-center gap-3 rounded-xl border border-border bg-surface py-3.5 pl-3.5 pr-4 text-left shadow-sm transition active:scale-[.99]"
+            >
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-coral/10 text-coral">
+                <Calendar className="h-4 w-4" strokeWidth={2} />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-[14px] font-semibold text-ink">{selectedDateOption?.full ?? form.date}</span>
+                <span className="mt-0.5 block text-[11.5px] font-medium text-ink-200">Tap to choose delivery date & time</span>
+              </span>
+            </button>
             <p className="mt-1.5 text-[11.5px] text-ink-200">
               আজ বিকেল ৪টার আগে অর্ডার করলে আগামীকাল পাবেন
             </p>
@@ -1231,6 +1249,90 @@ export default function CheckoutScreen({ onBack }: Props) {
         </>
         )}
       </div>
+
+      {datePickerOpen && (
+        <div className="fixed inset-0 z-[130] flex flex-col justify-end">
+          <button
+            type="button"
+            className="absolute inset-0 bg-ink/35 anim-fade"
+            onClick={() => setDatePickerOpen(false)}
+            aria-label="Close date picker"
+          />
+          <section className="relative rounded-t-[28px] border-t border-border bg-surface px-6 pb-8 pt-4 shadow-float anim-up">
+            <div className="mx-auto mb-4 h-1 w-16 rounded-full bg-ink-100" />
+            <div className="mb-4 flex items-center justify-between gap-3 border-b border-border pb-4">
+              <div>
+                <h2 className="text-[20px] font-semibold tracking-tight text-ink">Delivery Time</h2>
+                <p className="mt-1 text-[12px] font-medium text-ink-300">Choose your delivery date and preferred slot</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setForm((prev) => ({ ...prev, date: getMinDeliveryDate(), time: '4pm - 6pm' }));
+                }}
+                className="text-[11px] font-bold uppercase tracking-[0.16em] text-coral"
+              >
+                Reset
+              </button>
+            </div>
+
+            <div className="no-scrollbar flex gap-3 overflow-x-auto pb-2">
+              {dateOptions.map((option) => {
+                const active = form.date === option.value;
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => setForm((prev) => ({ ...prev, date: option.value }))}
+                    className={`flex min-w-[74px] flex-col items-center rounded-[18px] border px-3 py-3 transition active:scale-95 ${
+                      active ? 'border-coral bg-coral text-white shadow-btn' : 'border-border bg-bg text-ink'
+                    }`}
+                  >
+                    <span className={`text-[11px] font-bold uppercase ${active ? 'text-white/80' : 'text-ink-200'}`}>{option.label}</span>
+                    <span className="mt-1 text-[22px] font-bold leading-none tabular">{option.day}</span>
+                    <span className={`mt-1 text-[11px] font-semibold ${active ? 'text-white/80' : 'text-ink-300'}`}>{option.month}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="mt-5">
+              <div className="mb-3 flex items-center justify-between">
+                <h3 className="text-[14px] font-semibold text-ink">Pickup / Delivery Slot</h3>
+                <span className="text-[12px] font-medium text-ink-300">{selectedDateOption?.full}</span>
+              </div>
+              <div className="grid grid-cols-2 gap-2.5">
+                {SLOTS.map((slot) => {
+                  const active = form.time === slot.v;
+                  return (
+                    <button
+                      key={slot.v}
+                      type="button"
+                      onClick={() => setForm((prev) => ({ ...prev, time: slot.v }))}
+                      className={`relative h-12 rounded-[16px] border text-[13px] font-bold transition active:scale-95 ${
+                        active ? 'border-coral bg-coral text-white shadow-btn' : 'border-border bg-bg text-ink'
+                      }`}
+                    >
+                      {slot.v}
+                      {slot.hot && !active && (
+                        <span className="absolute -right-1.5 -top-1.5 rounded-full bg-ink px-1.5 py-0.5 text-[8px] font-bold uppercase text-white">Popular</span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setDatePickerOpen(false)}
+              className="mt-6 flex h-12 w-full items-center justify-center rounded-full bg-coral text-[14px] font-bold text-white shadow-btn transition active:scale-[.98]"
+            >
+              Confirm
+            </button>
+          </section>
+        </div>
+      )}
 
       {/* Sticky CTA */}
       <div className="absolute right-0 bottom-0 left-0 z-30 bg-white/95 px-6 pt-4 pb-6 shadow-float rounded-t-[22px]">
