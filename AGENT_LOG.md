@@ -1,4 +1,29 @@
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## BAS0022 — Checkout summary edit opens in-place pickers (single phase, complete) ✅ (2026-07-20, arena.ai Agent Mode)
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**Task:** Buddy requested that `Edit` from the checkout order-summary step should not navigate back to the previous checkout step. Instead, editing the address/time sections should open the same in-place bottom-sheet pickers already used on the address/date step.
+
+**In scope (files touched):** `src/screens/CheckoutScreen.tsx`, `AGENT_LOG.md` plus earlier pending cumulative UI files already in this ZIP.
+**Out of scope (untouched):** payment/order submission logic, address/date picker internals, cart logic, store/Firebase code.
+
+### কী বদলেছে
+- In the checkout `Order summary` card:
+  - Delivery address `Edit` now opens the `Delivery Address` bottom sheet on the same confirmation step.
+  - Delivery time `Edit` now opens the `Delivery Time` bottom sheet on the same confirmation step.
+- Removed the previous behavior where both Edit buttons called `goToStep(0)` and moved the user back to the address step.
+- Existing picker behavior and selected-address/date state are unchanged.
+
+### Verification (self)
+- `npx tsc --noEmit`: **30 known pre-existing errors** remain; no new CheckoutScreen errors. Remaining Checkout warnings are existing unused location-helper declarations.
+- `npm run build`: ✓ passed.
+- `package-lock.json` churn from local install was reverted.
+
+### Handoff / next
+- After deploy, test checkout step 2/confirm: tap address Edit → address picker opens without leaving step 2; tap time Edit → delivery time picker opens without leaving step 2.
+
+
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ## BAS0021 — Checkout selected-address applied-through-payment fix (single phase, complete) ✅ (2026-07-20, arena.ai Agent Mode)
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 

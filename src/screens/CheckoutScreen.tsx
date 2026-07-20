@@ -1017,7 +1017,7 @@ export default function CheckoutScreen({ onBack }: Props) {
                   <p className="text-ink-200">{checkoutPhone}</p>
                   <p className="max-w-[200px] text-ink-200">{checkoutAddress}, {checkoutDistrict}</p>
                 </div>
-                <EditButton onClick={() => goToStep(0)} />
+                <EditButton onClick={() => setAddressPickerOpen(true)} />
               </div>
             </div>
             <div className="h-px bg-ink-50" />
@@ -1025,7 +1025,7 @@ export default function CheckoutScreen({ onBack }: Props) {
               <span className="text-ink-200">ডেলিভারি সময়</span>
               <div className="flex items-center gap-2.5">
                 <span className="font-bold text-ink">{form.date} · {form.time}</span>
-                <EditButton onClick={() => goToStep(0)} />
+                <EditButton onClick={() => setDatePickerOpen(true)} />
               </div>
             </div>
             {giftMode && (
