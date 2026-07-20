@@ -1,4 +1,34 @@
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## BAS0029 — Replace onboarding slides with 2s glass heartbeat logo splash (single phase, complete) ✅ (2026-07-20, arena.ai Agent Mode)
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**Task:** Buddy requested removing the onboarding slides that appeared on every refresh. Desired behavior: show only the supplied BAS logo with a 2-second heartbeat animation, no extra `Bake Art Style` duplicate title, keep a logo-style `Handcrafted Bakery` tagline, use a glass/blur overlay over the last saved tab, then auto-open the last saved tab.
+
+**In scope (files touched):** `src/screens/SplashScreen.tsx`, `src/App.tsx`, `src/index.css`, `public/bas_default_logo.png`, `AGENT_LOG.md` plus earlier pending cumulative UI files already in this ZIP.
+**Out of scope (untouched):** auth flow, tab navigation internals, product/order/checkout logic.
+
+### কী বদলেছে
+- Removed the old multi-slide onboarding UI from `SplashScreen.tsx`.
+- New splash behavior:
+  - shows supplied BAS logo only (no duplicate `Bake Art Style` heading)
+  - `Handcrafted Bakery` tagline in a softer logo-like serif/italic style
+  - glass overlay with blurred app/tab silhouette behind it
+  - 2-second heartbeat animation: logo pulse, glow pulse, ring pulse, subtle screen vibration, progress shimmer
+  - after 2 seconds, automatically opens last saved tab
+- `App.tsx` now persists the current active tab to `localStorage` as `bas-last-tab`.
+- `SplashScreen.tsx` reads `bas-last-tab` and falls back to Home if unavailable/invalid.
+- Added the provided logo asset to `public/bas_default_logo.png`.
+
+### Verification (self)
+- `npx tsc --noEmit`: **30 known pre-existing errors** remain; no new SplashScreen/App errors. The visible App `PhoneFrame` unused warning is pre-existing.
+- `npm run build`: ✓ passed.
+- `package-lock.json` churn from local install was reverted.
+
+### Handoff / next
+- After deploy, refresh the app: old onboarding slides should be gone; glass heartbeat logo splash should run for ~2s and then open the last saved tab.
+
+
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ## BAS0028 — Checkout step animation + item expand/detail sheet (single phase, complete) ✅ (2026-07-20, arena.ai Agent Mode)
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 

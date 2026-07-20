@@ -1,130 +1,65 @@
-import { useState } from 'react';
-import { ArrowRight, ChevronRight } from 'lucide-react';
-import { useUI } from '../lib/store';
+import { useEffect } from 'react';
+import { useUI, type Tab } from '../lib/store';
 
-const SLIDES = [
-  {
-    id: 1,
-    title: 'Bookmark Your Bakery Favorites',
-    desc: 'Save your favorite handcrafted cakes, track live order status and enjoy customized celebrations.',
-    tag: 'Handcrafted Bakery',
-    icon: '🎂',
-  },
-  {
-    id: 2,
-    title: 'Discover Delight: Explore Our Bakery Selection',
-    desc: 'From fresh cupcakes and celebration cakes to custom orders — delivered right to your doorstep.',
-    tag: 'Fresh Daily',
-    icon: '🧁',
-  },
-  {
-    id: 3,
-    title: 'Your Preferred Cakes, Saved for You',
-    desc: 'Save your favorite items and access them anytime, making reordering quick and effortless.',
-    tag: 'Wishlist',
-    icon: '💖',
-  },
-  {
-    id: 4,
-    title: 'Stay Updated Every Step of the Way',
-    desc: 'Enjoy fast, reliable delivery with live tracking, bringing your order right to your doorstep.',
-    tag: 'Live Tracking',
-    icon: '🚴',
-  },
-];
+const LAST_TAB_KEY = 'bas-last-tab';
+const validTabs: Tab[] = ['home', 'categories', 'orders', 'profile'];
+
+function readLastTab(): Tab {
+  try {
+    const saved = localStorage.getItem(LAST_TAB_KEY) as Tab | null;
+    return saved && validTabs.includes(saved) ? saved : 'home';
+  } catch {
+    return 'home';
+  }
+}
 
 export default function SplashScreen() {
   const { setView } = useUI();
-  const [slideIdx, setSlideIdx] = useState(0);
 
-  const handleNext = () => {
-    if (slideIdx < SLIDES.length - 1) {
-      setSlideIdx(slideIdx + 1);
-    } else {
-      setView({ name: 'tabs', tab: 'home' });
-    }
-  };
-
-  const handleSkip = () => {
-    setView({ name: 'tabs', tab: 'home' });
-  };
-
-  const slide = SLIDES[slideIdx];
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setView({ name: 'tabs', tab: readLastTab() });
+    }, 2000);
+    return () => window.clearTimeout(timer);
+  }, [setView]);
 
   return (
-    <div className="relative flex h-full w-full flex-col justify-between overflow-hidden bg-bg px-6 pt-11 pb-6">
-      {/* Top Bar — Skip button */}
-      <div className="flex items-center justify-between z-10">
-        <div className="flex items-center gap-2">
+    <div className="relative h-full w-full overflow-hidden bg-bg">
+      {/* Blurred last-tab style app silhouette behind the glass splash. */}
+      <div className="absolute inset-0 scale-[1.04] opacity-90 blur-[5px]" aria-hidden="true">
+        <div className="absolute left-6 right-6 top-10 flex items-center justify-between">
+          <span className="h-12 w-12 rounded-full bg-surface shadow-card" />
+          <span className="h-6 w-32 rounded-full bg-secondary" />
+          <span className="h-12 w-12 rounded-full bg-surface shadow-card" />
+        </div>
+        <div className="absolute left-6 right-6 top-36 space-y-4">
+          <div className="h-36 rounded-[24px] border border-border bg-surface shadow-card" />
+          <div className="h-36 rounded-[24px] border border-border bg-surface shadow-card" />
+          <div className="h-36 rounded-[24px] border border-border bg-surface shadow-card" />
+        </div>
+        <div className="absolute bottom-5 left-4 right-4 h-[72px] rounded-[26px] border border-border bg-surface shadow-float" />
+      </div>
+
+      {/* Glass splash layer — intentionally no solid extra background. */}
+      <div className="bas-splash-glass absolute inset-0 flex flex-col items-center justify-center px-8">
+        <div className="bas-logo-heart relative grid h-[258px] w-[258px] place-items-center">
+          <span className="bas-logo-glow absolute inset-1.5 rounded-full" />
+          <span className="bas-logo-ring absolute -inset-0.5 rounded-full" />
+          <span className="bas-logo-ring two absolute -inset-0.5 rounded-full" />
           <img
-            src="/brand-logo-transparent-crop.png"
+            src="/bas_default_logo.png"
             alt="Bake Art Style"
-            className="h-8 w-auto object-contain"
+            className="relative h-[230px] w-[230px] object-contain drop-shadow-[0_18px_26px_rgba(92,35,58,0.16)]"
           />
         </div>
-        <button
-          onClick={handleSkip}
-          className="text-[13px] font-bold text-ink-200 hover:text-ink transition"
-        >
-          Skip
-        </button>
-      </div>
 
-      {/* Main Card Graphic */}
-      <div className="relative my-auto flex flex-col items-center justify-center text-center z-10 anim-fade">
-        {/* Soft-pink hero card — solid opaque surface, real soft elevation, no gradient/blur */}
-        <div className="relative flex h-52 w-full max-w-xs items-center justify-center rounded-[22px] bg-secondary p-6 shadow-card">
-          {/* quiet decorative ring for depth (solid, no blur) */}
-          <div className="absolute -top-4 -right-4 h-24 w-24 rounded-full border border-border bg-surface/60" />
-          <div className="absolute -bottom-6 -left-6 h-16 w-16 rounded-full bg-accent/50" />
-          <div className="relative flex h-24 w-24 items-center justify-center rounded-3xl bg-surface text-5xl shadow-card">
-            {slide.icon}
-          </div>
+        <div className="bas-splash-tagline mt-5 text-center font-serif text-[19px] font-semibold italic tracking-[0.04em] text-[#4B2B22]">
+          Handcrafted Bakery
         </div>
 
-        <span className="mt-5 inline-flex items-center gap-1 rounded-full bg-secondary px-3 py-1 text-[11px] font-bold text-coral uppercase tracking-wider">
-          {slide.tag}
-        </span>
-
-        <h1 className="mt-3 max-w-[18ch] text-[22px] font-bold leading-tight tracking-tight text-ink">
-          {slide.title}
-        </h1>
-
-        <p className="mt-2.5 max-w-[30ch] text-[13px] leading-relaxed text-ink-300">
-          {slide.desc}
-        </p>
-      </div>
-
-      {/* Footer / Controls */}
-      <div className="flex flex-col items-center gap-6 z-10">
-        {/* Pagination Dots */}
-        <div className="flex items-center gap-2">
-          {SLIDES.map((_, i) => (
-            <button
-              key={i}
-              onClick={() => setSlideIdx(i)}
-              className={`h-2 rounded-full transition-all duration-300 ${
-                i === slideIdx ? 'w-8 bg-coral' : 'w-2 bg-coral-200'
-              }`}
-            />
-          ))}
+        <div className="bas-splash-loader absolute bottom-[98px] left-[104px] right-[104px] h-[5px] overflow-hidden rounded-full bg-primary/15">
+          <span className="block h-full w-[42%] rounded-full bg-primary" />
         </div>
-
-        {/* CTA Button */}
-        <button
-          onClick={handleNext}
-          className="btn-primary flex h-12 w-full items-center justify-center gap-2 rounded-full text-[14px] font-bold tracking-tight shadow-btn transition active:scale-95"
-        >
-          {slideIdx === SLIDES.length - 1 ? (
-            <>
-              Explore Bakery Selection <ArrowRight className="h-4 w-4" strokeWidth={2.5} />
-            </>
-          ) : (
-            <>
-              Continue <ChevronRight className="h-4 w-4" strokeWidth={2.5} />
-            </>
-          )}
-        </button>
       </div>
     </div>
   );

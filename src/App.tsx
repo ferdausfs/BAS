@@ -72,6 +72,9 @@ export default function App() {
 
   useEffect(() => {
     (window as any).__BAKEART_TAB__ = activeTab;
+    try {
+      localStorage.setItem('bas-last-tab', activeTab);
+    } catch { /* ignore */ }
   }, [activeTab]);
 
   const screenKey = [
