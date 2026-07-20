@@ -518,6 +518,9 @@ ${productList}
 
   if (!embedded && !fullPage && !chatOpen) return null;
 
+  const latestBotText = [...messages].reverse().find((message) => message.role === 'bot')?.text ?? '';
+  const showWhatsappCta = /WhatsApp|হোয়াটসঅ্যাপ|সাপোর্ট|support/i.test(latestBotText);
+
   const panel = (
     <div
       className={`flex flex-col overflow-hidden bg-surface ${fullPage ? 'h-full' : embedded ? 'rounded-[24px] border border-border shadow-card' : 'h-full'}`}
@@ -593,15 +596,19 @@ ${productList}
         <button type="button" onClick={() => send()} disabled={!input.trim() || loading} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-primary text-white shadow-btn transition hover:bg-primary-hover disabled:opacity-40 active:scale-90" aria-label="Send message"><Send className="h-4 w-4" /></button>
       </div>
 
-      <a
-        href={settings.whatsappNumber.replace(/\D/g, '').length >= 10 ? waLink(settings.whatsappNumber, 'হ্যালো! আমার একটা প্রশ্ন আছে।') : '#'}
-        target="_blank"
-        rel="noopener noreferrer"
-        onClick={(event) => { if (settings.whatsappNumber.replace(/\D/g, '').length < 10) event.preventDefault(); }}
-        className="flex min-h-12 shrink-0 items-center justify-center gap-2 border-t border-success/20 bg-success/10 px-4 text-[12px] font-semibold text-success transition hover:bg-success/15"
-      >
-        <Phone className="h-4 w-4" /> সরাসরি WhatsApp-এ কথা বলুন
-      </a>
+      {showWhatsappCta && (
+        <div className="shrink-0 border-t border-success/20 bg-success/10 px-3 py-2 anim-up">
+          <a
+            href={settings.whatsappNumber.replace(/\D/g, '').length >= 10 ? waLink(settings.whatsappNumber, 'হ্যালো! আমার একটা প্রশ্ন আছে।') : '#'}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(event) => { if (settings.whatsappNumber.replace(/\D/g, '').length < 10) event.preventDefault(); }}
+            className="flex h-11 items-center justify-center gap-2 rounded-full bg-success/10 px-4 text-[12px] font-semibold text-success transition hover:bg-success/15 active:scale-[.98]"
+          >
+            <Phone className="h-4 w-4" /> সরাসরি WhatsApp-এ কথা বলুন
+          </a>
+        </div>
+      )}
     </div>
   );
 

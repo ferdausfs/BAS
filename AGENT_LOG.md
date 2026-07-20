@@ -1,4 +1,29 @@
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## BAS0027 — Chat WhatsApp CTA appears only when support is suggested (single phase, complete) ✅ (2026-07-20, arena.ai Agent Mode)
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**Task:** Buddy requested the WhatsApp contact button should not permanently occupy the bottom of Customer Service chat. The bottom area should remain the message/send input by default, and the WhatsApp tap button should animate in only when BAS mentions contacting WhatsApp/support.
+
+**In scope (files touched):** `src/components/ChatBot.tsx`, `AGENT_LOG.md` plus earlier pending cumulative UI files already in this ZIP.
+**Out of scope (untouched):** ChatBot reply/rule logic, WhatsApp URL generation, Profile navigation, order/payment logic.
+
+### কী বদলেছে
+- Removed the always-visible bottom WhatsApp bar from ChatBot.
+- Added `showWhatsappCta`, based on the latest bot message containing WhatsApp/support intent.
+- WhatsApp CTA now appears with `anim-up` only after BAS suggests WhatsApp/support.
+- Before that, the bottom area stays focused on the normal camera + message input + paper-plane send button.
+- The CTA still uses the existing `waLink()` and WhatsApp number validation behavior.
+
+### Verification (self)
+- `npx tsc --noEmit`: **30 known pre-existing errors** remain; no new ChatBot errors.
+- `npm run build`: ✓ passed.
+- `package-lock.json` churn from local install was reverted.
+
+### Handoff / next
+- After deploy, test Customer Service: open chat → no WhatsApp bar initially; ask a support/contact question → WhatsApp CTA animates in above the input; send button remains visible.
+
+
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ## BAS0026 — Customer Service true fullscreen chat + hide bottom nav (single phase, complete) ✅ (2026-07-20, arena.ai Agent Mode)
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
