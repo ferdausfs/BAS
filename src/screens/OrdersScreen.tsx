@@ -102,13 +102,13 @@ export default function OrdersScreen() {
             <button
               key={t.v}
               onClick={() => setActiveTab(t.v)}
-              className={`relative pb-2.5 text-[13px] font-bold transition ${
-                activeTab === t.v ? 'text-ink' : 'text-text-tertiary'
+              className={`relative origin-bottom pb-2.5 font-bold transition-all duration-300 ease-out active:scale-95 ${
+                activeTab === t.v ? 'scale-110 text-[15px] text-ink' : 'scale-100 text-[13px] text-text-tertiary'
               }`}
             >
-              {t.label}
+              <span className={activeTab === t.v ? 'inline-block anim-pop' : 'inline-block'}>{t.label}</span>
               {activeTab === t.v && (
-                <span className="absolute inset-x-0 -bottom-px h-[2px] rounded-full bg-coral" />
+                <span className="absolute inset-x-0 -bottom-px h-[2px] rounded-full bg-coral transition-all duration-300 ease-out" />
               )}
             </button>
           ))}

@@ -1,4 +1,28 @@
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## BAS0018 — Orders tab active-label scale animation (single phase, complete) ✅ (2026-07-20, arena.ai Agent Mode)
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**Task:** Buddy requested a small animation on the Orders screen tabs: when tapping `Pending`, `Active`, `Completed`, or `Cancelled`, the selected tab text should become slightly larger via animation.
+
+**In scope (files touched):** `src/screens/OrdersScreen.tsx`, `AGENT_LOG.md` plus earlier pending cumulative UI files already in this ZIP.
+**Out of scope (untouched):** Orders data/filtering logic, order cards, cart/pending logic, BottomTabBar.
+
+### কী বদলেছে
+- Orders tab buttons now animate with `transition-all duration-300 ease-out`.
+- Active tab text changes from `13px` to `15px` and scales to `scale-110`.
+- Inactive tabs stay `13px / scale-100`.
+- Added a small `anim-pop` on the active label so tab changes feel responsive without changing the layout structure.
+
+### Verification (self)
+- `npx tsc --noEmit`: **30 known pre-existing errors** remain; no new OrdersScreen errors from this animation change.
+- `npm run build`: ✓ passed.
+- `package-lock.json` churn from local install was reverted.
+
+### Handoff / next
+- Single visual micro-interaction. Review on mobile: active tab should gently grow, not jump harshly.
+
+
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ## BAS0017 — Orders pending-checkout tab + remove global QuickBar (single phase, complete) ✅ (2026-07-20, arena.ai Agent Mode)
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
