@@ -332,7 +332,7 @@ export default function ProductScreen() {
 
         {/* Floating gallery thumbnails — sit above the product card like the reference */}
         {galleryImages.length > 1 && (
-          <div className="relative z-20 mx-auto -mt-[86px] mb-3 flex max-w-[292px] gap-2 overflow-x-auto rounded-[18px] bg-white/85 p-2 shadow-card scrollbar-hide">
+          <div className="relative z-20 mx-auto -mt-[92px] mb-5 flex max-w-[292px] gap-2 overflow-x-auto rounded-[18px] bg-white/90 p-2 shadow-card scrollbar-hide">
             {galleryImages.slice(0, 5).map((url, i) => {
               const isActive = currentImg === url;
               const remaining = galleryImages.length - 4;
@@ -358,7 +358,7 @@ export default function ProductScreen() {
         )}
 
         {/* Content sheet below image — solid product card under floating thumbnails */}
-        <div className={`bg-surface rounded-t-[22px] relative z-10 px-6 border-t border-border shadow-card ${galleryImages.length > 1 ? '-mt-10 pt-16' : '-mt-14 pt-5'}`}>
+        <div className={`relative z-10 mx-4 rounded-[24px] border border-border bg-surface px-5 pb-6 pt-5 shadow-card ${galleryImages.length > 1 ? 'mt-0' : '-mt-10'}`}>
           {/* Title row */}
           <div className="flex items-start justify-between gap-3">
             <h1 className="flex-1 font-sans text-[20px] font-semibold leading-[1.2] tracking-tight text-ink">

@@ -1,4 +1,28 @@
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## BAS0014 — Product detail card separation after floating thumbnails (single phase, complete) ✅ (2026-07-20, arena.ai Agent Mode)
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**Task:** Buddy reviewed the live product page after the floating-thumbnail pass and said the product card still felt attached/overlapped with the image strip; text was starting too low. Requested: make the product card clearly separate like the reference and bring the content text higher.
+
+**In scope (files touched):** `src/screens/ProductScreen.tsx`, `AGENT_LOG.md` plus earlier pending cumulative UI files already in this ZIP.
+**Out of scope (untouched):** image swipe/touch listener logic, lightbox behavior, cart/add-to-cart logic, wishlist/share logic, product data.
+
+### কী বদলেছে
+- Floating thumbnail strip remains above the card, but now has a clearer gap (`mb-5`) and a slightly stronger white surface (`bg-white/90`).
+- Product content is no longer a full-width attached sheet with large top padding. It is now a separate rounded card (`mx-4 rounded-[24px] border bg-surface`) below the thumbnail strip.
+- Removed the previous conditional `pt-16` spacing that pushed title/rating/price too far down; product text now starts near the top of the card (`pt-5`).
+- Existing thumbnail tap behavior and gallery/image logic are preserved.
+
+### Verification (self)
+- `npx tsc --noEmit`: still reports the known **31 pre-existing errors**; no new `ProductScreen.tsx` errors.
+- `npm run build`: ✓ passed.
+- `package-lock.json` churn from local install was reverted.
+
+### Handoff / next
+- Single focused visual adjustment. Review product detail on a real phone: the thumbnail strip should now float over the hero while the product info card reads as a separate card, with title text starting higher.
+
+
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ## BAS0013 — Product detail floating thumbnail strip adjustment (single phase, complete) ✅ (2026-07-20, arena.ai Agent Mode)
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
