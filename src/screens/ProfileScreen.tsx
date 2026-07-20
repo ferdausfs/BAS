@@ -130,7 +130,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
 
   const [contactOpen, setContactOpen] = useState(false);
   const [customerOpen, setCustomerOpen] = useState(false);
-  const [profileView, setProfileView] = useState<'main' | 'edit' | 'address' | 'payment' | 'settings' | 'help'>('main');
+  const [profileView, setProfileView] = useState<'main' | 'edit' | 'address' | 'payment' | 'settings' | 'help' | 'chat'>('main');
   const [showAdmin, setShowAdmin] = useState(false);
   const [, setLogoTapCount] = useState(0);
 
@@ -477,7 +477,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
             <ArrowLeft className="h-5 w-5" strokeWidth={1.9} />
           </button>
           <h1 className="text-[20px] font-semibold tracking-tight text-ink">
-            {profileView === 'settings' ? 'Settings' : profileView === 'help' ? 'Help Center' : profileView === 'edit' ? 'Your Profile' : profileView === 'address' ? 'Manage Address' : profileView === 'payment' ? 'Payment Methods' : 'Profile'}
+            {profileView === 'settings' ? 'Settings' : profileView === 'help' ? 'Help Center' : profileView === 'chat' ? 'Customer Service' : profileView === 'edit' ? 'Your Profile' : profileView === 'address' ? 'Manage Address' : profileView === 'payment' ? 'Payment Methods' : 'Profile'}
           </h1>
         </div>
       </header>
@@ -566,7 +566,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
               Icon={Headphones}
               label="Customer Service"
               detail="Chat with Bake Art Style support"
-              onClick={() => setContactOpen(true)}
+              onClick={() => setProfileView('chat')}
               bordered
             />
             <HelpProfileRow
@@ -604,6 +604,12 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
               onClick={() => useUI.getState().addNotification('Instagram', 'Instagram link will be available soon.')}
             />
           </div>
+        </div>
+      )}
+
+      {profileView === 'chat' && (
+        <div className="flex min-h-0 flex-1 flex-col px-4 pb-4 pt-2 anim-up">
+          <ChatBot embedded fullPage />
         </div>
       )}
 

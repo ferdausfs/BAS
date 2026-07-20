@@ -1,4 +1,28 @@
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## BAS0025 — Help Center Customer Service as full page chat (single phase, complete) ✅ (2026-07-20, arena.ai Agent Mode)
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**Task:** Buddy clarified Customer Service should not open as a popup/bottom sheet. It should open as a separate in-app chat page like the supplied reference.
+
+**In scope (files touched):** `src/screens/ProfileScreen.tsx`, `src/components/ChatBot.tsx`, `AGENT_LOG.md` plus earlier pending cumulative UI files already in this ZIP.
+**Out of scope (untouched):** ChatBot reply/rule logic, WhatsApp link, global store, order/payment logic.
+
+### কী বদলেছে
+- Help Center → Customer Service now opens an in-profile full page (`profileView='chat'`) instead of opening the support popup/sheet.
+- Added `fullPage` support to `ChatBot` so embedded chat can fill the page height instead of using the old fixed 440px embedded card.
+- Profile header shows `Customer Service`; back returns to Help Center/Profile flow.
+- The chat input still uses the paper-plane Send button; no microphone button is introduced.
+
+### Verification (self)
+- `npx tsc --noEmit`: **30 known pre-existing errors** remain; no new ProfileScreen/ChatBot errors.
+- `npm run build`: ✓ passed.
+- `package-lock.json` churn from local install was reverted.
+
+### Handoff / next
+- After deploy, test Profile → Help Center → Customer Service: it should navigate to a full chat page, not dim the screen or show a popup.
+
+
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ## BAS0024 — Help Center customer-service double-open bug fix (single phase, complete) ✅ (2026-07-20, arena.ai Agent Mode)
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 

@@ -27,9 +27,10 @@ const chatHistoryKey = (userId?: string, orderId?: string | null) =>
 
 interface Props {
   embedded?: boolean;
+  fullPage?: boolean;
 }
 
-export function ChatBot({ embedded = false }: Props) {
+export function ChatBot({ embedded = false, fullPage = false }: Props) {
   // মূল history load এখন নিচের useEffect-এ হয় ([user?.id, chatOrderContext] অনুযায়ী) —
   // এখানে খালি রাখা হলো যাতে order-context থেকে খোলা হলে পুরনো general history flash না করে
   const [messages, setMessages] = useState<Message[]>([]);
@@ -518,8 +519,8 @@ ${productList}
 
   const panel = (
     <div
-      className={`flex flex-col overflow-hidden bg-surface ${embedded ? 'rounded-[24px] border border-border shadow-card' : 'h-full'}`}
-      style={embedded ? { height: 440 } : undefined}
+      className={`flex flex-col overflow-hidden bg-surface ${embedded ? 'rounded-[24px] border border-border shadow-card' : 'h-full'} ${fullPage ? 'h-full' : ''}`}
+      style={embedded && !fullPage ? { height: 440 } : undefined}
     >
       <header className="flex shrink-0 items-center gap-3 border-b border-primary-hover bg-primary px-4 py-3.5 text-white">
         <span className="flex h-10 w-10 items-center justify-center rounded-[14px] bg-white/18 shadow-[0_2px_8px_rgba(44,44,44,0.12)]">
