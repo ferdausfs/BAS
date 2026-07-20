@@ -143,6 +143,8 @@ export default function CheckoutScreen({ onBack }: Props) {
   const [paymentScreenshotPreview, setPaymentScreenshotPreview] = useState('');
   const [giftMode, setGiftMode] = useState(false);
   const [gift, setGift] = useState({ message: '', hidePrice: false, wrap: false, recipientName: '', recipientPhone: '' });
+  const [checkoutItemsExpanded, setCheckoutItemsExpanded] = useState(false);
+  const [selectedCartItem, setSelectedCartItem] = useState<CartItem | null>(null);
 
   // Advance (preparation) payment method — always online, so no 'cash' option.
   // `paymentScreenshotFile`/`paymentScreenshotPreview` (declared above) hold the
@@ -593,24 +595,28 @@ export default function CheckoutScreen({ onBack }: Props) {
         {/* Items */}
         <Section icon={ShoppingCart} title="অর্ডারের আইটেম">
           <div className="space-y-2.5">
-            {safeArray<CartItem>(items).slice(0, 3).map((it, i) => (
-              <div key={i} className="flex items-center gap-3">
+            {(checkoutItemsExpanded ? safeArray<CartItem>(items) : safeArray<CartItem>(items).slice(0, 3)).map((it, i) => (
+              <button key={i} type="button" onClick={() => setSelectedCartItem(it)} className="flex w-full items-center gap-3 rounded-xl text-left transition active:scale-[.99]">
                 <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-xl bg-cream">
                   <img src={it.image} alt="" className="h-full w-full object-cover" />
                 </div>
-                <div className="flex-1">
+                <div className="min-w-0 flex-1">
                   <div className="line-clamp-1 text-[13px] font-bold text-ink">{it.name}</div>
                   <div className="text-[11.5px] text-ink-200">{it.size} · ×{it.quantity}</div>
                 </div>
-                <div className=" text-[13px] font-bold tabular text-ink">
+                <div className="text-[13px] font-bold tabular text-ink">
                   {formatINR(it.price * it.quantity)}
                 </div>
-              </div>
+              </button>
             ))}
             {items.length > 3 && (
-              <div className="text-center text-[11px] text-ink-200">
-                +{items.length - 3} আরও আইটেম
-              </div>
+              <button
+                type="button"
+                onClick={() => setCheckoutItemsExpanded((value) => !value)}
+                className="flex w-full items-center justify-center rounded-full bg-secondary/60 py-2 text-[11.5px] font-bold text-coral transition active:scale-95"
+              >
+                {checkoutItemsExpanded ? 'কম দেখান' : `+${items.length - 3} আরও আইটেম`}
+              </button>
             )}
           </div>
         </Section>
@@ -1254,6 +1260,46 @@ export default function CheckoutScreen({ onBack }: Props) {
         )}
       </div>
 
+      {selectedCartItem && (
+        <div className="fixed inset-0 z-[130] flex flex-col justify-end">
+          <button
+            type="button"
+            className="absolute inset-0 bg-ink/35 anim-fade"
+            onClick={() => setSelectedCartItem(null)}
+            aria-label="Close item details"
+          />
+          <section className="relative rounded-t-[28px] border-t border-border bg-surface px-6 pb-8 pt-4 shadow-float anim-up">
+            <div className="mx-auto mb-4 h-1 w-16 rounded-full bg-ink-100" />
+            <div className="mb-4 flex items-start gap-4 border-b border-border pb-4">
+              <div className="h-16 w-16 shrink-0 overflow-hidden rounded-2xl bg-secondary">
+                <img src={selectedCartItem.image} alt="" className="h-full w-full object-cover" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <h2 className="line-clamp-2 text-[18px] font-bold text-ink">{selectedCartItem.name}</h2>
+                <p className="mt-1 text-[13px] font-medium text-ink-300">Cart item details</p>
+              </div>
+              <button type="button" onClick={() => setSelectedCartItem(null)} className="flex h-9 w-9 items-center justify-center rounded-full bg-ink-50 text-ink-300">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="space-y-3 text-[13px]">
+              <DetailRow label="Size" value={selectedCartItem.size || '—'} />
+              <DetailRow label="Flavor" value={selectedCartItem.flavor || '—'} />
+              {selectedCartItem.topping && <DetailRow label="Add-ons / topping" value={selectedCartItem.topping} />}
+              {selectedCartItem.message && <DetailRow label="Message" value={selectedCartItem.message} />}
+              <DetailRow label="Unit price" value={formatINR(selectedCartItem.price)} />
+              <DetailRow label="Quantity" value={`×${selectedCartItem.quantity}`} />
+              <div className="h-px bg-border" />
+              <div className="flex items-center justify-between text-[15px]">
+                <span className="font-bold text-ink">Item total</span>
+                <span className="font-bold tabular text-coral">{formatINR(selectedCartItem.price * selectedCartItem.quantity)}</span>
+              </div>
+            </div>
+          </section>
+        </div>
+      )}
+
       {addressPickerOpen && (
         <div className="fixed inset-0 z-[130] flex flex-col justify-end">
           <button
@@ -1472,7 +1518,7 @@ function Header({
                   style={{ background: reached ? 'var(--color-coral)' : 'rgba(28,17,18,0.10)' }}
                 />
                 <span
-                  className="text-[9px] font-bold tracking-wide"
+                  className={`origin-bottom font-bold tracking-wide transition-all duration-300 ease-out ${i === step ? 'scale-110 text-[11px] anim-pop' : reached ? 'scale-100 text-[9.5px]' : 'scale-100 text-[9px]'}`}
                   style={{ color: reached ? 'var(--color-coral)' : 'var(--color-ink-200)' }}
                 >
                   {s}
@@ -1514,6 +1560,15 @@ function Section({
       </div>
       <div className="px-4 py-3">{children}</div>
     </section>
+  );
+}
+
+function DetailRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-start justify-between gap-4 rounded-2xl bg-bg px-4 py-3">
+      <span className="text-ink-300 font-medium">{label}</span>
+      <span className="max-w-[190px] text-right font-bold text-ink">{value}</span>
+    </div>
   );
 }
 

@@ -1,4 +1,41 @@
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## BAS0028 — Checkout step animation + item expand/detail sheet (single phase, complete) ✅ (2026-07-20, arena.ai Agent Mode)
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**Task:** Buddy requested checkout step labels to animate like the Orders tabs, and reported the `+ more items` row in checkout did nothing. Also requested tapping an item to show details: size, price, and selected cart options.
+
+**In scope (files touched):** `src/screens/CheckoutScreen.tsx`, `AGENT_LOG.md` plus earlier pending cumulative UI files already in this ZIP.
+**Out of scope (untouched):** cart store logic, order submission/payment logic, product data.
+
+### কী বদলেছে
+- Checkout step labels (`ঠিকানা / নিশ্চিত / পেমেন্ট`) now animate:
+  - active step label grows slightly (`scale-110`, 11px)
+  - smooth `transition-all duration-300`
+  - small `anim-pop` on active label
+- Checkout item list now supports expand/collapse:
+  - first 3 items show by default
+  - `+N আরও আইটেম` expands to show all
+  - `কম দেখান` collapses again
+- Tapping a checkout item now opens an item details bottom sheet showing:
+  - image/name
+  - size
+  - flavor
+  - add-ons/topping if present
+  - custom message if present
+  - unit price
+  - quantity
+  - item total
+
+### Verification (self)
+- `npx tsc --noEmit`: **30 known pre-existing errors** remain; no new CheckoutScreen errors. Remaining Checkout warnings are existing unused location-helper declarations.
+- `npm run build`: ✓ passed.
+- `package-lock.json` churn from local install was reverted.
+
+### Handoff / next
+- After deploy, test checkout step 1: tap `+N আরও আইটেম`, tap individual item, verify details sheet opens and closes.
+
+
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ## BAS0027 — Chat WhatsApp CTA appears only when support is suggested (single phase, complete) ✅ (2026-07-20, arena.ai Agent Mode)
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
