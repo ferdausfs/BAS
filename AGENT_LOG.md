@@ -1,4 +1,33 @@
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## BAS0034 — Fix ProductCard layout regression with Option-B shadow-text cards (single phase, complete) ✅ (2026-07-20, arena.ai Agent Mode)
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**Task:** Buddy reported the previous product-card attempt broke the Home Featured Products area (cards collapsed into thin strips / looked wrong). Requested the correct Option-B style: full image card with text directly on a bottom shadow, no inner card/glass box.
+
+**Root cause:** The previous shared ProductCard styling was not stable enough across all consumers and could collapse visually in grid contexts. It also still did not match the requested no-inner-card shadow-text interpretation closely enough.
+
+**In scope (files touched):** `src/components/ProductCard.tsx`, `AGENT_LOG.md` plus earlier pending cumulative UI files already in this ZIP.
+**Out of scope (untouched):** product data, cart add logic, wishlist logic, product detail screen, checkout/order logic.
+
+### কী বদলেছে
+- Rebuilt `ProductCard.tsx` as a stable fixed-height image card using inline `style={{ height }}` so grid contexts cannot collapse.
+- Product image fills the whole card.
+- Removed inner details card/glass panel entirely.
+- Details are written directly over a bottom dark gradient/shadow, matching the Option-B direction.
+- Floating badge + heart remain on top of image.
+- Add button is a white `Add +` pill.
+- Preserved all behavior: image fallback, wishlist toggle, add-to-cart, bestseller/new/discount/low-stock badges.
+
+### Verification (self)
+- `npx tsc --noEmit`: **30 known pre-existing errors** remain; no new ProductCard errors.
+- `npm run build`: ✓ passed.
+- `package-lock.json` churn from local install was reverted.
+
+### Handoff / next
+- This is a regression fix. After deploy, check Home Featured Products first: cards should be normal height again, not thin strips.
+
+
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ## BAS0033 — Product cards no-box shadow-text overlay style (single phase, complete) ✅ (2026-07-20, arena.ai Agent Mode)
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
