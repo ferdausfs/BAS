@@ -116,7 +116,7 @@ class AdminErrorBoundary extends React.Component<{ children: React.ReactNode }, 
 }
 
 export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
-  const { go, setChatOpen } = useUI();
+  const { go } = useUI();
   const { user } = useAuthStore();
   const effectiveIsAdmin = isAdmin || !!user?.isAdmin;
   const { signOut } = useAuth();
@@ -174,11 +174,6 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
     setSavedProfile(merged);
     setDraftProfile(merged);
   }, [user?.id, user?.name, user?.contact, user?.district, user?.locationAddress]);
-
-  useEffect(() => {
-    setChatOpen(contactOpen || customerOpen);
-    return () => setChatOpen(false);
-  }, [contactOpen, customerOpen, setChatOpen]);
 
   // Claim any pending cross-device referral rewards tied to this user's code.
   // When someone on another device places an order using this code, the reward

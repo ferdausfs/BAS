@@ -1,4 +1,30 @@
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## BAS0024 — Help Center customer-service double-open bug fix (single phase, complete) ✅ (2026-07-20, arena.ai Agent Mode)
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**Task:** Buddy reported that tapping Help Center → Customer Service opens the chat in a broken/double state: what used to require two taps happens at once. Also requested keeping send button behavior, not microphone-style UI.
+
+**Root cause:** `ProfileScreen.tsx` had a `useEffect` that called `setChatOpen(contactOpen || customerOpen)`. When the Help Center opened the local support sheet (`contactOpen=true`) with `<ChatBot embedded />`, that effect also opened the global `<ChatBot />` overlay from `App.tsx` at the same time. Result: embedded support sheet + global chat overlay stacked together, causing the double-open/broken live state.
+
+**In scope (files touched):** `src/screens/ProfileScreen.tsx`, `AGENT_LOG.md` plus earlier pending cumulative UI files already in this ZIP.
+**Out of scope (untouched):** ChatBot message/reply logic, WhatsApp link logic, support content/rules, global store code.
+
+### কী বদলেছে
+- Removed the ProfileScreen effect that forced `setChatOpen(true)` when `contactOpen` or `customerOpen` became true.
+- Help Center → Customer Service now opens only the intended local support sheet with embedded chat.
+- Bottom navigation hiding is still handled by existing `useModalDepth(contactOpen)` / modal depth logic, so no global chat-open side effect is needed.
+- Chat input already uses the `Send` icon button; no microphone button is introduced.
+
+### Verification (self)
+- `npx tsc --noEmit`: **30 known pre-existing errors** remain; no new ProfileScreen/ChatBot errors.
+- `npm run build`: ✓ passed.
+- `package-lock.json` churn from local install was reverted.
+
+### Handoff / next
+- After deploy, test: Profile → Help Center → Customer Service. It should open one support sheet only; close button should close it cleanly; send button should remain the paper-plane send action.
+
+
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ## BAS0023 — Move Help Center to Profile main list + profile-style help UI (single phase, complete) ✅ (2026-07-20, arena.ai Agent Mode)
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
