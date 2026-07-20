@@ -1,4 +1,32 @@
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## BAS0031 — Product cards thin edgeless glass detail overlay (single phase, complete) ✅ (2026-07-20, arena.ai Agent Mode)
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**Task:** Buddy approved the refined product-card mockup: full-image cards with the detail area over the cake image, but the glass panel should be thinner and more edgeless/feathered so the start/end of the glass is less obvious.
+
+**In scope (files touched):** `src/components/ProductCard.tsx`, `AGENT_LOG.md` plus earlier pending cumulative UI files already in this ZIP.
+**Out of scope (untouched):** product data, cart add logic, wishlist logic, product detail screen, checkout/order logic.
+
+### কী বদলেছে
+- ProductCard detail glass panel made thinner and softer:
+  - bottom readability fade reduced from heavier `48%` to lighter `42%`.
+  - detail wrapper padding reduced.
+  - visible border removed from the glass panel.
+  - glass changed to lighter `bg-white/45` with lower blur (`backdrop-blur-[5px]`).
+  - added subtle radial highlight + inset highlight pseudo-elements to feather the edge.
+  - title/subtitle/price/add button slightly compacted to match the thinner panel.
+- The full-card image background, floating badges/heart, add-to-cart logic, and wishlist logic are unchanged.
+
+### Verification (self)
+- `npx tsc --noEmit`: **30 known pre-existing errors** remain; no new ProductCard errors.
+- `npm run build`: ✓ passed.
+- `package-lock.json` churn from local install was reverted.
+
+### Handoff / next
+- After deploy, review Home/Cake/Wishlist product cards: the glass detail area should feel lighter, thinner, and less boxed-in while keeping text readable.
+
+
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ## BAS0030 — Product cards full-image light-glass overlay style (single phase, complete) ✅ (2026-07-20, arena.ai Agent Mode)
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
