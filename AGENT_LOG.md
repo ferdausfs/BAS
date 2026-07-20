@@ -1,4 +1,34 @@
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## BAS0020 — Checkout app-styled address picker + selected-address persistence fix (single phase, complete) ✅ (2026-07-20, arena.ai Agent Mode)
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**Task:** Buddy reported the checkout address UI was still confusing: address selection in step 1 did not reliably carry into the confirmation/payment step, default address appeared to override the chosen address, and requested the delivery-address UI to use an app-styled picker like the custom calendar picker.
+
+**In scope (files touched):** `src/screens/CheckoutScreen.tsx`, `AGENT_LOG.md` plus earlier pending cumulative UI files already in this ZIP.
+**Out of scope (untouched):** order submission/payment logic, Profile saved-address localStorage format, cart logic, store/Firebase code.
+
+### কী বদলেছে
+- Checkout delivery address section is now a single selected-address summary card with a `Change` action, instead of a horizontal row that could look like multiple cards were active.
+- Added a custom app-styled bottom-sheet address picker:
+  - rounded sheet + drag handle
+  - saved address list
+  - single selected indicator
+  - `Default` badge
+  - `Add New` action routes safely to Profile tab
+- Address selection now goes through a single `applyCheckoutAddress()` path that updates both `selectedAddressId` and checkout `form.address/form.district/phone` together.
+- Auto-default logic now applies the saved default address only when no explicit address has been selected yet; after the user selects another address, the default no longer overrides it.
+- Manual address typing clears `selectedAddressId`, preventing stale selected-card state.
+
+### Verification (self)
+- `npx tsc --noEmit`: **30 known pre-existing errors** remain; no new CheckoutScreen errors. Remaining Checkout warnings are existing unused location-helper declarations.
+- `npm run build`: ✓ passed.
+- `package-lock.json` churn from local install was reverted.
+
+### Handoff / next
+- After deploy, test: save 2 addresses, set one default, go Checkout, tap Change, choose non-default address, proceed to Confirm step, verify the selected non-default address appears and is submitted.
+
+
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ## BAS0019 — Checkout custom delivery date/time picker (single phase, complete) ✅ (2026-07-20, arena.ai Agent Mode)
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 

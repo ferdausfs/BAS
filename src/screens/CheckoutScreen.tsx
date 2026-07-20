@@ -162,6 +162,7 @@ export default function CheckoutScreen({ onBack }: Props) {
     payment: 'cash' as typeof PAYMENT_METHODS[number]['id'],
   });
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
+  const [addressPickerOpen, setAddressPickerOpen] = useState(false);
   const [datePickerOpen, setDatePickerOpen] = useState(false);
 
 
@@ -202,11 +203,24 @@ export default function CheckoutScreen({ onBack }: Props) {
     setSelectedAddressId(preferred.id);
     setForm((prev) => ({
       ...prev,
-      address: prev.address || preferred.address,
-      district: prev.district || preferred.district,
+      address: preferred.address,
+      district: preferred.district,
       phone: prev.phone || preferred.phone,
     }));
   }, [checkoutAddressCards, selectedAddressId]);
+
+  const selectedCheckoutAddress = checkoutAddressCards.find((addr) => addr.id === selectedAddressId);
+
+  const applyCheckoutAddress = (addr: typeof checkoutAddressCards[number]) => {
+    setSelectedAddressId(addr.id);
+    setForm((prev) => ({
+      ...prev,
+      address: addr.address,
+      district: addr.district,
+      phone: prev.phone || addr.phone,
+    }));
+    setAddressPickerOpen(false);
+  };
 
   const dateOptions = useMemo(() => {
     const start = new Date(getMinDeliveryDate());
@@ -597,53 +611,39 @@ export default function CheckoutScreen({ onBack }: Props) {
           </div>
         </Section>
 
-        {/* Delivery address — uses real saved Profile addresses, no hardcoded cards */}
+        {/* Delivery address — app-styled picker, single selected address only */}
         <Section icon={MapPin} title="ডেলিভারি ঠিকানা">
-          <div className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-hide">
-            {checkoutAddressCards.map((addr) => {
-              const selected = selectedAddressId === addr.id;
-              return (
-                <button
-                  key={addr.id}
-                  onClick={() => {
-                    setSelectedAddressId(addr.id);
-                    setForm((prev) => ({
-                      ...prev,
-                      address: addr.address,
-                      district: addr.district,
-                      phone: prev.phone || addr.phone,
-                    }));
-                  }}
-                  className={`flex-shrink-0 w-[148px] rounded-2xl border p-3 text-left active:scale-95 transition ${
-                    selected ? 'border-coral bg-coral-50/50 shadow-card' : 'border-ink-50 bg-white'
-                  }`}
-                >
-                  <div className="mb-1 flex items-center justify-between gap-2">
-                    <div className="line-clamp-1 font-bold text-[13px] text-ink">{addr.label}</div>
-                    {selected && <Check className="h-4 w-4 shrink-0 text-coral" strokeWidth={2.5} />}
-                  </div>
-                  <div className="line-clamp-2 text-[11px] leading-snug text-ink-200">{addr.sub}</div>
-                  {addr.isDefault && <div className="mt-2 inline-flex rounded-full bg-secondary px-2 py-0.5 text-[9px] font-bold text-coral">Default</div>}
-                </button>
-              );
-            })}
-            <button
-              type="button"
-              onClick={() => go({ name: 'tabs', tab: 'profile' })}
-              className="flex-shrink-0 w-[148px] rounded-2xl border-2 border-dashed border-ink-200 p-3 text-left active:scale-95 transition"
-            >
-              <div className="font-bold text-[13px] text-ink-200 mb-0.5">+ Add New</div>
-              <div className="text-[11px] text-ink-200">Profile → Manage Address</div>
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={() => setAddressPickerOpen(true)}
+            className="flex w-full items-center gap-3 rounded-xl border border-border bg-surface p-3.5 text-left shadow-sm transition active:scale-[.99]"
+          >
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-coral/10 text-coral">
+              <MapPin className="h-5 w-5" strokeWidth={1.9} />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="flex items-center gap-2">
+                <span className="line-clamp-1 text-[14px] font-bold text-ink">
+                  {selectedCheckoutAddress?.label ?? (form.address ? 'Current address' : 'Choose delivery address')}
+                </span>
+                {selectedCheckoutAddress?.isDefault && (
+                  <span className="shrink-0 rounded-full bg-secondary px-2 py-0.5 text-[9px] font-bold text-coral">Default</span>
+                )}
+              </span>
+              <span className="mt-1 line-clamp-2 text-[12px] leading-snug text-ink-300">
+                {selectedCheckoutAddress?.sub ?? form.address ?? 'Tap to select saved address'}
+              </span>
+            </span>
+            <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-coral">Change</span>
+          </button>
 
           {checkoutAddressCards.length === 0 && (
-            <div className="mt-2 rounded-2xl bg-secondary/40 px-3.5 py-3 text-[12px] font-medium text-ink-300">
+            <div className="mt-3 rounded-2xl bg-secondary/40 px-3.5 py-3 text-[12px] font-medium text-ink-300">
               No saved address yet. Add one from Profile → Manage Address, or type below.
             </div>
           )}
 
-          {/* Keep minimal form fields for editing / fallback entry */}
+          {/* Minimal form fields for editing / fallback entry */}
           <div className="mt-4 space-y-2.5">
             <input
               placeholder="আপনার নাম"
@@ -1249,6 +1249,76 @@ export default function CheckoutScreen({ onBack }: Props) {
         </>
         )}
       </div>
+
+      {addressPickerOpen && (
+        <div className="fixed inset-0 z-[130] flex flex-col justify-end">
+          <button
+            type="button"
+            className="absolute inset-0 bg-ink/35 anim-fade"
+            onClick={() => setAddressPickerOpen(false)}
+            aria-label="Close address picker"
+          />
+          <section className="relative rounded-t-[28px] border-t border-border bg-surface px-6 pb-8 pt-4 shadow-float anim-up">
+            <div className="mx-auto mb-4 h-1 w-16 rounded-full bg-ink-100" />
+            <div className="mb-4 flex items-center justify-between gap-3 border-b border-border pb-4">
+              <div>
+                <h2 className="text-[20px] font-semibold tracking-tight text-ink">Delivery Address</h2>
+                <p className="mt-1 text-[12px] font-medium text-ink-300">Choose one saved address for this order</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => { setAddressPickerOpen(false); go({ name: 'tabs', tab: 'profile' }); }}
+                className="text-[11px] font-bold uppercase tracking-[0.16em] text-coral"
+              >
+                Add New
+              </button>
+            </div>
+
+            {checkoutAddressCards.length === 0 ? (
+              <div className="rounded-[18px] border border-dashed border-border bg-bg px-5 py-8 text-center">
+                <MapPin className="mx-auto h-8 w-8 text-coral" strokeWidth={1.8} />
+                <p className="mt-3 text-[14px] font-bold text-ink">No saved address</p>
+                <p className="mt-1 text-[12px] text-ink-300">Add an address from Profile → Manage Address.</p>
+                <button
+                  type="button"
+                  onClick={() => { setAddressPickerOpen(false); go({ name: 'tabs', tab: 'profile' }); }}
+                  className="mt-4 rounded-full bg-coral px-5 py-2.5 text-[12px] font-bold text-white shadow-btn"
+                >
+                  Add address
+                </button>
+              </div>
+            ) : (
+              <div className="no-scrollbar max-h-[48vh] space-y-3 overflow-y-auto pr-1">
+                {checkoutAddressCards.map((addr) => {
+                  const selected = selectedAddressId === addr.id;
+                  return (
+                    <button
+                      key={addr.id}
+                      type="button"
+                      onClick={() => applyCheckoutAddress(addr)}
+                      className={`flex w-full items-start gap-4 rounded-[18px] border px-4 py-4 text-left transition active:scale-[.99] ${
+                        selected ? 'border-coral bg-coral-50/50 shadow-card' : 'border-border bg-bg'
+                      }`}
+                    >
+                      <span className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full ${selected ? 'bg-coral text-white' : 'bg-secondary text-coral'}`}>
+                        {selected ? <Check className="h-5 w-5" strokeWidth={2.5} /> : <MapPin className="h-5 w-5" strokeWidth={1.8} />}
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="flex items-center gap-2">
+                          <span className="line-clamp-1 text-[15px] font-bold text-ink">{addr.label}</span>
+                          {addr.isDefault && <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-bold text-coral">Default</span>}
+                        </span>
+                        <span className="mt-1 block text-[13px] leading-snug text-ink-300">{addr.sub}</span>
+                        {addr.phone && <span className="mt-1 block text-[12px] text-ink-200">{addr.phone}</span>}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </section>
+        </div>
+      )}
 
       {datePickerOpen && (
         <div className="fixed inset-0 z-[130] flex flex-col justify-end">
