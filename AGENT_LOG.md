@@ -1,4 +1,33 @@
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## BAS0021 — Checkout selected-address applied-through-payment fix (single phase, complete) ✅ (2026-07-20, arena.ai Agent Mode)
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**Task:** Buddy reported the address picker visually selected a non-default address, but the confirmation/payment step still used the default address.
+
+**Root cause:** Address selection updated the selected card state, but checkout form fields could still retain stale/default phone/address values in some flows. Phone especially was using `prev.phone || addr.phone`, so an existing default/user phone prevented the selected address phone from being applied. Confirmation/submission also read directly from `form.*`, so stale values could survive even when `selectedAddressId` was correct.
+
+**In scope (files touched):** `src/screens/CheckoutScreen.tsx`, `AGENT_LOG.md` plus earlier pending cumulative UI files already in this ZIP.
+**Out of scope (untouched):** saved-address storage format, Profile address editor, payment/order submission mechanics beyond using the selected address values.
+
+### কী বদলেছে
+- Selecting an address now overwrites checkout phone with the selected address phone when available (`addr.phone || prev.phone`) instead of preserving stale/default phone.
+- Added effective selected-address values:
+  - `checkoutPhone`
+  - `checkoutAddress`
+  - `checkoutDistrict`
+- Validation, order payload, profile sync, location address, CTA disabled state, and confirmation summary now use those effective selected-address values.
+- Manual address typing still clears `selectedAddressId`, so manual values remain supported.
+
+### Verification (self)
+- `npx tsc --noEmit`: **30 known pre-existing errors** remain; no new CheckoutScreen errors. Remaining Checkout warnings are existing unused location-helper declarations.
+- `npm run build`: ✓ passed.
+- `package-lock.json` churn from local install was reverted.
+
+### Handoff / next
+- After deploy, test specifically: choose non-default address in Checkout → go next → confirmation shows non-default phone/address → submit/payment uses that selected address.
+
+
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ## BAS0020 — Checkout app-styled address picker + selected-address persistence fix (single phase, complete) ✅ (2026-07-20, arena.ai Agent Mode)
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 

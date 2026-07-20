@@ -217,7 +217,7 @@ export default function CheckoutScreen({ onBack }: Props) {
       ...prev,
       address: addr.address,
       district: addr.district,
-      phone: prev.phone || addr.phone,
+      phone: addr.phone || prev.phone,
     }));
     setAddressPickerOpen(false);
   };
@@ -372,14 +372,18 @@ export default function CheckoutScreen({ onBack }: Props) {
     return uploadToCloudinary(paymentScreenshotFile, 'bake-art-style/payment-screenshots');
   };
 
+  const checkoutPhone = selectedCheckoutAddress?.phone || form.phone;
+  const checkoutAddress = selectedCheckoutAddress?.address || form.address;
+  const checkoutDistrict = selectedCheckoutAddress?.district || form.district;
+
   const handleSubmit = async () => {
     if (items.length === 0) return;
-    if (!form.name || !form.phone || !form.address) {
+    if (!form.name || !checkoutPhone || !checkoutAddress) {
       setSubmitError('নাম, ফোন এবং ঠিকানা পূরণ করুন।');
       scrollToTop();
       return;
     }
-    if (!isValidPhone(form.phone)) {
+    if (!isValidPhone(checkoutPhone)) {
       setSubmitError('সঠিক মোবাইল নম্বর দিন (যেমন 01XXXXXXXXX)');
       scrollToTop();
       return;
@@ -406,10 +410,10 @@ export default function CheckoutScreen({ onBack }: Props) {
         items,
         customer: {
           name: form.name,
-          phone: form.phone,
+          phone: checkoutPhone,
           email: user?.email || '',
-          address: form.address,
-          city: form.district,
+          address: checkoutAddress,
+          city: checkoutDistrict,
           pin: '',
         },
         delivery: { date: form.date, time: form.time },
@@ -426,7 +430,7 @@ export default function CheckoutScreen({ onBack }: Props) {
         paymentScreenshot,
         gpsLat: locationLat,
         gpsLng: locationLng,
-        locationAddress: form.address,
+        locationAddress: checkoutAddress,
         locationVerified: locationVerified,
         gift: giftMode ? gift : undefined,
       });
@@ -435,10 +439,10 @@ export default function CheckoutScreen({ onBack }: Props) {
         await setDoc(doc(db, 'profiles', user.id), {
           id: user.id,
           name: form.name,
-          contact: form.phone,
+          contact: checkoutPhone,
           email: user.email,
-          district: form.district,
-          location_address: form.address,
+          district: checkoutDistrict,
+          location_address: checkoutAddress,
           updated_at: new Date().toISOString(),
         }, { merge: true });
       }
@@ -489,12 +493,12 @@ export default function CheckoutScreen({ onBack }: Props) {
   };
 
   const validateAddressStep = () => {
-    if (!form.name || !form.phone || !form.address) {
+    if (!form.name || !checkoutPhone || !checkoutAddress) {
       setSubmitError('নাম, ফোন এবং ঠিকানা পূরণ করুন।');
       scrollToTop();
       return false;
     }
-    if (!isValidPhone(form.phone)) {
+    if (!isValidPhone(checkoutPhone)) {
       setSubmitError('সঠিক মোবাইল নম্বর দিন (যেমন 01XXXXXXXXX)');
       scrollToTop();
       return false;
@@ -1010,8 +1014,8 @@ export default function CheckoutScreen({ onBack }: Props) {
               <div className="flex items-start gap-2.5">
                 <div className="text-right">
                   <p className="font-bold text-ink">{form.name}</p>
-                  <p className="text-ink-200">{form.phone}</p>
-                  <p className="max-w-[200px] text-ink-200">{form.address}, {form.district}</p>
+                  <p className="text-ink-200">{checkoutPhone}</p>
+                  <p className="max-w-[200px] text-ink-200">{checkoutAddress}, {checkoutDistrict}</p>
                 </div>
                 <EditButton onClick={() => goToStep(0)} />
               </div>
@@ -1417,7 +1421,7 @@ export default function CheckoutScreen({ onBack }: Props) {
           </div>
           <button
             onClick={goNext}
-            disabled={step === 2 ? (!form.name || !form.phone || !form.address || !paymentScreenshotFile || submitting) : false}
+            disabled={step === 2 ? (!form.name || !checkoutPhone || !checkoutAddress || !paymentScreenshotFile || submitting) : false}
             className="ml-auto flex h-14 flex-1 items-center justify-center gap-2 rounded-2xl bg-coral hover:bg-coral-600 text-white text-[14px] font-bold tracking-tight shadow-btn active:scale-[0.985] disabled:opacity-50 transition"
           >
             {step < 2 ? 'পরবর্তী' : submitting ? 'Submitting...' : 'Continue to Payment'}
