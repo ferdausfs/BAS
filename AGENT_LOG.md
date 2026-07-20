@@ -1,4 +1,34 @@
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## BAS0016 — Checkout address single-select + Profile default-address fix (single phase, complete) ✅ (2026-07-20, arena.ai Agent Mode)
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**Task:** Buddy reported remaining address bugs in Checkout: multiple address cards appeared selected at the same time, saved/default address handling was confusing, and Profile Manage Address needed a clear `Use as default` action.
+
+**Root cause:** Checkout selected cards by comparing `form.address === addr.address`, so duplicate/similar saved addresses could all render selected. Selection needed a stable selected-address ID, not address text matching.
+
+**In scope (files touched):** `src/screens/CheckoutScreen.tsx`, `src/screens/ProfileScreen.tsx`, `AGENT_LOG.md` plus earlier pending cumulative UI files already in this ZIP.
+**Out of scope (untouched):** order submission/payment logic, localStorage key format, cart logic, store/Firebase code.
+
+### কী বদলেছে
+- **CheckoutScreen.tsx**
+  - Added `selectedAddressId` state so only one address card can be selected at a time.
+  - On checkout load, automatically selects the saved default address if one exists; otherwise selects the first available saved/current address.
+  - Selecting an address now marks only that card selected and fills `address`, `district`, and phone fallback.
+  - Manual address typing clears `selectedAddressId`, so typed/custom address does not leave stale selected cards highlighted.
+- **ProfileScreen.tsx**
+  - Address list action label changed from `Default` to clear `Use as default`.
+  - If the current default address is removed, the first remaining address is promoted as default to avoid ending up with no default when addresses remain.
+
+### Verification (self)
+- `npx tsc --noEmit`: **30 known pre-existing errors** remain; no new Checkout/Profile errors. Remaining Checkout warnings are the existing unused location-helper declarations.
+- `npm run build`: ✓ passed.
+- `package-lock.json` churn from local install was reverted.
+
+### Handoff / next
+- This is the final address bugfix for the reported issues. After deploy, test: create 2+ addresses in Profile, set one as default, go Checkout, confirm exactly one card is selected, tap another card, confirm previous one unselects, type manual address, confirm no saved card remains selected.
+
+
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ## BAS0015 — Checkout saved-address selection crash fix (single phase, complete) ✅ (2026-07-20, arena.ai Agent Mode)
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 

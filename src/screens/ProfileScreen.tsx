@@ -957,10 +957,10 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
                         <p className="mt-1 text-[12px] text-ink-200">{addr.phone}</p>
                         <div className="mt-3 flex gap-2">
                           {!addr.isDefault && (
-                            <button onClick={() => setAddresses(prev => prev.map(a => ({ ...a, isDefault: a.id === addr.id })))} className="rounded-full bg-ink-50 px-3 py-1.5 text-[11px] font-bold text-ink-300">Default</button>
+                            <button onClick={() => setAddresses(prev => prev.map(a => ({ ...a, isDefault: a.id === addr.id })))} className="rounded-full bg-secondary px-3 py-1.5 text-[11px] font-bold text-coral">Use as default</button>
                           )}
                           <button onClick={() => { setAddrForm({ name: addr.name, address: addr.address, district: addr.district, phone: addr.phone }); setAddrLocateError(''); setEditingAddress(addr); }} className="rounded-full bg-secondary px-3 py-1.5 text-[11px] font-bold text-coral">Edit</button>
-                          <button onClick={() => setAddresses(prev => prev.filter(a => a.id !== addr.id))} className="rounded-full bg-error/10 px-3 py-1.5 text-[11px] font-bold text-error">Remove</button>
+                          <button onClick={() => setAddresses(prev => { const next = prev.filter(a => a.id !== addr.id); return addr.isDefault && next.length > 0 ? next.map((a, i) => ({ ...a, isDefault: i === 0 })) : next; })} className="rounded-full bg-error/10 px-3 py-1.5 text-[11px] font-bold text-error">Remove</button>
                         </div>
                       </div>
                     </div>

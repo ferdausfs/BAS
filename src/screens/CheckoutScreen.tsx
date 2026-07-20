@@ -161,6 +161,8 @@ export default function CheckoutScreen({ onBack }: Props) {
     // Remaining-amount payment method, settled at delivery — cash allowed here.
     payment: 'cash' as typeof PAYMENT_METHODS[number]['id'],
   });
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
+
 
   const savedAddresses = useMemo(() => {
     if (!user?.id) return [] as SavedAddress[];
@@ -192,6 +194,18 @@ export default function CheckoutScreen({ onBack }: Props) {
     }
     return [];
   }, [savedAddresses, detectedDistrict, form.address, form.district, form.phone]);
+
+  useEffect(() => {
+    if (selectedAddressId || checkoutAddressCards.length === 0) return;
+    const preferred = checkoutAddressCards.find((addr) => addr.isDefault) ?? checkoutAddressCards[0];
+    setSelectedAddressId(preferred.id);
+    setForm((prev) => ({
+      ...prev,
+      address: prev.address || preferred.address,
+      district: prev.district || preferred.district,
+      phone: prev.phone || preferred.phone,
+    }));
+  }, [checkoutAddressCards, selectedAddressId]);
 
   // Autofill name, phone and address for logged in users
   useEffect(() => {
@@ -570,11 +584,12 @@ export default function CheckoutScreen({ onBack }: Props) {
         <Section icon={MapPin} title="ডেলিভারি ঠিকানা">
           <div className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-hide">
             {checkoutAddressCards.map((addr) => {
-              const selected = form.address === addr.address;
+              const selected = selectedAddressId === addr.id;
               return (
                 <button
                   key={addr.id}
                   onClick={() => {
+                    setSelectedAddressId(addr.id);
                     setForm((prev) => ({
                       ...prev,
                       address: addr.address,
@@ -630,7 +645,7 @@ export default function CheckoutScreen({ onBack }: Props) {
               placeholder="সম্পূর্ণ ঠিকানা"
               rows={2}
               value={form.address}
-              onChange={(e) => setForm({ ...form, address: e.target.value })}
+              onChange={(e) => { setSelectedAddressId(null); setForm({ ...form, address: e.target.value }); }}
               className="w-full resize-none rounded-xl border border-ink-50 bg-white px-3 py-2.5 text-[13px] font-medium text-ink outline-none focus:border-coral"
             />
           </div>
