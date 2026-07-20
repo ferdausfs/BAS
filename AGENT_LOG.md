@@ -1,4 +1,33 @@
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## BAS0026 — Customer Service true fullscreen chat + hide bottom nav (single phase, complete) ✅ (2026-07-20, arena.ai Agent Mode)
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**Task:** Buddy reported the Customer Service chat was still not right: it opened inside Profile with the bottom navigation covering the input area. Requested a true fullscreen chat page like the supplied reference, and hide the navigation bar while chatting.
+
+**In scope (files touched):** `src/screens/ProfileScreen.tsx`, `src/components/ChatBot.tsx`, `AGENT_LOG.md` plus earlier pending cumulative UI files already in this ZIP.
+**Out of scope (untouched):** ChatBot reply/rule logic, WhatsApp link logic, global store, order/payment logic.
+
+### কী বদলেছে
+- Profile `chat` view now hides the normal Profile header and fills the available screen with the chat page.
+- Added `useModalDepth(profileView === 'chat')` so the bottom navigation bar hides while Customer Service chat is open.
+- `ChatBot` now has proper `fullPage` behavior:
+  - no rounded embedded card/border in full-page mode
+  - full-height chat surface
+  - top chat header with close/back button
+  - input area no longer sits behind the bottom nav
+- Added `onClose` support to `ChatBot`; Profile passes `onClose={() => setProfileView('help')}` so closing returns to Help Center.
+- Send button remains the paper-plane send button; no microphone button is introduced.
+
+### Verification (self)
+- `npx tsc --noEmit`: **30 known pre-existing errors** remain; no new ProfileScreen/ChatBot errors.
+- `npm run build`: ✓ passed.
+- `package-lock.json` churn from local install was reverted.
+
+### Handoff / next
+- After deploy, test Profile → Help Center → Customer Service: it should be a full-height page, bottom nav hidden, and the message input/send button fully visible.
+
+
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ## BAS0025 — Help Center Customer Service as full page chat (single phase, complete) ✅ (2026-07-20, arena.ai Agent Mode)
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 

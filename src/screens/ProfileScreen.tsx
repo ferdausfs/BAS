@@ -160,6 +160,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
   useModalDepth(walletHistoryOpen);
   useModalDepth(contactOpen);
   useModalDepth(customerOpen);
+  useModalDepth(profileView === 'chat');
 
 
   useEffect(() => {
@@ -466,21 +467,23 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
 
   return (
     <div className="flex h-full flex-col bg-bg">
-      <header className="flex-shrink-0 px-6 pt-6 pb-2">
-        <div className="relative flex h-14 items-center justify-center">
-          <button
-            type="button"
-            onClick={() => profileView === 'main' ? go({ name: 'tabs', tab: 'home' }) : setProfileView('main')}
-            className="absolute left-0 flex h-12 w-12 items-center justify-center rounded-full bg-surface text-ink-200 shadow-card transition active:scale-95"
-            aria-label="Back"
-          >
-            <ArrowLeft className="h-5 w-5" strokeWidth={1.9} />
-          </button>
-          <h1 className="text-[20px] font-semibold tracking-tight text-ink">
-            {profileView === 'settings' ? 'Settings' : profileView === 'help' ? 'Help Center' : profileView === 'chat' ? 'Customer Service' : profileView === 'edit' ? 'Your Profile' : profileView === 'address' ? 'Manage Address' : profileView === 'payment' ? 'Payment Methods' : 'Profile'}
-          </h1>
-        </div>
-      </header>
+      {profileView !== 'chat' && (
+        <header className="flex-shrink-0 px-6 pt-6 pb-2">
+          <div className="relative flex h-14 items-center justify-center">
+            <button
+              type="button"
+              onClick={() => profileView === 'main' ? go({ name: 'tabs', tab: 'home' }) : setProfileView('main')}
+              className="absolute left-0 flex h-12 w-12 items-center justify-center rounded-full bg-surface text-ink-200 shadow-card transition active:scale-95"
+              aria-label="Back"
+            >
+              <ArrowLeft className="h-5 w-5" strokeWidth={1.9} />
+            </button>
+            <h1 className="text-[20px] font-semibold tracking-tight text-ink">
+              {profileView === 'settings' ? 'Settings' : profileView === 'help' ? 'Help Center' : profileView === 'edit' ? 'Your Profile' : profileView === 'address' ? 'Manage Address' : profileView === 'payment' ? 'Payment Methods' : 'Profile'}
+            </h1>
+          </div>
+        </header>
+      )}
 
       {profileView === 'main' && (
         <div className="no-scrollbar flex-1 overflow-y-auto px-6 pb-32 pt-6 anim-up">
@@ -608,8 +611,8 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
       )}
 
       {profileView === 'chat' && (
-        <div className="flex min-h-0 flex-1 flex-col px-4 pb-4 pt-2 anim-up">
-          <ChatBot embedded fullPage />
+        <div className="flex min-h-0 flex-1 flex-col anim-up">
+          <ChatBot embedded fullPage onClose={() => setProfileView('help')} />
         </div>
       )}
 
