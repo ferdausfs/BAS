@@ -1,4 +1,32 @@
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## BAS0015 — Checkout saved-address selection crash fix (single phase, complete) ✅ (2026-07-20, arena.ai Agent Mode)
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**Task:** Buddy reported a critical checkout issue after the Profile/Address UI work: saved addresses did not appear in Checkout, selecting addresses was not possible, and tapping `+ Add New` crashed the app.
+
+**Root cause:** `CheckoutScreen.tsx` still used hardcoded demo address cards (`Home`, `Office`, etc.) instead of the real `bakeart-addresses-${user.id}` saved-address store used by ProfileScreen. The `+ Add New` button also routed to `go({ name: 'profile' })`, which is not a valid app route type (Profile lives under `{ name: 'tabs', tab: 'profile' }`), causing a runtime/navigation failure.
+
+**In scope (files touched):** `src/screens/CheckoutScreen.tsx`, `AGENT_LOG.md` plus earlier pending cumulative UI files already in this ZIP.
+**Out of scope (untouched):** order submission logic, payment logic, ProfileScreen address save logic, cart logic, store/Firebase code.
+
+### কী বদলেছে
+- Checkout delivery-address cards now read real saved addresses from `localStorage` via the same key as ProfileScreen: `bakeart-addresses-${user.id}`.
+- Selecting a saved address now fills `form.address`, `form.district`, and phone fallback correctly.
+- If no saved address exists but checkout already has an address from profile/recent order, it shows a `Current` card.
+- `+ Add New` no longer crashes: it safely routes to `{ name: 'tabs', tab: 'profile' }` and labels the flow as `Profile → Manage Address`.
+- Added a fallback manual address textarea in the checkout address section so checkout is still usable even without saved addresses.
+- Removed the invalid checkout route usage; as a side effect, the TypeScript baseline improved from 31 to 30 known pre-existing errors.
+
+### Verification (self)
+- `npx tsc --noEmit`: **30 errors** now (one pre-existing invalid route error in CheckoutScreen was fixed); no new errors. Remaining CheckoutScreen warnings are pre-existing unused location-helper declarations.
+- `npm run build`: ✓ passed.
+- `package-lock.json` churn from local install was reverted.
+
+### Handoff / next
+- This is a bugfix, not just UI polish. After deploy, test: Profile → Manage Address save address → Cart/Checkout → saved address appears → tap address selects it → `+ Add New` no longer crashes.
+
+
+## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ## BAS0014 — Product detail card separation after floating thumbnails (single phase, complete) ✅ (2026-07-20, arena.ai Agent Mode)
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 

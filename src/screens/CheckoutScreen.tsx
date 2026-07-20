@@ -15,11 +15,11 @@ import {
 } from '../lib/store';
 import { doc, setDoc } from 'firebase/firestore';
 import { db, isFirebaseConfigured, uploadToCloudinary } from '../lib/firebase';
-import { safeArray, isValidPhone, copyText } from '../lib/utils';
+import { safeArray, isValidPhone, copyText, ls } from '../lib/utils';
 import { LocationGate } from '../components/LocationGate';
 import PaymentAppPopup from '../components/PaymentAppPopup';
 import { BD_DISTRICTS } from '../lib/zones';
-import type { CartItem, Order } from '../types';
+import type { CartItem, Order, SavedAddress } from '../types';
 
 const PAYMENT_METHODS = [
   { id: 'bkash', name: 'bKash', desc: 'Send money / Payment', color: '#E2136E', bg: '#FCE8F1' },
@@ -161,6 +161,37 @@ export default function CheckoutScreen({ onBack }: Props) {
     // Remaining-amount payment method, settled at delivery — cash allowed here.
     payment: 'cash' as typeof PAYMENT_METHODS[number]['id'],
   });
+
+  const savedAddresses = useMemo(() => {
+    if (!user?.id) return [] as SavedAddress[];
+    return ls.get<SavedAddress[]>(`bakeart-addresses-${user.id}`, []);
+  }, [user?.id]);
+
+  const checkoutAddressCards = useMemo(() => {
+    const saved = savedAddresses.map((addr) => ({
+      id: addr.id,
+      label: addr.name || 'Address',
+      sub: `${addr.address}${addr.district ? `, ${addr.district}` : ''}`,
+      address: addr.address,
+      district: addr.district || detectedDistrict || 'Comilla',
+      phone: addr.phone,
+      isDefault: addr.isDefault,
+    }));
+
+    if (saved.length > 0) return saved;
+    if (form.address) {
+      return [{
+        id: 'current',
+        label: 'Current',
+        sub: `${form.address}${form.district ? `, ${form.district}` : ''}`,
+        address: form.address,
+        district: form.district,
+        phone: form.phone,
+        isDefault: true,
+      }];
+    }
+    return [];
+  }, [savedAddresses, detectedDistrict, form.address, form.district, form.phone]);
 
   // Autofill name, phone and address for logged in users
   useEffect(() => {
@@ -535,36 +566,52 @@ export default function CheckoutScreen({ onBack }: Props) {
           </div>
         </Section>
 
-        {/* Delivery address — Card selector (Phase 5 - Check 2) */}
+        {/* Delivery address — uses real saved Profile addresses, no hardcoded cards */}
         <Section icon={MapPin} title="ডেলিভারি ঠিকানা">
           <div className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-hide">
-            {[
-              { id: 'home', label: 'Home', sub: '123 Main Rd, Comilla' },
-              { id: 'office', label: 'Office', sub: 'Dhanmondi 27, Dhaka' },
-              { id: 'parents', label: "Parent's House", sub: 'Agrabad, Chittagong' },
-              { id: 'friend', label: "Friend's House", sub: 'Banani, Dhaka' },
-            ].map((addr) => (
-              <button
-                key={addr.id}
-                onClick={() => {
-                  setForm((prev) => ({ ...prev, address: addr.sub, district: 'Comilla' }));
-                }}
-                className="flex-shrink-0 w-[132px] rounded-2xl border border-ink-50 bg-white p-3 text-left active:scale-95 transition"
-              >
-                <div className="font-bold text-[13px] text-ink mb-0.5">{addr.label}</div>
-                <div className="text-[11px] text-ink-200 line-clamp-2">{addr.sub}</div>
-              </button>
-            ))}
+            {checkoutAddressCards.map((addr) => {
+              const selected = form.address === addr.address;
+              return (
+                <button
+                  key={addr.id}
+                  onClick={() => {
+                    setForm((prev) => ({
+                      ...prev,
+                      address: addr.address,
+                      district: addr.district,
+                      phone: prev.phone || addr.phone,
+                    }));
+                  }}
+                  className={`flex-shrink-0 w-[148px] rounded-2xl border p-3 text-left active:scale-95 transition ${
+                    selected ? 'border-coral bg-coral-50/50 shadow-card' : 'border-ink-50 bg-white'
+                  }`}
+                >
+                  <div className="mb-1 flex items-center justify-between gap-2">
+                    <div className="line-clamp-1 font-bold text-[13px] text-ink">{addr.label}</div>
+                    {selected && <Check className="h-4 w-4 shrink-0 text-coral" strokeWidth={2.5} />}
+                  </div>
+                  <div className="line-clamp-2 text-[11px] leading-snug text-ink-200">{addr.sub}</div>
+                  {addr.isDefault && <div className="mt-2 inline-flex rounded-full bg-secondary px-2 py-0.5 text-[9px] font-bold text-coral">Default</div>}
+                </button>
+              );
+            })}
             <button
-              onClick={() => go({ name: 'profile' })}
-              className="flex-shrink-0 w-[132px] rounded-2xl border-2 border-dashed border-ink-200 p-3 text-left active:scale-95 transition"
+              type="button"
+              onClick={() => go({ name: 'tabs', tab: 'profile' })}
+              className="flex-shrink-0 w-[148px] rounded-2xl border-2 border-dashed border-ink-200 p-3 text-left active:scale-95 transition"
             >
               <div className="font-bold text-[13px] text-ink-200 mb-0.5">+ Add New</div>
-              <div className="text-[11px] text-ink-200">New address</div>
+              <div className="text-[11px] text-ink-200">Profile → Manage Address</div>
             </button>
           </div>
 
-          {/* Keep minimal form fields for editing */}
+          {checkoutAddressCards.length === 0 && (
+            <div className="mt-2 rounded-2xl bg-secondary/40 px-3.5 py-3 text-[12px] font-medium text-ink-300">
+              No saved address yet. Add one from Profile → Manage Address, or type below.
+            </div>
+          )}
+
+          {/* Keep minimal form fields for editing / fallback entry */}
           <div className="mt-4 space-y-2.5">
             <input
               placeholder="আপনার নাম"
@@ -578,6 +625,13 @@ export default function CheckoutScreen({ onBack }: Props) {
               value={form.phone}
               onChange={(e) => setForm({ ...form, phone: e.target.value })}
               className="h-11 w-full rounded-xl border border-ink-50 bg-white px-3 text-[13px] font-medium text-ink outline-none focus:border-coral"
+            />
+            <textarea
+              placeholder="সম্পূর্ণ ঠিকানা"
+              rows={2}
+              value={form.address}
+              onChange={(e) => setForm({ ...form, address: e.target.value })}
+              className="w-full resize-none rounded-xl border border-ink-50 bg-white px-3 py-2.5 text-[13px] font-medium text-ink outline-none focus:border-coral"
             />
           </div>
         </Section>
