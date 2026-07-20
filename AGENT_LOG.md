@@ -1,36 +1,4 @@
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
-## BAS0035 — Dissolve clear animation for shared search/chat inputs (single phase, complete) ✅ (2026-07-20, arena.ai Agent Mode)
-## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-**Task:** Buddy provided the Transitions.dev `Input clear with dissolve` snippet and requested the same clear animation for search/text inputs across the app.
-
-**In scope (files touched):** `src/components/TransitionClearInput.tsx`, `src/components/SearchBar.tsx`, `src/components/ChatBot.tsx`, `AGENT_LOG.md` plus earlier pending cumulative UI files already in this ZIP.
-**Out of scope (untouched):** input validation/business logic, checkout/profile form submission logic, textarea/select fields.
-
-### কী বদলেছে
-- Added reusable `TransitionClearInput.tsx`, adapted from Buddy's provided snippet:
-  - auto-injects CSS once with `#transitions-p13`
-  - controlled React input support
-  - animated mirror text fly/blur
-  - placeholder re-entry animation
-  - glow/dissolve layer
-  - focus-preserving clear button
-  - reduced-motion guard
-- Replaced shared `SearchBar` input with `TransitionClearInput`.
-  - This covers Home search and Categories/Cake search because they use the shared SearchBar.
-- Replaced Customer Service / ChatBot message input with `TransitionClearInput`.
-  - Paper-plane send button remains unchanged.
-
-### Verification (self)
-- `npx tsc --noEmit`: **30 known pre-existing errors** remain; no new TransitionClearInput/SearchBar/ChatBot errors.
-- `npm run build`: ✓ passed.
-- `package-lock.json` churn from local install was reverted.
-
-### Handoff / next
-- This phase applies the dissolve clear interaction to shared search/chat text inputs. If Buddy wants every checkout/profile/admin form field converted too, that should be a dedicated follow-up because those fields include textarea/select/validation-specific flows.
-
-
-## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ## BAS0034 — Fix ProductCard layout regression with Option-B shadow-text cards (single phase, complete) ✅ (2026-07-20, arena.ai Agent Mode)
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
