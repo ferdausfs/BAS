@@ -5,13 +5,13 @@ import { useOrdersHook } from '../hooks/useOrders';
 import { safeArray } from '../lib/utils';
 import type { CartItem, Order } from '../types';
 
-const STATUSES: { key: string; label: string; icon: any }[] = [
-  { key: 'placed',    label: 'Placed',    icon: Check },
-  { key: 'confirmed', label: 'Confirmed', icon: Package },
-  { key: 'baking',    label: 'Baking',    icon: ChefHat },
-  { key: 'ready',     label: 'Ready',     icon: Package },
-  { key: 'out',       label: 'Out',       icon: Truck },
-  { key: 'delivered', label: 'Delivered', icon: Check },
+const STATUSES: { key: string; label: string; icon: any; color: string; bg: string }[] = [
+  { key: 'placed',    label: 'Placed',    icon: Check,   color: '#FF8A65', bg: '#FFF3E0' },
+  { key: 'confirmed', label: 'Confirmed', icon: Package, color: '#FF9F68', bg: '#FFF4E8' },
+  { key: 'baking',    label: 'Baking',    icon: ChefHat, color: '#FFB74D', bg: '#FFF8E1' },
+  { key: 'ready',     label: 'Ready',     icon: Package, color: '#4DB6AC', bg: '#E0F2F1' },
+  { key: 'out',       label: 'Out',       icon: Truck,   color: '#64B5F6', bg: '#E3F2FD' },
+  { key: 'delivered', label: 'Delivered', icon: Check,  color: '#81C784', bg: '#E8F5E9' },
 ];
 
 export default function OrdersScreen() {
@@ -184,6 +184,7 @@ export default function OrdersScreen() {
               const isExpanded = expanded.has(o.id);
               const visibleItems = isExpanded ? items : items.slice(0, 2);
               const progressPct = STATUSES.length > 1 ? (Math.max(currentIdx, 0) / (STATUSES.length - 1)) * 100 : 0;
+              const currentStatus = STATUSES[currentIdx] ?? STATUSES[0];
 
               return (
                 <article
@@ -210,8 +211,8 @@ export default function OrdersScreen() {
                       <span
                         className="mt-1 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9.5px] font-bold uppercase tracking-wide"
                         style={{
-                          background: isCancelled ? 'rgba(231,76,60,.1)' : isDelivered ? 'rgba(47,191,113,.1)' : 'var(--color-secondary)',
-                          color: isCancelled ? 'var(--color-error)' : isDelivered ? 'var(--color-success)' : 'var(--color-coral-700)',
+                          background: isCancelled ? 'rgba(231,76,60,.1)' : currentStatus.bg,
+                          color: isCancelled ? 'var(--color-error)' : currentStatus.color,
                         }}
                       >
                         {isDelivered && <Check className="h-2.5 w-2.5" strokeWidth={3} />}
@@ -223,11 +224,11 @@ export default function OrdersScreen() {
                   {/* Items */}
                   <div className="space-y-2.5 px-4 pb-2">
                     {visibleItems.map((it, i) => (
-                      <div key={i} className="flex items-center gap-4">
+                      <div key={i} className="flex min-w-0 items-center gap-4">
                         <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-2xl bg-bg ring-1 ring-border">
                           <img src={it.image} alt="" className="h-full w-full object-cover" />
                         </div>
-                        <div className="flex-1">
+                        <div className="min-w-0 flex-1">
                           <div className="line-clamp-1 text-[13px] font-bold text-ink">
                             {it.name}
                           </div>
@@ -277,8 +278,8 @@ export default function OrdersScreen() {
                         {/* Single continuous progress track — solid primary fill */}
                         <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-ink-50">
                           <div
-                            className="h-full rounded-full bg-coral transition-all duration-700 ease-out"
-                            style={{ width: `${progressPct}%` }}
+                            className="h-full rounded-full transition-all duration-700 ease-out"
+                            style={{ width: `${progressPct}%`, backgroundColor: currentStatus.color }}
                           />
                         </div>
 
@@ -290,12 +291,13 @@ export default function OrdersScreen() {
                               <div key={s.key} className="flex flex-1 flex-col items-center gap-1">
                                 <div
                                   className={`flex h-5 w-5 items-center justify-center rounded-full transition ${
-                                    isPast || isCurrent ? 'bg-coral text-white' : 'bg-ink-50 text-text-tertiary'
+                                    isPast || isCurrent ? 'text-white' : 'bg-ink-50 text-text-tertiary'
                                   } ${isCurrent && !isDelivered ? 'anim-ring' : ''}`}
+                                  style={isPast || isCurrent ? { backgroundColor: s.color } : undefined}
                                 >
                                   <s.icon className="h-3 w-3" strokeWidth={2.5} />
                                 </div>
-                                <span className={`text-[9px] font-semibold ${isPast || isCurrent ? 'text-ink' : 'text-text-tertiary'}`}>
+                                <span className={`text-[9px] font-semibold ${isPast || isCurrent ? 'text-ink' : 'text-text-tertiary'}`} style={isCurrent ? { color: s.color } : undefined}>
                                   {s.label}
                                 </span>
                               </div>
@@ -367,8 +369,8 @@ function PendingCheckoutCard({
   const visibleItems = items.slice(0, 3);
   return (
     <div className="space-y-4 pt-2 anim-up">
-      <article className="overflow-hidden rounded-2xl border border-coral/25 bg-surface shadow-card">
-        <div className="h-[3px] w-full bg-coral" />
+      <article className="overflow-hidden rounded-2xl border border-dashed border-coral/30 bg-surface shadow-card">
+        <div className="h-[3px] w-full animate-pulse bg-coral" />
         <div className="flex items-start justify-between px-4 pt-4 pb-3">
           <div>
             <div className="text-[10px] font-bold uppercase tracking-wider text-coral">Pending checkout</div>
@@ -377,13 +379,13 @@ function PendingCheckoutCard({
           </div>
           <div className="text-right">
             <div className="text-[20px] font-bold tabular text-ink">{formatINR(total)}</div>
-            <span className="mt-1 inline-flex rounded-full bg-secondary px-2 py-0.5 text-[10px] font-bold uppercase text-coral">Pending</span>
+            <span className="mt-1 inline-flex rounded-full bg-orange-50 px-2 py-0.5 text-[10px] font-bold uppercase text-orange-600">Pending</span>
           </div>
         </div>
 
         <div className="space-y-2.5 px-4 pb-3">
           {visibleItems.map((item, index) => (
-            <div key={`${item.productId ?? item.name}-${index}`} className="flex items-center gap-4">
+            <div key={`${item.productId ?? item.name}-${index}`} className="flex min-w-0 items-center gap-4">
               <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-2xl bg-bg ring-1 ring-border">
                 <img src={item.image} alt="" className="h-full w-full object-cover" />
               </div>
@@ -402,7 +404,7 @@ function PendingCheckoutCard({
           <button onClick={onCart} className="flex h-11 items-center justify-center gap-1.5 rounded-2xl border border-border bg-surface text-[12px] font-bold text-ink transition active:scale-[.98]">
             <ShoppingCart className="h-3.5 w-3.5" /> View cart
           </button>
-          <button onClick={onCheckout} className="flex h-11 items-center justify-center gap-1.5 rounded-2xl bg-coral text-[12px] font-bold text-white shadow-btn transition active:scale-[.98]">
+          <button onClick={onCheckout} className="flex h-11 scale-[1.02] items-center justify-center gap-1.5 rounded-2xl bg-coral text-[12px] font-bold text-white shadow-btn transition active:scale-[.98]">
             <Receipt className="h-3.5 w-3.5" /> Continue checkout
           </button>
         </div>

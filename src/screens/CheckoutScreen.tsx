@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { ArrowLeft, MapPin, Clock, Wallet, Check, Shield, Loader2, Banknote, ShoppingCart, Gift, Users, Image as ImageIcon, X, Calendar, Tag } from 'lucide-react';
+import { ArrowLeft, MapPin, Clock, Wallet, Check, Copy, Shield, Loader2, Banknote, ShoppingCart, Gift, Users, Image as ImageIcon, X, Calendar, Tag } from 'lucide-react';
 import {
   useCart, useOrders, useUI, formatINR,
   cartSubtotal, standardDeliveryFee,
@@ -1110,7 +1110,7 @@ export default function CheckoutScreen({ onBack }: Props) {
                 <div
                   key={method.id}
                   className={`overflow-hidden rounded-2xl border-2 transition ${
-                    isSelected ? 'border-coral bg-coral-50' : 'border-ink-50 bg-white'
+                    isSelected ? 'border-coral bg-coral/[0.08] shadow-card scale-[1.01] transition-all duration-200' : 'border-border bg-surface transition-all duration-200'
                   }`}
                 >
                   <button
@@ -1140,7 +1140,7 @@ export default function CheckoutScreen({ onBack }: Props) {
                   {isSelected && (
                     <div className="border-t border-coral/20 px-3.5 pb-3.5 pt-3 anim-fade">
                       <p className="mb-1.5 text-[11px] text-ink-200">এই নাম্বারে Send Money করুন</p>
-                      <div className="flex items-center gap-2 rounded-xl bg-white px-3 py-2.5">
+                      <div className="flex items-center gap-2 rounded-xl border border-coral/20 bg-white px-3 py-2.5">
                         <span className="flex-1 text-[15px] font-bold tabular tracking-wide text-ink">
                           {methodNumber}
                         </span>
@@ -1154,10 +1154,9 @@ export default function CheckoutScreen({ onBack }: Props) {
                               setAppPopupOpen(true);
                             }
                           }}
-                          className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[11.5px] font-bold text-white active:scale-95"
-                          style={{ background: method.color }}
+                          className="flex h-9 items-center gap-1 rounded-full bg-coral px-3.5 text-[11.5px] font-bold text-white shadow-btn active:scale-95"
                         >
-                          {numberCopied ? 'Copied' : 'Copy'}
+                          {numberCopied ? <><Check className="h-3.5 w-3.5" /> Copied</> : <><Copy className="h-3.5 w-3.5" /> Copy</>}
                         </button>
                       </div>
                       <p className="mt-1.5 text-[10.5px] text-ink/40">Personal number · Send Money অপশন ব্যবহার করুন</p>
@@ -1226,7 +1225,7 @@ export default function CheckoutScreen({ onBack }: Props) {
                   key={method.id}
                   onClick={() => setForm({ ...form, payment: method.id })}
                   className={`flex w-full items-center gap-4 rounded-2xl border-2 p-3.5 transition ${
-                    isSelected ? 'border-coral bg-coral-50' : 'border-ink-50 bg-white'
+                    isSelected ? 'border-coral bg-coral/[0.08] shadow-card scale-[1.01] transition-all duration-200' : 'border-border bg-surface transition-all duration-200'
                   }`}
                 >
                   <div
@@ -1271,14 +1270,15 @@ export default function CheckoutScreen({ onBack }: Props) {
           <section className="relative rounded-t-[28px] border-t border-border bg-surface px-6 pb-8 pt-4 shadow-float anim-up">
             <div className="mx-auto mb-4 h-1 w-16 rounded-full bg-ink-100" />
             <div className="mb-4 flex items-start gap-4 border-b border-border pb-4">
-              <div className="h-16 w-16 shrink-0 overflow-hidden rounded-2xl bg-secondary">
+              <div className="h-28 w-28 shrink-0 overflow-hidden rounded-xl border-2 border-white bg-secondary shadow-card">
                 <img src={selectedCartItem.image} alt="" className="h-full w-full object-cover" />
               </div>
               <div className="min-w-0 flex-1">
+                <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.14em] text-ink-200">PRODUCT DETAILS</p>
                 <h2 className="line-clamp-2 text-[18px] font-bold text-ink">{selectedCartItem.name}</h2>
                 <p className="mt-1 text-[13px] font-medium text-ink-300">Cart item details</p>
               </div>
-              <button type="button" onClick={() => setSelectedCartItem(null)} className="flex h-9 w-9 items-center justify-center rounded-full bg-ink-50 text-ink-300">
+              <button type="button" onClick={() => setSelectedCartItem(null)} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-ink-50 text-ink-300">
                 <X className="h-4 w-4" />
               </button>
             </div>
@@ -1296,6 +1296,13 @@ export default function CheckoutScreen({ onBack }: Props) {
                 <span className="font-bold tabular text-coral">{formatINR(selectedCartItem.price * selectedCartItem.quantity)}</span>
               </div>
             </div>
+            <button
+              type="button"
+              onClick={() => setSelectedCartItem(null)}
+              className="mt-6 h-14 w-full rounded-2xl bg-coral text-[15px] font-bold text-white shadow-btn"
+            >
+              Close details
+            </button>
           </section>
         </div>
       )}
@@ -1429,7 +1436,7 @@ export default function CheckoutScreen({ onBack }: Props) {
                       key={slot.v}
                       type="button"
                       onClick={() => setForm((prev) => ({ ...prev, time: slot.v }))}
-                      className={`relative h-12 rounded-[16px] border text-[13px] font-bold transition active:scale-95 ${
+                      className={`relative h-12 rounded-2xl border text-[13px] font-bold transition active:scale-95 ${
                         active ? 'border-coral bg-coral text-white shadow-btn' : 'border-border bg-bg text-ink'
                       }`}
                     >
@@ -1565,9 +1572,9 @@ function Section({
 
 function DetailRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-start justify-between gap-4 rounded-2xl bg-bg px-4 py-3">
-      <span className="text-ink-300 font-medium">{label}</span>
-      <span className="max-w-[190px] text-right font-bold text-ink">{value}</span>
+    <div className="flex min-w-0 items-start justify-between gap-4 rounded-2xl bg-bg px-4 py-3.5">
+      <span className="min-w-0 font-medium text-ink-300">{label}</span>
+      <span className="line-clamp-1 max-w-[60%] flex-shrink-0 text-right font-bold text-ink">{value}</span>
     </div>
   );
 }

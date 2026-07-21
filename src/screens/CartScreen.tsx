@@ -401,8 +401,8 @@ function CartItemRow({
             />
           </div>
         </div>
-        <div className="flex flex-1 flex-col">
-          <div className="flex-1">
+        <div className="min-w-0 flex-1 flex flex-col">
+          <div className="min-w-0 flex-1">
             <h4 className="line-clamp-1 text-[14px] font-bold text-ink">{item.name}</h4>
             <div className="mt-0.5 text-[12px] text-ink-300">
               {item.size} · {item.flavor}
