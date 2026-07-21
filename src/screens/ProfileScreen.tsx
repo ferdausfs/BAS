@@ -427,13 +427,13 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
   const settingsRows = [
     {
       Icon: Bell,
-      label: 'Notification Settings',
-      action: () => useUI.getState().addNotification('Notifications', 'Notification preferences will be available soon.'),
+      label: 'Notification Settings · Coming soon',
+      action: () => useUI.getState().addNotification('Notifications', 'Notification preferences — Coming soon. Order updates live in Orders tab.'),
     },
     {
       Icon: KeyRound,
-      label: 'Password Manager',
-      action: () => useUI.getState().addNotification('Password Manager', 'Account security settings will be available soon.'),
+      label: 'Password Manager · Contact support',
+      action: () => useUI.getState().addNotification('Password Manager', 'To change password, please contact support securely.'),
     },
     {
       Icon: Sun,

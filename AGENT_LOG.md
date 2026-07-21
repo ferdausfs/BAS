@@ -1,3 +1,28 @@
+## Session: 2026-07-21, Phase P4-2
+**Agent/Tool:** Arena.ai Agent Mode — Settings honesty
+**Feature:** Notification Settings + Password Manager placeholder → honest
+
+### কী হয়েছে:
+- Notification Settings is now labeled `Coming soon` and directs users to the Orders tab for live order updates.
+- Password Manager is now labeled `Contact support` and gives a secure support instruction; no Firebase password logic was added.
+- Theme and Delete Account messages were preserved unchanged.
+- P3 Help Center rows and all close-button components were left untouched.
+
+### Touched files:
+- `src/screens/ProfileScreen.tsx`
+- `AGENT_LOG.md`
+
+### Commit:
+- Prepared ZIP; commit/push pending user verification.
+
+### এখনো Pending:
+- P4-1 close-button consistency — propose only; Occasion 40px square remains an intentional exception per lessons.
+
+### পরবর্তী Agent এর জন্য নোট:
+- `available soon` should be absent from ProfileScreen settings/help rows; no fake notification toggle or password update logic was added.
+
+---
+
 ## Session: 2026-07-21, Phase P3-1
 **Agent/Tool:** Arena.ai Agent Mode — Help Center honesty
 **Feature worked on:** Help Center placeholder → real WhatsApp + honest disabled rows
