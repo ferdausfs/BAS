@@ -1,9 +1,9 @@
 import { useMemo, useState } from 'react';
-import { ArrowLeft, ArrowRight, Heart, RotateCcw } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Bell, Heart, RotateCcw } from 'lucide-react';
 import { useUI, useUser, useAuthStore } from '../lib/store';
 import { useProducts } from '../hooks/useProducts';
 import { categories } from '../lib/data';
-import { safeArray } from '../lib/utils';
+import { ls, safeArray } from '../lib/utils';
 import type { Product } from '../types';
 import ProductCard from '../components/ProductCard';
 import OccasionIcon from '../components/OccasionIcon';
@@ -41,6 +41,15 @@ export default function WishlistScreen({
         return next;
       });
     }, 220);
+  };
+
+  const handleNotify = (product: Product) => {
+    const key = 'bakeart-alerts';
+    const alerts = ls.get<{ productId: string; productName: string; date: number }[]>(key, []);
+    if (!alerts.some((alert) => alert.productId === product.id)) {
+      ls.set(key, [...alerts, { productId: product.id, productName: product.name, date: Date.now() }]);
+    }
+    useUI.getState().addNotification('Alert set!', `We'll notify you when ${product.name} is back in stock.`);
   };
 
   return (
@@ -208,6 +217,15 @@ export default function WishlistScreen({
                     onOpen={() => go({ name: 'product', productId: product.id })}
                     variant="grid"
                   />
+                  {product.inStock === false && (
+                    <button
+                      type="button"
+                      onClick={() => handleNotify(product)}
+                      className="mt-2 flex h-10 w-full items-center justify-center gap-1.5 rounded-2xl border border-error/20 bg-surface text-[11px] font-bold text-error shadow-card transition active:scale-95"
+                    >
+                      <Bell className="h-3.5 w-3.5" /> Notify me when available
+                    </button>
+                  )}
                 </div>
               ))}
             </div>

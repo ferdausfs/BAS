@@ -100,12 +100,16 @@ export default function ProductCard({ product, wished, onOpen, onWish, variant =
       </button>
 
       <div className="absolute inset-x-0 bottom-0 z-[3] px-3 pb-3 text-white [text-shadow:0_2px_12px_rgba(0,0,0,.44)]">
-        {product.inStock !== false && (product.lowStock || (product.stockCount !== undefined && product.stockCount <= 5)) && (
-          <span className="mb-1.5 inline-flex items-center gap-1 rounded-full bg-white/15 px-2 py-0.5 text-[9.5px] font-semibold text-white backdrop-blur-md">
-            <span className="h-1.5 w-1.5 rounded-full bg-error animate-pulse" />
-            {product.stockCount ? `মাত্র ${product.stockCount}টি!` : 'কম বাকি!'}
+        {product.inStock === false ? (
+          <span className="mb-1.5 inline-flex rounded-full bg-surface/90 px-3 py-1 text-[10px] font-bold text-error shadow-card">
+            Out of Stock
           </span>
-        )}
+        ) : product.lowStock || (product.stockCount !== undefined && product.stockCount <= 5) ? (
+          <span className="mb-1.5 inline-flex items-center gap-1 rounded-full bg-white/15 px-2 py-0.5 text-[9.5px] font-semibold text-white backdrop-blur-md">
+            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-error" />
+            {product.stockCount ? `মাত্র ${product.stockCount}টি বাকি!` : 'মাত্র কয়েকটি বাকি!'}
+          </span>
+        ) : null}
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
             <h3 className="line-clamp-1 text-[16px] font-bold tracking-[-0.035em] text-white">{product.name}</h3>

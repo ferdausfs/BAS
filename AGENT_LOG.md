@@ -1,3 +1,37 @@
+## Session: 2026-07-21, Phase P5-1 + P5-2 + P5-3
+**Agent/Tool:** Arena.ai Agent Mode — ProductCard stock state + Wishlist unavailable state
+**Feature worked on:** Explicit inventory messaging and saved-product recovery
+
+### কী হয়েছে:
+- ProductCard now shows an explicit `Out of Stock` badge instead of silently hiding the Add action.
+- Low-stock wording unified to `মাত্র Xটি বাকি!` / `মাত্র কয়েকটি বাকি!`.
+- Wishlist keeps unavailable saved products and adds a `Notify me when available` action using the existing `bakeart-alerts` local-storage contract.
+- Wishlist empty states and 220ms removal transition were preserved.
+- ProductCard radius and Home/Categories browse filtering were preserved.
+
+### Touched files:
+- `src/components/ProductCard.tsx`
+- `src/screens/WishlistScreen.tsx`
+- `AGENT_LOG.md`
+- `tasks/P5-1-PRODUCTCARD-CONTRAST-AUDIT.md`
+- `tasks/P5-COMPLETE-REVIEW-REPORT-2026-07-21.md`
+
+### Verification:
+- Baseline TypeScript errors: 30.
+- Final TypeScript errors: 30; no new errors.
+- Build passed.
+- Protected HomeScreen, CategoriesScreen, store, AdminPanel, ProductScreen, and touch-listener code remained unchanged.
+
+### এখনো Pending:
+- Real-device contrast validation for ProductCard remains a manual follow-up; no unverified overlay rewrite was made.
+- Inventory policy remains conversion-first: Home/Categories continue to hide out-of-stock products.
+
+### পরবর্তী Agent এর জন্য নোট:
+- `Out of Stock` is now rendered by ProductCard for any saved/directly rendered unavailable item.
+- Wishlist notify action reuses `bakeart-alerts`; do not create a second alert-storage contract.
+
+---
+
 ## Session: 2026-07-21, Phase P4-2
 **Agent/Tool:** Arena.ai Agent Mode — Settings honesty
 **Feature:** Notification Settings + Password Manager placeholder → honest
