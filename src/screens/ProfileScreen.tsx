@@ -5,11 +5,11 @@ import {
   LogIn, X, Save, Check, User, AlertTriangle, Cake, Gift, Wallet as WalletIcon,
   Copy, Share2, Navigation, Loader2, Tag, ClipboardList, Camera, Mail, Phone, Banknote, Search
 } from 'lucide-react';
-import { useUI, useAuthStore, getReferralCode, claimReferralRewards, WALLET_REFERRAL_BONUS } from '../lib/store';
+import { useUI, useAuthStore, useSettingsStore, getReferralCode, claimReferralRewards, WALLET_REFERRAL_BONUS } from '../lib/store';
 import { useAuth } from '../hooks/useAuth';
 import { doc, setDoc } from 'firebase/firestore';
 import { db, isFirebaseConfigured } from '../lib/firebase';
-import { ls } from '../lib/utils';
+import { ls, waLink } from '../lib/utils';
 import BrandLogo from '../components/BrandLogo';
 import WalletHistoryModal from '../components/WalletHistoryModal';
 import { ChatBot } from '../components/ChatBot';
@@ -118,6 +118,7 @@ class AdminErrorBoundary extends React.Component<{ children: React.ReactNode }, 
 export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
   const { go } = useUI();
   const { user } = useAuthStore();
+  const { settings } = useSettingsStore();
   const effectiveIsAdmin = isAdmin || !!user?.isAdmin;
   const { signOut } = useAuth();
   const referralCode = getReferralCode(user);
@@ -133,6 +134,15 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
   const [profileView, setProfileView] = useState<'main' | 'edit' | 'address' | 'payment' | 'settings' | 'help' | 'chat'>('main');
   const [showAdmin, setShowAdmin] = useState(false);
   const [, setLogoTapCount] = useState(0);
+
+  const handleWhatsApp = () => {
+    const digits = settings.whatsappNumber?.replace(/\D/g, '') || '';
+    if (digits.length >= 10) {
+      window.open(waLink(settings.whatsappNumber, 'Hello! Need help'), '_blank');
+    } else {
+      useUI.getState().addNotification('WhatsApp', 'WhatsApp number not set — use Customer Service chat.');
+    }
+  };
 
   const [, setSavedProfile] = useState<CustomerProfile>(() =>
     loadCustomerProfile(user?.id, user?.name ?? '')
@@ -576,7 +586,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
               Icon={MessageCircle}
               label="WhatsApp"
               detail="Order help and quick support"
-              onClick={() => useUI.getState().addNotification('WhatsApp', 'WhatsApp support will open from product/contact cards.')}
+              onClick={handleWhatsApp}
               bordered
             />
             <HelpProfileRow
@@ -589,22 +599,25 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
             <HelpProfileRow
               Icon={HelpCircle}
               label="FAQ"
-              detail="Delivery, payment, reorder and promo questions"
-              onClick={() => useUI.getState().addNotification('FAQ', 'FAQ page will be available soon.')}
+              detail="FAQ — coming soon"
+              onClick={() => useUI.getState().addNotification('FAQ', 'FAQ page coming soon — use Customer Service chat for now.')}
               bordered
+              disabled
             />
             <HelpProfileRow
               Icon={User}
               label="Facebook"
-              detail="Bake Art Style"
-              onClick={() => useUI.getState().addNotification('Facebook', 'Facebook link will be available soon.')}
+              detail="Link not available yet"
+              onClick={() => useUI.getState().addNotification('Facebook', 'Facebook page not linked yet.')}
               bordered
+              disabled
             />
             <HelpProfileRow
               Icon={User}
               label="Instagram"
-              detail="@bakeartstyle"
-              onClick={() => useUI.getState().addNotification('Instagram', 'Instagram link will be available soon.')}
+              detail="Link not available yet"
+              onClick={() => useUI.getState().addNotification('Instagram', 'Instagram page not linked yet.')}
+              disabled
             />
           </div>
         </div>
@@ -1270,18 +1283,21 @@ function HelpProfileRow({
   detail,
   onClick,
   bordered,
+  disabled = false,
 }: {
   Icon: React.ComponentType<{ className?: string; strokeWidth?: number }>;
   label: string;
   detail: string;
   onClick: () => void;
   bordered?: boolean;
+  disabled?: boolean;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`flex w-full items-center gap-4 px-0 py-4 text-left transition active:bg-secondary/40 ${bordered ? 'border-b border-border' : ''}`}
+      aria-disabled={disabled}
+      className={`flex w-full items-center gap-4 px-0 py-4 text-left transition active:bg-secondary/40 ${bordered ? 'border-b border-border' : ''} ${disabled ? 'opacity-60' : ''}`}
     >
       <span className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-secondary text-coral">
         <Icon className="h-5 w-5" strokeWidth={1.75} />
@@ -1290,7 +1306,7 @@ function HelpProfileRow({
         <span className="block text-[15.5px] font-semibold leading-none tracking-tight text-ink">{label}</span>
         <span className="mt-1.5 block line-clamp-1 text-[12px] font-medium text-ink-300">{detail}</span>
       </span>
-      <ChevronRight className="h-5 w-5 text-ink-200" strokeWidth={1.8} />
+      <ChevronRight className={`h-5 w-5 text-ink-200 ${disabled ? 'opacity-50' : ''}`} strokeWidth={1.8} />
     </button>
   );
 }

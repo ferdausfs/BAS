@@ -1,3 +1,31 @@
+## Session: 2026-07-21, Phase P3-1
+**Agent/Tool:** Arena.ai Agent Mode — Help Center honesty
+**Feature worked on:** Help Center placeholder → real WhatsApp + honest disabled rows
+
+### কী হয়েছে:
+- WhatsApp now opens via `waLink(settings.whatsappNumber)` when a valid number exists; otherwise it shows an honest fallback toast to use Customer Service chat.
+- FAQ now says `FAQ — coming soon`, uses a disabled visual treatment, and points users to Customer Service chat.
+- Facebook/Instagram now say `Link not available yet`, use disabled styling, and do not invent URLs.
+- Preserved Customer Service → ChatBot behavior exactly.
+
+### Touched files:
+- `src/screens/ProfileScreen.tsx`
+- `AGENT_LOG.md`
+
+### Commit:
+- Prepared ZIP; commit/push pending user verification.
+
+### এখনো Pending:
+- P4 close-button consistency (separate)
+- Settings placeholder rows (Notification Settings, Password Manager)
+
+### পরবর্তী Agent এর জন্য নোট:
+- `settings.whatsappNumber` comes from `useSettingsStore`; `waLink` is reused from `src/lib/utils.ts`.
+- No verified Facebook/Instagram URL was found, so both remain visibly unavailable.
+- `available soon` remains only in settings rows, not in Help Center rows.
+
+---
+
 ## Session: 2026-07-21, Phase P2-2 + P2-3
 **Agent/Tool:** Arena.ai Agent Mode — consolidated Phase 2 implementation and audit
 **Feature worked on:** Orders status palette, pending checkout CTA, overflow consistency, final audit
