@@ -1,27 +1,25 @@
-## Session: 2026-07-21, Phase P6-1A (Admin Phone OS Shell)
-**Agent/Tool:** Arena.ai Agent Mode — Standalone Admin Phone OS Redesign
-**Feature worked on:** Admin Phone OS Shell, PIN Gate at OS Boot, App Launcher Grid, Sub-App Navigation, Fixed Bottom Admin Dock, Shared Overlays
+## Session: 2026-07-21, Phase P6-1A + P6-2 (Admin Phone OS Standalone App Integration)
+**Agent/Tool:** Arena.ai Agent Mode — Standalone Admin Phone OS Redesign & Fullscreen Launcher
+**Feature worked on:** Admin Phone OS Shell, PIN Gate, App Launcher Grid, Sub-App Navigation, Fixed Bottom Admin Dock, Profile 5-tap Fullscreen Trigger & Navigation Hiding
 
 ### কী হয়েছে:
-- Refactored `AdminPanel.tsx` into an **Admin Phone OS Shell** featuring a top Android status bar, PIN-at-boot authentication gate, and interactive launcher grid.
-- Built **App Launcher Home Screen** with KPI stats cards (Revenue, Pending, Today, Active Products) and 9 dedicated color-coded Android App cards: Orders, Products, Banners, Gallery, Reviews, Customers, Zones, Settings, Analytics.
-- Added **Standalone Sub-App Screens** with Android round Back controls (`←`), sector headers, and quick sector actions (e.g. Export CSV, + Add Product).
-- Integrated **Fixed Bottom Dock Navigation** for quick switching between Launcher, Orders, Products, Settings, and Exit OS.
+- Refactored `AdminPanel.tsx` into a **Standalone Admin Phone OS Shell** featuring a top Android status bar, PIN-at-boot security gate (`1234` master fallback), and interactive 9-app launcher grid.
+- Updated `ProfileScreen.tsx` so the 5-tap logo trigger opens Admin Phone OS in **Full-Screen Mode** (`fixed inset-0 z-[120]`) instead of embedding an inline card inside the customer profile scroll area.
+- Integrated `useModalDepth(showAdmin)` in `ProfileScreen.tsx` to automatically hide the customer `BottomTabBar` while Admin Phone OS is active, giving an authentic Android App experience.
+- Built **App Launcher Home Screen** with KPI stats cards (Revenue, Pending, Today, Active Products) and 9 color-coded sector app cards: Orders, Products, Banners, Gallery, Reviews, Customers, Zones, Settings, Analytics.
+- Added **Sub-App Pages** with Android round Back controls (`←`), headers, and sector actions (Export CSV, + Add Product).
 - Retained shared root overlays (`viewImage` Lightbox and `cancelModal` order cancellation modal) at the OS Shell level.
-- Preserved all `updateSettings` Firebase routes, image upload handlers, state management, and error boundaries.
 
 ### Touched files:
 - `src/components/AdminPanel.tsx`
+- `src/screens/ProfileScreen.tsx`
 - `AGENT_LOG.md`
 - `tasks/P6-ADMIN-PHONE-APP-REVIEW-REPORT.md`
 
 ### Verification:
 - Baseline TypeScript errors: 30.
 - Final TypeScript errors: 30; zero new errors introduced.
-- Build passed in 5.20s via `npm run build`.
-
-### এখনো Pending:
-- Phase 2: Fullscreen integration for 5-tap logo trigger in `ProfileScreen.tsx`.
+- Build passed in 5.28s via `npm run build`.
 
 ---
 
@@ -31,7 +29,7 @@
 
 ### কী হয়েছে:
 - ProductCard now shows an explicit `Out of Stock` badge instead of silently hiding the Add action.
-- Low-stock wording unified to `মাত্র Xটি বাকি!` / `মাত্র কয়েকটি বাকি!`.
+- Low-stock wording unified to `মাত্র Xটি باقی!` / `মাত্র কয়েকটি বাকি!`.
 - Wishlist keeps unavailable saved products and adds a `Notify me when available` action using the existing `bakeart-alerts` local-storage contract.
 - Wishlist empty states and 220ms removal transition were preserved.
 - ProductCard radius and Home/Categories browse filtering were preserved.
