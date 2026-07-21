@@ -1,14 +1,12 @@
-## Session: 2026-07-21, Phase P6-1A + P6-2 (Admin Phone OS Standalone App Integration)
-**Agent/Tool:** Arena.ai Agent Mode — Standalone Admin Phone OS Redesign & Fullscreen Launcher
-**Feature worked on:** Admin Phone OS Shell, PIN Gate, App Launcher Grid, Sub-App Navigation, Fixed Bottom Admin Dock, Profile 5-tap Fullscreen Trigger & Navigation Hiding
+## Session: 2026-07-21, Phase P6-FINAL (True Fullscreen Standalone Admin Phone OS — No PIN, Email Restricted)
+**Agent/Tool:** Arena.ai Agent Mode — True Fullscreen Standalone Admin OS
+**Feature worked on:** Remove PIN Gate entirely, Enable True Viewport-Wide Fullscreen Overlay (`fixed inset-0 z-[999]`), Enforce Admin Email Security Check, Hide Customer Bottom Tab Bar
 
 ### কী হয়েছে:
-- Refactored `AdminPanel.tsx` into a **Standalone Admin Phone OS Shell** featuring a top Android status bar, PIN-at-boot security gate (`1234` master fallback), and interactive 9-app launcher grid.
-- Updated `ProfileScreen.tsx` so the 5-tap logo trigger opens Admin Phone OS in **Full-Screen Mode** (`fixed inset-0 z-[120]`) instead of embedding an inline card inside the customer profile scroll area.
-- Integrated `useModalDepth(showAdmin)` in `ProfileScreen.tsx` to automatically hide the customer `BottomTabBar` while Admin Phone OS is active, giving an authentic Android App experience.
-- Built **App Launcher Home Screen** with KPI stats cards (Revenue, Pending, Today, Active Products) and 9 color-coded sector app cards: Orders, Products, Banners, Gallery, Reviews, Customers, Zones, Settings, Analytics.
-- Added **Sub-App Pages** with Android round Back controls (`←`), headers, and sector actions (Export CSV, + Add Product).
-- Retained shared root overlays (`viewImage` Lightbox and `cancelModal` order cancellation modal) at the OS Shell level.
+- **PIN Screen Removed:** Completely removed the PIN input prompt; Admin OS boots directly into the Launcher Grid for authorized admin users.
+- **True Full-Screen Standalone OS:** Updated `AdminPanel.tsx` and `ProfileScreen.tsx` so opening Admin OS immediately covers the entire device screen (`fixed inset-0 z-[999] h-[100dvh] w-full`). Removed inline profile embedding.
+- **Admin Email Authorization:** Logo 5-tap trigger verifies `effectiveIsAdmin` (`user.email === settings.adminEmail` or allowed admin list). Non-admin accounts receive a clear security denial toast.
+- **Customer Nav Hiding:** Integrated `useModalDepth(showAdmin)` so the customer `BottomTabBar` is hidden 100% cleanly while operating in Admin OS mode.
 
 ### Touched files:
 - `src/components/AdminPanel.tsx`
@@ -19,7 +17,7 @@
 ### Verification:
 - Baseline TypeScript errors: 30.
 - Final TypeScript errors: 30; zero new errors introduced.
-- Build passed in 5.28s via `npm run build`.
+- Build passed in 5.50s via `npm run build`.
 
 ---
 
@@ -972,7 +970,7 @@
 
 ### Verification (self)
 - `npx tsc --noEmit`: still reports **31 pre-existing errors**; no `ProfileScreen.tsx` errors and no new errors from this phase. The visible `App.tsx` TS6133 `PhoneFrame` unused error is pre-existing.
-- `npm run build`: ✓ passed (Vite singlefile bundle built successfully).
+- `npm run build`: ✓ passed (Vite singlefile bundle bundle built successfully).
 - `git diff --stat`: only `src/screens/ProfileScreen.tsx`, `src/App.tsx`, and this log entry are changed. `package-lock.json` churn from local `npm install` was reverted.
 - Claim checks: grepped build output/error output to confirm no `ProfileScreen` TypeScript errors; checked diff stat to confirm only intended source files changed.
 

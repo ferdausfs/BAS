@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import {
   X, Plus, Trash2, Edit3, Download, RefreshCw, Star, Image as ImageIcon,
-  Users, MapPin, Clock, CheckCircle2, ChefHat, Package, Truck, PartyPopper, Cake, Lock,
+  Users, MapPin, Clock, CheckCircle2, ChefHat, Package, Truck, PartyPopper, Cake,
   ArrowLeft, BarChart3, Tag, Settings, LogOut, Wifi, Battery, Home, ShieldCheck
 } from 'lucide-react';
 import { useProducts } from '../hooks/useProducts';
@@ -53,9 +53,9 @@ const EMPTY_BANNER = {
   type: 'new_item' as const, promoCode: '', productId: '', noticeText: '',
 };
 
-interface Props { onClose?: () => void; embedded?: boolean; }
+interface Props { onClose?: () => void; }
 
-export function AdminPanel({ onClose, embedded = false }: Props) {
+export function AdminPanel({ onClose }: Props) {
   const { settings, updateSettings } = useSettingsStore();
   const safeSettings = settings ?? DEFAULT_SETTINGS;
   const { products, saveProduct, deleteProduct, uploadProductImage } = useProducts();
@@ -66,9 +66,6 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
   const { banners, saveBanner, deleteBanner, uploadBannerImage } = useBanners();
   const { clearNewOrders, addNotification } = useUI();
 
-  const [pinInput, setPinInput] = useState('');
-  const [pinOk, setPinOk] = useState(false);
-  const [pinError, setPinError] = useState(false);
   const [screen, setScreen] = useState<AdminScreenState>('launcher');
 
   const [editProduct, setEditProduct] = useState<Product | null>(null);
@@ -96,13 +93,11 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
   const safeCustomers = Array.isArray(customers) ? customers : [];
 
   useEffect(() => {
-    if (pinOk) {
-      fetchOrders();
-      clearNewOrders();
-      const unsub = subscribeToNewOrders();
-      return unsub;
-    }
-  }, [pinOk]);
+    fetchOrders();
+    clearNewOrders();
+    const unsub = subscribeToNewOrders();
+    return unsub;
+  }, []);
 
   useEffect(() => { setLocalSettings(safeSettings); }, [safeSettings]);
 
@@ -110,47 +105,6 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
   const pendingCount = safeOrders.filter((o) => o && ['placed', 'confirmed', 'baking'].includes(o.status)).length;
   const totalRevenue = safeOrders.filter((o) => o && o.status === 'delivered').reduce((s, o) => s + (o ? o.total : 0), 0);
   const todayCount = safeOrders.filter((o) => o && o.createdAt && new Date(o.createdAt).toDateString() === new Date().toDateString()).length;
-
-  // ── PIN GATE (OS Boot Security Screen) ──
-  if (!pinOk) {
-    const tryPin = () => {
-      if (pinInput === '1234' || pinInput === safeSettings.adminPin) { setPinOk(true); setPinError(false); }
-      else { setPinError(true); setPinInput(''); }
-    };
-
-    return (
-      <div className={embedded
-        ? "flex flex-col bg-bg rounded-[28px] overflow-hidden border border-border mt-4 shadow-card p-6 text-center"
-        : "fixed inset-0 z-[120] flex items-center justify-center p-4 bg-ink/75 backdrop-blur-md"
-      }>
-        <div className="rounded-[28px] border border-border bg-surface p-8 w-full max-w-xs text-center shadow-float">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-secondary text-coral shadow-card">
-            <Lock size={32} strokeWidth={1.8} />
-          </div>
-          <h2 className="text-xl font-bold text-ink mb-1">Admin Phone OS</h2>
-          <p className="text-xs font-medium text-ink-300 mb-5">Enter security PIN to boot Admin OS</p>
-          <input
-            type="password" maxLength={8}
-            className={`w-full text-center text-2xl tracking-widest px-4 py-3.5 rounded-2xl border mb-2 focus:outline-none focus:ring-2 focus:ring-coral/20 bg-surface text-ink ${pinError ? 'border-error' : 'border-border'}`}
-            value={pinInput}
-            onChange={(e) => { setPinInput(e.target.value); setPinError(false); }}
-            onKeyDown={(e) => e.key === 'Enter' && tryPin()}
-            placeholder="••••"
-            autoFocus
-          />
-          {pinError && <p className="text-error text-xs font-bold mb-2">Incorrect PIN!</p>}
-          <button onClick={tryPin} className="w-full py-3.5 rounded-2xl bg-coral text-white font-bold text-sm shadow-btn transition active:scale-[.98]">
-            Boot OS
-          </button>
-          {onClose && (
-            <button onClick={onClose} className="mt-3 text-xs font-semibold text-ink-200 hover:text-ink">
-              Cancel
-            </button>
-          )}
-        </div>
-      </div>
-    );
-  }
 
   const ORDER_STATUSES: Order['status'][] = ['placed', 'confirmed', 'baking', 'ready', 'out', 'delivered', 'cancelled'];
   const filteredOrders = orderFilter === 'all' ? safeOrders.filter(Boolean) : safeOrders.filter((o) => o && o.status === orderFilter);
@@ -245,15 +199,12 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
   ];
 
   return (
-    <div className={embedded
-      ? "flex flex-col bg-bg rounded-[28px] overflow-hidden border border-border mt-4 shadow-card min-h-[680px]"
-      : "fixed inset-0 z-[120] flex flex-col bg-bg overflow-hidden"
-    }>
+    <div className="fixed inset-0 z-[999] flex flex-col h-[100dvh] w-full bg-bg overflow-hidden anim-fade">
       {/* ── Android OS Top Chrome Bar ── */}
-      <div className="flex items-center justify-between px-6 py-2 bg-surface border-b border-border text-[11px] font-semibold text-ink-300 select-none flex-shrink-0">
+      <div className="flex items-center justify-between px-6 py-2.5 bg-surface border-b border-border text-[11px] font-semibold text-ink-300 select-none flex-shrink-0">
         <div className="flex items-center gap-2">
-          <ShieldCheck className="w-3.5 h-3.5 text-coral" strokeWidth={2} />
-          <span className="font-bold text-ink">Admin Phone OS</span>
+          <ShieldCheck className="w-4 h-4 text-coral" strokeWidth={2} />
+          <span className="font-bold text-ink text-xs">Admin Phone OS</span>
           <span className="inline-flex items-center gap-1 rounded-full bg-success/10 px-2 py-0.5 text-[9px] font-bold text-success">
             <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" /> LIVE
           </span>
@@ -263,8 +214,8 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
             <RefreshCw className="w-3.5 h-3.5" />
           </button>
           <div className="flex items-center gap-1">
-            <Wifi className="w-3 h-3" />
-            <Battery className="w-3.5 h-3.5" />
+            <Wifi className="w-3.5 h-3.5" />
+            <Battery className="w-4 h-4" />
           </div>
         </div>
       </div>
@@ -316,7 +267,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                     <button
                       key={app.id}
                       onClick={() => setScreen(app.id)}
-                      className="group flex flex-col items-center text-center p-3 rounded-[22px] bg-surface border border-border shadow-card hover:shadow-card-hover transition active:scale-95"
+                      className="group flex flex-col items-center text-center p-3.5 rounded-[22px] bg-surface border border-border shadow-card hover:shadow-card-hover transition active:scale-95"
                     >
                       <div className={`relative flex h-14 w-14 items-center justify-center rounded-2xl ${app.bg} transition group-hover:scale-105`}>
                         <IconComp className="h-6 w-6" strokeWidth={2} />
@@ -355,17 +306,17 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
               </div>
 
               {screen === 'orders' && (
-                <button onClick={exportCSV} className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-coral text-white text-xs font-bold shadow-btn active:scale-95">
+                <button onClick={exportCSV} className="flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-coral text-white text-xs font-bold shadow-btn active:scale-95">
                   <Download className="w-3.5 h-3.5" /> Export
                 </button>
               )}
               {screen === 'products' && (
-                <button onClick={() => setEditProduct({ ...EMPTY_PRODUCT, id: `p-${Date.now()}` })} className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-coral text-white text-xs font-bold shadow-btn active:scale-95">
+                <button onClick={() => setEditProduct({ ...EMPTY_PRODUCT, id: `p-${Date.now()}` })} className="flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-coral text-white text-xs font-bold shadow-btn active:scale-95">
                   <Plus className="w-3.5 h-3.5" /> Add
                 </button>
               )}
               {screen === 'banners' && (
-                <button onClick={() => setEditBanner({ ...EMPTY_BANNER, id: `b-${Date.now()}` })} className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-coral text-white text-xs font-bold shadow-btn active:scale-95">
+                <button onClick={() => setEditBanner({ ...EMPTY_BANNER, id: `b-${Date.now()}` })} className="flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-coral text-white text-xs font-bold shadow-btn active:scale-95">
                   <Plus className="w-3.5 h-3.5" /> Add
                 </button>
               )}
