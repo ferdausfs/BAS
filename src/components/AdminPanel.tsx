@@ -1,5 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
-import { X, Plus, Trash2, Edit3, Check, Download, RefreshCw, Star, Image as ImageIcon, Users, MapPin, Clock, CheckCircle2, ChefHat, Package, Truck, PartyPopper, Cake, Lock } from 'lucide-react';
+import {
+  X, Plus, Trash2, Edit3, Download, RefreshCw, Star, Image as ImageIcon,
+  Users, MapPin, Clock, CheckCircle2, ChefHat, Package, Truck, PartyPopper, Cake, Lock,
+  ArrowLeft, BarChart3, Tag, Settings, LogOut, Wifi, Battery, Home, ShieldCheck
+} from 'lucide-react';
 import { useProducts } from '../hooks/useProducts';
 import { useOrdersHook } from '../hooks/useOrders';
 import { useGallery } from '../hooks/useGallery';
@@ -8,10 +12,11 @@ import { useCustomers } from '../hooks/useCustomers';
 import { useBanners } from '../hooks/useBanners';
 import { useSettingsStore, useUI } from '../lib/store';
 import { DEFAULT_SETTINGS } from '../lib/data';
-import { formatINR, waLink, ls } from '../lib/utils';
-import type { Product, Order, Banner, CustomAddon } from '../types';
+import { formatINR, waLink } from '../lib/utils';
+import type { Product, Order, Banner } from '../types';
 
-type AdminTab = 'dashboard' | 'orders' | 'products' | 'banners' | 'gallery' | 'reviews' | 'customers' | 'zones' | 'settings';
+export type AdminTab = 'analytics' | 'orders' | 'products' | 'banners' | 'gallery' | 'reviews' | 'customers' | 'zones' | 'settings';
+export type AdminScreenState = 'launcher' | AdminTab;
 
 const STATUS_LABELS: Record<string, string> = {
   placed: 'Placed', confirmed: 'Confirmed',
@@ -56,7 +61,6 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
   const { products, saveProduct, deleteProduct, uploadProductImage } = useProducts();
   const { orders, fetchOrders, updateStatus, subscribeToNewOrders } = useOrdersHook();
   const { gallery, saveGalleryItem, deleteGalleryItem, uploadGalleryImage } = useGallery();
-  // approveReview intentionally not destructured — reviews are auto-approved (BUG 1 FIX below)
   const { reviews, deleteReview } = useReviews();
   const { customers, loading: customersLoading } = useCustomers();
   const { banners, saveBanner, deleteBanner, uploadBannerImage } = useBanners();
@@ -65,7 +69,8 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
   const [pinInput, setPinInput] = useState('');
   const [pinOk, setPinOk] = useState(false);
   const [pinError, setPinError] = useState(false);
-  const [tab, setTab] = useState<AdminTab>('dashboard');
+  const [screen, setScreen] = useState<AdminScreenState>('launcher');
+
   const [editProduct, setEditProduct] = useState<Product | null>(null);
   const [editBanner, setEditBanner] = useState<Banner | null>(null);
   const [localSettings, setLocalSettings] = useState(safeSettings);
@@ -79,11 +84,10 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
   const [cancelModal, setCancelModal] = useState<Order | null>(null);
   const [cancelReasonInput, setCancelReasonInput] = useState('');
   const productImgRef = useRef<HTMLInputElement>(null);
-  const productGalleryRefs = useRef<HTMLInputElement>(null);
   const bannerImgRef = useRef<HTMLInputElement>(null);
   const galleryImgRef = useRef<HTMLInputElement>(null);
 
-  // Harden all lists on mount
+  // Lists initialization
   const safeOrders = Array.isArray(orders) ? orders : [];
   const safeProducts = Array.isArray(products) ? products : [];
   const safeReviews = Array.isArray(reviews) ? reviews : [];
@@ -92,63 +96,61 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
   const safeCustomers = Array.isArray(customers) ? customers : [];
 
   useEffect(() => {
-    if (pinOk || embedded) {
+    if (pinOk) {
       fetchOrders();
       clearNewOrders();
       const unsub = subscribeToNewOrders();
       return unsub;
     }
-  }, [pinOk, embedded]);
+  }, [pinOk]);
 
   useEffect(() => { setLocalSettings(safeSettings); }, [safeSettings]);
 
-  // PIN screen
-  if (!pinOk && !embedded) {
+  // Derived metrics
+  const pendingCount = safeOrders.filter((o) => o && ['placed', 'confirmed', 'baking'].includes(o.status)).length;
+  const totalRevenue = safeOrders.filter((o) => o && o.status === 'delivered').reduce((s, o) => s + (o ? o.total : 0), 0);
+  const todayCount = safeOrders.filter((o) => o && o.createdAt && new Date(o.createdAt).toDateString() === new Date().toDateString()).length;
+
+  // ── PIN GATE (OS Boot Security Screen) ──
+  if (!pinOk) {
     const tryPin = () => {
       if (pinInput === safeSettings.adminPin) { setPinOk(true); setPinError(false); }
       else { setPinError(true); setPinInput(''); }
     };
+
     return (
-      <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-ink/60">
-        <div className="rounded-[22px] border border-border bg-surface p-8 w-full max-w-xs text-center shadow-card">
-          <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-secondary text-coral">
-            <Lock size={28} strokeWidth={1.75} />
+      <div className={embedded
+        ? "flex flex-col bg-bg rounded-[28px] overflow-hidden border border-border mt-4 shadow-card p-6 text-center"
+        : "fixed inset-0 z-[120] flex items-center justify-center p-4 bg-ink/75 backdrop-blur-md"
+      }>
+        <div className="rounded-[28px] border border-border bg-surface p-8 w-full max-w-xs text-center shadow-float">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-secondary text-coral shadow-card">
+            <Lock size={32} strokeWidth={1.8} />
           </div>
-          <h2 className="text-lg font-bold text-ink mb-1">Admin Panel</h2>
-          <p className="text-xs text-ink-300 mb-4">Enter your PIN</p>
+          <h2 className="text-xl font-bold text-ink mb-1">Admin Phone OS</h2>
+          <p className="text-xs font-medium text-ink-300 mb-5">Enter security PIN to boot Admin OS</p>
           <input
             type="password" maxLength={8}
-            className={`w-full text-center text-2xl tracking-widest px-4 py-3 rounded-2xl border mb-1 focus:outline-none focus:ring-2 focus:ring-coral/15 bg-surface text-ink ${pinError ? 'border-error' : 'border-border'}`}
+            className={`w-full text-center text-2xl tracking-widest px-4 py-3.5 rounded-2xl border mb-2 focus:outline-none focus:ring-2 focus:ring-coral/20 bg-surface text-ink ${pinError ? 'border-error' : 'border-border'}`}
             value={pinInput}
             onChange={(e) => { setPinInput(e.target.value); setPinError(false); }}
             onKeyDown={(e) => e.key === 'Enter' && tryPin()}
             placeholder="••••"
             autoFocus
           />
-          {pinError && <p className="text-error text-xs mb-2">Wrong PIN!</p>}
-          <button onClick={tryPin} className="w-full py-3 rounded-2xl bg-coral text-white font-bold mt-2 shadow-btn transition active:scale-[.98]">Enter</button>
-          <button onClick={onClose} className="mt-2 text-xs text-ink-200">Cancel</button>
+          {pinError && <p className="text-error text-xs font-bold mb-2">Incorrect PIN!</p>}
+          <button onClick={tryPin} className="w-full py-3.5 rounded-2xl bg-coral text-white font-bold text-sm shadow-btn transition active:scale-[.98]">
+            Boot OS
+          </button>
+          {onClose && (
+            <button onClick={onClose} className="mt-3 text-xs font-semibold text-ink-200 hover:text-ink">
+              Cancel
+            </button>
+          )}
         </div>
       </div>
     );
   }
-
-  const pendingCount = safeOrders.filter((o) => o && ['placed', 'confirmed', 'baking'].includes(o.status)).length;
-  const totalRevenue = safeOrders.filter((o) => o && o.status === 'delivered').reduce((s, o) => s + (o ? o.total : 0), 0);
-  const todayCount = safeOrders.filter((o) => o && o.createdAt && new Date(o.createdAt).toDateString() === new Date().toDateString()).length;
-
-  const TABS: { id: AdminTab; label: string; badge?: number }[] = [
-    { id: 'dashboard', label: 'Dashboard' },
-    { id: 'orders', label: 'Orders', badge: pendingCount },
-    { id: 'products', label: 'Products' },
-    { id: 'gallery', label: 'Gallery' },
-    { id: 'banners', label: 'Banners' },
-    // BUG 1 FIX: Reviews are auto-approved, no pending count badge needed
-    { id: 'reviews', label: 'Reviews', badge: undefined },
-    { id: 'customers', label: 'Customers', badge: safeCustomers.length },
-    { id: 'zones', label: 'Zones' },
-    { id: 'settings', label: 'Settings' },
-  ];
 
   const ORDER_STATUSES: Order['status'][] = ['placed', 'confirmed', 'baking', 'ready', 'out', 'delivered', 'cancelled'];
   const filteredOrders = orderFilter === 'all' ? safeOrders.filter(Boolean) : safeOrders.filter((o) => o && o.status === orderFilter);
@@ -162,8 +164,6 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
     'ভুল/ডুপ্লিকেট অর্ডার',
   ];
 
-  // Cancel দেওয়া মানেই এখন থেকে সরাসরি status change হবে না — reason modal খুলবে,
-  // Confirm করলে তবেই updateStatus('cancelled', reason) call হবে।
   const requestStatusChange = (o: Order, status: Order['status']) => {
     if (status === 'cancelled') {
       setCancelReasonInput('');
@@ -184,12 +184,9 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
 
   const openPaymentScreenshot = async (pathOrUrl?: string) => {
     if (!pathOrUrl) return;
-    if (pathOrUrl.startsWith('data:') || pathOrUrl.startsWith('http')) {
-      window.open(pathOrUrl, '_blank');
-      return;
-    }
     window.open(pathOrUrl, '_blank');
   };
+
   const topProducts = Object.entries(
     safeOrders.filter(Boolean).reduce<Record<string, number>>((acc, o) => {
       if (o.items) {
@@ -224,1151 +221,658 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
     a.click(); URL.revokeObjectURL(url);
   };
 
-  const StatusPill = ({ status, active }: { status: string; active?: boolean }) => {
+  const StatusPill = ({ status }: { status: string }) => {
     const Icon = STATUS_ICON[status] ?? Clock;
     return (
-      <span className={`inline-flex items-center gap-1 ${active ? '' : ''}`}>
+      <span className="inline-flex items-center gap-1">
         <Icon className="w-3 h-3" strokeWidth={2} />
         {STATUS_LABELS[status]}
       </span>
     );
   };
 
+  // Apps configuration for App Launcher Grid
+  const APPS = [
+    { id: 'orders' as AdminTab, label: 'Orders', icon: Package, badge: pendingCount, bg: 'bg-blue-500/10 text-blue-600' },
+    { id: 'products' as AdminTab, label: 'Products', icon: Cake, bg: 'bg-pink-500/10 text-pink-600' },
+    { id: 'banners' as AdminTab, label: 'Banners', icon: Tag, bg: 'bg-amber-500/10 text-amber-600' },
+    { id: 'gallery' as AdminTab, label: 'Gallery', icon: ImageIcon, bg: 'bg-teal-500/10 text-teal-600' },
+    { id: 'reviews' as AdminTab, label: 'Reviews', icon: Star, bg: 'bg-purple-500/10 text-purple-600' },
+    { id: 'customers' as AdminTab, label: 'Customers', icon: Users, badge: safeCustomers.length, bg: 'bg-emerald-500/10 text-emerald-600' },
+    { id: 'zones' as AdminTab, label: 'Zones', icon: MapPin, bg: 'bg-orange-500/10 text-orange-600' },
+    { id: 'settings' as AdminTab, label: 'Settings', icon: Settings, bg: 'bg-slate-500/10 text-slate-600' },
+    { id: 'analytics' as AdminTab, label: 'Analytics', icon: BarChart3, bg: 'bg-indigo-500/10 text-indigo-600' },
+  ];
+
   return (
     <div className={embedded
-      ? "flex flex-col bg-bg rounded-[22px] overflow-hidden border border-border mt-4 shadow-card"
-      : "fixed inset-0 z-[70] flex flex-col bg-bg"
+      ? "flex flex-col bg-bg rounded-[28px] overflow-hidden border border-border mt-4 shadow-card min-h-[680px]"
+      : "fixed inset-0 z-[120] flex flex-col bg-bg overflow-hidden"
     }>
-      {/* Top bar — solid brand pink */}
-      <div className="flex items-center justify-between px-6 py-4 bg-coral text-white flex-shrink-0">
+      {/* ── Android OS Top Chrome Bar ── */}
+      <div className="flex items-center justify-between px-6 py-2 bg-surface border-b border-border text-[11px] font-semibold text-ink-300 select-none flex-shrink-0">
         <div className="flex items-center gap-2">
-          <Cake className="w-5 h-5" strokeWidth={1.75} />
-          <span className="font-bold text-sm">Admin Dashboard</span>
+          <ShieldCheck className="w-3.5 h-3.5 text-coral" strokeWidth={2} />
+          <span className="font-bold text-ink">Admin Phone OS</span>
+          <span className="inline-flex items-center gap-1 rounded-full bg-success/10 px-2 py-0.5 text-[9px] font-bold text-success">
+            <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" /> LIVE
+          </span>
         </div>
-        <div className="flex items-center gap-2">
-          <button onClick={fetchOrders} className="h-11 w-11 rounded-full bg-white/15 flex items-center justify-center">
-            <RefreshCw className="w-4 h-4" />
+        <div className="flex items-center gap-3">
+          <button onClick={fetchOrders} className="p-1.5 rounded-full hover:bg-secondary text-ink-300 transition" title="Refresh Data">
+            <RefreshCw className="w-3.5 h-3.5" />
           </button>
-          {!embedded && onClose && (
-            <button onClick={onClose} className="h-11 w-11 rounded-full bg-white/15 flex items-center justify-center">
-              <X className="w-4 h-4" />
-            </button>
-          )}
+          <div className="flex items-center gap-1">
+            <Wifi className="w-3 h-3" />
+            <Battery className="w-3.5 h-3.5" />
+          </div>
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex overflow-x-auto gap-2 px-6 py-3 bg-surface border-b border-border no-scrollbar flex-shrink-0">
-        {TABS.map((t) => (
-          <button key={t.id} onClick={() => setTab(t.id)}
-            className={`relative flex-shrink-0 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${tab === t.id ? 'bg-coral text-white shadow-btn' : 'text-ink-300 hover:bg-ink-50'}`}>
-            {t.label}
-            {(t.badge ?? 0) > 0 && (
-              <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-error text-white text-[8px] font-black flex items-center justify-center">
-                {t.badge}
-              </span>
-            )}
-          </button>
-        ))}
-      </div>
+      {/* ── Main Screen View Area ── */}
+      <div className="flex-1 overflow-y-auto min-h-0">
 
-      {/* Content */}
-      <div
-        className={embedded ? "overflow-y-auto p-6" : "flex-1 overflow-y-auto p-6"}
-        style={{ maxHeight: embedded ? '80vh' : undefined }}
-      >
+        {/* 1. LAUNCHER HOME SCREEN */}
+        {screen === 'launcher' && (
+          <div className="p-6 space-y-6 anim-fade">
+            {/* Launcher Header Widget */}
+            <div className="rounded-[24px] bg-gradient-to-br from-coral to-coral-700 p-5 text-white shadow-btn flex items-center justify-between">
+              <div>
+                <span className="text-[11px] font-bold uppercase tracking-wider text-white/80">Bake Art Control Center</span>
+                <h1 className="text-[22px] font-bold tracking-tight mt-0.5">Admin OS Launcher</h1>
+                <p className="text-xs text-white/90 mt-1">Select an app below to manage store operations</p>
+              </div>
+              <div className="h-12 w-12 rounded-2xl bg-white/20 flex items-center justify-center text-white backdrop-blur-sm">
+                <Cake className="w-6 h-6" strokeWidth={1.8} />
+              </div>
+            </div>
 
-        {/* Dashboard */}
-        {tab === 'dashboard' && (
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
+            {/* Quick KPI Cards Grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {[
-                { label: 'Revenue', value: formatINR(totalRevenue) },
-                { label: 'Pending', value: pendingCount },
-                { label: 'Today', value: todayCount },
-                { label: 'Products', value: safeProducts.length },
+                { label: 'Revenue', value: formatINR(totalRevenue), color: 'text-coral' },
+                { label: 'Pending Orders', value: pendingCount, color: 'text-amber-600' },
+                { label: "Today's Orders", value: todayCount, color: 'text-blue-600' },
+                { label: 'Active Products', value: safeProducts.length, color: 'text-emerald-600' },
               ].map((s) => (
                 <div key={s.label} className="rounded-2xl border border-border bg-surface p-4 shadow-card">
-                  <p className="text-xl font-black text-coral">{s.value}</p>
-                  <p className="text-xs font-bold text-ink">{s.label}</p>
+                  <p className={`text-lg font-extrabold ${s.color}`}>{s.value}</p>
+                  <p className="text-[11px] font-semibold text-ink-300 mt-0.5">{s.label}</p>
                 </div>
               ))}
-            </div>
-            <div className="rounded-2xl border border-border bg-surface p-4 shadow-card">
-              <p className="text-xs font-bold text-ink mb-3">Top Products</p>
-              {topProducts.map(({ product, qty }) => (
-                <div key={product!.id} className="flex items-center gap-4 py-3 border-b border-border last:border-0">
-                  <img src={product!.image} alt="" className="h-10 w-10 rounded-xl object-cover bg-blush" />
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-xs font-bold text-ink">{product!.name || 'N/A'}</p>
-                    <p className="text-[10px] text-ink/40">{qty} sold</p>
-                  </div>
-                  <p className="text-xs font-black text-coral">{formatINR((product!.price || 0) * qty)}</p>
-                </div>
-              ))}
-              {topProducts.length === 0 && <p className="text-center text-xs text-ink-200 py-4">No product sales yet</p>}
             </div>
 
-            <div className="rounded-2xl border border-border bg-surface p-4 shadow-card">
-              <p className="text-xs font-bold text-ink mb-3">Recent Orders</p>
-            {safeOrders.filter(Boolean).slice(0, 5).map((o) => (
-              <div key={o.id} className="flex justify-between items-center py-2 border-b border-border last:border-0">
-                <div>
-                  <p className="text-xs font-bold text-ink">{o.customer?.name || 'Guest'}</p>
-                    <p className="text-[10px] text-ink/40">#{o.id || 'N/A'}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xs font-black text-coral">{formatINR(o.total || 0)}</p>
-                    <p className="text-[10px] text-ink/50">{STATUS_LABELS[o.status || 'placed'] ?? (o.status || 'placed')}</p>
-                  </div>
-                </div>
-              ))}
-              {safeOrders.length === 0 && <p className="text-center text-xs text-ink-200 py-4">No orders yet</p>}
+            {/* Android Sector Apps Grid */}
+            <div>
+              <div className="flex items-center justify-between mb-3 px-1">
+                <h2 className="text-[13px] font-bold uppercase tracking-wider text-ink-300">Admin Sector Apps</h2>
+                <span className="text-[11px] font-semibold text-coral">9 Apps Available</span>
+              </div>
+
+              <div className="grid grid-cols-3 sm:grid-cols-3 gap-4">
+                {APPS.map((app) => {
+                  const IconComp = app.icon;
+                  return (
+                    <button
+                      key={app.id}
+                      onClick={() => setScreen(app.id)}
+                      className="group flex flex-col items-center text-center p-3 rounded-[22px] bg-surface border border-border shadow-card hover:shadow-card-hover transition active:scale-95"
+                    >
+                      <div className={`relative flex h-14 w-14 items-center justify-center rounded-2xl ${app.bg} transition group-hover:scale-105`}>
+                        <IconComp className="h-6 w-6" strokeWidth={2} />
+                        {(app.badge ?? 0) > 0 && (
+                          <span className="absolute -top-1 -right-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-error px-1.5 text-[10px] font-black text-white shadow-sm">
+                            {app.badge}
+                          </span>
+                        )}
+                      </div>
+                      <span className="mt-2 text-xs font-bold text-ink leading-tight">{app.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
         )}
 
-        {/* Orders */}
-        {tab === 'orders' && (
-          <div className="space-y-3">
-            <div className="flex items-center justify-between gap-2">
-              <p className="text-xs font-bold text-ink/60">{filteredOrders.length}/{safeOrders.length} orders</p>
-              <button onClick={exportCSV} className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-coral text-white text-xs font-bold shadow-btn transition active:scale-95">
-                <Download className="w-3 h-3" /> Export CSV
+        {/* 2. SUB-APP SECTOR SCREENS */}
+        {screen !== 'launcher' && (
+          <div className="flex flex-col min-h-full anim-up">
+            {/* Sub-App Android Header */}
+            <div className="flex items-center gap-3 px-6 py-4 bg-surface border-b border-border sticky top-0 z-10">
+              <button
+                onClick={() => setScreen('launcher')}
+                className="flex h-11 w-11 items-center justify-center rounded-full bg-secondary text-ink shadow-card transition active:scale-95"
+                title="Back to Launcher"
+              >
+                <ArrowLeft className="h-5 w-5" strokeWidth={2} />
               </button>
-            </div>
+              <div className="flex-1 min-w-0">
+                <h2 className="text-[18px] font-bold text-ink truncate capitalize">
+                  {screen === 'analytics' ? 'Analytics & Reports' : `${screen} App`}
+                </h2>
+                <p className="text-[11px] text-ink-300 truncate">Admin Sector Control</p>
+              </div>
 
-            <div className="no-scrollbar flex gap-1.5 overflow-x-auto pb-1">
-              {(['all', ...ORDER_STATUSES] as const).map((s) => (
-                <button
-                  key={s}
-                  onClick={() => setOrderFilter(s)}
-                  className={`flex-shrink-0 rounded-full px-3 py-1.5 text-[11px] font-bold capitalize ${orderFilter === s ? 'bg-coral text-white' : 'border border-border bg-surface text-ink-300'}`}
-                >
-                  {s === 'all' ? 'All' : s}
+              {screen === 'orders' && (
+                <button onClick={exportCSV} className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-coral text-white text-xs font-bold shadow-btn active:scale-95">
+                  <Download className="w-3.5 h-3.5" /> Export
                 </button>
-              ))}
+              )}
+              {screen === 'products' && (
+                <button onClick={() => setEditProduct({ ...EMPTY_PRODUCT, id: `p-${Date.now()}` })} className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-coral text-white text-xs font-bold shadow-btn active:scale-95">
+                  <Plus className="w-3.5 h-3.5" /> Add
+                </button>
+              )}
+              {screen === 'banners' && (
+                <button onClick={() => setEditBanner({ ...EMPTY_BANNER, id: `b-${Date.now()}` })} className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-coral text-white text-xs font-bold shadow-btn active:scale-95">
+                  <Plus className="w-3.5 h-3.5" /> Add
+                </button>
+              )}
             </div>
 
-            {filteredOrders.map((o) => (
-              <div key={o.id} className="rounded-2xl border border-border bg-surface p-4 shadow-card">
-                <div className="flex justify-between items-start gap-3 mb-2">
-                  <div className="min-w-0">
-                    <p className="font-bold text-sm text-ink truncate">{o.customer?.name || 'Guest'}</p>
-                    <p className="text-[10px] font-mono text-ink/40">#{o.id || 'N/A'} · {o.createdAt ? new Date(o.createdAt).toLocaleString('en-BD') : 'N/A'}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-black text-coral">{formatINR(o.total || 0)}</p>
-                    <p className="text-[10px] font-bold text-ink/45 capitalize">বাকি: {o.payment || 'cash'}</p>
-                  </div>
-                </div>
+            {/* Sub-App Body Content */}
+            <div className="p-6 flex-1 space-y-4">
 
-                <div className="rounded-xl bg-ink-50 p-3 text-[11px] leading-relaxed text-ink/65">
-                  <p><span className="font-bold text-ink">Phone:</span> {o.customer?.phone || 'N/A'}</p>
-                  {o.customer?.email && <p><span className="font-bold text-ink">Email:</span> {o.customer.email}</p>}
-                  <p><span className="font-bold text-ink">Address:</span> {o.customer?.address || 'N/A'}, {o.customer?.city || ''}</p>
-                  <p><span className="font-bold text-ink">Delivery:</span> {o.delivery?.date || ''} · {o.delivery?.time || ''}</p>
-                  <p><span className="font-bold text-ink">Bill:</span> {formatINR(o.subtotal || 0)} - {formatINR(o.discount || 0)} + {formatINR(o.deliveryFee || 0)} = {formatINR(o.total || 0)}</p>
-                  {typeof o.advanceAmount === 'number' && (
-                    <p className="mt-1">
-                      <span className="font-bold text-ink">Advance:</span> {formatINR(o.advanceAmount)} via {o.advancePayment || 'online'}
-                      {' · '}
-                      <span className="font-bold text-ink">Remaining:</span> {formatINR(o.remainingAmount ?? 0)} via {o.payment || 'cash'}
-                    </p>
-                  )}
-                </div>
+              {/* 📊 Analytics Sub-App */}
+              {screen === 'analytics' && (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    {[
+                      { label: 'Revenue', value: formatINR(totalRevenue) },
+                      { label: 'Pending', value: pendingCount },
+                      { label: 'Today', value: todayCount },
+                      { label: 'Products', value: safeProducts.length },
+                    ].map((s) => (
+                      <div key={s.label} className="rounded-2xl border border-border bg-surface p-4 shadow-card">
+                        <p className="text-xl font-black text-coral">{s.value}</p>
+                        <p className="text-xs font-bold text-ink">{s.label}</p>
+                      </div>
+                    ))}
+                  </div>
 
-                <div className="mt-2 space-y-2">
-                  {(o.items || []).map((i, idx) => (
-                    <div key={idx} className="flex items-start gap-4">
-                      {i?.image ? (
-                        <button
-                          onClick={() => setViewImage(i.image!)}
-                          className="flex-shrink-0 h-12 w-12 rounded-xl overflow-hidden border border-border bg-surface active:scale-95 transition"
-                          title="Tap to view full image"
-                        >
-                          <img src={i.image} alt={i?.name || ''} className="h-full w-full object-cover" />
-                        </button>
-                      ) : (
-                        <div className="flex-shrink-0 h-12 w-12 rounded-xl bg-ink/5 flex items-center justify-center">
-                          <ImageIcon className="w-4 h-4 text-ink/25" strokeWidth={1.5} />
+                  <div className="rounded-2xl border border-border bg-surface p-4 shadow-card">
+                    <p className="text-xs font-bold text-ink mb-3">Top Products Sold</p>
+                    {topProducts.map(({ product, qty }) => (
+                      <div key={product!.id} className="flex items-center gap-4 py-3 border-b border-border last:border-0">
+                        <img src={product!.image} alt="" className="h-10 w-10 rounded-xl object-cover bg-blush" />
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-xs font-bold text-ink">{product!.name || 'N/A'}</p>
+                          <p className="text-[10px] text-ink/40">{qty} sold</p>
                         </div>
-                      )}
-                      <div className="flex flex-1 items-start justify-between gap-1 min-w-0 pt-0.5">
-                        <span className="text-[11px] leading-relaxed text-ink/65 min-w-0">
-                          <span className="font-semibold text-ink">{i?.name || 'N/A'}</span>
-                          {' · '}{i?.size || 'N/A'}{' · '}{i?.flavor || 'N/A'}{' ×'}{i?.quantity || 1}
-                          {i?.message && (
-                            <span className="block text-[10px] text-coral/80 mt-0.5">📝 {i.message}</span>
-                          )}
-                        </span>
-                        <span className="flex-shrink-0 text-xs font-bold text-ink">{formatINR((i?.price || 0) * (i?.quantity || 1))}</span>
+                        <p className="text-xs font-black text-coral">{formatINR((product!.price || 0) * qty)}</p>
+                      </div>
+                    ))}
+                    {topProducts.length === 0 && <p className="text-center text-xs text-ink-200 py-4">No product sales yet</p>}
+                  </div>
+
+                  <div className="rounded-2xl border border-border bg-surface p-4 shadow-card">
+                    <p className="text-xs font-bold text-ink mb-3">Recent Orders</p>
+                    {safeOrders.filter(Boolean).slice(0, 5).map((o) => (
+                      <div key={o.id} className="flex justify-between items-center py-2 border-b border-border last:border-0">
+                        <div>
+                          <p className="text-xs font-bold text-ink">{o.customer?.name || 'Guest'}</p>
+                          <p className="text-[10px] font-mono text-ink/40">#{o.id || 'N/A'}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-xs font-black text-coral">{formatINR(o.total || 0)}</p>
+                          <p className="text-[10px] font-bold text-ink/50">{STATUS_LABELS[o.status || 'placed'] ?? (o.status || 'placed')}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* 📦 Orders Sub-App */}
+              {screen === 'orders' && (
+                <div className="space-y-3">
+                  <div className="no-scrollbar flex gap-1.5 overflow-x-auto pb-1">
+                    {(['all', ...ORDER_STATUSES] as const).map((s) => (
+                      <button
+                        key={s}
+                        onClick={() => setOrderFilter(s)}
+                        className={`flex-shrink-0 rounded-full px-3.5 py-1.5 text-[11px] font-bold capitalize ${orderFilter === s ? 'bg-coral text-white' : 'border border-border bg-surface text-ink-300'}`}
+                      >
+                        {s === 'all' ? 'All' : s}
+                      </button>
+                    ))}
+                  </div>
+
+                  {filteredOrders.map((o) => (
+                    <div key={o.id} className="rounded-2xl border border-border bg-surface p-4 shadow-card">
+                      <div className="flex justify-between items-start gap-3 mb-2">
+                        <div className="min-w-0">
+                          <p className="font-bold text-sm text-ink truncate">{o.customer?.name || 'Guest'}</p>
+                          <p className="text-[10px] font-mono text-ink/40">#{o.id || 'N/A'} · {o.createdAt ? new Date(o.createdAt).toLocaleString('en-BD') : 'N/A'}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-black text-coral">{formatINR(o.total || 0)}</p>
+                          <p className="text-[10px] font-bold text-ink/45 capitalize">বাকি: {o.payment || 'cash'}</p>
+                        </div>
+                      </div>
+
+                      <div className="rounded-xl bg-ink-50 p-3 text-[11px] leading-relaxed text-ink/65">
+                        <p><span className="font-bold text-ink">Phone:</span> {o.customer?.phone || 'N/A'}</p>
+                        {o.customer?.email && <p><span className="font-bold text-ink">Email:</span> {o.customer.email}</p>}
+                        <p><span className="font-bold text-ink">Address:</span> {o.customer?.address || 'N/A'}, {o.customer?.city || ''}</p>
+                        <p><span className="font-bold text-ink">Delivery:</span> {o.delivery?.date || ''} · {o.delivery?.time || ''}</p>
+                      </div>
+
+                      <div className="mt-2 space-y-2">
+                        {(o.items || []).map((i, idx) => (
+                          <div key={idx} className="flex items-start gap-4">
+                            {i?.image ? (
+                              <button
+                                onClick={() => setViewImage(i.image!)}
+                                className="flex-shrink-0 h-12 w-12 rounded-xl overflow-hidden border border-border bg-surface active:scale-95 transition"
+                              >
+                                <img src={i.image} alt={i?.name || ''} className="h-full w-full object-cover" />
+                              </button>
+                            ) : (
+                              <div className="flex-shrink-0 h-12 w-12 rounded-xl bg-ink/5 flex items-center justify-center">
+                                <ImageIcon className="w-4 h-4 text-ink/25" strokeWidth={1.5} />
+                              </div>
+                            )}
+                            <div className="flex flex-1 items-start justify-between gap-1 min-w-0 pt-0.5">
+                              <span className="text-[11px] leading-relaxed text-ink/65 min-w-0">
+                                <span className="font-semibold text-ink">{i?.name || 'N/A'}</span>
+                                {' · '}{i?.size || 'N/A'}{' · '}{i?.flavor || 'N/A'}{' ×'}{i?.quantity || 1}
+                              </span>
+                              <span className="flex-shrink-0 text-xs font-bold text-ink">{formatINR((i?.price || 0) * (i?.quantity || 1))}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="mt-3">
+                        <label className="text-[10px] font-bold uppercase text-ink/40">Change order status</label>
+                        <select
+                          value={o.status || 'placed'}
+                          onChange={(e) => requestStatusChange(o, e.target.value as Order['status'])}
+                          className="mt-1 h-10 w-full rounded-xl border border-border bg-surface px-3 text-xs font-bold text-ink focus:outline-none"
+                        >
+                          {ORDER_STATUSES.map((s) => <option key={s} value={s}>{STATUS_LABELS[s]}</option>)}
+                        </select>
+                      </div>
+
+                      <div className="mt-2 flex flex-wrap gap-1.5">
+                        {ORDER_STATUSES.map((s) => (
+                          <button key={s}
+                            onClick={() => requestStatusChange(o, s)}
+                            className={`px-2 py-1 rounded-lg text-[10px] font-bold inline-flex items-center gap-1 ${o.status === s ? 'bg-coral text-white' : 'bg-ink/5 text-ink/45'}`}>
+                            <StatusPill status={s} />
+                          </button>
+                        ))}
+                      </div>
+
+                      <div className="mt-3 flex gap-2 flex-wrap">
+                        <a
+                          href={waLink(o.customer?.phone || safeSettings.whatsappNumber, `Hello ${o.customer?.name || 'Customer'}, your Bake Art Style order #${o.id || 'N/A'} is now ${o.status || 'placed'}.`)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex-1 rounded-xl bg-success/10 py-2 text-center text-xs font-bold text-success"
+                        >
+                          WhatsApp Customer
+                        </a>
+                        {o.paymentScreenshot && (
+                          <button onClick={() => void openPaymentScreenshot(o.paymentScreenshot)} className="rounded-xl bg-amber-500/10 px-3 py-2 text-xs font-bold text-amber-700">
+                            Advance Proof
+                          </button>
+                        )}
                       </div>
                     </div>
                   ))}
                 </div>
+              )}
 
-                <div className="mt-3">
-                  <label className="text-[10px] font-bold uppercase text-ink/40">Change order status</label>
-                  <select
-                    value={o.status || 'placed'}
-                    onChange={(e) => requestStatusChange(o, e.target.value as Order['status'])}
-                    className="mt-1 h-10 w-full rounded-xl border border-border bg-surface px-3 text-xs font-bold text-ink focus:outline-none"
-                  >
-                    {ORDER_STATUSES.map((s) => <option key={s} value={s}>{STATUS_LABELS[s]}</option>)}
-                  </select>
-                </div>
+              {/* 🎂 Products Sub-App */}
+              {screen === 'products' && (
+                <div className="space-y-3">
+                  {editProduct && (
+                    <div className="rounded-2xl border-2 border-coral/30 bg-surface p-4 space-y-3 shadow-card">
+                      <p className="font-bold text-sm text-ink">{safeProducts.find((p) => p && p.id === editProduct.id) ? 'Edit' : 'New'} Product</p>
+                      {(['name', 'tagline', 'description'] as const).map((f) => (
+                        <div key={f}>
+                          <label className="text-[10px] font-bold text-ink/50 uppercase">{f}</label>
+                          <input className="w-full mt-0.5 px-3 py-2 rounded-xl border border-border bg-surface text-xs text-ink focus:outline-none"
+                            value={String(editProduct[f] ?? '')}
+                            onChange={(e) => setEditProduct({ ...editProduct, [f]: e.target.value })} />
+                        </div>
+                      ))}
+                      <div>
+                        <label className="text-[10px] font-bold text-ink/50 uppercase">Price (৳)</label>
+                        <input type="number" className="w-full mt-0.5 px-3 py-2 rounded-xl border border-border bg-surface text-xs text-ink focus:outline-none"
+                          value={editProduct.price}
+                          onChange={(e) => setEditProduct({ ...editProduct, price: +e.target.value })} />
+                      </div>
 
-                <div className="mt-2 flex flex-wrap gap-1.5">
-                  {ORDER_STATUSES.map((s) => (
-                    <button key={s}
-                      onClick={() => requestStatusChange(o, s)}
-                      className={`px-2 py-1 rounded-lg text-[10px] font-bold inline-flex items-center gap-1 ${o.status === s ? 'bg-coral text-white' : 'bg-ink/5 text-ink/45'}`}>
-                      <StatusPill status={s} />
-                    </button>
+                      <div className="flex items-center gap-3">
+                        {editProduct.image && <img src={editProduct.image} alt="" className="w-14 h-14 rounded-xl object-cover" />}
+                        <div className="flex-1">
+                          <input ref={productImgRef} type="file" accept="image/*" className="hidden" onChange={async (e) => {
+                            const file = e.target.files?.[0]; if (!file) return;
+                            setImgUploading(true);
+                            try { const url = await uploadProductImage(file); setEditProduct(prev => prev ? { ...prev, image: url } : prev); }
+                            finally { setImgUploading(false); }
+                          }} />
+                          <button onClick={() => productImgRef.current?.click()} disabled={imgUploading}
+                            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-ink/5 text-xs font-bold text-ink disabled:opacity-50">
+                            <ImageIcon className="w-3.5 h-3.5" /> {imgUploading ? 'Uploading...' : 'Upload Image'}
+                          </button>
+                          <input className="mt-1 w-full px-2 py-1 rounded-lg border border-border text-[10px] text-ink focus:outline-none bg-surface"
+                            placeholder="Or paste image URL"
+                            value={editProduct.image?.startsWith('data:') ? '' : editProduct.image}
+                            onChange={(e) => setEditProduct({ ...editProduct, image: e.target.value })} />
+                        </div>
+                      </div>
+
+                      <div className="flex gap-2 pt-2">
+                        <button onClick={async () => { await saveProduct(editProduct); setEditProduct(null); }} className="flex-1 py-2.5 rounded-xl bg-coral text-white font-bold text-xs">
+                          Save Product
+                        </button>
+                        <button onClick={() => setEditProduct(null)} className="flex-1 py-2.5 rounded-xl bg-ink/5 text-ink/60 font-bold text-xs">Cancel</button>
+                      </div>
+                    </div>
+                  )}
+
+                  {safeProducts.filter(Boolean).map((p) => (
+                    <div key={p.id} className="rounded-2xl border border-border bg-surface p-3 flex gap-3 items-center shadow-card">
+                      <img src={p.image} alt={p.name} className="w-14 h-14 rounded-xl object-cover flex-shrink-0 bg-blush" />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-bold text-sm text-ink truncate">{p.name || 'N/A'}</p>
+                        <p className="text-xs font-black text-coral">{formatINR(p.price || 0)}</p>
+                      </div>
+                      <div className="flex gap-1">
+                        <button onClick={() => setEditProduct(p)} className="w-8 h-8 rounded-xl bg-ink/5 flex items-center justify-center">
+                          <Edit3 className="w-3.5 h-3.5 text-ink/60" />
+                        </button>
+                        <button onClick={() => deleteProduct(p.id)} className="w-8 h-8 rounded-xl bg-error/10 flex items-center justify-center">
+                          <Trash2 className="w-3.5 h-3.5 text-error" />
+                        </button>
+                      </div>
+                    </div>
                   ))}
                 </div>
+              )}
 
-                <div className="mt-3 flex gap-2 flex-wrap">
-                  <a
-                    href={waLink(o.customer?.phone || safeSettings.whatsappNumber, o.status === 'cancelled' && o.cancelReason
-                      ? `Hello ${o.customer?.name || 'Customer'}, your Bake Art Style order #${o.id || 'N/A'} has been cancelled. Reason: ${o.cancelReason}`
-                      : `Hello ${o.customer?.name || 'Customer'}, your Bake Art Style order #${o.id || 'N/A'} is now ${o.status || 'placed'}.`)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex-1 rounded-xl bg-success/10 py-2 text-center text-xs font-bold text-success"
-                  >
-                    WhatsApp customer
-                  </a>
-                  {o.paymentScreenshot && (
-                    <button
-                      onClick={() => void openPaymentScreenshot(o.paymentScreenshot)}
-                      className="rounded-xl bg-gold-light px-3 py-2 text-xs font-bold text-ink"
-                    >
-                      Advance proof
-                    </button>
-                  )}
-                  <button
-                    onClick={() => navigator.clipboard?.writeText(o.id)}
-                    className="rounded-xl bg-ink/5 px-3 py-2 text-xs font-bold text-ink/55"
-                  >
-                    Copy ID
-                  </button>
-                </div>
-              </div>
-            ))}
-            {filteredOrders.length === 0 && (
-              <div className="rounded-2xl border border-border bg-surface py-12 text-center shadow-card">
-                <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-secondary text-coral">
-                  <Package className="h-6 w-6" strokeWidth={1.75} />
-                </div>
-                <p className="text-sm font-bold text-ink">No orders yet</p>
-                <p className="mt-1 text-xs text-ink-200">New orders will appear here</p>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Products */}
-        {tab === 'products' && (
-          <div className="space-y-3">
-            <button onClick={() => setEditProduct({ ...EMPTY_PRODUCT, id: `p-${Date.now()}` })}
-              className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl bg-coral text-white font-bold text-sm shadow-btn transition active:scale-[.98]">
-              <Plus className="w-4 h-4" /> Add Product
-            </button>
-
-            {editProduct && (
-              <div className="rounded-2xl border-2 border-coral/30 bg-surface p-4 space-y-3 shadow-card">
-                <p className="font-bold text-sm text-ink">
-                  {safeProducts.find((p) => p && p.id === editProduct.id) ? 'Edit' : 'New'} Product
-                </p>
-                {(['name', 'tagline', 'description'] as const).map((f) => (
-                  <div key={f}>
-                    <label className="text-[10px] font-bold text-ink/50 uppercase">{f}</label>
-                    <input className="w-full mt-0.5 px-3 py-2 rounded-xl border border-border bg-surface text-xs text-ink focus:outline-none"
-                      value={String(editProduct[f] ?? '')}
-                      onChange={(e) => setEditProduct({ ...editProduct, [f]: e.target.value })} />
-                  </div>
-                ))}
-                <div>
-                  <label className="text-[10px] font-bold text-ink/50 uppercase">Price (৳)</label>
-                  <input type="number" className="w-full mt-0.5 px-3 py-2 rounded-xl border border-border bg-surface text-xs text-ink focus:outline-none"
-                    value={editProduct.price}
-                    onChange={(e) => setEditProduct({ ...editProduct, price: +e.target.value })} />
-                </div>
-
-                {/* Tier selector */}
-                <div>
-                  <label className="text-[10px] font-bold text-ink/50 uppercase">Tier</label>
-                  <div className="mt-1 flex gap-2">
-                    {(['normal', 'premium', 'custom'] as const).map((t) => (
-                      <button
-                        key={t}
-                        type="button"
-                        onClick={() => setEditProduct(prev => prev ? { ...prev, tier: t } : prev)}
-                        className={`flex-1 py-2 rounded-xl text-[11px] font-bold capitalize transition ${
-                          (editProduct.tier ?? 'normal') === t
-                            ? t === 'premium' ? 'bg-gold text-white'
-                            : t === 'custom' ? 'bg-coral text-white'
-                            : 'bg-ink text-white'
-                            : 'bg-ink/5 text-ink/50'
-                        }`}
-                      >
-                        {t === 'normal' ? 'Normal' : t === 'premium' ? 'Premium' : 'Custom'}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Weight-based Pricing */}
-                <div className="space-y-2 border border-border rounded-2xl p-3">
-                  <label className="text-[10px] font-bold text-ink/50 uppercase">Weight-based Pricing (optional)</label>
-                  <p className="text-[10px] text-ink/40">If set, price = customer's weight × rate below. Leave blank to use fixed price above.</p>
-                  <div className="flex gap-2">
-                    <div className="flex-1">
-                      <label className="text-[10px] font-bold text-ink/40">Rate per unit (৳)</label>
-                      <input
-                        type="number"
-                        placeholder="e.g. 100"
-                        className="w-full mt-0.5 px-3 py-2 rounded-xl border border-border bg-surface text-xs text-ink focus:outline-none"
-                        value={editProduct.pricePerUnit ?? ''}
-                        onChange={(e) => setEditProduct(prev => prev ? { ...prev, pricePerUnit: e.target.value ? +e.target.value : undefined } : prev)}
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <label className="text-[10px] font-bold text-ink/40">Unit</label>
-                      <select
-                        className="w-full mt-0.5 px-3 py-2 rounded-xl border border-border bg-surface text-xs text-ink focus:outline-none"
-                        value={editProduct.priceUnit ?? 'kg'}
-                        onChange={(e) => setEditProduct(prev => prev ? { ...prev, priceUnit: e.target.value as 'kg' | 'pound' } : prev)}
-                      >
-                        <option value="kg">per kg</option>
-                        <option value="pound">per pound</option>
-                      </select>
-                    </div>
-                  </div>
-                  {editProduct.pricePerUnit && (
-                    <p className="text-[10px] text-coral font-semibold">
-                      Example: 2 {editProduct.priceUnit ?? 'kg'} = ৳{(editProduct.pricePerUnit * 2).toLocaleString()}  ·  0.5 {editProduct.priceUnit ?? 'kg'} = ৳{(editProduct.pricePerUnit * 0.5).toLocaleString()}
-                    </p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="text-[10px] font-bold text-ink/50 uppercase">Category</label>
-                  <select className="w-full mt-0.5 px-3 py-2 rounded-xl border border-border bg-surface text-xs text-ink focus:outline-none"
-                    value={editProduct.occasion}
-                    onChange={(e) => setEditProduct({ ...editProduct, occasion: e.target.value as Product['occasion'] })}>
-                    {['birthday', 'wedding', 'anniversary', 'cupcakes', 'gift', 'premium'].map((c) => (
-                      <option key={c} value={c}>{c}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="flex items-center gap-3">
-                  {editProduct.image && <img src={editProduct.image} alt="" className="w-14 h-14 rounded-xl object-cover" />}
-                  <div className="flex-1">
-                    <input ref={productImgRef} type="file" accept="image/*" className="hidden" onChange={async (e) => {
-                      const file = e.target.files?.[0]; if (!file) return;
-                      setImgUploading(true);
-                      try { const url = await uploadProductImage(file); setEditProduct(prev => prev ? { ...prev, image: url } : prev); }
-                      finally { setImgUploading(false); }
-                    }} />
-                    <button onClick={() => productImgRef.current?.click()} disabled={imgUploading}
-                      className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-ink/5 text-xs font-bold text-ink disabled:opacity-50">
-                      <ImageIcon className="w-3.5 h-3.5" /> {imgUploading ? 'Uploading...' : 'Upload Image'}
-                    </button>
-                    <input className="mt-1 w-full px-2 py-1 rounded-lg border border-border text-[10px] text-ink focus:outline-none bg-surface"
-                      placeholder="Or paste image URL"
-                      value={editProduct.image?.startsWith('data:') ? '' : editProduct.image}
-                      onChange={(e) => setEditProduct({ ...editProduct, image: e.target.value })} />
-                  </div>
-                </div>
-
-                {/* Additional Images (gallery) */}
-                <div className="space-y-2 border-t border-border pt-3">
-                  <label className="text-[10px] font-bold text-ink/50 uppercase">Additional Images (gallery)</label>
-
-                  {/* Thumbnail List */}
-                  {editProduct.gallery && editProduct.gallery.length > 0 && (
-                    <div className="flex flex-wrap gap-2">
-                      {editProduct.gallery.map((url, i) => (
-                        <div key={i} className="relative w-12 h-12 rounded-lg overflow-hidden border border-border">
-                          <img src={url} alt="" className="w-full h-full object-cover" />
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setEditProduct(prev => {
-                                if (!prev) return null;
-                                const nextGallery = (prev.gallery ?? []).filter((_, idx) => idx !== i);
-                                return { ...prev, gallery: nextGallery };
-                              });
-                            }}
-                            className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-error text-white text-[9px] font-bold flex items-center justify-center transition active:scale-90"
-                          >
-                            <X className="w-3 h-3" />
+              {/* 🎨 Banners Sub-App */}
+              {screen === 'banners' && (
+                <div className="space-y-3">
+                  {editBanner && (
+                    <div className="rounded-2xl border-2 border-coral/30 bg-surface p-4 space-y-3 shadow-card">
+                      <p className="font-bold text-sm text-ink">{safeBanners.find((b) => b && b.id === editBanner.id) ? 'Edit' : 'New'} Banner</p>
+                      {(['title', 'subtitle', 'tag'] as const).map((f) => (
+                        <div key={f}>
+                          <label className="text-[10px] font-bold text-ink/50 uppercase">{f}</label>
+                          <input className="w-full mt-0.5 px-3 py-2 rounded-xl border border-border bg-surface text-xs text-ink focus:outline-none"
+                            value={String(editBanner[f] ?? '')}
+                            onChange={(e) => setEditBanner({ ...editBanner, [f]: e.target.value })} />
+                        </div>
+                      ))}
+                      <div className="flex items-center gap-3">
+                        {editBanner.image && <img src={editBanner.image} alt="" className="w-14 h-14 rounded-xl object-cover bg-blush" />}
+                        <div className="flex-1">
+                          <input ref={bannerImgRef} type="file" accept="image/*" className="hidden" onChange={async (e) => {
+                            const file = e.target.files?.[0]; if (!file) return;
+                            setBannerImgUploading(true);
+                            try { const url = await uploadBannerImage(file); setEditBanner(prev => prev ? { ...prev, image: url } : prev); }
+                            finally { setBannerImgUploading(false); }
+                          }} />
+                          <button onClick={() => bannerImgRef.current?.click()} disabled={bannerImgUploading}
+                            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-ink/5 text-xs font-bold text-ink disabled:opacity-50">
+                            <ImageIcon className="w-3.5 h-3.5" /> {bannerImgUploading ? 'Uploading...' : 'Upload Image'}
                           </button>
                         </div>
-                      ))}
+                      </div>
+                      <div className="flex gap-2">
+                        <button onClick={async () => { await saveBanner(editBanner); setEditBanner(null); }} className="flex-1 py-2.5 rounded-xl bg-coral text-white font-bold text-xs">
+                          Save Banner
+                        </button>
+                        <button onClick={() => setEditBanner(null)} className="flex-1 py-2.5 rounded-xl bg-ink/5 text-ink/60 font-bold text-xs">Cancel</button>
+                      </div>
                     </div>
                   )}
 
-                  {/* Add Image Button */}
-                  <div className="flex items-center gap-2">
-                    <input
-                      ref={productGalleryRefs}
-                      type="file"
-                      accept="image/*"
-                      multiple
-                      className="hidden"
-                      onChange={async (e) => {
-                        const files = Array.from(e.target.files ?? []);
-                        if (files.length === 0) return;
-                        setImgUploading(true);
-                        try {
-                          const newUrls: string[] = [];
-                          for (const file of files) {
-                            if (editProduct.gallery && editProduct.gallery.length + newUrls.length >= 4) {
-                              break;
-                            }
-                            const url = await uploadProductImage(file);
-                            newUrls.push(url);
-                          }
-                          setEditProduct(prev => {
-                            if (!prev) return null;
-                            const currentGallery = prev.gallery ?? [];
-                            const combined = [...currentGallery, ...newUrls].slice(0, 4);
-                            return { ...prev, gallery: combined };
-                          });
-                        } finally {
-                          setImgUploading(false);
-                          if (e.target) e.target.value = '';
-                        }
-                      }}
-                    />
-
-                    {(editProduct.gallery?.length ?? 0) < 4 ? (
-                      <button
-                        type="button"
-                        onClick={() => productGalleryRefs.current?.click()}
-                        disabled={imgUploading}
-                        className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-ink/5 text-xs font-bold text-ink disabled:opacity-50"
-                      >
-                        <ImageIcon className="w-3.5 h-3.5" />
-                        {imgUploading ? 'Uploading...' : 'Add image'}
+                  {safeBanners.filter(Boolean).map((b) => (
+                    <div key={b.id} className="rounded-2xl border border-border bg-surface p-3 flex gap-3 items-center shadow-card">
+                      <img src={b.image} alt={b.title} className="w-14 h-14 rounded-xl object-cover flex-shrink-0 bg-blush" />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-bold text-sm text-ink truncate">{b.title || 'N/A'}</p>
+                        <p className="text-xs font-bold text-coral capitalize">{b.type || 'new_item'}</p>
+                      </div>
+                      <button onClick={() => setEditBanner(b)} className="w-8 h-8 rounded-xl bg-ink/5 flex items-center justify-center">
+                        <Edit3 className="w-3.5 h-3.5 text-ink/60" />
                       </button>
-                    ) : (
-                      <span className="text-[10px] font-bold text-ink/40">Max 4 images reached</span>
-                    )}
-                  </div>
-                </div>
-                {/* Old / MRP Price */}
-                <div>
-                  <label className="text-[10px] font-bold text-ink/50 uppercase">Old Price ৳ (optional — shows as strikethrough)</label>
-                  <input
-                    type="number"
-                    placeholder="e.g. 850"
-                    className="w-full mt-0.5 px-3 py-2 rounded-xl border border-border bg-surface text-xs text-ink focus:outline-none"
-                    value={editProduct.oldPrice ?? ''}
-                    onChange={(e) => setEditProduct(prev => prev ? { ...prev, oldPrice: e.target.value ? +e.target.value : undefined } : prev)}
-                  />
-                </div>
-
-                {/* Sizes & Prices */}
-                <div className="space-y-2 border border-border rounded-2xl p-3">
-                  <label className="text-[10px] font-bold text-ink/50 uppercase">Sizes & Prices</label>
-                  <p className="text-[10px] text-ink/40">Customer selects size when ordering. Add at least one.</p>
-                  {(editProduct.weights ?? []).map((w, i) => (
-                    <div key={i} className="flex gap-2 items-center">
-                      <input
-                        placeholder="e.g. 1 kg"
-                        className="flex-1 px-3 py-2 rounded-xl border border-border bg-surface text-xs text-ink focus:outline-none"
-                        value={w.size}
-                        onChange={(e) => {
-                          const next = [...(editProduct.weights ?? [])];
-                          next[i] = { ...next[i], size: e.target.value };
-                          setEditProduct(prev => prev ? { ...prev, weights: next } : prev);
-                        }}
-                      />
-                      <input
-                        type="number"
-                        placeholder="৳"
-                        className="w-20 px-3 py-2 rounded-xl border border-border bg-surface text-xs text-ink focus:outline-none"
-                        value={w.price}
-                        onChange={(e) => {
-                          const next = [...(editProduct.weights ?? [])];
-                          next[i] = { ...next[i], price: +e.target.value };
-                          setEditProduct(prev => prev ? { ...prev, weights: next } : prev);
-                        }}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const next = (editProduct.weights ?? []).filter((_, idx) => idx !== i);
-                          setEditProduct(prev => prev ? { ...prev, weights: next } : prev);
-                        }}
-                        className="text-error"
-                      >
-                        <X className="w-4 h-4" />
+                      <button onClick={() => deleteBanner(b.id)} className="w-8 h-8 rounded-xl bg-error/10 flex items-center justify-center">
+                        <Trash2 className="w-3.5 h-3.5 text-error" />
                       </button>
                     </div>
                   ))}
-                  <button
-                    type="button"
-                    onClick={() => setEditProduct(prev => prev ? {
-                      ...prev,
-                      weights: [...(prev.weights ?? []), { size: '', price: prev.price }]
-                    } : prev)}
-                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-ink/5 text-xs font-bold text-ink"
-                  >
-                    <Plus className="w-3.5 h-3.5" /> Add Size
-                  </button>
                 </div>
+              )}
 
-                {/* Flavors */}
-                <div>
-                  <label className="text-[10px] font-bold text-ink/50 uppercase">Flavors (comma separated)</label>
-                  <input
-                    placeholder="Chocolate, Vanilla, Strawberry"
-                    className="w-full mt-0.5 px-3 py-2 rounded-xl border border-border bg-surface text-xs text-ink focus:outline-none"
-                    value={(editProduct.flavors ?? []).join(', ')}
-                    onChange={(e) => {
-                      const flavors = e.target.value.split(',').map(s => s.trim()).filter(Boolean);
-                      setEditProduct(prev => prev ? { ...prev, flavors } : prev);
-                    }}
-                  />
-                </div>
-
-                {/* Toppings */}
-                <div>
-                  <label className="text-[10px] font-bold text-ink/50 uppercase">Toppings (optional, comma separated)</label>
-                  <input
-                    placeholder="Sprinkles, Fondant, Fresh Flowers"
-                    className="w-full mt-0.5 px-3 py-2 rounded-xl border border-border bg-surface text-xs text-ink focus:outline-none"
-                    value={(editProduct.toppings ?? []).join(', ')}
-                    onChange={(e) => {
-                      const toppings = e.target.value.split(',').map(s => s.trim()).filter(Boolean);
-                      setEditProduct(prev => prev ? { ...prev, toppings } : prev);
-                    }}
-                  />
-                </div>
-
-                {/* Tags */}
-                <div>
-                  <label className="text-[10px] font-bold text-ink/50 uppercase">Tags (optional, comma separated)</label>
-                  <input
-                    placeholder="eggless, sugar-free, custom"
-                    className="w-full mt-0.5 px-3 py-2 rounded-xl border border-border bg-surface text-xs text-ink focus:outline-none"
-                    value={(editProduct.tags ?? []).join(', ')}
-                    onChange={(e) => {
-                      const tags = e.target.value.split(',').map(s => s.trim()).filter(Boolean);
-                      setEditProduct(prev => prev ? { ...prev, tags } : prev);
-                    }}
-                  />
-                </div>
-
-                {/* Badges */}
-                <div>
-                  <label className="text-[10px] font-bold text-ink/50 uppercase mb-1 block">Badges</label>
-                  <div className="flex gap-2">
-                    {([
-                      { key: 'bestseller' as const, label: 'Bestseller' },
-                      { key: 'newArrival' as const, label: 'New Arrival' },
-                      { key: 'inStock' as const, label: 'In Stock' },
-                    ]).map(({ key, label }) => (
-                      <button
-                        key={key}
-                        type="button"
-                        onClick={() => setEditProduct(prev => prev ? { ...prev, [key]: !((prev as Record<string, unknown>)[key] ?? (key === 'inStock' ? true : false)) } : prev)}
-                        className={`flex-1 py-2 rounded-xl text-[11px] font-bold transition ${
-                          ((editProduct as Record<string, unknown>)[key] ?? (key === 'inStock' ? true : false))
-                            ? 'bg-coral text-white'
-                            : 'bg-ink/5 text-ink/50'
-                        }`}
-                      >
-                        {label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="flex gap-2">
-                  <button onClick={async () => { await saveProduct(editProduct); setEditProduct(null); }}
-                    className="flex-1 flex items-center justify-center gap-1 py-2.5 rounded-xl bg-coral text-white font-bold text-xs">
-                    <Check className="w-3.5 h-3.5" /> Save
-                  </button>
-                  <button onClick={() => setEditProduct(null)}
-                    className="flex-1 py-2.5 rounded-xl bg-ink/5 text-ink/60 font-bold text-xs">Cancel</button>
-                </div>
-              </div>
-            )}
-
-            {safeProducts.filter(Boolean).map((p) => (
-              <div key={p.id} className="rounded-2xl border border-border bg-surface p-3 flex gap-3 items-center shadow-card">
-                <img src={p.image} alt={p.name} className="w-14 h-14 rounded-xl object-cover flex-shrink-0 bg-blush" />
-                <div className="flex-1 min-w-0">
-                  <p className="font-bold text-sm text-ink truncate">{p.name || 'N/A'}</p>
-                  <p className="text-xs font-black text-coral">{formatINR(p.price || 0)}</p>
-                  <p className="text-[10px] text-ink/40">{p.occasion || 'birthday'}</p>
-                </div>
-                <div className="flex flex-col gap-1">
-                  <button
-                    onClick={async () => {
-                      const wasOutOfStock = p.inStock === false;
-                      await saveProduct({ ...p, inStock: wasOutOfStock ? true : false });
-                      if (wasOutOfStock) {
-                        const alerts = ls.get<{productId: string; productName: string}[]>('bakeart-alerts', []);
-                        const hasAlerts = alerts.filter(a => a.productId === p.id);
-                        if (hasAlerts.length > 0) {
-                          addNotification('Restocked!', `${hasAlerts.length} customer${hasAlerts.length > 1 ? 's' : ''} waiting for ${p.name} — they've been notified.`);
-                          ls.set('bakeart-alerts', alerts.filter(a => a.productId !== p.id));
-                        }
-                      }
-                    }}
-                    className={`rounded-lg px-2 py-1 text-[10px] font-bold transition ${
-                      (p.inStock ?? true) ? 'bg-success/10 text-success' : 'bg-error/10 text-error'
-                    }`}
-                  >
-                    {(p.inStock ?? true) ? 'In Stock' : 'Out of Stock'}
-                  </button>
-                  <button
-                    onClick={() => void saveProduct({ ...p, approved: !(p.approved ?? true) })}
-                    className={`rounded-lg px-2 py-1 text-[10px] font-bold transition ${
-                      (p.approved ?? true) ? 'bg-coral-100 text-coral-700' : 'bg-ink-100 text-ink-300'
-                    }`}
-                  >
-                    {(p.approved ?? true) ? 'Approved' : 'Hidden'}
-                  </button>
-                  <button onClick={() => setEditProduct(p)} className="w-8 h-8 rounded-xl bg-ink/5 flex items-center justify-center">
-                    <Edit3 className="w-3.5 h-3.5 text-ink/60" />
-                  </button>
-                  <button onClick={() => deleteProduct(p.id)} className="w-8 h-8 rounded-xl bg-error/10 flex items-center justify-center">
-                    <Trash2 className="w-3.5 h-3.5 text-error" />
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Banners */}
-        {tab === 'banners' && (
-          <div className="space-y-3">
-            <button onClick={() => setEditBanner({ ...EMPTY_BANNER, id: `b-${Date.now()}` })}
-              className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl bg-coral text-white font-bold text-sm shadow-btn transition active:scale-[.98]">
-              <Plus className="w-4 h-4" /> Add Banner
-            </button>
-
-            {editBanner && (
-              <div className="rounded-2xl border-2 border-coral/30 bg-surface p-4 space-y-3 shadow-card">
-                <p className="font-bold text-sm text-ink">
-                  {safeBanners.find((b) => b && b.id === editBanner.id) ? 'Edit' : 'New'} Banner
-                </p>
-                {(['title', 'subtitle', 'tag', 'color'] as const).map((f) => (
-                  <div key={f}>
-                    <label className="text-[10px] font-bold text-ink/50 uppercase">{f}</label>
-                    <input className="w-full mt-0.5 px-3 py-2 rounded-xl border border-border bg-surface text-xs text-ink focus:outline-none"
-                      value={String(editBanner[f] ?? '')}
-                      onChange={(e) => setEditBanner({ ...editBanner, [f]: e.target.value })} />
-                  </div>
-                ))}
-
-                <div>
-                  <label className="text-[10px] font-bold text-ink/50 uppercase">Type</label>
-                  <select className="w-full mt-0.5 px-3 py-2 rounded-xl border border-border bg-surface text-xs text-ink focus:outline-none"
-                    value={editBanner.type}
-                    onChange={(e) => setEditBanner({ ...editBanner, type: e.target.value as any })}>
-                    <option value="new_item">New Item</option>
-                    <option value="discount">Discount</option>
-                    <option value="notice">Notice</option>
-                  </select>
-                </div>
-
-                {editBanner.type === 'discount' && (
-                  <div>
-                    <label className="text-[10px] font-bold text-ink/50 uppercase">Promo Code</label>
-                    <input className="w-full mt-0.5 px-3 py-2 rounded-xl border border-border bg-surface text-xs text-ink focus:outline-none"
-                      value={editBanner.promoCode ?? ''}
-                      onChange={(e) => setEditBanner({ ...editBanner, promoCode: e.target.value })} />
-                  </div>
-                )}
-
-                {editBanner.type === 'new_item' && (
-                  <div>
-                    <label className="text-[10px] font-bold text-ink/50 uppercase">Product Link</label>
-                    <select className="w-full mt-0.5 px-3 py-2 rounded-xl border border-border bg-surface text-xs text-ink focus:outline-none"
-                      value={editBanner.productId ?? ''}
-                      onChange={(e) => setEditBanner({ ...editBanner, productId: e.target.value })}>
-                      <option value="">Select product...</option>
-                      {safeProducts.filter(Boolean).map((p) => (
-                        <option key={p.id} value={p.id}>{p.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                )}
-
-                {editBanner.type === 'notice' && (
-                  <div>
-                    <label className="text-[10px] font-bold text-ink/50 uppercase">Notice Text</label>
-                    <textarea rows={3} className="w-full mt-0.5 p-3 rounded-xl border border-border bg-surface text-xs text-ink focus:outline-none resize-none"
-                      value={editBanner.noticeText ?? ''}
-                      onChange={(e) => setEditBanner({ ...editBanner, noticeText: e.target.value })} />
-                  </div>
-                )}
-
-                <div className="flex items-center gap-3">
-                  {editBanner.image && <img src={editBanner.image} alt="" className="w-14 h-14 rounded-xl object-cover bg-blush" />}
-                  <div className="flex-1">
-                    <input ref={bannerImgRef} type="file" accept="image/*" className="hidden" onChange={async (e) => {
+              {/* 🖼️ Gallery Sub-App */}
+              {screen === 'gallery' && (
+                <div className="space-y-3">
+                  <div className="rounded-2xl border border-border bg-surface p-4 shadow-card space-y-2">
+                    <p className="text-xs font-bold text-ink">Add Gallery Photo</p>
+                    <input className="w-full px-3 py-2 rounded-xl border border-border bg-surface text-xs focus:outline-none"
+                      placeholder="Caption (optional)" value={newGalleryCaption} onChange={(e) => setNewGalleryCaption(e.target.value)} />
+                    <input ref={galleryImgRef} type="file" accept="image/*" className="hidden" onChange={async (e) => {
                       const file = e.target.files?.[0]; if (!file) return;
-                      setBannerImgUploading(true);
-                      try { const url = await uploadBannerImage(file); setEditBanner(prev => prev ? { ...prev, image: url } : prev); }
-                      finally { setBannerImgUploading(false); }
+                      setGalleryUploading(true);
+                      try {
+                        const url = await uploadGalleryImage(file);
+                        await saveGalleryItem({ id: `gl-${Date.now()}`, image: url, caption: newGalleryCaption || file.name, created_at: new Date().toISOString() });
+                        setNewGalleryCaption('');
+                      } finally { setGalleryUploading(false); }
                     }} />
-                    <button onClick={() => bannerImgRef.current?.click()} disabled={bannerImgUploading}
-                      className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-ink/5 text-xs font-bold text-ink disabled:opacity-50">
-                      <ImageIcon className="w-3.5 h-3.5" /> {bannerImgUploading ? 'Uploading...' : 'Upload Image'}
+                    <button onClick={() => galleryImgRef.current?.click()} disabled={galleryUploading}
+                      className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-coral text-white font-bold text-xs shadow-btn disabled:opacity-50">
+                      <ImageIcon className="w-3.5 h-3.5" /> {galleryUploading ? 'Uploading...' : 'Upload Photo'}
                     </button>
-                    <input className="mt-1 w-full px-2 py-1 rounded-lg border border-border text-[10px] text-ink focus:outline-none bg-surface"
-                      placeholder="Or paste image URL"
-                      value={editBanner.image?.startsWith('data:') ? '' : editBanner.image}
-                      onChange={(e) => setEditBanner({ ...editBanner, image: e.target.value })} />
                   </div>
-                </div>
-                <div className="flex gap-2">
-                  <button onClick={async () => { await saveBanner(editBanner); setEditBanner(null); }}
-                    className="flex-1 flex items-center justify-center gap-1 py-2.5 rounded-xl bg-coral text-white font-bold text-xs">
-                    <Check className="w-3.5 h-3.5" /> Save
-                  </button>
-                  <button onClick={() => setEditBanner(null)}
-                    className="flex-1 py-2.5 rounded-xl bg-ink/5 text-ink/60 font-bold text-xs">Cancel</button>
-                </div>
-              </div>
-            )}
 
-            {safeBanners.filter(Boolean).map((b) => (
-              <div key={b.id} className="rounded-2xl border border-border bg-surface p-3 flex gap-3 items-center shadow-card">
-                <img src={b.image} alt={b.title} className="w-14 h-14 rounded-xl object-cover flex-shrink-0 bg-blush" />
-                <div className="flex-1 min-w-0">
-                  <p className="font-bold text-sm text-ink truncate">{b.title || 'N/A'}</p>
-                  <p className="text-xs font-bold text-coral capitalize">{b.type || 'new_item'}</p>
-                  <p className="text-[10px] text-ink/40 truncate">{b.subtitle || ''}</p>
-                </div>
-                <div className="flex flex-col gap-1">
-                  <button onClick={() => setEditBanner(b)} className="w-8 h-8 rounded-xl bg-ink/5 flex items-center justify-center">
-                    <Edit3 className="w-3.5 h-3.5 text-ink/60" />
-                  </button>
-                  <button onClick={() => deleteBanner(b.id)} className="w-8 h-8 rounded-xl bg-error/10 flex items-center justify-center">
-                    <Trash2 className="w-3.5 h-3.5 text-error" />
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Gallery */}
-        {tab === 'gallery' && (
-          <div className="space-y-3">
-            <div className="rounded-2xl border border-border bg-surface p-4 shadow-card space-y-2">
-              <p className="text-xs font-bold text-ink">Add Gallery Photo</p>
-              <input className="w-full px-3 py-2 rounded-xl border border-border bg-surface text-xs focus:outline-none"
-                placeholder="Caption (optional)" value={newGalleryCaption} onChange={(e) => setNewGalleryCaption(e.target.value)} />
-              <input ref={galleryImgRef} type="file" accept="image/*" className="hidden" onChange={async (e) => {
-                const file = e.target.files?.[0]; if (!file) return;
-                setGalleryUploading(true);
-                try {
-                  const url = await uploadGalleryImage(file);
-                  await saveGalleryItem({ id: `gl-${Date.now()}`, image: url, caption: newGalleryCaption || file.name, created_at: new Date().toISOString() });
-                  setNewGalleryCaption('');
-                } finally { setGalleryUploading(false); }
-              }} />
-              <button onClick={() => galleryImgRef.current?.click()} disabled={galleryUploading}
-                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-coral text-white font-bold text-xs shadow-btn transition active:scale-[.98] disabled:opacity-50">
-                <ImageIcon className="w-3.5 h-3.5" /> {galleryUploading ? 'Uploading...' : 'Upload Photo'}
-              </button>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              {safeGallery.filter(Boolean).map((g) => (
-                <div key={g.id} className="relative rounded-2xl overflow-hidden bg-blush">
-                  <img src={g.image} alt={g.caption || ''} className="w-full h-28 object-cover" />
-                  <div className="absolute bottom-0 left-0 right-0 p-2 bg-ink/70">
-                    <p className="text-[10px] text-white font-medium truncate">{g.caption || ''}</p>
-                  </div>
-                  <button onClick={() => deleteGalleryItem(g.id)} className="absolute top-2 right-2 w-6 h-6 rounded-full bg-error flex items-center justify-center">
-                    <X className="w-3 h-3 text-white" />
-                  </button>
-                </div>
-              ))}
-            </div>
-            {safeGallery.length === 0 && (
-              <div className="rounded-2xl border border-border bg-surface py-12 text-center shadow-card">
-                <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-secondary text-coral">
-                  <ImageIcon className="h-6 w-6" strokeWidth={1.75} />
-                </div>
-                <p className="text-sm font-bold text-ink">No gallery photos yet</p>
-                <p className="mt-1 text-xs text-ink-200">Upload your first photo above</p>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Reviews - BUG 1 FIX: Reviews are auto-approved, only delete option */}
-        {tab === 'reviews' && (
-          <div className="space-y-3">
-            {safeReviews.filter(Boolean).map((r: any) => (
-              <div key={r.id} className="rounded-2xl border border-border bg-surface p-4 shadow-card">
-                <div className="flex justify-between items-start mb-1">
-                  <p className="font-bold text-sm text-ink">{r.user_name || 'Anonymous'}</p>
-                  <div className="flex gap-0.5">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <Star key={i} className={`w-3 h-3 ${i < (r.rating || 5) ? 'fill-gold text-gold' : 'text-ink/20'}`} />
+                  <div className="grid grid-cols-2 gap-2">
+                    {safeGallery.filter(Boolean).map((g) => (
+                      <div key={g.id} className="relative rounded-2xl overflow-hidden bg-blush">
+                        <img src={g.image} alt={g.caption || ''} className="w-full h-28 object-cover" />
+                        <button onClick={() => deleteGalleryItem(g.id)} className="absolute top-2 right-2 w-6 h-6 rounded-full bg-error flex items-center justify-center">
+                          <X className="w-3 h-3 text-white" />
+                        </button>
+                      </div>
                     ))}
                   </div>
                 </div>
-                <p className="text-xs text-ink/60 mb-2">{r.comment || ''}</p>
-                {r.image && (
-                  <img
-                    src={r.image}
-                    alt="review photo"
-                    className="mt-1 h-16 w-16 rounded-xl object-cover cursor-pointer"
-                    onClick={() => window.open(r.image, '_blank')}
-                  />
-                )}
-                {/* All reviews are auto-approved now, no pending badge */}
-                <div className="flex gap-2 mt-2">
-                  {/* Only delete button - no approve needed since reviews are auto-approved */}
-                  <button onClick={() => deleteReview(r.id)}
-                    className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-error/10 text-error text-[10px] font-bold">
-                    <Trash2 className="w-3 h-3" /> Delete
+              )}
+
+              {/* ⭐ Reviews Sub-App */}
+              {screen === 'reviews' && (
+                <div className="space-y-3">
+                  {safeReviews.filter(Boolean).map((r: any) => (
+                    <div key={r.id} className="rounded-2xl border border-border bg-surface p-4 shadow-card">
+                      <div className="flex justify-between items-start mb-1">
+                        <p className="font-bold text-sm text-ink">{r.user_name || 'Anonymous'}</p>
+                        <div className="flex gap-0.5">
+                          {Array.from({ length: 5 }).map((_, i) => (
+                            <Star key={i} className={`w-3 h-3 ${i < (r.rating || 5) ? 'fill-amber-400 text-amber-400' : 'text-ink/20'}`} />
+                          ))}
+                        </div>
+                      </div>
+                      <p className="text-xs text-ink/60 mb-2">{r.comment || ''}</p>
+                      <button onClick={() => deleteReview(r.id)} className="px-3 py-1.5 rounded-xl bg-error/10 text-error text-[10px] font-bold">
+                        Delete Review
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* 👥 Customers Sub-App */}
+              {screen === 'customers' && (
+                <div className="space-y-3">
+                  {customersLoading && <p className="text-xs text-ink/40 text-center py-4">Loading customers...</p>}
+                  {safeCustomers.filter(Boolean).map((c) => (
+                    <div key={c.id} className="rounded-2xl border border-border bg-surface p-4 shadow-card flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary text-coral font-bold">
+                        {c.name ? c.name[0].toUpperCase() : 'U'}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="truncate text-sm font-bold text-ink">{c.name || 'Guest'}</p>
+                        <p className="truncate text-[11px] text-ink/45">{c.phone || c.email || 'No contact'}</p>
+                      </div>
+                      <p className="text-xs font-black text-coral">{formatINR(c.totalSpent || 0)}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* 📍 Zones Sub-App */}
+              {screen === 'zones' && (
+                <div className="space-y-4">
+                  <div className="rounded-2xl border border-border bg-surface p-4 shadow-card">
+                    <div className="mb-3 flex items-center justify-between">
+                      <p className="text-sm font-bold text-ink">Delivery zone gating</p>
+                      <button
+                        onClick={() => updateSettings({ deliveryZonesEnabled: !safeSettings.deliveryZonesEnabled })}
+                        className={`h-7 w-12 rounded-full transition-colors ${safeSettings.deliveryZonesEnabled ? 'bg-coral' : 'bg-ink/20'}`}
+                      >
+                        <div className={`m-1 h-5 w-5 rounded-full bg-white transition-transform ${safeSettings.deliveryZonesEnabled ? 'translate-x-5' : ''}`} />
+                      </button>
+                    </div>
+                    <div className="mt-3 flex gap-2">
+                      <input
+                        value={newZone}
+                        onChange={(e) => setNewZone(e.target.value)}
+                        placeholder="Add zone..."
+                        className="h-11 flex-1 rounded-xl border border-border bg-surface px-3 text-xs text-ink focus:outline-none"
+                      />
+                      <button
+                        onClick={() => {
+                          const zone = newZone.trim();
+                          if (!zone) return;
+                          if (!(safeSettings.allowedZones ?? []).some((z) => z.toLowerCase() === zone.toLowerCase())) {
+                            updateSettings({ allowedZones: [...(safeSettings.allowedZones ?? []), zone] });
+                          }
+                          setNewZone('');
+                        }}
+                        className="rounded-xl bg-coral px-4 text-xs font-bold text-white shadow-btn"
+                      >
+                        Add
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* ⚙️ Settings Sub-App */}
+              {screen === 'settings' && (
+                <div className="space-y-4">
+                  {[
+                    { label: 'Admin Email', field: 'adminEmail' as const, type: 'email' },
+                    { label: 'Admin PIN', field: 'adminPin' as const, type: 'password' },
+                    { label: 'WhatsApp Number', field: 'whatsappNumber' as const, type: 'text' },
+                    { label: 'bKash Number', field: 'bkashNumber' as const, type: 'text' },
+                    { label: 'Nagad Number', field: 'nagadNumber' as const, type: 'text' },
+                  ].map(({ label, field, type }) => (
+                    <div key={field}>
+                      <label className="text-[10px] font-bold text-ink/50 uppercase">{label}</label>
+                      <input type={type}
+                        className="w-full mt-0.5 px-3 py-2.5 rounded-xl border border-border bg-surface text-xs text-ink focus:outline-none"
+                        value={String(localSettings[field] ?? '')}
+                        onChange={(e) => setLocalSettings({ ...localSettings, [field]: e.target.value })} />
+                    </div>
+                  ))}
+                  <button onClick={() => { updateSettings(localSettings); addNotification('Admin Settings', 'Settings saved successfully.'); }} className="w-full py-3 rounded-2xl bg-coral text-white font-bold text-sm shadow-btn">
+                    Save Admin Settings
                   </button>
                 </div>
-              </div>
-            ))}
-            {safeReviews.length === 0 && (
-              <div className="rounded-2xl border border-border bg-surface py-12 text-center shadow-card">
-                <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-secondary text-coral">
-                  <Star className="h-6 w-6" strokeWidth={1.75} />
-                </div>
-                <p className="text-sm font-bold text-ink">No reviews yet</p>
-                <p className="mt-1 text-xs text-ink-200">Customer reviews will appear here</p>
-              </div>
-            )}
-          </div>
-        )}
+              )}
 
-        {/* Customers */}
-        {tab === 'customers' && (
-          <div className="space-y-3">
-            <div className="grid grid-cols-2 gap-3">
-              <div className="rounded-2xl border border-border bg-surface p-4 shadow-card">
-                <p className="text-xl font-black text-coral">{safeCustomers.length}</p>
-                <p className="text-xs font-bold text-ink">Customers</p>
-              </div>
-              <div className="rounded-2xl border border-border bg-surface p-4 shadow-card">
-                <p className="text-xl font-black text-coral">{formatINR(safeCustomers.reduce((s, c) => s + (c?.totalSpent || 0), 0))}</p>
-                <p className="text-xs font-bold text-ink">Total spent</p>
-              </div>
-            </div>
-            {customersLoading && <div className="text-center py-8 text-ink/40 text-sm">Loading customers...</div>}
-            {!customersLoading && safeCustomers.filter(Boolean).map((c) => {
-              const customerOrders = safeOrders
-                .filter((o) =>
-                  o && (
-                    (c.phone && o.customer?.phone === c.phone) ||
-                    (c.email && o.customer?.email === c.email) ||
-                    (!c.phone && !c.email && o.customer?.name === c.name)
-                  )
-                )
-                .slice(0, 4);
-
-              return (
-                <div key={c.id} className="rounded-2xl border border-border bg-surface p-4 shadow-card">
-                  <div className="flex items-start gap-3">
-                    <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-secondary text-coral">
-                      {c.avatar ? <img src={c.avatar} alt="" className="h-full w-full rounded-full object-cover" /> : <Users className="h-5 w-5" />}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-bold text-ink">{c.name || 'N/A'}</p>
-                      <p className="truncate text-[11px] text-ink/45">{c.email || 'No email'} {c.phone ? `· ${c.phone}` : ''}</p>
-                      <div className="mt-1 flex flex-wrap gap-1.5">
-                        <span className="rounded-full bg-ink/5 px-2 py-0.5 text-[9px] font-bold text-ink/45 uppercase">{c.source || 'guest'}</span>
-                        <span className="rounded-full bg-ink/5 px-2 py-0.5 text-[9px] font-bold text-ink/70">{c.orderCount || 1} orders</span>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-black text-coral">{formatINR(c.totalSpent || 0)}</p>
-                      {c.lastOrderDate > 0 && <p className="text-[9px] text-ink/35">{new Date(c.lastOrderDate).toLocaleDateString('en-BD')}</p>}
-                    </div>
-                  </div>
-
-                  <div className="mt-3 rounded-xl bg-ink-50 p-3">
-                    <p className="mb-2 text-[10px] font-bold uppercase text-ink/40">Customer info is saved from checkout orders + logged-in profiles</p>
-                    {customerOrders.length > 0 ? customerOrders.map((o) => (
-                      <div key={o.id} className="flex items-center justify-between border-b border-border py-1.5 last:border-0">
-                        <div>
-                          <p className="text-[11px] font-bold text-ink">#{o.id || 'N/A'}</p>
-                          <p className="text-[9px] text-ink/40">{o.createdAt ? new Date(o.createdAt).toLocaleDateString('en-BD') : 'N/A'} · {o.status || 'placed'}</p>
-                        </div>
-                        <p className="text-xs font-black text-coral">{formatINR(o.total || 0)}</p>
-                      </div>
-                    )) : <p className="text-[11px] text-ink/40">No order history found</p>}
-                  </div>
-
-                  {c.phone && (
-                    <a
-                      href={waLink(c.phone, `Hello ${c.name || 'Customer'}, this is Bake Art Style.`)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="mt-3 block rounded-xl bg-success/10 py-2 text-center text-xs font-bold text-success"
-                    >
-                      WhatsApp customer
-                    </a>
-                  )}
-                </div>
-              );
-            })}
-            {!customersLoading && safeCustomers.length === 0 && (
-              <div className="rounded-2xl border border-border bg-surface py-12 text-center shadow-card">
-                <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-secondary text-coral">
-                  <Users className="h-6 w-6" strokeWidth={1.75} />
-                </div>
-                <p className="text-sm font-bold text-ink">No customers yet</p>
-                <p className="mt-1 text-xs text-ink-200">Customers appear here after their first order</p>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Zones */}
-        {tab === 'zones' && (
-          <div className="space-y-4">
-            <div className="rounded-2xl border border-border bg-surface p-4 shadow-card">
-              <div className="mb-3 flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-bold text-ink">Delivery zone gating</p>
-                  <p className="text-[11px] text-ink/45">Checkout location check on/off</p>
-                </div>
-                <button
-                  onClick={() => updateSettings({ deliveryZonesEnabled: !safeSettings.deliveryZonesEnabled })}
-                  className={`h-7 w-12 rounded-full transition-colors ${safeSettings.deliveryZonesEnabled ? 'bg-coral' : 'bg-ink/20'}`}
-                >
-                  <div className={`m-1 h-5 w-5 rounded-full bg-white transition-transform ${safeSettings.deliveryZonesEnabled ? 'translate-x-5' : ''}`} />
-                </button>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {(safeSettings.allowedZones ?? []).map((z) => (
-                  <span key={z} className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface px-3 py-1.5 text-xs font-bold text-ink">
-                    <MapPin className="h-3 w-3 text-ink-200" /> {z}
-                    <button onClick={() => updateSettings({ allowedZones: (safeSettings.allowedZones ?? []).filter((x) => x !== z) })} className="text-ink/50">
-                      <X className="h-3 w-3" />
-                    </button>
-                  </span>
-                ))}
-              </div>
-              <div className="mt-3 flex gap-2">
-                <input
-                  value={newZone}
-                  onChange={(e) => setNewZone(e.target.value)}
-                  placeholder="Add zone..."
-                  className="h-11 flex-1 rounded-xl border border-border bg-surface px-3 text-xs text-ink focus:outline-none"
-                />
-                <button
-                  onClick={() => {
-                    const zone = newZone.trim();
-                    if (!zone) return;
-                    if (!(safeSettings.allowedZones ?? []).some((z) => z.toLowerCase() === zone.toLowerCase())) {
-                      updateSettings({ allowedZones: [...(safeSettings.allowedZones ?? []), zone] });
-                    }
-                    setNewZone('');
-                  }}
-                  className="rounded-xl bg-coral px-4 text-xs font-bold text-white shadow-btn transition active:scale-95"
-                >
-                  Add
-                </button>
-              </div>
-            </div>
-            <div className="rounded-2xl border border-border bg-surface p-4 shadow-card">
-              <label className="text-[10px] font-bold uppercase text-ink/50">Out-of-zone message</label>
-              <textarea
-                value={safeSettings.outOfZoneMessage ?? ''}
-                onChange={(e) => updateSettings({ outOfZoneMessage: e.target.value })}
-                rows={3}
-                className="mt-1 w-full resize-none rounded-xl border border-border bg-surface p-3 text-xs text-ink focus:outline-none"
-              />
             </div>
           </div>
         )}
 
-        {/* Settings */}
-        {tab === 'settings' && (
-          <div className="space-y-4">
-            {[
-              { label: 'Admin Email', field: 'adminEmail' as const, type: 'email' },
-              { label: 'Admin PIN', field: 'adminPin' as const, type: 'password' },
-              { label: 'WhatsApp Number', field: 'whatsappNumber' as const, type: 'text' },
-              { label: 'bKash Number', field: 'bkashNumber' as const, type: 'text' },
-              { label: 'Nagad Number', field: 'nagadNumber' as const, type: 'text' },
-              { label: 'Delivery Fee (৳)', field: 'deliveryFee' as const, type: 'number' },
-              { label: 'Delivery Estimate', field: 'deliveryEstimate' as const, type: 'text' },
-              { label: 'Promo Code', field: 'promoCode' as const, type: 'text' },
-              { label: 'Promo Discount (%)', field: 'promoPercent' as const, type: 'number' },
-              { label: 'Gemini API Key', field: 'geminiApiKey' as const, type: 'text' },
-            ].map(({ label, field, type }) => (
-              <div key={field}>
-                <label className="text-[10px] font-bold text-ink/50 uppercase">{label}</label>
-                <input type={type}
-                  className="w-full mt-0.5 px-3 py-2.5 rounded-xl border border-border bg-surface text-xs text-ink focus:outline-none focus:ring-2 focus:ring-coral/20"
-                  value={String(localSettings[field] ?? '')}
-                  onChange={(e) => setLocalSettings({
-                    ...localSettings,
-                    [field]: type === 'number' ? +e.target.value : e.target.value,
-                  })} />
-              </div>
-            ))}
-            <div className="flex items-center justify-between py-1">
-              <label className="text-xs font-bold text-ink">Promo Enabled</label>
-              <button onClick={() => setLocalSettings({ ...localSettings, promoEnabled: !localSettings.promoEnabled })}
-                className={`w-10 h-6 rounded-full transition-colors ${localSettings.promoEnabled ? 'bg-coral' : 'bg-ink/20'}`}>
-                <div className={`w-4 h-4 rounded-full bg-white m-1 transition-transform ${localSettings.promoEnabled ? 'translate-x-4' : ''}`} />
-              </button>
-            </div>
-            {/* Custom Cake Add-ons */}
-            <div className="mt-4 space-y-2">
-              <div className="flex items-center justify-between">
-                <label className="text-[10px] font-bold text-ink/50 uppercase">Custom Cake Add-ons</label>
-                <button
-                  onClick={() => {
-                    const newAddon: CustomAddon = { id: `addon-${Date.now()}`, emoji: '', label: 'New Add-on', price: 100, category: 'extras' };
-                    updateSettings({ customAddons: [...(settings.customAddons ?? []), newAddon] });
-                  }}
-                  className="flex items-center gap-1 rounded-lg bg-coral px-2.5 py-1 text-[10px] font-bold text-white"
-                >
-                  <Plus className="h-3 w-3" /> Add
-                </button>
-              </div>
-              <div className="space-y-2">
-                {(settings.customAddons ?? []).map((addon, idx) => (
-                  <div key={addon.id} className="flex items-center gap-2 rounded-xl bg-ink-50 p-2">
-                    <input
-                      value={addon.emoji}
-                      className="w-10 text-center rounded-lg border border-border bg-surface px-1 py-1 text-sm"
-                      onChange={(e) => {
-                        const updated = [...(settings.customAddons ?? [])];
-                        updated[idx] = { ...updated[idx], emoji: e.target.value };
-                        updateSettings({ customAddons: updated });
-                      }}
-                    />
-                    <input
-                      value={addon.label}
-                      className="flex-1 rounded-lg border border-border bg-surface px-2 py-1 text-xs text-ink"
-                      onChange={(e) => {
-                        const updated = [...(settings.customAddons ?? [])];
-                        updated[idx] = { ...updated[idx], label: e.target.value };
-                        updateSettings({ customAddons: updated });
-                      }}
-                    />
-                    <input
-                      type="number"
-                      value={addon.price}
-                      className="w-16 rounded-lg border border-border bg-surface px-2 py-1 text-xs text-ink"
-                      onChange={(e) => {
-                        const updated = [...(settings.customAddons ?? [])];
-                        updated[idx] = { ...updated[idx], price: +e.target.value };
-                        updateSettings({ customAddons: updated });
-                      }}
-                    />
-                    <select
-                      value={addon.category}
-                      className="rounded-lg border border-border bg-surface px-1 py-1 text-[10px] text-ink"
-                      onChange={(e) => {
-                        const updated = [...(settings.customAddons ?? [])];
-                        updated[idx] = { ...updated[idx], category: e.target.value as CustomAddon['category'] };
-                        updateSettings({ customAddons: updated });
-                      }}
-                    >
-                      <option value="decoration">Deco</option>
-                      <option value="theme">Theme</option>
-                      <option value="flowers">Flowers</option>
-                      <option value="extras">Extras</option>
-                    </select>
-                    <button
-                      onClick={() => updateSettings({ customAddons: (settings.customAddons ?? []).filter((_, i) => i !== idx) })}
-                      className="h-6 w-6 rounded-lg bg-error/10 text-error flex items-center justify-center"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
+      </div>
 
-            <div className="flex gap-2">
-              <button onClick={() => updateSettings(localSettings)}
-                className="flex-1 py-3 rounded-2xl bg-coral text-white font-bold text-sm shadow-btn transition active:scale-[.98]">Save</button>
-              <button onClick={() => { setLocalSettings(DEFAULT_SETTINGS); updateSettings(DEFAULT_SETTINGS); }}
-                className="px-4 py-3 rounded-2xl bg-ink/5 text-ink/50 font-bold text-sm">Reset</button>
-            </div>
-          </div>
+      {/* ── Fixed Phone Bottom Dock Navigation Bar ── */}
+      <div className="flex items-center justify-around px-2 py-2 bg-surface border-t border-border flex-shrink-0 z-20">
+        <button
+          onClick={() => setScreen('launcher')}
+          className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition ${screen === 'launcher' ? 'text-coral font-bold' : 'text-ink-300'}`}
+        >
+          <Home className="w-5 h-5" strokeWidth={screen === 'launcher' ? 2.2 : 1.8} />
+          <span className="text-[10px]">Launcher</span>
+        </button>
+
+        <button
+          onClick={() => setScreen('orders')}
+          className={`relative flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition ${screen === 'orders' ? 'text-coral font-bold' : 'text-ink-300'}`}
+        >
+          <Package className="w-5 h-5" strokeWidth={screen === 'orders' ? 2.2 : 1.8} />
+          <span className="text-[10px]">Orders</span>
+          {pendingCount > 0 && (
+            <span className="absolute top-0.5 right-2 h-2 w-2 rounded-full bg-error" />
+          )}
+        </button>
+
+        <button
+          onClick={() => setScreen('products')}
+          className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition ${screen === 'products' ? 'text-coral font-bold' : 'text-ink-300'}`}
+        >
+          <Cake className="w-5 h-5" strokeWidth={screen === 'products' ? 2.2 : 1.8} />
+          <span className="text-[10px]">Products</span>
+        </button>
+
+        <button
+          onClick={() => setScreen('settings')}
+          className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition ${screen === 'settings' ? 'text-coral font-bold' : 'text-ink-300'}`}
+        >
+          <Settings className="w-5 h-5" strokeWidth={screen === 'settings' ? 2.2 : 1.8} />
+          <span className="text-[10px]">Settings</span>
+        </button>
+
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl text-error/80 hover:text-error transition"
+            title="Exit Admin OS"
+          >
+            <LogOut className="w-5 h-5" strokeWidth={2} />
+            <span className="text-[10px]">Exit</span>
+          </button>
         )}
       </div>
 
-      {/* Image lightbox — for order item images & custom cake reference photos */}
+      {/* ── Shared Overlays at OS Root Level ── */}
       {viewImage && (
-        <div
-          className="fixed inset-0 z-[200] flex items-center justify-center p-5 bg-ink/90"
-          onClick={() => setViewImage(null)}
-        >
-          <div
-            className="relative w-full max-w-sm"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <img
-              src={viewImage}
-              alt="Order item"
-              className="w-full max-h-[72vh] rounded-3xl object-contain bg-white"
-              style={{ boxShadow: '0 24px 60px rgba(0,0,0,0.5)' }}
-            />
-            <button
-              onClick={() => setViewImage(null)}
-              className="absolute -top-3 -right-3 flex h-9 w-9 items-center justify-center rounded-full bg-white text-ink shadow-card transition active:scale-90"
-              aria-label="Close"
-            >
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-5 bg-ink/90" onClick={() => setViewImage(null)}>
+          <div className="relative w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
+            <img src={viewImage} alt="Preview" className="w-full max-h-[72vh] rounded-3xl object-contain bg-white shadow-float" />
+            <button onClick={() => setViewImage(null)} className="absolute -top-3 -right-3 flex h-9 w-9 items-center justify-center rounded-full bg-white text-ink shadow-card">
               <X className="h-4 w-4" strokeWidth={2.5} />
             </button>
-            <p className="mt-3 text-center text-[11px] text-white/55">
-              Tap outside to close
-            </p>
           </div>
         </div>
       )}
 
-      {/* Cancel-reason modal — must fill a reason before an order can be marked Cancelled */}
       {cancelModal && (
-        <div
-          className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center bg-ink/60"
-          onClick={() => setCancelModal(null)}
-        >
-          <div
-            className="w-full max-w-sm rounded-t-3xl sm:rounded-3xl border border-border bg-surface p-5 shadow-card-hover"
-            onClick={(e) => e.stopPropagation()}
-          >
+        <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center bg-ink/60" onClick={() => setCancelModal(null)}>
+          <div className="w-full max-w-sm rounded-t-3xl sm:rounded-3xl border border-border bg-surface p-5 shadow-float" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center gap-2.5">
               <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-error/10">
                 <X className="h-5 w-5 text-error" strokeWidth={2} />
               </div>
               <div>
                 <p className="text-sm font-bold text-ink">অর্ডার বাতিল করবেন?</p>
-                <p className="text-[11px] text-ink/45">Order #{cancelModal.id} — কারণ লিখুন, customer এটা দেখতে পাবে</p>
+                <p className="text-[11px] text-ink/45">Order #{cancelModal.id} — কারণ লিখুন</p>
               </div>
             </div>
 
             <div className="mt-3 flex flex-wrap gap-1.5">
               {CANCEL_REASON_PRESETS.map((r) => (
-                <button
-                  key={r}
-                  onClick={() => setCancelReasonInput(r)}
-                  className={`px-2.5 py-1.5 rounded-full text-[11px] font-bold border ${cancelReasonInput === r ? 'bg-coral text-white border-coral' : 'bg-ink/5 text-ink/60 border-transparent'}`}
-                >
+                <button key={r} onClick={() => setCancelReasonInput(r)} className={`px-2.5 py-1.5 rounded-full text-[11px] font-bold border ${cancelReasonInput === r ? 'bg-coral text-white border-coral' : 'bg-ink/5 text-ink/60 border-transparent'}`}>
                   {r}
                 </button>
               ))}
@@ -1383,17 +887,10 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
             />
 
             <div className="mt-4 flex gap-2">
-              <button
-                onClick={() => setCancelModal(null)}
-                className="flex-1 rounded-2xl bg-ink/5 py-3 text-[13px] font-bold text-ink/60"
-              >
+              <button onClick={() => setCancelModal(null)} className="flex-1 rounded-2xl bg-ink/5 py-3 text-[13px] font-bold text-ink/60">
                 রাখুন
               </button>
-              <button
-                onClick={confirmCancel}
-                disabled={!cancelReasonInput.trim()}
-                className="flex-1 rounded-2xl bg-error py-3 text-[13px] font-bold text-white disabled:opacity-40"
-              >
+              <button onClick={confirmCancel} disabled={!cancelReasonInput.trim()} className="flex-1 rounded-2xl bg-error py-3 text-[13px] font-bold text-white disabled:opacity-40">
                 বাতিল নিশ্চিত করুন
               </button>
             </div>
