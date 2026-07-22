@@ -171,7 +171,6 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
   useModalDepth(contactOpen);
   useModalDepth(customerOpen);
   useModalDepth(profileView === 'chat');
-  useModalDepth(showAdmin);
 
 
   useEffect(() => {
@@ -533,9 +532,16 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
           </button>
 
           {showAdmin && effectiveIsAdmin && user && (
-            <AdminErrorBoundary>
-              <AdminPanel onClose={() => setShowAdmin(false)} />
-            </AdminErrorBoundary>
+            <div className="mt-5 anim-up">
+              <div className="mb-3 flex items-center gap-2">
+                <Settings className="h-5 w-5 text-coral" strokeWidth={2} />
+                <h2 className="text-[17px] font-bold text-ink">Admin Dashboard</h2>
+                <span className="ml-auto rounded-full bg-coral px-2 py-0.5 text-[10px] font-bold text-white uppercase tracking-wide">Admin</span>
+              </div>
+              <AdminErrorBoundary>
+                <AdminPanel embedded />
+              </AdminErrorBoundary>
+            </div>
           )}
         </div>
       )}
