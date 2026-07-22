@@ -27,6 +27,9 @@ export type Product = {
   lowStock?: boolean;
   stockCount?: number;
   viewCount?: number;
+  sizes?: string[];
+  addons?: string[];
+  createdAt?: number | string;
 };
 
 export type CartItem = {

@@ -453,20 +453,31 @@ export default function ProductScreen() {
               </div>
             </div>
             <div className="flex gap-2">
-              <a
-                href={`https://wa.me/${settings?.whatsappNumber?.replace(/\D/g, '') || '8801XXXXXXXXX'}?text=Hi%20Bake%20Art%20Style`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 active:scale-95 transition shadow-sm border border-emerald-100"
-              >
-                <MessageSquare size={16} />
-              </a>
-              <a
-                href={`tel:${settings?.whatsappNumber || '+8801XXXXXXXXX'}`}
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-coral active:scale-95 transition shadow-sm border border-coral-100"
-              >
-                <Phone size={16} />
-              </a>
+              {(() => {
+                const rawNum = settings?.whatsappNumber || '';
+                const digits = rawNum.replace(/\D/g, '');
+                if (!(digits.length >= 10) || rawNum.includes('X')) return null;
+                return (
+                  <>
+                    <a
+                      href={`https://wa.me/${digits}?text=Hi%20Bake%20Art%20Style`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 active:scale-95 transition shadow-sm border border-emerald-100"
+                      aria-label="Chat on WhatsApp"
+                    >
+                      <MessageSquare size={16} />
+                    </a>
+                    <a
+                      href={`tel:+${digits}`}
+                      className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-coral active:scale-95 transition shadow-sm border border-coral-100"
+                      aria-label="Call"
+                    >
+                      <Phone size={16} />
+                    </a>
+                  </>
+                );
+              })()}
             </div>
           </div>
 

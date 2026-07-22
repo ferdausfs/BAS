@@ -18,6 +18,7 @@ export default function WriteReviewScreen() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [imageError, setImageError] = useState('');
 
   const handleSubmit = async () => {
     if (!comment.trim() || !user) return;
@@ -118,13 +119,19 @@ export default function WriteReviewScreen() {
               <Camera className="h-6 w-6 text-coral/60" />
               <input type="file" accept="image/*" className="hidden" onChange={(e) => {
                 const file = e.target.files?.[0];
-                if (file) {
-                  setImageFile(file);
-                  setImagePreview(URL.createObjectURL(file));
+                e.target.value = '';
+                if (!file) return;
+                if (file.size > 2 * 1024 * 1024) {
+                  setImageError('ছবির size ২MB-এর বেশি হতে পারবে না।');
+                  return;
                 }
+                setImageError('');
+                setImageFile(file);
+                setImagePreview(URL.createObjectURL(file));
               }} />
             </label>
           )}
+          {imageError && <p className="mt-2 text-[11.5px] font-semibold text-error">{imageError}</p>}
         </div>
       </div>
 

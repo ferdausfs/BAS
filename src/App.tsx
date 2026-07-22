@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useUI, useAuthStore, useSettingsStore, pushBrowserRouteState } from './lib/store';
-import PhoneFrame from './components/PhoneFrame';
 import BottomTabBar from './components/BottomTabBar';
 import SplashScreen from './screens/SplashScreen';
 import HomeScreen from './screens/HomeScreen';
@@ -62,11 +61,15 @@ export default function App() {
 
   const normalizeEmail = (email?: string) => email?.trim().toLowerCase() ?? '';
   const isAdminUser = useMemo(() => {
+    // Server-side is_admin flag on the profile is the source of truth.
+    if (user?.isAdmin) return true;
     if (settingsLoading) return false;
+    // Bootstrap fallback: email allow-list (so the very first admin can reach
+    // the panel before their profile.is_admin is flipped in Firestore).
     const userEmail = normalizeEmail(user?.email);
     const allowed = [settings.adminEmail, 'umuhammadiswa@gmail.com'];
     return !!userEmail && allowed.some((e) => normalizeEmail(e) === userEmail);
-  }, [user?.email, settings.adminEmail, settingsLoading]);
+  }, [user?.isAdmin, user?.email, settings.adminEmail, settingsLoading]);
 
   const activeTab = view.name === 'tabs' ? view.tab : tab;
 

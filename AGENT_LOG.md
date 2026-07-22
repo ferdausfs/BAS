@@ -1,3 +1,98 @@
+## Session: 2026-07-22, Post-ZIP review — additional bugs found & fixed (v2)
+**Agent/Tool:** Arena.ai Agent Mode — second-pass audit on bas-full-fix-072226.zip
+**Feature worked on:** Cross-device wallet hydration, referral_codes seeding for existing users, global image fallback, review image size cap
+
+### অতিরিক্ত বাগ (আগের ZIP-এ ছিল না):
+- **A — Wallet cross-device hydration missing:** `syncWalletToFirestore` শুধু write করতো, login-এ Firestore থেকে balance/totalEarned read করে hydrate করতো না। Result: user নতুন device-এ login করলে wallet 0৳ দেখাতো। Added `hydrateWalletFromFirestore(uid)` in `src/lib/store.ts`; called from `useAuth.ts` right after `login(hydrated)` (and again after referral claim) using `Math.max(local, server)` so offline-earned rewards নষ্ট না হয়।
+- **B — Existing users missing `referral_codes/{code}` doc:** Previous fix শুধু new-profile / email-mismatch case-এ referral_codes doc লিখতো → যারা আগে থেকে login করছিল তাদের code validate হতো না। Moved the upsert *outside* the try/catch so every login (existing & new) idempotently publishes the code.
+- **C — Broken-image icons across app:** Many `<img>` tags-এর কোনো `onError` fallback ছিল না (Products/Profile/Orders/Cart/Checkout/etc). Added a single **global capture-phase error listener in `src/main.tsx`** that swaps any failed image to `/cakes/logo-cake.png` with a `data-bas-fallback-applied` guard so no infinite loop. Individual onError-সহ images-এও এটা safe (already-fallback logo-এ পৌঁছালে repeat হয় না)।
+- **D — Review image size cap missing:** `WriteReviewScreen.tsx`-এ image input-এ size validation ছিল না (Checkout/ProductScreen-এ ছিল)। Added 2MB cap + inline error message.
+
+### Touched files (in addition to v1 ZIP):
+- `src/main.tsx` (new global image-error fallback)
+- `src/lib/store.ts` (added `hydrateWalletFromFirestore` export)
+- `src/hooks/useAuth.ts` (fixed scoping; always upsert referral_codes; call hydrateWallet after login)
+- `src/screens/WriteReviewScreen.tsx` (2MB image cap + error state)
+
+### Verification:
+- Fresh clone → unzip v2 → `npm install` → `npx tsc --noEmit` = **0 errors**
+- `npm run build` = ✓ built
+- `grep` sweep confirmed no remaining TS errors, unused imports, or debug leftovers.
+
+### পরবর্তী Agent এর জন্য নোট:
+- Global image fallback in main.tsx uses capture-phase event listener — any component with its own onError still works (its onError fires first in bubble phase), but even if none is set, the global fallback catches it.
+- `hydrateWalletFromFirestore` uses `Math.max(local, server)` — safe but not perfect. If a user spends balance on device A (server updated) then opens device B (local stale higher balance), device B-এ higher local balance দেখাবে until next server-confirmed action. Future: add a `lastClientOp` timestamp to do LWW merge.
+- `public/sw.js` self-unregistering — keep it 2-3 months, then remove.
+
+---
+## Session: 2026-07-22, Deep Audit + Full Bug Fix (Phases P0–P4)
+**Agent/Tool:** Arena.ai Agent Mode — full security/rules/types/UX bug-bash (per BAS-FULL-BUG-REPORT.md)
+**Feature worked on:** Firestore rules hardening, TypeScript 30→0, hook guards, referral system fix, UX/polish
+
+### কী হয়েছে:
+- **Firestore rules (P0-Sec):** Added `profiles/{userId}/wallet/{docId}` owner R/W rule; added flat `referral_codes/{code}` collection for public code lookup; scoped `app_settings/referral_*` writes to signed-in users; hardened `orders.create` and `reviews.create` to `signedIn()` (guest order block, spam mitigation).
+- **Referral system (P0-Logic):** Replaced `profiles` collection-scan for referral lookup (which was denied by rules) with a single `getDoc(doc(db,'referral_codes',code))`; invalid codes now rejected outright (no more fake-code wallet credit); `useAuth.ts` now upserts `referral_codes/{code}` on signup and hydration.
+- **TypeScript (P0-Types):** 30 baseline errors → **0 errors**. Fixed all: removed unused PhoneFrame import; removed DebugOverlay/DebugMetrics dead components and stray `.patch` file; extended `Product` type with `sizes?`, `addons?`, `createdAt?`; cast WalletTx literals; removed unused `toDbOrderStatus`/`collection/getDocs/query/where`/`lastUpdated`/`locating/LocateError/handleLocate`; typed all `safeArray` usages (`<CartItem>`); removed `formatBDT` local duplicate in ChatBot (now uses utils); removed duplicate `isFirebaseConfigured` in utils; fixed `order.userId: null` → `undefined`.
+- **Hook Firebase guards (P0-Hooks):** Added `isFirebaseConfigured()` early-return + fallback in `useProducts`, `useBanners`, `useGallery`, `useReviews`, `useOrdersHook`; rewrote optimistic setters to use functional setState (fixes race condition). Replaced the antipattern `onSnapshot(... unsub() inside callback)` with a real `getDocs` one-shot fetch for `fetchOrders`/`fetchMyOrders`.
+- **Admin check (P1-Auth):** `App.tsx` now trusts `user.isAdmin` (from `profiles.is_admin` in Firestore) first; email allow-list kept only as bootstrap fallback.
+- **ProductCard (P1):** Quick-add price now includes `safeWeights[0].price` surcharge; image `onError` clears `onerror=null` before setting fallback (no more infinite loop).
+- **CheckoutScreen (P1):** Removed dead `locating/locateError/handleLocate` geolocation code; added payment-screenshot 2MB size cap; referral apply handler now validates against `/referral_codes/{code}` before marking applied (final check still runs at submit); added `onerror=null` guard pattern.
+- **ProductScreen (P1):** WhatsApp/Call buttons now hidden when `settings.whatsappNumber` contains placeholder 'X' or has fewer than 10 digits (dead link removed).
+- **CartScreen swipe (P2):** Replaced PointerEvents-based swipe-to-delete with native `touchstart/touchmove{passive:false}/touchend` listeners with axis-lock (like ProductScreen's proven pattern) — reliable on real mobile devices.
+- **ProfileScreen (P2):** Fixed `specialDates` notification effect — dep array now includes `specialDates`, and a `Set` ref guards against duplicate notifications per (date, year).
+- **OrdersScreen (P2):** Pending tab now shows live `placed/confirmed/baking/ready/out` orders (was returning empty array). Order ID format now uses full `Date.now() + '-' + 4-char-random` (no collision risk).
+- **Logout (P3):** `useAuthStore.logout` now also clears the cart so a guest/account-switch doesn't see previous user's cart.
+- **Order ID (P2):** Replaced collision-prone `slice(-6) + 3 chars` with full timestamp + dash + 4 random chars (`BAS1721...-AB12`).
+- **Cleanup:** Removed `ui-polish-070615.zip` stray file; removed dead `DebugOverlay.tsx`/`DebugMetrics.tsx`; removed `src/lib/firestoreMappers.ts.patch`.
+- **Docs:** Rewrote README completely to reflect Firebase (not Supabase) + Cloudflare Workers (not Vercel) stack, documented rules, scripts, env vars, caveats.
+
+### Touched files:
+- `firestore.rules` (wallet subcollection, referral_codes collection, referral scoped writes, signedIn requirements)
+- `src/types/index.ts` (Product: sizes/addons/createdAt)
+- `src/App.tsx` (PhoneFrame import removed; admin check)
+- `src/lib/store.ts` (userId null→undefined, WalletTx casts, orderId collision fix, formatBDT dedup, unused firestore imports removed, cart cleared on logout)
+- `src/lib/utils.ts` (duplicate isFirebaseConfigured removed)
+- `src/lib/firebase.ts` (no change needed beyond existing exports)
+- `src/lib/firestoreMappers.ts` (no functional change — existing fields now typed)
+- `src/hooks/useProducts.ts`, `src/hooks/useBanners.ts`, `src/hooks/useGallery.ts`, `src/hooks/useReviews.ts`, `src/hooks/useOrders.ts`, `src/hooks/useAuth.ts`
+- `src/components/ProductCard.tsx` (price + onerror fix)
+- `src/components/ChatBot.tsx` (formatBDT dedup)
+- `src/screens/CheckoutScreen.tsx` (dead code removed, screenshot cap, referral validation)
+- `src/screens/ProductScreen.tsx` (WA placeholder guard)
+- `src/screens/CartScreen.tsx` (native touch swipe, onerror guard)
+- `src/screens/OrdersScreen.tsx` (pending tab fix, typed safeArray)
+- `src/screens/TrackingScreen.tsx` (lastUpdated removed, typed safeArray)
+- `src/screens/ProfileScreen.tsx` (specialDates effect dep + ref guard)
+- `src/components/DebugOverlay.tsx`, `src/components/DebugMetrics.tsx` — deleted (dead)
+- `src/lib/firestoreMappers.ts.patch` — deleted (stray manual-note file)
+- `README.md` (complete rewrite)
+- `AGENT_LOG.md` (this entry)
+
+### Verification:
+- `npx tsc --noEmit`: **0 errors** (baseline was 30)
+- `npm run build`: ✓ built in ~5.5s (1.28 MB single-file HTML, ~355 KB gzip)
+- `grep` sweep confirmed: no PhoneFrame import, no dead locating vars, no Debug files, no .patch file, wallet+referral_codes rules present, onerror=null guards in both image fallbacks, formatBDT single source.
+
+### Commit:
+- Prepared ZIP `bas-full-fix-072226.zip`; commit/push pending user verification.
+
+### এখনো Pending (out of scope, owner decision):
+- **Gemini API key** is currently bundled client-side. Move to a Cloudflare Worker proxy or lock down via Google AI Studio domain restrictions — do NOT commit a secret key without that protection.
+- **Cloudinary unsigned preset** (`bas_upload`): add an unsigned preset upload signature, or at least restrict folder/referer in Cloudinary console.
+- **Guest checkout**: `orders.create` now requires `signedIn()`. If anonymous/guest checkout without Firebase Auth is required, enable Firebase Anonymous Auth and add a silent sign-in on app launch (before re-opening the rule).
+- **PhoneFrame.tsx** component file is still in `src/components/` (not imported anywhere) — left in place so it can be re-wired later without history churn; no bundle cost because it is never imported (tree-shaken).
+- **Cart swipe** has been rewritten to native touch listeners but still needs real-device testing before pushing to production (per protocol — flagged for manual QA).
+- **Firestore rules deploy**: After ZIP apply, run `firebase deploy --only firestore:rules` and test referral apply + wallet sync on a real device.
+
+### পরবর্তী Agent এর জন্য নোট:
+- `PhoneFrame.tsx`-কে re-wire করতে চাইলে `src/App.tsx`-এ wrap করো (safe layout for desktop preview); কিন্তু mobile-first PWA-তে দরকার নেই।
+- `viteSingleFile` plugin production-এ inline রাখা হয়েছে (CF Workers SPA-এর জন্য) — code-splitting চাইলে `process.env.SINGLE_FILE` guard দিয়ে conditional করো।
+- Referral flat collection (`referral_codes/{code}`) এখন source of truth — পুরনো `app_settings/referral_pending_*` keys এখনও work করবে (rules allow signed-in writes), কিন্তু validation এখন `/referral_codes`-এর উপর নির্ভর করে।
+- formatINR/formatBDT single source = `src/lib/utils.ts`; store.ts/ChatBot সব re-use করছে।
+- Do NOT remove `public/sw.js` — it self-unregisters old service workers from previous PWA attempts; leave it in place for a couple of months to avoid stale-SW issues for returning users.
+- Admin PIN default `1234` and email fallback `umuhammadiswa@gmail.com` still present — production-এ `admin_settings`-এ override করো (admin panel-এই set করা যায়)।
+
+---
 ## Session: 2026-07-21, Phase P5-1 + P5-2 + P5-3
 **Agent/Tool:** Arena.ai Agent Mode — ProductCard stock state + Wishlist unavailable state
 **Feature worked on:** Explicit inventory messaging and saved-product recovery

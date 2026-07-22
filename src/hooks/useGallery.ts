@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { collection, deleteDoc, doc, onSnapshot, orderBy, query, setDoc } from 'firebase/firestore';
-import { db, uploadToCloudinary } from '../lib/firebase';
+import { db, isFirebaseConfigured, uploadToCloudinary } from '../lib/firebase';
 import { safeArray } from '../lib/utils';
 import { mapGalleryDoc, sanitizeForFirestore } from '../lib/firestoreMappers';
 import type { GalleryItem } from '../types';
@@ -10,6 +10,11 @@ export function useGallery() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    if (!isFirebaseConfigured()) {
+      setGallery([]);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     const q = query(collection(db, 'gallery_items'), orderBy('created_at', 'desc'));
     const unsub = onSnapshot(q, (snap) => {
@@ -26,22 +31,29 @@ export function useGallery() {
   const fetchGallery = useCallback(async () => {}, []);
 
   const saveGalleryItem = useCallback(async (item: GalleryItem) => {
-    const updated = gallery.find((g) => g.id === item.id) ? gallery.map((g) => (g.id === item.id ? item : g)) : [item, ...gallery];
-    const validated = safeArray<GalleryItem>(updated, []);
-    setGallery(validated);
-    await setDoc(doc(db, 'gallery_items', item.id), sanitizeForFirestore(item), { merge: true });
-  }, [gallery]);
+    setGallery((prev) => {
+      const updated = (prev ?? []).find((g) => g.id === item.id)
+        ? (prev ?? []).map((g) => (g.id === item.id ? item : g))
+        : [item, ...(prev ?? [])];
+      return safeArray<GalleryItem>(updated, []);
+    });
+    if (!isFirebaseConfigured()) return;
+    try {
+      await setDoc(doc(db, 'gallery_items', item.id), sanitizeForFirestore(item), { merge: true });
+    } catch (e) {
+      console.error('Gallery save failed:', e);
+    }
+  }, []);
 
   const deleteGalleryItem = useCallback(async (id: string) => {
-    const updated = gallery.filter((g) => g.id !== id);
-    const validated = safeArray<GalleryItem>(updated, []);
-    setGallery(validated);
+    setGallery((prev) => safeArray<GalleryItem>((prev ?? []).filter((g) => g.id !== id), []));
+    if (!isFirebaseConfigured()) return;
     try {
       await deleteDoc(doc(db, 'gallery_items', id));
     } catch (e) {
       console.error('Gallery delete failed:', e);
     }
-  }, [gallery]);
+  }, []);
 
   const uploadGalleryImage = useCallback(async (file: File): Promise<string> => uploadToCloudinary(file, 'bake-art-style/gallery'), []);
 

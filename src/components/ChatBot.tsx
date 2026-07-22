@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Phone, Send, Cake, X, Camera, Loader2 } from 'lucide-react';
 import { useAuthStore, useOrders, useSettingsStore, useUI } from '../lib/store';
 import { useProducts } from '../hooks/useProducts';
-import { waLink } from '../lib/utils';
+import { waLink, formatBDT } from '../lib/utils';
 import { uploadToCloudinary } from '../lib/firebase';
 
 interface Message {
@@ -21,7 +21,6 @@ const QUICK_REPLIES = [
   { q: 'মানুষের সাথে কথা বলতে চাই', label: 'সাপোর্ট' },
 ];
 
-const formatBDT = (n: number) => `৳${n.toLocaleString('en-BD')}`;
 const chatHistoryKey = (userId?: string, orderId?: string | null) =>
   orderId ? `bakeart-chat-order-${orderId}` : `bakeart-chat-history-${userId || 'guest'}`;
 

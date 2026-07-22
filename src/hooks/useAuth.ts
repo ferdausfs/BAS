@@ -17,8 +17,8 @@ import {
   type User as FirebaseUser,
 } from 'firebase/auth';
 import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
-import { auth, db } from '../lib/firebase';
-import { claimReferralRewards, getReferralCode, useAuthStore, useLocation, useUI } from '../lib/store';
+import { auth, db, isFirebaseConfigured } from '../lib/firebase';
+import { claimReferralRewards, getReferralCode, hydrateWalletFromFirestore, useAuthStore, useLocation, useUI } from '../lib/store';
 import type { User } from '../types';
 
 type ProfileDoc = {
@@ -49,19 +49,22 @@ const mapFirebaseUser = async (authUser: FirebaseUser): Promise<User> => {
   const fallbackAvatar = authUser.photoURL || '';
 
   let profile: ProfileDoc | null = null;
+  const profileEmail = authUser.email || '';
+  // Compute refCode outside the try so it's visible below (catch may leave profile null).
+  const refCode = getReferralCode({ email: profileEmail, id: authUser.uid });
   try {
     const snap = await getDoc(profileRef(authUser.uid));
     profile = snap.exists() ? (snap.data() as ProfileDoc) : null;
 
-    const profileEmail = authUser.email || profile?.email || '';
-    const refCode = getReferralCode({ email: profileEmail, id: authUser.uid });
+    const existingEmail = profile?.email || '';
+    const effectiveEmail = authUser.email || existingEmail;
 
-    if (!profile || profile.email !== (authUser.email || '')) {
+    if (!profile || (authUser.email && profile.email !== authUser.email)) {
       const nextProfile: ProfileDoc = {
         id: authUser.uid,
         name: profile?.name || fallbackName,
         contact: profile?.contact || '',
-        email: profileEmail,
+        email: effectiveEmail,
         is_admin: profile?.is_admin || false,
         district: profile?.district || null,
         gps_lat: profile?.gps_lat ?? null,
@@ -81,6 +84,20 @@ const mapFirebaseUser = async (authUser: FirebaseUser): Promise<User> => {
     }
   } catch (error) {
     console.warn('Profile fetch failed during auth hydration:', error);
+  }
+
+  // Always (idempotently) publish our code to the flat referral_codes lookup
+  // collection — both new and returning users, both initial signup and every
+  // subsequent login. The rule allows owner writes to own doc, so this is safe.
+  const finalRefCode = profile?.referral_code || refCode;
+  const finalName = profile?.name || fallbackName;
+  if (isFirebaseConfigured() && finalRefCode) {
+    setDoc(doc(db, 'referral_codes', finalRefCode), {
+      code: finalRefCode,
+      uid: authUser.uid,
+      name: finalName,
+      updated_at: new Date().toISOString(),
+    }, { merge: true }).catch((e) => console.warn('referral_codes upsert failed:', e));
   }
 
   const nextUser: User = {
@@ -140,11 +157,16 @@ export function useAuth() {
         if (active) {
           login(hydrated);
 
-          // Auto-claim referral rewards after login, even if ProfileScreen is not opened.
+          // Hydrate wallet balance from Firestore (cross-device sync), then
+          // auto-claim any pending referral rewards (which credit the wallet).
+          if (hydrated.id) await hydrateWalletFromFirestore(hydrated.id);
+
           const myCode = getReferralCode(hydrated);
           if (myCode) {
             const claimed = await claimReferralRewards(myCode);
             if (claimed > 0) {
+              // Sync the newly-claimed balance back up.
+              if (hydrated.id) await hydrateWalletFromFirestore(hydrated.id);
               useUI.getState().addNotification(
                 '🎉 Referral reward!',
                 `৳${claimed * 100} wallet-এ যোগ হয়েছে`
@@ -178,6 +200,14 @@ export function useAuth() {
         created_at: serverTimestamp(),
         updated_at: serverTimestamp(),
       }, { merge: true });
+      if (refCode && isFirebaseConfigured()) {
+        void setDoc(doc(db, 'referral_codes', refCode), {
+          code: refCode,
+          uid: cred.user.uid,
+          name,
+          updated_at: new Date().toISOString(),
+        }, { merge: true });
+      }
       login(await mapFirebaseUser(cred.user));
       return { needsEmailConfirmation: false };
     } finally {

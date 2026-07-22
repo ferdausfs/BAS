@@ -35,13 +35,14 @@ export default function ProductCard({ product, wished, onOpen, onWish, variant =
   const handleAdd = (event: React.MouseEvent) => {
     event.stopPropagation();
     event.preventDefault();
+    const firstWeight = safeWeights[0] ?? { size: '1 lb', price: 0 };
     add({
       productId: product.id,
       name: product.name,
       image: product.image,
-      size: safeWeights[0]?.size ?? '1 lb',
+      size: firstWeight.size,
       flavor: safeFlavors[0] ?? 'Chocolate',
-      price: product.price,
+      price: product.price + (firstWeight.price ?? 0),
       quantity: 1,
     });
     setAdded(true);
@@ -62,7 +63,9 @@ export default function ProductCard({ product, wished, onOpen, onWish, variant =
         decoding="async"
         onLoad={() => setImageLoaded(true)}
         onError={(event) => {
-          (event.target as HTMLImageElement).src = '/cakes/logo-cake.png';
+          const img = event.currentTarget as HTMLImageElement;
+          img.onerror = null;
+          img.src = '/cakes/logo-cake.png';
           setImageLoaded(true);
         }}
         className={`absolute inset-0 h-full w-full object-cover transition-all duration-500 ${imageLoaded ? 'opacity-100' : 'opacity-0'} group-hover:scale-[1.04]`}

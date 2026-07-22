@@ -1,9 +1,10 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { CartItem, Order } from '../types';
-import { collection, doc, getDoc, getDocs, onSnapshot, query, setDoc, where } from 'firebase/firestore';
+import { doc, getDoc, onSnapshot, setDoc } from 'firebase/firestore';
 import { db, isFirebaseConfigured } from './firebase';
-import { sanitizeForFirestore, orderToDoc, toDbOrderStatus } from './firestoreMappers';
+import { sanitizeForFirestore, orderToDoc } from './firestoreMappers';
+import { formatBDT as _formatBDT } from './utils';
 
 
 
@@ -248,8 +249,8 @@ export const useOrders = create<OrderState>((set) => ({
 
         const o: Order = {
           ...data,
-          id: 'BAS' + Date.now().toString().slice(-6) + Math.random().toString(36).slice(2, 5).toUpperCase(),
-          userId: user?.id && !user.id.startsWith('local-') ? user.id : null,
+          id: 'BAS' + Date.now().toString() + '-' + Math.random().toString(36).slice(2, 6).toUpperCase(),
+          userId: user?.id && !user.id.startsWith('local-') ? user.id : undefined,
           createdAt: Date.now(),
           status: 'placed',
           loyaltyPointsRedeemed: pendingRedeem > 0 ? pendingRedeem : undefined,
@@ -331,9 +332,9 @@ export const useUser = create<UserState>()(
   )
 );
 
-export const formatBDT = (n: number) => `৳${n.toLocaleString('en-BD')}`;
-// Backward-compatible alias: existing components still import formatINR.
-export const formatINR = formatBDT;
+// Single source of truth lives in utils.ts; re-export for backward-compat.
+export const formatBDT = _formatBDT;
+export const formatINR = _formatBDT;
 
 // Selectors / helpers
 export const cartSubtotal = (items: CartItem[]) =>
@@ -363,6 +364,8 @@ export const useAuthStore = create<AuthState>()(
       logout: () => {
         set({ user: null });
         useLocation.getState().clearLocation();
+        // Clear ephemeral guest state so the next account starts clean.
+        useCart.getState().clear();
       },
     }),
     { name: 'bakeart-auth' }
@@ -564,6 +567,30 @@ const syncWalletToFirestore = async (uid: string, balance: number, totalEarned: 
   ).catch(e => console.warn('Wallet sync failed:', e));
 };
 
+// Hydrate wallet from Firestore on login. Called from useAuth after user is mapped.
+// Merges server balance with local txn history (we keep the higher balance since
+// local may have pending rewards not yet synced up).
+export const hydrateWalletFromFirestore = async (uid: string): Promise<void> => {
+  if (!isFirebaseConfigured() || !uid) return;
+  try {
+    const snap = await getDoc(doc(db, 'profiles', uid, 'wallet', 'balance'));
+    if (!snap.exists()) return;
+    const data = snap.data() as { balance?: number; totalEarned?: number };
+    const serverBalance = Number(data.balance ?? 0);
+    const serverTotal = Number(data.totalEarned ?? 0);
+    if (serverBalance <= 0 && serverTotal <= 0) return;
+    const cur = useWallet.getState();
+    // Use max(local, server) to avoid losing rewards earned offline.
+    const nextBalance = Math.max(cur.balance, serverBalance);
+    const nextTotal = Math.max(cur.totalEarned, serverTotal);
+    if (nextBalance !== cur.balance || nextTotal !== cur.totalEarned) {
+      useWallet.setState({ balance: nextBalance, totalEarned: nextTotal });
+    }
+  } catch (e) {
+    console.warn('Wallet hydrate failed:', e);
+  }
+};
+
 type WalletState = {
   balance: number;                                    // ৳ balance (confirmed only)
   totalEarned: number;                                // lifetime ৳ earned
@@ -669,7 +696,7 @@ export const useWallet = create<WalletState>()(
             balance: s.balance + amount,
             txns: [{
               id: `wtx-${Date.now()}`,
-              type: 'refund',
+              type: 'refund' as WalletTxType,
               amount,
               orderId,
               date: Date.now(),
@@ -695,17 +722,18 @@ export const useWallet = create<WalletState>()(
         }
 
         set(s => {
+          const txnType: WalletTxType = role === 'referrer' ? 'referral_earn' : 'referral_bonus';
           const next = {
             balance: s.balance + amount,
             totalEarned: s.totalEarned + amount,
             txns: [{
               id: `wtx-${Date.now()}`,
-              type: role === 'referrer' ? 'referral_earn' : 'referral_bonus',
+              type: txnType,
               amount,
               refCode,
               date: Date.now(),
               note,
-            }, ...s.txns],
+            } as WalletTx, ...s.txns],
           };
           const uid = useAuthStore.getState().user?.id;
           if (uid) void syncWalletToFirestore(uid, next.balance, next.totalEarned);
@@ -721,12 +749,12 @@ export const useWallet = create<WalletState>()(
             balance: Math.max(0, s.balance - capped),
             txns: [{
               id: `wtx-${Date.now()}`,
-              type: 'redeem',
+              type: 'redeem' as WalletTxType,
               amount: -capped,
               orderId,
               date: Date.now(),
               note: `Redeemed for order #${orderId}`,
-            }, ...s.txns],
+            } as WalletTx, ...s.txns],
           };
           const uid = useAuthStore.getState().user?.id;
           if (uid) void syncWalletToFirestore(uid, next.balance, s.totalEarned);
@@ -838,19 +866,27 @@ export const applyReferralCode = async (
     return { success: false, message: 'নিজের code ব্যবহার করা যাবে না' };
   }
 
-  // Check whether a profile owns this referral code.
+  // Validate referral-code ownership via the flat /referral_codes/{code}
+  // collection (public read, owner/admin write per firestore.rules).
+  let codeOwnerId: string | null = null;
   try {
-    const profilesSnap = await getDocs(
-      query(collection(db, 'profiles'), where('referral_code', '==', normalizedCode))
-    );
-
-    if (profilesSnap.empty) {
-      // Fallback: derived code check (existing users may not have referral_code field).
-      // Accept if format valid and not own code, but log for diagnostics.
-      console.warn('Referral code owner not found in profiles:', normalizedCode);
+    const codeSnap = await getDoc(doc(db, 'referral_codes', normalizedCode));
+    if (codeSnap.exists()) {
+      const data = codeSnap.data() as { uid?: string; code?: string };
+      codeOwnerId = typeof data?.uid === 'string' ? data.uid : null;
     }
   } catch (e) {
-    console.warn('Referral owner lookup failed:', e);
+    console.warn('Referral code lookup failed:', e);
+  }
+
+  // Reject unknown codes outright (no more fallback accept = no fake-code wallet credit).
+  if (!codeOwnerId) {
+    return { success: false, message: 'এই referral code টি বৈধ নয়' };
+  }
+  // Buyer cannot use the referrer's own code on the referrer's account (already
+  // covered by own-code check above, but double-guard).
+  if (codeOwnerId === buyerUserId) {
+    return { success: false, message: 'নিজের code ব্যবহার করা যাবে না' };
   }
 
   try {

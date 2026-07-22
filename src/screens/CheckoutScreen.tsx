@@ -13,7 +13,7 @@ import {
   WALLET_MIN_ORDER_TO_REDEEM,
   applyReferralCode,
 } from '../lib/store';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db, isFirebaseConfigured, uploadToCloudinary } from '../lib/firebase';
 import { safeArray, isValidPhone, copyText, ls } from '../lib/utils';
 import { LocationGate } from '../components/LocationGate';
@@ -112,12 +112,31 @@ export default function CheckoutScreen({ onBack }: Props) {
       return;
     }
 
-    // Buyer max 3 uses is enforced when the order is submitted with an order ID.
-    // Show the existing loading state while marking this code for checkout.
+    // Early validation: confirm the code exists in /referral_codes before marking
+    // it applied. Final 3-use limit + wallet credit still happen on order submit.
     setReferralLoading(true);
+    setReferralError('');
     try {
+      if (isFirebaseConfigured()) {
+        const snap = await getDoc(doc(db, 'referral_codes', code));
+        if (!snap.exists()) {
+          setReferralError('এই referral code টি বৈধ নয়');
+          setReferralApplied(false);
+          return;
+        }
+        const ownerUid = (snap.data() as { uid?: string })?.uid;
+        if (ownerUid && ownerUid === user.id) {
+          setReferralError('নিজের code ব্যবহার করা যাবে না');
+          setReferralApplied(false);
+          return;
+        }
+      }
       setReferralApplied(true);
-      setReferralError('');
+    } catch (e) {
+      console.warn('Referral validation failed:', e);
+      // Offline / transient failure — allow optimistic mark; final server check
+      // at submit will still reject invalid codes.
+      setReferralApplied(true);
     } finally {
       setReferralLoading(false);
     }
@@ -135,8 +154,6 @@ export default function CheckoutScreen({ onBack }: Props) {
 
 
   const [showLocationGate, setShowLocationGate] = useState(false);
-  const [locating, setLocating] = useState(false);
-  const [locateError, setLocateError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [paymentScreenshotFile, setPaymentScreenshotFile] = useState<File | null>(null);
@@ -323,51 +340,6 @@ export default function CheckoutScreen({ onBack }: Props) {
   const [showExtras, setShowExtras] = useState(false);
   const extrasAlreadyApplied = pendingLoyaltyRedeem > 0 || promoDiscount > 0 || referralApplied;
   const extrasOpen = showExtras || extrasAlreadyApplied;
-
-  const handleLocate = async () => {
-    setLocating(true);
-    setLocateError('');
-    try {
-      if (!navigator.geolocation) {
-        throw new Error('জিপিএস সমর্থিত নয়');
-      }
-      const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 10000 });
-      });
-      const { latitude: lat, longitude: lng } = pos.coords;
-      const r = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`);
-      if (!r.ok) {
-        throw new Error('সার্ভার থেকে এড্রেস পাওয়া যায়নি');
-      }
-      const data = await r.json();
-      const city =
-        data.address?.city ||
-        data.address?.town ||
-        data.address?.district ||
-        data.address?.county ||
-        data.address?.state_district ||
-        '';
-      const addressText = data.display_name || city || '';
-
-      setForm((prev) => {
-        const next = { ...prev };
-        next.address = addressText;
-        const detectedCity = (city || addressText).toLowerCase();
-        const matchedDistrict = BD_DISTRICTS.find(
-          (d) => detectedCity.includes(d.toLowerCase()) || addressText.toLowerCase().includes(d.toLowerCase())
-        );
-        if (matchedDistrict) {
-          next.district = matchedDistrict;
-        }
-        return next;
-      });
-    } catch (e: any) {
-      console.warn('Geolocation failed:', e);
-      setLocateError('লোকেশন শনাক্ত করা যায়নি, অনুগ্রহ করে ম্যানুয়ালি লিখুন।');
-    } finally {
-      setLocating(false);
-    }
-  };
 
   const uploadPaymentScreenshot = async (): Promise<string | undefined> => {
     if (!paymentScreenshotFile) return undefined;
@@ -1198,6 +1170,11 @@ export default function CheckoutScreen({ onBack }: Props) {
                   onChange={(e) => {
                     const file = e.target.files?.[0];
                     if (!file) return;
+                    if (file.size > 2 * 1024 * 1024) {
+                      setSubmitError('Screenshot size 2MB-এর বেশি হতে পারবে না। ছবি compress করে আবার চেষ্টা করুন।');
+                      e.target.value = '';
+                      return;
+                    }
                     setPaymentScreenshotFile(file);
                     setPaymentScreenshotPreview(URL.createObjectURL(file));
                     setSubmitError('');

@@ -23,7 +23,6 @@ export default function TrackingScreen() {
   const [match, setMatch] = useState<Order | null>(null);
   const { orders, loading, fetchMyOrders } = useOrdersHook();
   const user = useAuthStore((s) => s.user);
-  const [lastUpdated] = useState<number>(Date.now());
   const { settings } = useSettingsStore();
 
   useEffect(() => {
@@ -122,7 +121,7 @@ export default function TrackingScreen() {
             </div>
 
             <div className="space-y-2.5 px-4 py-3.5">
-              {safeArray(match.items).slice(0, 3).map((it, i) => (
+              {safeArray<import('../types').CartItem>(match.items).slice(0, 3).map((it, i) => (
                 <div key={i} className="flex items-center gap-4">
                   <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-xl bg-bg ring-1 ring-border">
                     <img src={it.image} alt="" className="h-full w-full object-cover" />
@@ -158,7 +157,7 @@ export default function TrackingScreen() {
                   <div className="flex gap-2 mt-2">
                     <button
                       onClick={() => {
-                        safeArray(match.items).forEach((item) => useCart.getState().add({ ...item }));
+                        safeArray<import('../types').CartItem>(match.items).forEach((item) => useCart.getState().add({ ...item }));
                         go({ name: 'cart' });
                       }}
                       className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-xl bg-error text-[12px] font-bold text-white"

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import {
   Heart, MapPin, CreditCard, Bell, HelpCircle, Settings, LogOut,
   ChevronRight, ArrowLeft, KeyRound, Trash2, Sun, Headphones, MessageCircle, Globe2,
@@ -161,6 +161,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
   const [profileLocateError, setProfileLocateError] = useState('');
 
   const [specialDates, setSpecialDates] = useState<SpecialDate[]>(() => loadSpecialDates(user?.id));
+  const specialDatesNotifiedRef = useRef<Set<string>>(new Set());
   const [showDatesModal, setShowDatesModal] = useState(false);
   const [dateForm, setDateForm] = useState({ type: 'birthday' as SpecialDate['type'], name: '', date: '' });
 
@@ -222,7 +223,9 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
       const [month, day] = d.date.split('-').map(Number);
       const eventDate = new Date(currentYear, month - 1, day);
       const diffDays = Math.ceil((eventDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-      if (diffDays >= 0 && diffDays <= 7 && d.notifiedYear !== currentYear) {
+      const notifyKey = `${d.id}-${currentYear}`;
+      if (diffDays >= 0 && diffDays <= 7 && d.notifiedYear !== currentYear && !specialDatesNotifiedRef.current.has(notifyKey)) {
+        specialDatesNotifiedRef.current.add(notifyKey);
         useUI.getState().addNotification(
           `${d.name} in ${diffDays === 0 ? 'today!' : `${diffDays} day${diffDays > 1 ? 's' : ''}!`}`,
           `Order a special cake now to celebrate!`
@@ -232,7 +235,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
       }
     });
     if (changed) setSpecialDates(updated);
-  }, [user?.id]); // eslint-disable-line
+  }, [user?.id, specialDates]);
 
 
   const handleSaveCustomer = useCallback(async () => {

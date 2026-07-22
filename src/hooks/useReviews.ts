@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { addDoc, collection, deleteDoc, doc, onSnapshot, query, setDoc, where } from 'firebase/firestore';
-import { db, uploadToCloudinary } from '../lib/firebase';
+import { db, isFirebaseConfigured, uploadToCloudinary } from '../lib/firebase';
 import { ls, safeArray } from '../lib/utils';
 import { mapReviewDoc, sanitizeForFirestore } from '../lib/firestoreMappers';
 import type { Review } from '../types';
@@ -16,21 +16,30 @@ function sanitizeReviews(arr: unknown): Review[] {
   });
 }
 
-const visibleForProduct = (all: Review[], productId?: string) => productId ? all.filter((r) => r.product_id === productId && r.approved) : all;
+const visibleForProduct = (all: Review[], productId?: string) =>
+  productId ? all.filter((r) => r.product_id === productId && r.approved) : all;
 
 export function useReviews(productId?: string) {
-  const [reviews, setReviews] = useState<Review[]>(() => visibleForProduct(sanitizeReviews(ls.get(LS_KEY, [])), productId));
+  const [reviews, setReviews] = useState<Review[]>(() =>
+    visibleForProduct(sanitizeReviews(ls.get(LS_KEY, [])), productId)
+  );
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    if (!isFirebaseConfigured()) {
+      const all = sanitizeReviews(ls.get(LS_KEY, []));
+      setReviews(visibleForProduct(all, productId));
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     const constraints: any[] = [];
     if (productId) constraints.push(where('approved', '==', true), where('product_id', '==', productId));
     const q = query(collection(db, 'reviews'), ...constraints);
     const unsub = onSnapshot(q, (snap) => {
+      const fetched = snap.docs.map((d) => mapReviewDoc(d.id, d.data()));
       const validated = sanitizeReviews(
-        snap.docs.map((d) => mapReviewDoc(d.id, d.data()))
-          .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+        fetched.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
       );
       if (!productId) ls.set(LS_KEY, validated);
       setReviews(productId ? validated.filter((r) => r.approved) : validated);
@@ -49,26 +58,35 @@ export function useReviews(productId?: string) {
     setReviews(visibleForProduct(all, pid ?? productId));
   }, [productId]);
 
-  // Reviews are now auto-approved - set approved: true by default
+  // Reviews are auto-approved.
   const saveReview = useCallback(async (review: Review) => {
-    // Ensure review is auto-approved
     const approvedReview: Review = { ...review, approved: true };
-    const all = sanitizeReviews(ls.get(LS_KEY, []));
-    const updated = sanitizeReviews([approvedReview, ...all]);
-    ls.set(LS_KEY, updated);
-    setReviews(visibleForProduct(updated, productId));
-    await setDoc(doc(db, 'reviews', review.id), sanitizeForFirestore({ ...review, approved: true }), { merge: true }).catch(async () => {
-      await addDoc(collection(db, 'reviews'), sanitizeForFirestore({ ...review, approved: true }));
+    setReviews(() => {
+      const all = sanitizeReviews(ls.get(LS_KEY, []));
+      const updated = sanitizeReviews([approvedReview, ...all]);
+      ls.set(LS_KEY, updated);
+      return visibleForProduct(updated, productId);
     });
+    if (!isFirebaseConfigured()) return;
+    try {
+      await setDoc(doc(db, 'reviews', review.id), sanitizeForFirestore({ ...review, approved: true }), { merge: true });
+    } catch {
+      try {
+        await addDoc(collection(db, 'reviews'), sanitizeForFirestore({ ...review, approved: true }));
+      } catch (e) {
+        console.error('Review save failed:', e);
+      }
+    }
   }, [productId]);
 
-  // Approve function kept for compatibility but reviews are auto-approved now
-  // Admin can still use this for manual override if needed
   const approveReview = useCallback(async (id: string, approved: boolean) => {
-    const all = sanitizeReviews(ls.get(LS_KEY, []));
-    const updated = sanitizeReviews(all.map((r) => (r.id === id ? { ...r, approved } : r)));
-    ls.set(LS_KEY, updated);
-    setReviews(visibleForProduct(updated, productId));
+    setReviews(() => {
+      const all = sanitizeReviews(ls.get(LS_KEY, []));
+      const updated = sanitizeReviews(all.map((r) => (r.id === id ? { ...r, approved } : r)));
+      ls.set(LS_KEY, updated);
+      return visibleForProduct(updated, productId);
+    });
+    if (!isFirebaseConfigured()) return;
     try {
       await setDoc(doc(db, 'reviews', id), { approved }, { merge: true });
     } catch (e) {
@@ -77,10 +95,13 @@ export function useReviews(productId?: string) {
   }, [productId]);
 
   const deleteReview = useCallback(async (id: string) => {
-    const all = sanitizeReviews(ls.get(LS_KEY, []));
-    const updated = sanitizeReviews(all.filter((r) => r.id !== id));
-    ls.set(LS_KEY, updated);
-    setReviews(visibleForProduct(updated, productId));
+    setReviews(() => {
+      const all = sanitizeReviews(ls.get(LS_KEY, []));
+      const updated = sanitizeReviews(all.filter((r) => r.id !== id));
+      ls.set(LS_KEY, updated);
+      return visibleForProduct(updated, productId);
+    });
+    if (!isFirebaseConfigured()) return;
     try {
       await deleteDoc(doc(db, 'reviews', id));
     } catch (e) {
@@ -88,10 +109,15 @@ export function useReviews(productId?: string) {
     }
   }, [productId]);
 
-  const uploadReviewImage = useCallback(async (file: File): Promise<string> => uploadToCloudinary(file, 'bake-art-style/reviews'), []);
+  const uploadReviewImage = useCallback(
+    async (file: File): Promise<string> => uploadToCloudinary(file, 'bake-art-style/reviews'),
+    []
+  );
 
-  const validReviews = safeArray(reviews).filter((r) => r && typeof r.rating === 'number');
-  const avgRating = validReviews.length ? validReviews.reduce((sum, review) => sum + review.rating, 0) / validReviews.length : 0;
+  const validReviews = safeArray(reviews).filter((r): r is Review => !!r && typeof (r as Review).rating === 'number');
+  const avgRating = validReviews.length
+    ? validReviews.reduce((sum, review) => sum + review.rating, 0) / validReviews.length
+    : 0;
 
   return { reviews: safeArray(reviews), loading, fetchReviews, saveReview, approveReview, deleteReview, uploadReviewImage, avgRating };
 }

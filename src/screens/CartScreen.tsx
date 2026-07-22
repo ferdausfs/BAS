@@ -317,33 +317,50 @@ function CartItemRow({
   const openRef = useRef(open);
   openRef.current = open;
   
-  const drag = useRef({ dragging: false, startX: 0, baseX: 0, pointerId: -1 });
+  const touchStartX = useRef(0);
+  const touchStartY = useRef(0);
+  const dragging = useRef(false);
+  const lockedAxis = useRef<'none' | 'x' | 'y'>('none');
+  const baseX = useRef(0);
 
-  // Native Pointer Events + touch-action:'pan-y'
+  // Native touch listeners (reliable on real mobile devices; pointer events
+  // with touchAction:pan-y can still let vertical scroll win before preventDefault).
   useEffect(() => {
     const el = cardRef.current;
     if (!el) return;
 
-    const onPointerDown = (e: PointerEvent) => {
+    const onStart = (e: TouchEvent) => {
       if ((e.target as HTMLElement).closest('button')) return;
-      if (e.pointerType === 'mouse' && e.button !== 0) return;
-      drag.current.dragging = true;
-      drag.current.startX = e.clientX;
-      drag.current.baseX = openRef.current ? -SWIPE_MAX : 0;
-      drag.current.pointerId = e.pointerId;
-      el.setPointerCapture(e.pointerId);
+      const t = e.touches[0];
+      dragging.current = true;
+      lockedAxis.current = 'none';
+      touchStartX.current = t.clientX;
+      touchStartY.current = t.clientY;
+      baseX.current = openRef.current ? -SWIPE_MAX : 0;
     };
 
-    const onPointerMove = (e: PointerEvent) => {
-      if (!drag.current.dragging || e.pointerId !== drag.current.pointerId) return;
-      const dx = e.clientX - drag.current.startX;
-      const x = Math.max(-SWIPE_MAX, Math.min(0, drag.current.baseX + dx));
-      setTranslateX(x);
+    const onMove = (e: TouchEvent) => {
+      if (!dragging.current) return;
+      const t = e.touches[0];
+      const dx = t.clientX - touchStartX.current;
+      const dy = t.clientY - touchStartY.current;
+
+      if (lockedAxis.current === 'none') {
+        if (Math.abs(dx) > 8 || Math.abs(dy) > 8) {
+          lockedAxis.current = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
+        }
+      }
+
+      if (lockedAxis.current === 'x') {
+        e.preventDefault();
+        const x = Math.max(-SWIPE_MAX, Math.min(0, baseX.current + dx));
+        setTranslateX(x);
+      }
     };
 
-    const endDrag = (e: PointerEvent) => {
-      if (!drag.current.dragging || e.pointerId !== drag.current.pointerId) return;
-      drag.current.dragging = false;
+    const endDrag = () => {
+      if (!dragging.current) return;
+      dragging.current = false;
       setTranslateX((current) => {
         const nextOpen = current < -SWIPE_MAX / 2;
         setOpen(nextOpen);
@@ -351,16 +368,16 @@ function CartItemRow({
       });
     };
 
-    el.addEventListener('pointerdown', onPointerDown);
-    el.addEventListener('pointermove', onPointerMove);
-    el.addEventListener('pointerup', endDrag);
-    el.addEventListener('pointercancel', endDrag);
+    el.addEventListener('touchstart', onStart, { passive: true });
+    el.addEventListener('touchmove', onMove, { passive: false });
+    el.addEventListener('touchend', endDrag, { passive: true });
+    el.addEventListener('touchcancel', endDrag, { passive: true });
 
     return () => {
-      el.removeEventListener('pointerdown', onPointerDown);
-      el.removeEventListener('pointermove', onPointerMove);
-      el.removeEventListener('pointerup', endDrag);
-      el.removeEventListener('pointercancel', endDrag);
+      el.removeEventListener('touchstart', onStart);
+      el.removeEventListener('touchmove', onMove);
+      el.removeEventListener('touchend', endDrag);
+      el.removeEventListener('touchcancel', endDrag);
     };
   }, []);
 
@@ -382,7 +399,7 @@ function CartItemRow({
         ref={cardRef}
         style={{
           transform: `translateX(${translateX}px)`,
-          transition: drag.current.dragging ? 'none' : 'transform .25s ease',
+          transition: dragging.current ? 'none' : 'transform .25s ease',
           touchAction: 'pan-y',
         }}
         className="relative flex cursor-grab gap-4 rounded-2xl border border-border bg-surface p-3.5 shadow-card"
@@ -394,7 +411,9 @@ function CartItemRow({
               decoding="async"
               src={item.image || '/cakes/logo-cake.png'}
               onError={(e) => {
-                (e.target as HTMLImageElement).src = '/cakes/logo-cake.png';
+                const img = e.currentTarget as HTMLImageElement;
+                img.onerror = null;
+                img.src = '/cakes/logo-cake.png';
               }}
               alt=""
               className="h-full w-full object-cover"

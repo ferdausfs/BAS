@@ -46,16 +46,18 @@ export default function OrdersScreen() {
     });
   };
 
-  const tabbedOrders = activeTab === 'pending'
-    ? []
-    : safeArray<Order>(orders)
+  const ACTIVE_ORDER_STATUSES: Order['status'][] = ['placed', 'confirmed', 'baking', 'ready', 'out'];
+  const tabbedOrders = safeArray<Order>(orders)
     .filter(Boolean)
-    .filter((o) => categorize(o.status) === activeTab)
+    .filter((o) => {
+      if (activeTab === 'pending') return ACTIVE_ORDER_STATUSES.includes(o.status);
+      return categorize(o.status) === activeTab;
+    })
     .filter((o) => {
       const q = query.trim().toLowerCase();
       if (!q) return true;
       if (o.id.toLowerCase().includes(q)) return true;
-      return safeArray(o.items).some((it: any) => it.name?.toLowerCase().includes(q));
+      return safeArray<import('../types').CartItem>(o.items).some((it) => it.name?.toLowerCase().includes(q));
     });
 
   return (
@@ -180,7 +182,7 @@ export default function OrdersScreen() {
               const currentIdx = STATUSES.findIndex((s) => s.key === o.status);
               const isDelivered = o.status === 'delivered';
               const isCancelled = o.status === 'cancelled';
-              const items = safeArray(o.items);
+              const items = safeArray<import('../types').CartItem>(o.items);
               const isExpanded = expanded.has(o.id);
               const visibleItems = isExpanded ? items : items.slice(0, 2);
               const progressPct = STATUSES.length > 1 ? (Math.max(currentIdx, 0) / (STATUSES.length - 1)) * 100 : 0;
@@ -327,7 +329,7 @@ export default function OrdersScreen() {
                         </button>
                         <button
                           onClick={() => {
-                            const safeItems = safeArray(o.items);
+                            const safeItems = safeArray<import('../types').CartItem>(o.items);
                             safeItems.forEach((item) => useCart.getState().add({ ...item }));
                             useUI.getState().addNotification(
                               'Added to cart!',
