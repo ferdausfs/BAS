@@ -1,3 +1,23 @@
+## Session: 2026-07-23, Banner — full-bleed image redesign
+**Feature:** "Exclusive Offers" banner এখন full image fills card (আগে text left-এ + 96×96 thumbnail right-এ choto image chhilo)
+**Touched:** `src/screens/HomeScreen.tsx`
+
+### কী change:
+- Height fixed `h-[180px]`, radius `rounded-[24px]` (same as card convention), `shadow-card`
+- Image `absolute inset-0 h-full w-full object-cover` → পুরো banner fill করবে
+- Active slide-এ image subtle 1.06× Ken-Burns zoom (5s ease-out)
+- Dark gradient overlays (bottom + left) so white text readable থাকে
+- Text left-aligned, white, text-shadow: tag pill (white bg, pink text, uppercase, bold), title 22px bold, subtitle 12px white/85
+- CTA button: pill pink bg (`bg-primary`), `shadow-btn`, hover lift + primary-hover — আগের pink outlined ছিল, এখন proper pink CTA
+- Image `onerror` fallback → /cakes/logo-cake.png
+- Prev/Next arrow + dot indicators unchanged (md+ screen-এ)
+
+### Verification:
+- `npx tsc --noEmit` = 0 errors
+- `npm run build` = ✓ built
+
+---
+
 ## Session: 2026-07-23, Product Card — Uiverse-inspired hover polish (v4)
 **Agent/Tool:** Arena.ai Agent Mode — UI polish pass per Buddy's Uiverse snippet reference
 **Feature worked on:** ProductCard micro-interactions (existing tfmoni on-photo layout kept 100%)

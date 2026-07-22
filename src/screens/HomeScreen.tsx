@@ -178,7 +178,7 @@ export default function HomeScreen({
               action={{ label: 'See all', onClick: () => go({ name: 'tabs', tab: 'categories' }) }}
             />
             <div className="mt-4 px-6">
-              <div className="relative overflow-hidden rounded-[18px]">
+              <div className="relative h-[180px] overflow-hidden rounded-[24px] shadow-card">
                 {activeBanners.map((banner, index) => (
                   <div
                     key={banner.id}
@@ -187,18 +187,29 @@ export default function HomeScreen({
                       else if (banner.link === 'customize') go({ name: 'customize' });
                       else if (banner.link === 'categories') go({ name: 'tabs', tab: 'categories' });
                     }}
-                    className={`flex cursor-pointer items-center gap-3 bg-secondary py-[21px] pl-[21px] pr-4 transition-opacity duration-700 ${
+                    className={`absolute inset-0 cursor-pointer transition-opacity duration-700 ${
                       index === bannerIdx ? 'relative z-10 opacity-100' : 'absolute inset-0 z-0 opacity-0'
                     }`}
                   >
-                    <div className="min-w-0 flex-1">
-                      <span className="mb-3 inline-flex w-fit items-center rounded-[13px] bg-white/70 px-3 py-[5px] text-[11px] font-medium text-text-secondary">
+                    <img
+                      src={banner.image}
+                      alt={banner.title}
+                      loading="lazy"
+                      onError={(e) => { const i = e.currentTarget as HTMLImageElement; i.onerror = null; i.src = '/cakes/logo-cake.png'; }}
+                      className="absolute inset-0 h-full w-full object-cover transition-transform duration-[5000ms] ease-out"
+                      style={index === bannerIdx ? { transform: 'scale(1.06)' } : { transform: 'scale(1)' }}
+                    />
+                    <span className="pointer-events-none absolute inset-0 z-[2] bg-gradient-to-r from-black/65 via-black/35 to-black/5" />
+                    <span className="pointer-events-none absolute inset-0 z-[2] bg-gradient-to-t from-black/55 via-black/10 to-black/10" />
+
+                    <div className="relative z-[3] flex h-full flex-col justify-center gap-2 px-5 py-4 text-white [text-shadow:0_2px_12px_rgba(0,0,0,.45)]">
+                      <span className="inline-flex w-fit items-center rounded-full bg-white/90 px-3 py-[5px] text-[10.5px] font-bold uppercase tracking-wider text-primary shadow-card backdrop-blur-md">
                         {banner.tag}
                       </span>
-                      <h3 className="max-w-[15ch] text-[17px] font-semibold leading-[1.3] text-text">
+                      <h3 className="max-w-[18ch] text-[22px] font-bold leading-[1.15] tracking-[-0.02em] text-white">
                         {banner.title}
                       </h3>
-                      <p className="mt-1 max-w-[22ch] truncate text-[12px] text-text-tertiary">
+                      <p className="max-w-[26ch] text-[12px] font-medium text-white/85">
                         {banner.subtitle}
                       </p>
                       <button
@@ -223,7 +234,7 @@ export default function HomeScreen({
                             go({ name: 'product', productId: availableProducts[0]?.id || 'p1' });
                           }
                         }}
-                        className="mt-[14px] inline-flex h-[30px] w-fit items-center gap-1.5 rounded-[15px] bg-primary px-[18px] text-[12px] font-medium text-white transition active:scale-95"
+                        className="mt-1 inline-flex h-[34px] w-fit items-center gap-1.5 rounded-full bg-primary px-[18px] text-[12px] font-bold text-white shadow-btn transition hover:-translate-y-0.5 hover:bg-primary-hover active:scale-95"
                       >
                         {banner.type === 'discount'
                           ? copiedId === banner.id
@@ -231,9 +242,6 @@ export default function HomeScreen({
                             : `Copy: ${banner.promoCode || 'CODE'}`
                           : (banner.ctaText || 'Shop Now')}
                       </button>
-                    </div>
-                    <div className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white/40">
-                      <img src={banner.image} alt="" className="h-full w-full object-cover" />
                     </div>
                   </div>
                 ))}
