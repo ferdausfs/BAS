@@ -1,3 +1,33 @@
+## Session: 2026-07-23, Product Card — Uiverse-inspired hover polish (v4)
+**Agent/Tool:** Arena.ai Agent Mode — UI polish pass per Buddy's Uiverse snippet reference
+**Feature worked on:** ProductCard micro-interactions (existing tfmoni on-photo layout kept 100%)
+
+### কী change হয়েছে:
+- Buddy-র request: existing card look (photo fills card, white text on gradient, white pill Add button, BEST/NEW badges, heart top-right, price+star row) **অপরিবর্তিত থাকবে** — শুধু Uiverse snippet থেকে hover "feel" add করতে হবে।
+- Layout/typography/colors/radius (rounded-[24px])/shadows/shadow-btn **touch করা হয়নি** — screenshot-এ যেমন দেখাচ্ছে ঠিক তেমনিই থাকছে।
+- Added hover micro-interactions (desktop):
+  - Card: `-translate-y-1` lift + `shadow-card-hover` + slight brightness boost
+  - Image: `scale-[1.08]` zoom + brightness bump (matches Uiverse `card-image` grow/shrink feel without cropping layout)
+  - Add button: white → `bg-primary` pink fill + white text + `shadow-btn` + tiny upward lift; Plus icon color inverts with parent
+  - Wishlist heart: `hover:scale-110` + `shadow-btn` pop
+  - Badges (BEST/NEW/%OFF): tiny `translate-y-0.5 + scale-1.03` lift
+  - Rating star chip + price: subtle scale on hover
+- Mobile (touch)-এ :hover কাজ করে না → static look একদম unchanged (no regression).
+- Added → Added checkmark state-এ `!bg-success !text-white` রাখা হয়েছে (hover override করে না)।
+
+### Touched files:
+- `src/components/ProductCard.tsx` (only file changed in this pass)
+
+### Verification:
+- `npx tsc --noEmit` = **0 errors**
+- `npm run build` = ✓ built (1.28 MB inline HTML, same as baseline)
+
+### পরবর্তী Agent এর জন্য নোট:
+- যদি future-এ আরো "Uiverse" feel আনতে চাও (যেমন hover-এ image shrink করে below-image content reveal), তাহলে `cardHeight` fixed আছে → সেটা remove করে auto-height + CSS grid/image-aspect-ratio pattern-এ যেতে হবে। বর্তমান fixed-height design-এ image shrink করলে text area overflow হবে।
+- v3 bug-fix ZIP (bas-full-fix-v3-072226.zip) এখনো Buddy apply করেননি — এই ZIP-টা apply করার আগে v3 apply করতে হবে (নতুনরা মনে রাখবেন)।
+
+---
+
 ## Session: 2026-07-22, Post-ZIP review — additional bugs found & fixed (v2)
 **Agent/Tool:** Arena.ai Agent Mode — second-pass audit on bas-full-fix-072226.zip
 **Feature worked on:** Cross-device wallet hydration, referral_codes seeding for existing users, global image fallback, review image size cap
