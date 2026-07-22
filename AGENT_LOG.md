@@ -1790,3 +1790,4 @@ consistency/closing pass; no new screen was rebuilt and no business logic was to
   3. `HomeScreen.tsx:197` scrim + `CouponsScreen.tsx:84` brand-pink strip +
      `.shimmer` are intentional gradients (documented above) — keep them.
 ## ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- **Submodule CI fix:** `termux-style` git index-এ একটা stale 160000 gitlink (submodule record) আটকে ছিল, folder-টা খালি, `.gitmodules` নেই → Cloudflare deploy "error occurred while updating repository submodules" দিচ্ছিল। `git rm --cached termux-style` করে index থেকে remove করা হয়েছে, empty folder-ও remove করা হয়েছে।
