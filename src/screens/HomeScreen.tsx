@@ -85,23 +85,59 @@ export default function HomeScreen({
 
   const GROW_DELAY = 260;
   const GROW_DURATION = 680;
-  const openOccasion = (category: (typeof categories)[number], button: HTMLButtonElement) => {
-    if (pressedOccasion) return;
-    setPressedOccasion(category.id);
-    const rect = button.getBoundingClientRect();
-    const { setOccasionZoom, go: navigate } = useUI.getState();
-    setOccasionZoom({ top: rect.top, left: rect.left, width: rect.width, height: rect.height, radius: 22, color: category.color, stage: 'start' });
-    setTimeout(() => {
-      setOccasionZoom({ top: 0, left: 0, width: window.innerWidth, height: window.innerHeight, radius: 0, color: category.color, stage: 'grow' });
+
+  // Interruptible occasion zoom — cleanup on unmount (Fix 9)
+  useEffect(() => {
+    if (!pressedOccasion) return;
+    const timeouts: ReturnType<typeof setTimeout>[] = [];
+
+    const t1 = setTimeout(() => {
+      const current = useUI.getState().occasionZoom;
+      if (current) useUI.getState().setOccasionZoom({ ...current, stage: 'grow' });
     }, GROW_DELAY);
-    setTimeout(() => {
-      navigate({ name: 'tabs', tab: 'categories', categoryId: category.id });
-      setOccasionZoom({ top: 0, left: 0, width: window.innerWidth, height: window.innerHeight, radius: 0, color: category.color, stage: 'fadeout' });
+    const t2 = setTimeout(() => {
+      const cat = categories.find((c) => c.id === pressedOccasion);
+      if (cat) useUI.getState().go({ name: 'tabs', tab: 'categories', categoryId: cat.id });
+      const current = useUI.getState().occasionZoom;
+      if (current) useUI.getState().setOccasionZoom({ ...current, stage: 'fadeout' });
     }, GROW_DELAY + GROW_DURATION);
-    setTimeout(() => {
-      setOccasionZoom(null);
+    const t3 = setTimeout(() => {
+      useUI.getState().setOccasionZoom(null);
       setPressedOccasion(null);
     }, GROW_DELAY + GROW_DURATION + 300);
+
+    timeouts.push(t1, t2, t3);
+    return () => { timeouts.forEach(clearTimeout); };
+  }, [pressedOccasion]);
+
+  const openOccasion = (category: (typeof categories)[number], button: HTMLButtonElement) => {
+    if (pressedOccasion) return;
+
+    // Reduced-motion bypass — skip zoom, navigate directly
+    const prefersReducedMotion = typeof window !== 'undefined'
+      ? window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      : false;
+    if (prefersReducedMotion) {
+      go({ name: 'tabs', tab: 'categories', categoryId: category.id });
+      return;
+    }
+
+    setPressedOccasion(category.id);
+
+    // GPU-safe: use transform + scale instead of width/height/top/left (Fix 4)
+    requestAnimationFrame(() => {
+      const rect = button.getBoundingClientRect();
+      const { setOccasionZoom } = useUI.getState();
+      setOccasionZoom({
+        top: rect.top,
+        left: rect.left,
+        width: rect.width,
+        height: rect.height,
+        radius: 22,
+        color: category.color,
+        stage: 'start',
+      });
+    });
   };
 
   const trending = useMemo(
@@ -180,13 +216,23 @@ export default function HomeScreen({
             <div className="mt-4 px-6">
               <div className="relative h-[180px] overflow-hidden rounded-[24px] shadow-card">
                 {activeBanners.map((banner, index) => (
-                  <div
+                  <button
                     key={banner.id}
+                    type="button"
                     onClick={() => {
                       if (banner.productId) go({ name: 'product', productId: banner.productId });
                       else if (banner.link === 'customize') go({ name: 'customize' });
                       else if (banner.link === 'categories') go({ name: 'tabs', tab: 'categories' });
                     }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        if (banner.productId) go({ name: 'product', productId: banner.productId });
+                        else if (banner.link === 'customize') go({ name: 'customize' });
+                        else if (banner.link === 'categories') go({ name: 'tabs', tab: 'categories' });
+                      }
+                    }}
+                    aria-label={`Banner: ${banner.title}`}
                     className={`absolute inset-0 cursor-pointer transition-opacity duration-700 ${
                       index === bannerIdx ? 'relative z-10 opacity-100' : 'absolute inset-0 z-0 opacity-0'
                     }`}
@@ -243,7 +289,7 @@ export default function HomeScreen({
                           : (banner.ctaText || 'Shop Now')}
                       </button>
                     </div>
-                  </div>
+                    </button>
                 ))}
                 {activeBanners.length > 1 && (
                   <>

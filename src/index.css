@@ -53,14 +53,14 @@
   --color-ink:     #2C2C2C;     /* text primary */
   --color-ink-50:  #F8F5F7;     /* very light neutral-pink surface tint */
   --color-ink-100: #E9E4E7;     /* divider */
-  --color-ink-200: #9A9A9A;     /* text tertiary */
+  --color-ink-200: #767676;     /* text tertiary — 4.5:1 contrast, passes WCAG AA */
   --color-ink-300: #666666;     /* text secondary */
   --color-ink-400: #404040;
   --color-ink-500: #4A4A4A;
 
   --color-text:           #2C2C2C;
   --color-text-secondary: #666666;
-  --color-text-tertiary:  #9A9A9A;
+  --color-text-tertiary:  #767676;
 
   /* === Status === */
   --color-success: #2FBF71;
@@ -104,6 +104,31 @@
   --ease-premium: cubic-bezier(.16,1,.3,1);
   --ease-spring:  cubic-bezier(.34,1.56,.64,1);
   --ease-exit:    cubic-bezier(.4,0,1,1);
+
+  /* ===== Unified shadow depth system ===== */
+  --shadow-sm:
+    0 1px 2px rgba(0,0,0,0.04),
+    0 4px 12px -4px rgba(0,0,0,0.08);
+  --shadow-md:
+    0 4px 8px rgba(0,0,0,0.06),
+    0 16px 32px -12px rgba(0,0,0,0.12);
+  --shadow-lg:
+    0 8px 16px rgba(0,0,0,0.08),
+    0 24px 48px -16px rgba(0,0,0,0.16);
+  --shadow-glow:
+    0 0 0 4px rgba(246,95,143,0.3),
+    0 4px 12px -4px rgba(246,95,143,0.4);
+
+  /* ===== Spacing scale (4-unit base) ===== */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
 }
 
 html, body {
@@ -205,6 +230,40 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 .btn-primary:hover  { background: #E84E80; box-shadow: 0 6px 20px -4px rgba(246,95,143,0.40); }
 .btn-primary:active { transform: scale(.97); box-shadow: 0 2px 8px -2px rgba(246,95,143,0.28); }
+.btn-primary:disabled,
+.btn-primary[aria-disabled="true"] {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+.btn-primary:disabled:hover,
+.btn-primary[aria-disabled="true"]:hover {
+  transform: none;
+  background: #F65F8F;
+  box-shadow: none;
+}
+.btn-primary.loading {
+  color: transparent;
+  pointer-events: none;
+  position: relative;
+}
+.btn-primary.loading::before {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: bas-spin 0.6s linear infinite;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+@keyframes bas-spin {
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}
 
 .btn-secondary {
   background: #FFFFFF;

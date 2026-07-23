@@ -12,7 +12,7 @@ type Props = {
 };
 
 export default function ProductCard({ product, wished, onOpen, onWish, variant = 'horizontal' }: Props) {
-  const { add } = useCart();
+  const add = useCart((s) => s.add);
   const [heartKey, setHeartKey] = useState(0);
   const [added, setAdded] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
@@ -46,7 +46,7 @@ export default function ProductCard({ product, wished, onOpen, onWish, variant =
       quantity: 1,
     });
     setAdded(true);
-    window.setTimeout(() => setAdded(false), 1200);
+    window.setTimeout(() => setAdded(false), 800);
   };
 
   // ── Uiverse-style polish (keeps EXISTING on-photo layout/typography/colors
@@ -57,8 +57,8 @@ export default function ProductCard({ product, wished, onOpen, onWish, variant =
   //    On mobile (touch) there is no :hover so the card remains visually
   //    identical to the screenshot Buddy shared. ──────────────────────────
   const cardClass = isGrid
-    ? 'group relative cursor-pointer overflow-hidden rounded-[24px] border-[5px] border-white bg-ink shadow-card transition-all duration-300 hover:-translate-y-1 hover:shadow-card-hover hover:brightness-105 active:scale-[.98]'
-    : 'group relative w-[172px] shrink-0 cursor-pointer overflow-hidden rounded-[24px] border-[5px] border-white bg-ink shadow-card transition-all duration-300 hover:-translate-y-1 hover:shadow-card-hover hover:brightness-105 active:scale-[.98]';
+    ? 'group relative cursor-pointer overflow-hidden rounded-[24px] border-[5px] border-white bg-ink shadow-card transition-all duration-[280ms] ease-[var(--ease-premium)] hover:-translate-y-1 hover:shadow-card-hover hover:brightness-105 active:scale-[.98]'
+    : 'group relative w-[172px] shrink-0 cursor-pointer overflow-hidden rounded-[24px] border-[5px] border-white bg-ink shadow-card transition-all duration-[280ms] ease-[var(--ease-premium)] hover:-translate-y-1 hover:shadow-card-hover hover:brightness-105 active:scale-[.98]';
 
   return (
     <article onClick={onOpen} className={cardClass} style={{ height: cardHeight }}>
@@ -104,7 +104,8 @@ export default function ProductCard({ product, wished, onOpen, onWish, variant =
         type="button"
         onClick={handleWish}
         className="absolute right-2.5 top-2.5 z-[4] flex h-9 w-9 items-center justify-center rounded-full border border-white/70 bg-white/90 text-primary shadow-card backdrop-blur-md transition-all duration-300 hover:scale-110 hover:shadow-btn active:scale-90"
-        aria-label={wished ? 'Remove from wishlist' : 'Add to wishlist'}
+        aria-label={wished ? `Remove ${product.name} from wishlist` : `Add ${product.name} to wishlist`}
+        aria-pressed={wished}
       >
         <Heart key={heartKey} className={wished ? 'anim-pop h-4 w-4 fill-primary' : 'h-4 w-4'} strokeWidth={2} />
       </button>
@@ -143,7 +144,8 @@ export default function ProductCard({ product, wished, onOpen, onWish, variant =
               type="button"
               onClick={handleAdd}
               className={`flex h-8 min-w-[72px] shrink-0 items-center justify-center gap-1 rounded-full bg-white px-3 text-[12px] font-bold text-text shadow-card transition-all duration-300 hover:bg-primary hover:text-white hover:shadow-btn hover:-translate-y-0.5 active:scale-90 ${added ? '!bg-success !text-white' : ''}`}
-              aria-label="Add to cart"
+              aria-label={added ? `${product.name} added to cart` : `Add ${product.name} to cart`}
+              aria-live="polite"
             >
               {added ? <><Check className="h-4 w-4 anim-pop" strokeWidth={2.5} />Added</> : <>Add <Plus className="h-4 w-4 text-primary transition-colors duration-300 group-hover:text-white" strokeWidth={2.4} /></>}
             </button>
