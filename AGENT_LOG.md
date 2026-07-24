@@ -1,3 +1,42 @@
+## Session: 2026-07-24 08:17 AST, Premium pending fixes — GPU occasion zoom + spacing/card guards
+**Agent/Tool:** Arena.ai Agent Mode
+**Feature worked on:** BAS Next Agent Task — remaining premium audit items after commit `9e0d697`
+
+### কী হয়েছে:
+- **Task 1 (P0) fixed:** `occasionZoom` state shape changed from layout dimensions (`top/left/width/height/radius`) to transform data (`x/y/scale/borderRadius`).
+- **Task 1 misleading comment verified:** `HomeScreen.tsx` had a stale `// GPU-safe...` comment, but actual logic still stored layout properties. Removed the comment and changed the implementation to compute the tapped occasion button center plus viewport scale.
+- **Task 1 overlay fixed:** `OccasionZoomOverlay.tsx` now uses a fixed `100vmax` box with `transform: translate(-50%, -50%) scale(...)`, `transformOrigin`, and `willChange`, instead of transitioning `top/left/width/height`.
+- **Task 3 fixed:** `ProductCard` fixed height bumped from `248/238` to `260/248` for the requested small-viewport text overlap guard.
+- **Task 2 fixed:** Added additive `--spacing-1` through `--spacing-12` tokens in the `@theme` block. Existing spacing usages were intentionally not refactored.
+- **Task 4 skipped:** Live Firestore data was not accessible in this environment. Source review showed default products use local `/cakes/*.png` assets, while admin uploads go through Cloudinary. To avoid forcing broken `srcset` URLs onto non-CDN/local images, no ProductCard `srcSet` change was made in this pass.
+
+### Touched files:
+- `src/lib/store.ts`
+- `src/screens/HomeScreen.tsx`
+- `src/components/OccasionZoomOverlay.tsx`
+- `src/components/ProductCard.tsx`
+- `src/index.css`
+- `tasks/lessons.md`
+- `AGENT_LOG.md`
+
+### Verification:
+- Baseline before changes: `npx tsc --noEmit` = 0 errors; `npm run build` = ✓ built
+- After changes: `npx tsc --noEmit` = 0 errors; `npm run build` = ✓ built
+- Grep verified no remaining Task 1 layout-transition patterns in the occasion zoom files.
+
+### Commit:
+- Not committed in this environment; changed files staged together for handoff.
+
+### এখনো Pending (যদি থাকে):
+- Manual visual/performance verification on real mobile/desktop browser remains required: tap an occasion icon and confirm the transition looks correct and DevTools Performance no longer shows layout/reflow during the animation.
+- Task 4 can be revisited only after confirming actual Firestore product image URLs are Cloudinary/CDN URLs with resize-by-URL-param support.
+
+### পরবর্তী Agent এর জন্য নোট:
+- Do not trust code comments that claim a performance fix was applied; verify the actual state shape and animated CSS properties.
+- Product image delivery is mixed/uncertain from source alone: local defaults are `/cakes/*.png`, admin uploads call Cloudinary. Add responsive image `srcSet` only with a safe CDN-specific URL builder or after live data confirmation.
+
+---
+
 ## Session: 2026-07-23, Banner — full-bleed image redesign
 **Feature:** "Exclusive Offers" banner এখন full image fills card (আগে text left-এ + 96×96 thumbnail right-এ choto image chhilo)
 **Touched:** `src/screens/HomeScreen.tsx`

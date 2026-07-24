@@ -124,16 +124,16 @@ export default function HomeScreen({
 
     setPressedOccasion(category.id);
 
-    // GPU-safe: use transform + scale instead of width/height/top/left (Fix 4)
     requestAnimationFrame(() => {
       const rect = button.getBoundingClientRect();
+      const viewportWidth = window.innerWidth || document.documentElement.clientWidth || rect.width;
+      const viewportHeight = window.innerHeight || document.documentElement.clientHeight || rect.height;
       const { setOccasionZoom } = useUI.getState();
       setOccasionZoom({
-        top: rect.top,
-        left: rect.left,
-        width: rect.width,
-        height: rect.height,
-        radius: 22,
+        x: rect.left + rect.width / 2,
+        y: rect.top + rect.height / 2,
+        scale: Math.max(viewportWidth / rect.width, viewportHeight / rect.height),
+        borderRadius: 22,
         color: category.color,
         stage: 'start',
       });

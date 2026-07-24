@@ -98,11 +98,10 @@ type UIState = {
   closeModal: () => void;
   // Occasion-icon zoom-in page transition (Home screen occasion row → Categories)
   occasionZoom: {
-    top: number;
-    left: number;
-    width: number;
-    height: number;
-    radius: number;
+    x: number;
+    y: number;
+    scale: number;
+    borderRadius: number;
     color: string;
     stage: 'start' | 'grow' | 'fadeout';
   } | null;

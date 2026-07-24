@@ -90,6 +90,17 @@
      their @theme vars were removed in Phase 6 — headings now use the default
      Poppins+Hind Siliguri stack. BrandLogo wordmark is bold Poppins. === */
   --font-body:    "Poppins", "Hind Siliguri", system-ui, -apple-system, sans-serif;
+
+  /* === Spacing scale tokens (4px base) === */
+  --spacing-1: 4px;
+  --spacing-2: 8px;
+  --spacing-3: 12px;
+  --spacing-4: 16px;
+  --spacing-5: 20px;
+  --spacing-6: 24px;
+  --spacing-8: 32px;
+  --spacing-10: 40px;
+  --spacing-12: 48px;
 }
 
 :root {

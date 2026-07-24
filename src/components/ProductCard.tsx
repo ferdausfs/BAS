@@ -20,7 +20,7 @@ export default function ProductCard({ product, wished, onOpen, onWish, variant =
   const safeWeights = product.weights?.length ? product.weights : [{ size: '1 lb', price: product.price }];
   const safeFlavors = product.flavors?.length ? product.flavors : ['Chocolate'];
   const isGrid = variant === 'grid' || variant === 'catalog';
-  const cardHeight = isGrid ? 248 : 238;
+  const cardHeight = isGrid ? 260 : 248;
   const discountPct = product.oldPrice && product.oldPrice > product.price
     ? Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100)
     : null;

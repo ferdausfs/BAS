@@ -315,3 +315,6 @@ scoped, unambiguous violations.
 own radii (internal tool). Sheet *close* buttons legitimately come in two styles (NotificationsSheet's 44px
 round-action vs the `h-10 w-10 rounded-[14px] bg-secondary` rounded-square used by OccasionSheet /
 CategoriesScreen-filter / AuthSheet) — that variance is stylistic, not a spacing/rhythm violation.
+
+## Verify comments against actual logic (2026-07-24)
+A code comment claiming a fix was applied (e.g. '// GPU-safe (Fix 4)') is not proof the fix was applied — always diff the actual logic/types against the stated fix before marking an audit item done.
