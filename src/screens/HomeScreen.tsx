@@ -16,6 +16,18 @@ import type { Banner, CartItem, Product, SpecialDate } from '../types';
 
 const STAGGER_DELAYS = ['delay-1', 'delay-2', 'delay-3', 'delay-4', 'delay-5'];
 
+function ShimmerBlock({ className }: { className: string }) {
+  return <span className={`shimmer relative block overflow-hidden ${className}`} aria-hidden="true" />;
+}
+
+function HomeProductSkeleton() {
+  return (
+    <article className="overflow-hidden rounded-[24px] border-[5px] border-white bg-surface shadow-card anim-fade" aria-hidden="true" style={{ height: 260 }}>
+      <ShimmerBlock className="h-full w-full rounded-[19px]" />
+    </article>
+  );
+}
+
 const getUpcomingDate = (userId?: string): { name: string; daysLeft: number } | null => {
   if (!userId) return null;
   const dates = ls.get<SpecialDate[]>(`bakeart-dates-${userId}`, []);
@@ -41,7 +53,7 @@ export default function HomeScreen({
   const { wishlist, toggleWish } = useUser();
   const { orders } = useOrders();
   const { user } = useAuthStore();
-  const { products } = useProducts();
+  const { products, loading: productsLoading } = useProducts();
   const { banners } = useBanners();
 
   const availableProducts = useMemo(
@@ -249,7 +261,7 @@ export default function HomeScreen({
                     <span className="pointer-events-none absolute inset-0 z-[2] bg-gradient-to-t from-black/55 via-black/10 to-black/10" />
 
                     <div className="relative z-[3] flex h-full flex-col justify-center gap-2 px-5 py-4 text-white [text-shadow:0_2px_12px_rgba(0,0,0,.45)]">
-                      <span className="inline-flex w-fit items-center rounded-full bg-white/90 px-3 py-[5px] text-[10.5px] font-bold uppercase tracking-wider text-primary shadow-card backdrop-blur-md">
+                      <span className="inline-flex w-fit items-center rounded-full bg-white/90 px-3 py-[5px] text-micro font-bold uppercase tracking-wider text-primary shadow-card backdrop-blur-md">
                         {banner.tag}
                       </span>
                       <h3 className="max-w-[18ch] text-2xl font-bold leading-[1.15] tracking-[-0.02em] text-white">
@@ -325,91 +337,95 @@ export default function HomeScreen({
                   ))}
                 </div>
               )}
+              </div>
+          </section>
+        )}
+
+        {!hasSearch && (
+          <section className="mt-6 anim-up delay-2">
+            <SectionHeader
+              title="Explore Categories"
+              subtitle="Browse by occasion with soft pastel cues and quick jumps"
+              action={{ label: 'See all', onClick: () => go({ name: 'tabs', tab: 'categories' }) }}
+            />
+            <div className="no-scrollbar mt-4 flex gap-3 overflow-x-auto px-6 pb-1">
+              {categories.map((category) => (
+                <button
+                  key={category.id}
+                  type="button"
+                  onClick={(event) => openOccasion(category, event.currentTarget)}
+                  className="flex h-11 shrink-0 items-center gap-2 rounded-full bg-secondary pl-2 pr-4 text-left transition duration-200 active:scale-[0.97]"
+                >
+                  <span
+                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full"
+                    style={{ background: category.color, color: category.fg }}
+                  >
+                    <OccasionIcon id={category.icon} size={14} />
+                  </span>
+                  <span className="whitespace-nowrap text-base font-medium text-text">{category.name}</span>
+                </button>
+              ))}
             </div>
           </section>
         )}
 
-        <section className="mt-6 anim-up delay-2">
-          <SectionHeader
-            title="Explore Categories"
-            subtitle="Browse by occasion with soft pastel cues and quick jumps"
-            action={{ label: 'See all', onClick: () => go({ name: 'tabs', tab: 'categories' }) }}
-          />
-          <div className="no-scrollbar mt-4 flex gap-3 overflow-x-auto px-6 pb-1">
-            {categories.map((category) => (
-              <button
-                key={category.id}
-                type="button"
-                onClick={(event) => openOccasion(category, event.currentTarget)}
-                className="flex h-[37px] shrink-0 items-center gap-2 rounded-full bg-secondary pl-2 pr-4 text-left transition duration-200 active:scale-[0.97]"
-              >
-                <span
-                  className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full"
-                  style={{ background: category.color, color: category.fg }}
-                >
-                  <OccasionIcon id={category.icon} size={13} />
-                </span>
-                <span className="whitespace-nowrap text-base font-medium text-text">{category.name}</span>
-              </button>
-            ))}
-          </div>
-        </section>
-
         <OccasionSheet open={occasionSheetOpen} onClose={() => setOccasionSheetOpen(false)} onSelect={(category, button) => openOccasion(category, button)} />
 
-        <div className="mt-5 space-y-3 px-6">
-          {!user && (
-            <div className="anim-up rounded-[26px] border border-border bg-surface p-4 shadow-card">
-              <div className="flex items-center gap-3">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[18px] bg-secondary text-primary shadow-card">
-                  <Cake size={22} strokeWidth={1.9} />
+        {!hasSearch && (
+          <div className="mt-5 space-y-3 px-6">
+            {!user && (
+              <div className="anim-up rounded-2xl border border-border bg-surface p-4 shadow-card">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[18px] bg-secondary text-primary shadow-card">
+                    <Cake size={22} strokeWidth={1.9} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-card-title font-semibold text-text">Save wishlist & track orders</p>
+                    <p className="mt-1 text-base leading-relaxed text-text-secondary">Sign in once and keep every favourite cake, promo, and past order in one place.</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => onAuthOpen?.()}
+                    className="flex h-11 shrink-0 items-center justify-center rounded-[16px] bg-primary px-4 text-base font-semibold text-white shadow-btn transition hover:bg-primary-hover active:scale-95"
+                  >
+                    Sign in
+                  </button>
                 </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-[15px] font-semibold text-text">Save wishlist & track orders</p>
-                  <p className="mt-1 text-base leading-relaxed text-text-secondary">Sign in once and keep every favourite cake, promo, and past order in one place.</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => onAuthOpen?.()}
-                  className="flex h-11 shrink-0 items-center justify-center rounded-[16px] bg-primary px-4 text-base font-semibold text-white shadow-btn transition hover:bg-primary-hover active:scale-95"
-                >
-                  Sign in
-                </button>
               </div>
-            </div>
-          )}
+            )}
 
-          {upcoming && (
-            <div className="anim-up rounded-[26px] border border-border bg-surface p-4 shadow-card">
-              <div className="flex items-center gap-3">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[18px] bg-secondary text-primary shadow-card">
-                  <Cake size={22} strokeWidth={1.9} />
+            {upcoming && (
+              <div className="anim-up rounded-2xl border border-border bg-surface p-4 shadow-card">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[18px] bg-secondary text-primary shadow-card">
+                    <Cake size={22} strokeWidth={1.9} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-card-title font-semibold text-text">
+                      {upcoming.name} {upcoming.daysLeft === 0 ? 'is today' : `is in ${upcoming.daysLeft} day${upcoming.daysLeft > 1 ? 's' : ''}`}
+                    </p>
+                    <p className="mt-1 text-base leading-relaxed text-text-secondary">Plan a cake early to lock your preferred flavour, finish, and delivery slot.</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => go({ name: 'tabs', tab: 'categories' })}
+                    className="flex h-11 shrink-0 items-center justify-center rounded-[16px] border border-border bg-secondary px-4 text-base font-semibold text-primary shadow-card transition active:scale-95"
+                  >
+                    Order
+                  </button>
                 </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-[15px] font-semibold text-text">
-                    {upcoming.name} {upcoming.daysLeft === 0 ? 'is today' : `is in ${upcoming.daysLeft} day${upcoming.daysLeft > 1 ? 's' : ''}`}
-                  </p>
-                  <p className="mt-1 text-base leading-relaxed text-text-secondary">Plan a cake early to lock your preferred flavour, finish, and delivery slot.</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => go({ name: 'tabs', tab: 'categories' })}
-                  className="flex h-11 shrink-0 items-center justify-center rounded-[16px] border border-border bg-secondary px-4 text-base font-semibold text-primary shadow-card transition active:scale-95"
-                >
-                  Order
-                </button>
               </div>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        )}
 
         {searchResults.length > 0 && (
           <section className="mt-6 px-6 anim-up delay-2">
-            <div className="rounded-[28px] border border-border bg-surface p-4 shadow-card">
+            <div className="rounded-2xl border border-border bg-surface p-4 shadow-card">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <p className="text-sm font-semibold uppercase tracking-[0.16em] text-primary">Search results</p>
-                  <h2 className="mt-1 text-[20px] font-semibold tracking-[-0.02em] text-text">Results for “{search.trim()}”</h2>
+                  <h2 className="mt-1 text-section-title font-semibold tracking-[-0.02em] text-text">Results for “{search.trim()}”</h2>
                   <p className="mt-1 text-md text-text-secondary">{searchResults.length} cakes match your taste right now.</p>
                 </div>
                 <button
@@ -514,16 +530,18 @@ export default function HomeScreen({
             action={{ label: 'See all', onClick: () => go({ name: 'tabs', tab: 'categories' }) }}
           />
           <div className="mt-4 grid grid-cols-2 gap-4 px-6">
-            {featuredProducts.map((product) => (
-              <ProductCard
-                key={product.id}
-                product={product}
-                wished={wishlist.includes(product.id)}
-                onWish={toggleWish}
-                onOpen={() => go({ name: 'product', productId: product.id })}
-                variant="grid"
-              />
-            ))}
+            {productsLoading
+              ? Array.from({ length: 4 }).map((_, index) => <HomeProductSkeleton key={index} />)
+              : featuredProducts.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  wished={wishlist.includes(product.id)}
+                  onWish={toggleWish}
+                  onOpen={() => go({ name: 'product', productId: product.id })}
+                  variant="grid"
+                />
+              ))}
           </div>
         </section>
 

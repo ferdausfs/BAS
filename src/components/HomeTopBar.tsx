@@ -43,7 +43,7 @@ export default function HomeTopBar({
           {user?.avatar ? (
             <img src={user.avatar} alt="" className="h-full w-full object-cover" />
           ) : (
-            <span className="text-[16px] font-bold">{initial}</span>
+            <span className="text-lg font-bold">{initial}</span>
           )}
         </button>
 
@@ -53,8 +53,8 @@ export default function HomeTopBar({
           className="min-w-0 flex-1 text-left leading-tight"
           aria-label="Delivery location"
         >
-          <span className="block text-[12px] text-white/75">Delivery to</span>
-          <span className="mt-[3px] flex items-center gap-[7px] text-[15px] font-medium text-white/95">
+          <span className="block text-sm text-white/75">Delivery to</span>
+          <span className="mt-[3px] flex items-center gap-[7px] text-card-title font-medium text-white/95">
             <MapPin className="h-[18px] w-[18px] shrink-0 text-white/95" strokeWidth={1.8} />
             <span className="truncate">{district || 'Set your location'}</span>
             <ChevronDown className="h-[14px] w-[14px] shrink-0 text-white/70" strokeWidth={2.2} />

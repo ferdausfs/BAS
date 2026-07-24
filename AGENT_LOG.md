@@ -1,3 +1,45 @@
+## Session: 2026-07-24 09:39 AST, Home UI design pass — search hierarchy, tap targets, type tokens, skeleton
+**Agent/Tool:** Arena.ai Agent Mode — ui-designer role
+**Feature worked on:** Home screen UI polish after approved `BAS-HOME-UI-DESIGN-REVIEW-20260724.md`
+
+### কী হয়েছে:
+- **Search hierarchy fixed:** During active Home search (`hasSearch`), non-search browse/promotional blocks above results are hidden: Exclusive Offers was already hidden; now Explore Categories plus sign-in/upcoming helper cards are hidden too, so results/no-results appear immediately below HomeTopBar. Sections were conditionally hidden, not deleted.
+- **Occasion tap targets fixed:** Home occasion chips increased from `h-[37px]` to `h-11` (44px), with icon circle `h-7 w-7` and icon size `14`; existing occasion zoom behavior was not touched.
+- **Home typography POC completed:** Added approved semantic type tokens for non-existing Home sizes (`--text-micro: 10.5px`, `--text-card-title: 15px`, `--text-section-title: 20px`) and removed arbitrary `text-[Npx]` typography from HomeScreen/HomeTopBar/SearchBar/SectionHeader.
+- **Shared chrome tokenized:** `HomeTopBar`, `SearchBar`, and `SectionHeader` now use type tokens instead of arbitrary text-size classes. Cross-screen grep confirmed live consumers are Home-only in this repo state (`SearchBar` via `HomeTopBar`; `SectionHeader` in `HomeScreen`).
+- **Radius cleanup applied safely:** Low-risk Home content cards (`auth/upcoming helper cards`, `search results panel`) moved to `rounded-2xl`. Larger editorial surfaces (empty state, For You card, notice modal) intentionally keep their larger radii.
+- **Featured Products loading skeleton added:** Home now reads `productsLoading` from `useProducts()` and shows four ProductCard-shaped `.shimmer` skeleton cards while products load; existing product rendering is unchanged after loading.
+
+### Touched files:
+- `src/screens/HomeScreen.tsx`
+- `src/components/HomeTopBar.tsx`
+- `src/components/SearchBar.tsx`
+- `src/components/SectionHeader.tsx`
+- `src/index.css`
+- `tasks/lessons.md`
+- `AGENT_LOG.md`
+
+### Verification:
+- Baseline before edits: `npx tsc --noEmit` = 0 errors; `npm run build` = ✓ built
+- After edits: `npx tsc --noEmit` = 0 errors; `npm run build` = ✓ built
+- Grep verified no `h-[37px]` remains in `HomeScreen.tsx`.
+- Grep verified no arbitrary `text-[Npx]` typography remains in `HomeScreen.tsx`, `HomeTopBar.tsx`, `SearchBar.tsx`, or `SectionHeader.tsx`.
+- Grep verified `HomeProductSkeleton`, `productsLoading`, and the new type tokens exist.
+
+### Commit:
+- Not committed in this environment; changed files staged together for handoff.
+
+### এখনো Pending (যদি থাকে):
+- Manual visual check on mobile: type a Home search term and verify results/no-results appear immediately under the search header, with categories/helper cards suppressed.
+- Manual mobile check: tap occasion chips and confirm 44px target feels comfortable and zoom transition still works.
+- Manual slow-network/Firebase check: Featured Products skeleton should appear while product fetch is loading.
+
+### পরবর্তী Agent এর জন্য নোট:
+- Home intentionally keeps larger editorial radii on empty state / For You / modal surfaces; do not blindly flatten those in a future radius grep pass.
+- Search intent state should suppress browse/promotional modules above results; do not place categories, banners, or helper cards above active search results.
+
+---
+
 ## Session: 2026-07-24 09:02 AST, Premium Polish Round 2 — skeleton loaders, haptics, type-scale POC
 **Agent/Tool:** Arena.ai Agent Mode
 **Feature worked on:** BAS Premium Polish Round 2 after commit `2da36ba`

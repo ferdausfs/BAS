@@ -101,6 +101,9 @@
   --text-xl: 18px;
   --text-2xl: 22px;
   --text-display: 28px;
+  --text-micro: 10.5px;
+  --text-card-title: 15px;
+  --text-section-title: 20px;
 
   /* === Spacing scale tokens (4px base) === */
   --spacing-1: 4px;

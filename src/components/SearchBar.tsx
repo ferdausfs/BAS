@@ -48,20 +48,20 @@ const SearchBar = forwardRef<HTMLInputElement, Props>(
             onBlur={() => window.setTimeout(() => setFocused(false), 120)}
             onKeyDown={(event) => event.key === 'Enter' && onSearch?.(value)}
             placeholder={placeholder}
-            inputClassName="h-11 w-full rounded-full border border-border bg-surface pl-12 pr-11 text-[14px] font-medium text-text shadow-card outline-none transition placeholder:font-normal placeholder:text-transparent focus:border-accent focus:ring-4 focus:ring-primary/10"
-            textLayerClassName="pl-12 pr-11 text-[14px] font-medium text-text placeholder:font-normal text-text-tertiary"
+            inputClassName="h-11 w-full rounded-full border border-border bg-surface pl-12 pr-11 text-md font-medium text-text shadow-card outline-none transition placeholder:font-normal placeholder:text-transparent focus:border-accent focus:ring-4 focus:ring-primary/10"
+            textLayerClassName="pl-12 pr-11 text-md font-medium text-text placeholder:font-normal text-text-tertiary"
           />
 
           {showDropdown && (
             <div className="absolute left-0 right-0 top-[calc(100%+0.75rem)] z-30 rounded-2xl border border-border bg-surface p-3 shadow-float">
               <div className="mb-2 flex items-center justify-between px-1">
-                <span className="text-[13px] font-semibold text-text">{value ? 'Search Results' : 'Recent Search'}</span>
+                <span className="text-base font-semibold text-text">{value ? 'Search Results' : 'Recent Search'}</span>
                 {!value && onClearRecent && (
                   <button
                     type="button"
                     onMouseDown={(event) => event.preventDefault()}
                     onClick={onClearRecent}
-                    className="text-[11px] font-medium text-text-tertiary"
+                    className="text-xs font-medium text-text-tertiary"
                   >
                     Clear All
                   </button>
@@ -79,7 +79,7 @@ const SearchBar = forwardRef<HTMLInputElement, Props>(
                     <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary text-primary">
                       <Search className="h-4 w-4" strokeWidth={2} />
                     </span>
-                    <span className="min-w-0 flex-1 truncate text-[14px] font-medium text-text">{term}</span>
+                    <span className="min-w-0 flex-1 truncate text-md font-medium text-text">{term}</span>
                   </button>
                 ))}
               </div>

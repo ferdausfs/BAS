@@ -321,3 +321,6 @@ A code comment claiming a fix was applied (e.g. '// GPU-safe (Fix 4)') is not pr
 
 ## Full-screen loading states should use shape-matched shimmer skeletons (2026-07-24)
 For data-heavy mobile screens, avoid centered bouncing-dot loaders in empty space. Build skeletons that match the final card/list layout (thumbnail blocks, text lines, status pills/timeline dots) and reuse the existing `.shimmer` class so loading states share one visual language app-wide. This reduces perceived layout shift and feels native/premium.
+
+## Search intent state should prioritize results above browse/promotional modules (2026-07-24)
+When a screen enters an active search state, suppress non-search browse/promotional modules above the results (categories, banners, helper cards) instead of merely hiding the hero. Search results/no-results should appear immediately after the search chrome so typed intent gets priority. Keep the hidden modules in JSX behind `!hasSearch` rather than deleting them, so normal browse mode is unchanged.
