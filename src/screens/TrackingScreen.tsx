@@ -5,6 +5,61 @@ import { useOrdersHook } from '../hooks/useOrders';
 import { safeArray } from '../lib/utils';
 import type { Order } from '../types';
 
+
+function ShimmerBlock({ className }: { className: string }) {
+  return (
+    <span className={`shimmer relative block overflow-hidden ${className}`} aria-hidden="true" />
+  );
+}
+
+function TrackingSkeletonCard() {
+  return (
+    <article className="mt-4 overflow-hidden rounded-2xl border border-border bg-surface shadow-card anim-fade" role="status" aria-label="Syncing order tracking">
+      <div className="flex items-center justify-between border-b border-border px-4 py-3.5">
+        <div className="space-y-2">
+          <ShimmerBlock className="h-2.5 w-28 rounded-full" />
+          <ShimmerBlock className="h-3 w-36 rounded-full" />
+        </div>
+        <div className="flex flex-col items-end gap-2">
+          <ShimmerBlock className="h-3 w-12 rounded-full" />
+          <ShimmerBlock className="h-5 w-16 rounded-full" />
+        </div>
+      </div>
+      <div className="space-y-2.5 px-4 py-3.5">
+        {[0, 1].map((item) => (
+          <div key={item} className="flex items-center gap-4">
+            <ShimmerBlock className="h-12 w-12 shrink-0 rounded-xl" />
+            <div className="flex-1 space-y-2">
+              <ShimmerBlock className="h-3.5 w-3/4 rounded-full" />
+              <ShimmerBlock className="h-2.5 w-24 rounded-full" />
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="border-t border-border px-4 py-3.5">
+        <div className="mb-4 flex items-center justify-between">
+          <ShimmerBlock className="h-2.5 w-20 rounded-full" />
+          <ShimmerBlock className="h-3 w-16 rounded-full" />
+        </div>
+        <div className="space-y-0">
+          {TIMELINE_STEPS.slice(0, 5).map((step, i, arr) => (
+            <div key={step.key} className="flex gap-3">
+              <div className="flex flex-col items-center">
+                <ShimmerBlock className="h-9 w-9 rounded-full" />
+                {i !== arr.length - 1 && <ShimmerBlock className="my-1 w-0.5 flex-1 rounded-full" />}
+              </div>
+              <div className="flex-1 space-y-2 pb-4">
+                <ShimmerBlock className="h-3.5 w-36 rounded-full" />
+                <ShimmerBlock className="h-2.5 w-28 rounded-full" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </article>
+  );
+}
+
 const TIMELINE_STEPS: { key: string; Icon: typeof ShoppingCart; label: string; sub: string }[] = [
   { key: 'placed',    Icon: ShoppingCart, label: 'Order Placed',      sub: 'We received your order' },
   { key: 'confirmed', Icon: CheckCircle2, label: 'Baker Assigned',     sub: 'A baker is on it' },
@@ -88,14 +143,7 @@ export default function TrackingScreen() {
         </div>
 
         {loading ? (
-          <div className="flex flex-col items-center justify-center pt-16 text-center anim-fade">
-            <div className="flex gap-1.5 justify-center py-4">
-              {[0, 1, 2].map((i) => (
-                <div key={i} className="h-2 w-2 animate-bounce rounded-full bg-ink-200" style={{ animationDelay: `${i * 0.15}s` }} />
-              ))}
-            </div>
-            <p className="text-[12px] text-text-tertiary">Syncing orders...</p>
-          </div>
+          <TrackingSkeletonCard />
         ) : match ? (
           <article
             className="mt-4 overflow-hidden rounded-2xl bg-surface border border-border shadow-card"

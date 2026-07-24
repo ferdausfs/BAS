@@ -318,3 +318,6 @@ CategoriesScreen-filter / AuthSheet) — that variance is stylistic, not a spaci
 
 ## Verify comments against actual logic (2026-07-24)
 A code comment claiming a fix was applied (e.g. '// GPU-safe (Fix 4)') is not proof the fix was applied — always diff the actual logic/types against the stated fix before marking an audit item done.
+
+## Full-screen loading states should use shape-matched shimmer skeletons (2026-07-24)
+For data-heavy mobile screens, avoid centered bouncing-dot loaders in empty space. Build skeletons that match the final card/list layout (thumbnail blocks, text lines, status pills/timeline dots) and reuse the existing `.shimmer` class so loading states share one visual language app-wide. This reduces perceived layout shift and feels native/premium.

@@ -1,3 +1,10 @@
+
+export function hapticTap(pattern: number | number[] = 12) {
+  if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+    (navigator as Navigator & { vibrate: (pattern: number | number[]) => boolean }).vibrate(pattern);
+  }
+}
+
 export function safeArray<T>(v: unknown, fallback: T[] = []): T[] {
   return Array.isArray(v) ? (v as T[]) : fallback;
 }

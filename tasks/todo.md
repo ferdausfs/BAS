@@ -1,3 +1,33 @@
+# Pull-to-Refresh Mini-Plan (Round 2 Task 4)
+
+**Status:** proposed only — do not implement until Buddy approves this plan.
+
+## Scope
+- `src/hooks/usePullToRefresh.ts` (new reusable hook)
+- `src/screens/OrdersScreen.tsx`
+- `src/screens/TrackingScreen.tsx`
+- `src/screens/HomeScreen.tsx`
+
+## Proposed approach
+1. Create `usePullToRefresh({ containerRef, onRefresh, enabled })` using native touch listeners, not React synthetic handlers.
+2. Attach listeners in `useEffect` to the scroll container: `touchstart` passive true, `touchmove` passive false, `touchend/touchcancel` passive true.
+3. Only start pulling when the container is at scroll-top (`scrollTop <= 0`) and the gesture is clearly vertical downward after a small threshold.
+4. While pulling, call `event.preventDefault()` from the non-passive `touchmove` handler, expose `pullDistance`/`refreshing` state, and cap visual distance.
+5. Trigger `onRefresh` after release if distance crosses threshold; await the callback; then reset state cleanly.
+6. Keep indicator lightweight: a small BAS/logo or spinner pill above content, with no heavy animation.
+7. Wire callbacks to existing data APIs: Orders `fetchMyOrders()`, Tracking `fetchMyOrders()` for current order data, Home via existing products/banner refetch paths (if current banner hook lacks refetch, add it deliberately in that same approved task).
+
+## Verification plan
+- `npx tsc --noEmit`
+- `npm run build`
+- Manual mobile/emulator test on all three screens at scroll top and mid-scroll.
+- Confirm normal vertical scrolling is unaffected when not at top.
+
+## Approval needed before code
+This touches a new shared gesture hook plus three high-traffic screens, so it should be implemented as its own approved mini-phase.
+
+---
+
 # BAS0002 — Phase L5 — Final consistency pass (this run only)
 
 Scope: cross-screen side-by-side spacing/structure audit against the GroceryApp

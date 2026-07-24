@@ -1,3 +1,50 @@
+## Session: 2026-07-24 09:02 AST, Premium Polish Round 2 — skeleton loaders, haptics, type-scale POC
+**Agent/Tool:** Arena.ai Agent Mode
+**Feature worked on:** BAS Premium Polish Round 2 after commit `2da36ba`
+
+### কী হয়েছে:
+- **Task 1 fixed:** `OrdersScreen.tsx` no longer shows a centered bouncing-dot loader. Added order-card-shaped skeletons matching the final order card structure: top accent, order/date/total/status placeholders, item thumbnail rows, and live-status progress placeholders.
+- **Task 1 fixed:** `TrackingScreen.tsx` no longer shows a centered bouncing-dot loader. Added a tracking-card-shaped skeleton matching the final tracking layout: order header, item rows, live-status header, and vertical timeline placeholders.
+- Skeleton placeholders reuse the existing app-wide `.shimmer` class so the loading language matches `ProductCard.tsx` instead of introducing a new animation style.
+- **Task 3 fixed:** Added `hapticTap()` helper in `src/lib/utils.ts` using `navigator.vibrate` behind a feature check.
+- **Task 3 fixed:** Added short haptic confirmation taps on ProductCard add-to-cart, Checkout order success, wallet redeem success, promo apply success, and referral-code apply success. This is a no-op on unsupported desktop/iOS browsers.
+- **Task 2 fixed:** Added requested additive typography tokens in `src/index.css`: `--text-2xs`, `--text-xs`, `--text-sm`, `--text-base`, `--text-md`, `--text-lg`, `--text-xl`, `--text-2xl`, `--text-display`.
+- **Task 2 POC:** Migrated `HomeScreen.tsx` arbitrary font-size classes with exact token matches only (`12/13/14/18/22px`, etc.). Left `10.5px`, `15px`, and `20px` as arbitrary sizes because the approved token list has no exact matching value and changing them would alter the screenshot.
+- **Task 4 not implemented:** Added the requested pull-to-refresh mini-plan to `tasks/todo.md` and left implementation pending approval.
+
+### Touched files:
+- `src/screens/OrdersScreen.tsx`
+- `src/screens/TrackingScreen.tsx`
+- `src/lib/utils.ts`
+- `src/components/ProductCard.tsx`
+- `src/screens/CheckoutScreen.tsx`
+- `src/index.css`
+- `src/screens/HomeScreen.tsx`
+- `tasks/todo.md`
+- `tasks/lessons.md`
+- `AGENT_LOG.md`
+
+### Verification:
+- Baseline before changes: `npx tsc --noEmit` = 0 errors; `npm run build` = ✓ built
+- After changes: `npx tsc --noEmit` = 0 errors; `npm run build` = ✓ built
+- Grep verified no `animate-bounce` / bouncing-dot loader remains in `OrdersScreen.tsx` or `TrackingScreen.tsx`.
+- Grep verified haptic helper and calls are present in the intended success paths.
+
+### Commit:
+- Not committed in this environment; changed files staged together for handoff.
+
+### এখনো Pending (যদি থাকে):
+- Manual mobile testing: throttle network and verify Orders/Tracking skeletons appear with no blank centered spinner.
+- Manual Android/Chrome testing: confirm a subtle haptic tap on add-to-cart, order success, wallet redeem, promo/referral apply.
+- Typography migration follow-up: screens/components outside `HomeScreen.tsx` still contain arbitrary `text-[Npx]` sizes and should be migrated gradually, one screen/batch at a time.
+- Pull-to-refresh implementation is pending Buddy approval of the `tasks/todo.md` mini-plan.
+
+### পরবর্তী Agent এর জন্য নোট:
+- When adding skeleton loaders, match the final content shape and reuse `.shimmer`; don't use centered bouncing-dot loaders for full-screen data states.
+- The requested `--text-xs/sm/base/...` tokens intentionally define the BAS type scale; be aware these token names also affect any existing Tailwind `text-xs/text-sm/...` classes app-wide.
+
+---
+
 ## Session: 2026-07-24 08:17 AST, Premium pending fixes — GPU occasion zoom + spacing/card guards
 **Agent/Tool:** Arena.ai Agent Mode
 **Feature worked on:** BAS Next Agent Task — remaining premium audit items after commit `9e0d697`

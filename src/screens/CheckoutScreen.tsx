@@ -15,7 +15,7 @@ import {
 } from '../lib/store';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db, isFirebaseConfigured, uploadToCloudinary } from '../lib/firebase';
-import { safeArray, isValidPhone, copyText, ls } from '../lib/utils';
+import { safeArray, isValidPhone, copyText, ls, hapticTap } from '../lib/utils';
 import { LocationGate } from '../components/LocationGate';
 import PaymentAppPopup from '../components/PaymentAppPopup';
 import { BD_DISTRICTS } from '../lib/zones';
@@ -132,11 +132,13 @@ export default function CheckoutScreen({ onBack }: Props) {
         }
       }
       setReferralApplied(true);
+      hapticTap();
     } catch (e) {
       console.warn('Referral validation failed:', e);
       // Offline / transient failure — allow optimistic mark; final server check
       // at submit will still reject invalid codes.
       setReferralApplied(true);
+      hapticTap();
     } finally {
       setReferralLoading(false);
     }
@@ -441,6 +443,7 @@ export default function CheckoutScreen({ onBack }: Props) {
         // Success message will be shown in the UI via the apply state
       }
       
+      hapticTap();
       clear();
       go({ name: 'success', orderId: o.id });
     } catch (error) {
@@ -830,6 +833,7 @@ export default function CheckoutScreen({ onBack }: Props) {
                           }
                           if (maxRedeemable <= 0) return;
                           setPendingLoyaltyRedeem(maxRedeemable);
+                          hapticTap();
                           setPromoError('');
                         }}
                         disabled={!canRedeem}
@@ -899,6 +903,7 @@ export default function CheckoutScreen({ onBack }: Props) {
 
                       if (matchedCoupon) {
                         applyPromo(matchedCoupon.discount);
+                        hapticTap();
                         setPromoError('');
                         return;
                       }
@@ -910,6 +915,7 @@ export default function CheckoutScreen({ onBack }: Props) {
                       }
                       if (enteredCode === settings.promoCode.trim().toUpperCase()) {
                         applyPromo(settings.promoPercent);
+                        hapticTap();
                         setPromoError('');
                       } else {
                         setPromoError('Invalid promo code');

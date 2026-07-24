@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Heart, Plus, Star, Check, Award, Sparkles } from 'lucide-react';
 import { useCart, formatINR } from '../lib/store';
+import { hapticTap } from '../lib/utils';
 import type { Product } from '../types';
 
 type Props = {
@@ -45,6 +46,7 @@ export default function ProductCard({ product, wished, onOpen, onWish, variant =
       price: product.price + (firstWeight.price ?? 0),
       quantity: 1,
     });
+    hapticTap();
     setAdded(true);
     window.setTimeout(() => setAdded(false), 800);
   };

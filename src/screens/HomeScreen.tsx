@@ -252,10 +252,10 @@ export default function HomeScreen({
                       <span className="inline-flex w-fit items-center rounded-full bg-white/90 px-3 py-[5px] text-[10.5px] font-bold uppercase tracking-wider text-primary shadow-card backdrop-blur-md">
                         {banner.tag}
                       </span>
-                      <h3 className="max-w-[18ch] text-[22px] font-bold leading-[1.15] tracking-[-0.02em] text-white">
+                      <h3 className="max-w-[18ch] text-2xl font-bold leading-[1.15] tracking-[-0.02em] text-white">
                         {banner.title}
                       </h3>
-                      <p className="max-w-[26ch] text-[12px] font-medium text-white/85">
+                      <p className="max-w-[26ch] text-sm font-medium text-white/85">
                         {banner.subtitle}
                       </p>
                       <button
@@ -280,7 +280,7 @@ export default function HomeScreen({
                             go({ name: 'product', productId: availableProducts[0]?.id || 'p1' });
                           }
                         }}
-                        className="mt-1 inline-flex h-[34px] w-fit items-center gap-1.5 rounded-full bg-primary px-[18px] text-[12px] font-bold text-white shadow-btn transition hover:-translate-y-0.5 hover:bg-primary-hover active:scale-95"
+                        className="mt-1 inline-flex h-[34px] w-fit items-center gap-1.5 rounded-full bg-primary px-[18px] text-sm font-bold text-white shadow-btn transition hover:-translate-y-0.5 hover:bg-primary-hover active:scale-95"
                       >
                         {banner.type === 'discount'
                           ? copiedId === banner.id
@@ -349,7 +349,7 @@ export default function HomeScreen({
                 >
                   <OccasionIcon id={category.icon} size={13} />
                 </span>
-                <span className="whitespace-nowrap text-[13px] font-medium text-text">{category.name}</span>
+                <span className="whitespace-nowrap text-base font-medium text-text">{category.name}</span>
               </button>
             ))}
           </div>
@@ -366,12 +366,12 @@ export default function HomeScreen({
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-[15px] font-semibold text-text">Save wishlist & track orders</p>
-                  <p className="mt-1 text-[13px] leading-relaxed text-text-secondary">Sign in once and keep every favourite cake, promo, and past order in one place.</p>
+                  <p className="mt-1 text-base leading-relaxed text-text-secondary">Sign in once and keep every favourite cake, promo, and past order in one place.</p>
                 </div>
                 <button
                   type="button"
                   onClick={() => onAuthOpen?.()}
-                  className="flex h-11 shrink-0 items-center justify-center rounded-[16px] bg-primary px-4 text-[13px] font-semibold text-white shadow-btn transition hover:bg-primary-hover active:scale-95"
+                  className="flex h-11 shrink-0 items-center justify-center rounded-[16px] bg-primary px-4 text-base font-semibold text-white shadow-btn transition hover:bg-primary-hover active:scale-95"
                 >
                   Sign in
                 </button>
@@ -389,12 +389,12 @@ export default function HomeScreen({
                   <p className="text-[15px] font-semibold text-text">
                     {upcoming.name} {upcoming.daysLeft === 0 ? 'is today' : `is in ${upcoming.daysLeft} day${upcoming.daysLeft > 1 ? 's' : ''}`}
                   </p>
-                  <p className="mt-1 text-[13px] leading-relaxed text-text-secondary">Plan a cake early to lock your preferred flavour, finish, and delivery slot.</p>
+                  <p className="mt-1 text-base leading-relaxed text-text-secondary">Plan a cake early to lock your preferred flavour, finish, and delivery slot.</p>
                 </div>
                 <button
                   type="button"
                   onClick={() => go({ name: 'tabs', tab: 'categories' })}
-                  className="flex h-11 shrink-0 items-center justify-center rounded-[16px] border border-border bg-secondary px-4 text-[13px] font-semibold text-primary shadow-card transition active:scale-95"
+                  className="flex h-11 shrink-0 items-center justify-center rounded-[16px] border border-border bg-secondary px-4 text-base font-semibold text-primary shadow-card transition active:scale-95"
                 >
                   Order
                 </button>
@@ -408,14 +408,14 @@ export default function HomeScreen({
             <div className="rounded-[28px] border border-border bg-surface p-4 shadow-card">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
-                  <p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-primary">Search results</p>
+                  <p className="text-sm font-semibold uppercase tracking-[0.16em] text-primary">Search results</p>
                   <h2 className="mt-1 text-[20px] font-semibold tracking-[-0.02em] text-text">Results for “{search.trim()}”</h2>
-                  <p className="mt-1 text-[14px] text-text-secondary">{searchResults.length} cakes match your taste right now.</p>
+                  <p className="mt-1 text-md text-text-secondary">{searchResults.length} cakes match your taste right now.</p>
                 </div>
                 <button
                   type="button"
                   onClick={() => go({ name: 'tabs', tab: 'categories' })}
-                  className="rounded-full border border-border bg-bg px-3 py-2 text-[12px] font-semibold text-primary transition active:scale-95"
+                  className="rounded-full border border-border bg-bg px-3 py-2 text-sm font-semibold text-primary transition active:scale-95"
                 >
                   View all
                 </button>
@@ -443,13 +443,13 @@ export default function HomeScreen({
               <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-[22px] bg-secondary text-primary shadow-card">
                 <Search className="h-7 w-7" strokeWidth={1.75} />
               </div>
-              <h2 className="mt-5 text-[22px] font-bold tracking-[-0.02em] text-text">No results for “{searchTerm}”</h2>
-              <p className="mt-2 text-[14px] leading-relaxed text-text-secondary">Try a simpler cake name, another flavour, or browse by occasion instead.</p>
+              <h2 className="mt-5 text-2xl font-bold tracking-[-0.02em] text-text">No results for “{searchTerm}”</h2>
+              <p className="mt-2 text-md leading-relaxed text-text-secondary">Try a simpler cake name, another flavour, or browse by occasion instead.</p>
               <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
                 <button
                   type="button"
                   onClick={() => setSearch('')}
-                  className="flex h-12 items-center justify-center rounded-[18px] border border-border bg-bg px-5 text-[13px] font-semibold text-text transition active:scale-95"
+                  className="flex h-12 items-center justify-center rounded-[18px] border border-border bg-bg px-5 text-base font-semibold text-text transition active:scale-95"
                 >
                   Clear search
                 </button>
@@ -459,7 +459,7 @@ export default function HomeScreen({
                     setSearch('');
                     go({ name: 'tabs', tab: 'categories' });
                   }}
-                  className="flex h-12 items-center justify-center rounded-[18px] bg-primary px-5 text-[13px] font-semibold text-white shadow-btn transition hover:bg-primary-hover active:scale-95"
+                  className="flex h-12 items-center justify-center rounded-[18px] bg-primary px-5 text-base font-semibold text-white shadow-btn transition hover:bg-primary-hover active:scale-95"
                 >
                   Browse all cakes
                 </button>
@@ -492,12 +492,12 @@ export default function HomeScreen({
                   </div>
                 )}
                 <div className="min-w-0 flex-1">
-                  <p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-primary">Order again</p>
-                  <h3 className="mt-1 truncate text-[18px] font-semibold tracking-[-0.02em] text-text">
+                  <p className="text-sm font-semibold uppercase tracking-[0.16em] text-primary">Order again</p>
+                  <h3 className="mt-1 truncate text-xl font-semibold tracking-[-0.02em] text-text">
                     {firstItem?.name ?? 'Your last order'}
                     {lastOrder.items.length > 1 ? ` + ${lastOrder.items.length - 1} more` : ''}
                   </h3>
-                  <p className="mt-1 text-[13px] text-text-secondary">Re-add everything from your most recent order in one tap.</p>
+                  <p className="mt-1 text-base text-text-secondary">Re-add everything from your most recent order in one tap.</p>
                 </div>
                 <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[16px] bg-secondary text-primary shadow-card transition group-hover:translate-x-0.5">
                   <ArrowRight className="h-4 w-4" strokeWidth={2.1} />
@@ -531,15 +531,15 @@ export default function HomeScreen({
           <div className="overflow-hidden rounded-[30px] border border-border bg-surface p-5 shadow-card">
             <div className="flex items-center gap-4">
               <div className="min-w-0 flex-1">
-                <span className="inline-flex items-center gap-2 rounded-full bg-secondary px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-primary">
+                <span className="inline-flex items-center gap-2 rounded-full bg-secondary px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-primary">
                   For you
                 </span>
-                <h3 className="mt-3 text-[22px] font-bold tracking-[-0.02em] text-text">Picked for your taste</h3>
-                <p className="mt-2 text-[14px] leading-relaxed text-text-secondary">{forYouLabel}</p>
+                <h3 className="mt-3 text-2xl font-bold tracking-[-0.02em] text-text">Picked for your taste</h3>
+                <p className="mt-2 text-md leading-relaxed text-text-secondary">{forYouLabel}</p>
                 <button
                   type="button"
                   onClick={() => (forYouProduct ? go({ name: 'product', productId: forYouProduct.id }) : go({ name: 'customize' }))}
-                  className="mt-5 inline-flex h-11 items-center gap-2 rounded-[18px] bg-primary px-4 text-[13px] font-semibold text-white shadow-btn transition hover:bg-primary-hover active:scale-95"
+                  className="mt-5 inline-flex h-11 items-center gap-2 rounded-[18px] bg-primary px-4 text-base font-semibold text-white shadow-btn transition hover:bg-primary-hover active:scale-95"
                 >
                   {forYouProduct ? 'View cake' : 'Customize yours'}
                   <ArrowRight className="h-4 w-4" strokeWidth={2.2} />
@@ -559,8 +559,8 @@ export default function HomeScreen({
         </section>
 
         <div className="mt-9 px-6 pb-4 text-center">
-          <div className="text-[18px] font-semibold tracking-[-0.02em] text-text">Bake Art Style</div>
-          <div className="mt-1 text-[12px] font-medium uppercase tracking-[0.18em] text-text-tertiary">Handcrafted since 2018</div>
+          <div className="text-xl font-semibold tracking-[-0.02em] text-text">Bake Art Style</div>
+          <div className="mt-1 text-sm font-medium uppercase tracking-[0.18em] text-text-tertiary">Handcrafted since 2018</div>
         </div>
       </div>
 
@@ -570,12 +570,12 @@ export default function HomeScreen({
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-[22px] bg-secondary text-primary shadow-card">
               <Megaphone size={28} strokeWidth={1.75} />
             </div>
-            <h3 className="mt-5 text-center text-[22px] font-bold tracking-[-0.02em] text-text">{activeNotice.title}</h3>
-            <p className="mt-3 text-center text-[14px] leading-relaxed text-text-secondary">{activeNotice.noticeText}</p>
+            <h3 className="mt-5 text-center text-2xl font-bold tracking-[-0.02em] text-text">{activeNotice.title}</h3>
+            <p className="mt-3 text-center text-md leading-relaxed text-text-secondary">{activeNotice.noticeText}</p>
             <button
               type="button"
               onClick={() => setActiveNotice(null)}
-              className="mt-6 flex h-12 w-full items-center justify-center rounded-[18px] bg-primary text-[13px] font-semibold text-white shadow-btn transition hover:bg-primary-hover active:scale-95"
+              className="mt-6 flex h-12 w-full items-center justify-center rounded-[18px] bg-primary text-base font-semibold text-white shadow-btn transition hover:bg-primary-hover active:scale-95"
             >
               Close
             </button>

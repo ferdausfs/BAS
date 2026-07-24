@@ -91,6 +91,17 @@
      Poppins+Hind Siliguri stack. BrandLogo wordmark is bold Poppins. === */
   --font-body:    "Poppins", "Hind Siliguri", system-ui, -apple-system, sans-serif;
 
+  /* === Typography scale tokens (matches current most-used arbitrary sizes) === */
+  --text-2xs: 10px;
+  --text-xs: 11px;
+  --text-sm: 12px;
+  --text-base: 13px;
+  --text-md: 14px;
+  --text-lg: 16px;
+  --text-xl: 18px;
+  --text-2xl: 22px;
+  --text-display: 28px;
+
   /* === Spacing scale tokens (4px base) === */
   --spacing-1: 4px;
   --spacing-2: 8px;

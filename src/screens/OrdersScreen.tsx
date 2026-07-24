@@ -5,6 +5,68 @@ import { useOrdersHook } from '../hooks/useOrders';
 import { safeArray } from '../lib/utils';
 import type { CartItem, Order } from '../types';
 
+
+function ShimmerBlock({ className }: { className: string }) {
+  return (
+    <span className={`shimmer relative block overflow-hidden ${className}`} aria-hidden="true" />
+  );
+}
+
+function OrderSkeletonCard() {
+  return (
+    <article className="overflow-hidden rounded-2xl border border-border bg-surface shadow-card anim-fade" aria-hidden="true">
+      <div className="h-[3px] w-full bg-secondary" />
+      <div className="flex items-start justify-between px-4 pt-3.5 pb-3">
+        <div className="space-y-2">
+          <ShimmerBlock className="h-2.5 w-24 rounded-full" />
+          <ShimmerBlock className="h-3 w-28 rounded-full" />
+        </div>
+        <div className="flex flex-col items-end gap-2">
+          <ShimmerBlock className="h-5 w-16 rounded-full" />
+          <ShimmerBlock className="h-5 w-20 rounded-full" />
+        </div>
+      </div>
+      <div className="space-y-2.5 px-4 pb-2">
+        {[0, 1].map((item) => (
+          <div key={item} className="flex items-center gap-4">
+            <ShimmerBlock className="h-14 w-14 shrink-0 rounded-2xl" />
+            <div className="min-w-0 flex-1 space-y-2">
+              <ShimmerBlock className="h-3.5 w-3/4 rounded-full" />
+              <ShimmerBlock className="h-2.5 w-24 rounded-full" />
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="mx-4 border-t border-dashed border-divider" />
+      <div className="px-4 pt-3.5 pb-4">
+        <div className="mb-2.5 flex items-center justify-between">
+          <ShimmerBlock className="h-2.5 w-20 rounded-full" />
+          <ShimmerBlock className="h-3 w-16 rounded-full" />
+        </div>
+        <ShimmerBlock className="h-1.5 w-full rounded-full" />
+        <div className="mt-2.5 flex items-center justify-between gap-2">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="flex flex-1 flex-col items-center gap-1">
+              <ShimmerBlock className="h-5 w-5 rounded-full" />
+              <ShimmerBlock className="h-2 w-8 rounded-full" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function OrdersSkeletonList() {
+  return (
+    <div className="space-y-4 pt-2" role="status" aria-label="Loading orders">
+      {Array.from({ length: 3 }).map((_, i) => (
+        <OrderSkeletonCard key={i} />
+      ))}
+    </div>
+  );
+}
+
 const STATUSES: { key: string; label: string; icon: any; color: string; bg: string }[] = [
   { key: 'placed',    label: 'Placed',    icon: Check,   color: '#FF8A65', bg: '#FFF3E0' },
   { key: 'confirmed', label: 'Confirmed', icon: Package, color: '#FF9F68', bg: '#FFF4E8' },
@@ -119,14 +181,7 @@ export default function OrdersScreen() {
 
       <div className="no-scrollbar flex-1 overflow-y-auto px-6 pb-32">
         {loading ? (
-          <div className="flex flex-col items-center justify-center pt-16 text-center anim-fade">
-            <div className="flex gap-1.5 justify-center py-4">
-              {[0, 1, 2].map((i) => (
-                <div key={i} className="h-2 w-2 animate-bounce rounded-full bg-ink-200" style={{ animationDelay: `${i * 0.15}s` }} />
-              ))}
-            </div>
-            <p className="text-[12px] text-text-tertiary">Loading your orders...</p>
-          </div>
+          <OrdersSkeletonList />
         ) : activeTab === 'pending' && hasPendingCheckout ? (
           <PendingCheckoutCard
             items={cartItems}
