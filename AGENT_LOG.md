@@ -1,3 +1,31 @@
+## Session: 2026-07-24 10:25 AST, Home banner — Uiverse rotating image-only offer card
+**Agent/Tool:** Arena.ai Agent Mode — ui-designer/frontend polish
+**Feature worked on:** Home Exclusive Offers banner visual treatment
+
+### কী হয়েছে:
+- Reworked Home banner into a Uiverse-inspired rotating gradient frame using `.bas-banner-frame` + `@keyframes basBannerRotate` in `src/index.css`.
+- Removed visible banner overlay text, CTA/copy button, dark text gradients, manual carousel arrow buttons, and dot controls from the banner card.
+- Banner remains a real full-image `<button>` with an accessible `aria-label`; tapping/clicking the image opens the product/link/custom/categories target, and notice banners still open the existing notice modal.
+- Added `prefers-reduced-motion: reduce` handling so the rotating border stops for reduced-motion users.
+
+### Touched files:
+- `src/screens/HomeScreen.tsx`
+- `src/index.css`
+- `AGENT_LOG.md`
+
+### Verification:
+- `npx tsc --noEmit` = 0 errors
+- `npm run build` = ✓ built
+- Grep verified old visible banner CTA/copy/arrows state strings are removed from `HomeScreen.tsx`.
+
+### Commit:
+- Not committed in this environment; changed files staged together for handoff.
+
+### এখনো Pending (যদি থাকে):
+- Manual visual check on mobile: confirm the rotating border frames the banner cleanly, no banner text/buttons appear over the image, and tapping the image opens the expected destination.
+
+---
+
 ## Session: 2026-07-24 09:39 AST, Home UI design pass — search hierarchy, tap targets, type tokens, skeleton
 **Agent/Tool:** Arena.ai Agent Mode — ui-designer role
 **Feature worked on:** Home screen UI polish after approved `BAS-HOME-UI-DESIGN-REVIEW-20260724.md`

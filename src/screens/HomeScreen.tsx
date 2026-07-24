@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowRight, Cake, ChevronLeft, ChevronRight, Megaphone, RotateCcw, Search } from 'lucide-react';
+import { ArrowRight, Cake, Megaphone, RotateCcw, Search } from 'lucide-react';
 import { useDebounce } from '../hooks/useDebounce';
 import { useUI, useUser, useOrders, useAuthStore, useCart } from '../lib/store';
 import { ls, safeArray } from '../lib/utils';
@@ -71,7 +71,6 @@ export default function HomeScreen({
   const [occasionSheetOpen, setOccasionSheetOpen] = useState(false);
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebounce(search, 300);
-  const [copiedId, setCopiedId] = useState<string | null>(null);
   const [activeNotice, setActiveNotice] = useState<Banner | null>(null);
   useModalDepth(!!activeNotice);
 
@@ -204,6 +203,17 @@ export default function HomeScreen({
     return () => clearInterval(timer);
   }, [activeBanners.length]);
 
+  const openBanner = (banner: Banner) => {
+    if (banner.type === 'notice') {
+      setActiveNotice(banner);
+      return;
+    }
+    if (banner.productId) go({ name: 'product', productId: banner.productId });
+    else if (banner.link === 'customize') go({ name: 'customize' });
+    else if (banner.link === 'categories') go({ name: 'tabs', tab: 'categories' });
+    else go({ name: 'product', productId: availableProducts[0]?.id || 'p1' });
+  };
+
   return (
     <div className="flex h-full flex-col bg-bg">
       <div className="no-scrollbar flex-1 overflow-y-auto pb-36">
@@ -222,122 +232,36 @@ export default function HomeScreen({
           <section className="mt-6 anim-up delay-1">
             <SectionHeader
               title="Exclusive Offers"
-              subtitle="Seasonal picks, limited bundles, and soft-launch specials"
+              subtitle="Tap any offer image to open it"
               action={{ label: 'See all', onClick: () => go({ name: 'tabs', tab: 'categories' }) }}
             />
             <div className="mt-4 px-6">
-              <div className="relative h-[180px] overflow-hidden rounded-[24px] shadow-card">
-                {activeBanners.map((banner, index) => (
-                  <button
-                    key={banner.id}
-                    type="button"
-                    onClick={() => {
-                      if (banner.productId) go({ name: 'product', productId: banner.productId });
-                      else if (banner.link === 'customize') go({ name: 'customize' });
-                      else if (banner.link === 'categories') go({ name: 'tabs', tab: 'categories' });
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        if (banner.productId) go({ name: 'product', productId: banner.productId });
-                        else if (banner.link === 'customize') go({ name: 'customize' });
-                        else if (banner.link === 'categories') go({ name: 'tabs', tab: 'categories' });
-                      }
-                    }}
-                    aria-label={`Banner: ${banner.title}`}
-                    className={`absolute inset-0 cursor-pointer transition-opacity duration-700 ${
-                      index === bannerIdx ? 'relative z-10 opacity-100' : 'absolute inset-0 z-0 opacity-0'
-                    }`}
-                  >
-                    <img
-                      src={banner.image}
-                      alt={banner.title}
-                      loading="lazy"
-                      onError={(e) => { const i = e.currentTarget as HTMLImageElement; i.onerror = null; i.src = '/cakes/logo-cake.png'; }}
-                      className="absolute inset-0 h-full w-full object-cover transition-transform duration-[5000ms] ease-out"
-                      style={index === bannerIdx ? { transform: 'scale(1.06)' } : { transform: 'scale(1)' }}
-                    />
-                    <span className="pointer-events-none absolute inset-0 z-[2] bg-gradient-to-r from-black/65 via-black/35 to-black/5" />
-                    <span className="pointer-events-none absolute inset-0 z-[2] bg-gradient-to-t from-black/55 via-black/10 to-black/10" />
-
-                    <div className="relative z-[3] flex h-full flex-col justify-center gap-2 px-5 py-4 text-white [text-shadow:0_2px_12px_rgba(0,0,0,.45)]">
-                      <span className="inline-flex w-fit items-center rounded-full bg-white/90 px-3 py-[5px] text-micro font-bold uppercase tracking-wider text-primary shadow-card backdrop-blur-md">
-                        {banner.tag}
-                      </span>
-                      <h3 className="max-w-[18ch] text-2xl font-bold leading-[1.15] tracking-[-0.02em] text-white">
-                        {banner.title}
-                      </h3>
-                      <p className="max-w-[26ch] text-sm font-medium text-white/85">
-                        {banner.subtitle}
-                      </p>
-                      <button
-                        type="button"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          if (banner.type === 'discount') {
-                            if (banner.promoCode) {
-                              navigator.clipboard?.writeText(banner.promoCode);
-                              setCopiedId(banner.id);
-                              setTimeout(() => setCopiedId(null), 1500);
-                            }
-                          } else if (banner.type === 'notice') {
-                            setActiveNotice(banner);
-                          } else if (banner.productId) {
-                            go({ name: 'product', productId: banner.productId });
-                          } else if (banner.link === 'customize') {
-                            go({ name: 'customize' });
-                          } else if (banner.link === 'categories') {
-                            go({ name: 'tabs', tab: 'categories' });
-                          } else {
-                            go({ name: 'product', productId: availableProducts[0]?.id || 'p1' });
-                          }
-                        }}
-                        className="mt-1 inline-flex h-[34px] w-fit items-center gap-1.5 rounded-full bg-primary px-[18px] text-sm font-bold text-white shadow-btn transition hover:-translate-y-0.5 hover:bg-primary-hover active:scale-95"
-                      >
-                        {banner.type === 'discount'
-                          ? copiedId === banner.id
-                            ? 'Copied!'
-                            : `Copy: ${banner.promoCode || 'CODE'}`
-                          : (banner.ctaText || 'Shop Now')}
-                      </button>
-                    </div>
-                    </button>
-                ))}
-                {activeBanners.length > 1 && (
-                  <>
+              <div className="bas-banner-frame relative h-[190px] overflow-hidden rounded-[24px] p-[5px] shadow-card">
+                <div className="relative z-[2] h-full overflow-hidden rounded-[19px] bg-ink">
+                  {activeBanners.map((banner, index) => (
                     <button
+                      key={banner.id}
                       type="button"
-                      onClick={() => setBannerIdx((current) => (current - 1 + activeBanners.length) % activeBanners.length)}
-                      className="absolute left-2 top-1/2 z-20 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/85 text-text shadow-card transition active:scale-95 md:flex"
-                      aria-label="Previous"
+                      onClick={() => openBanner(banner)}
+                      aria-label={`Open offer: ${banner.title}`}
+                      className={`absolute inset-0 cursor-pointer overflow-hidden transition-opacity duration-700 ${
+                        index === bannerIdx ? 'z-10 opacity-100' : 'z-0 opacity-0'
+                      }`}
                     >
-                      <ChevronLeft className="h-4 w-4" strokeWidth={2.2} />
+                      <img
+                        src={banner.image}
+                        alt={banner.title}
+                        loading="lazy"
+                        decoding="async"
+                        onError={(e) => { const i = e.currentTarget as HTMLImageElement; i.onerror = null; i.src = '/cakes/logo-cake.png'; }}
+                        className="h-full w-full object-cover transition-transform duration-[5000ms] ease-out"
+                        style={index === bannerIdx ? { transform: 'scale(1.05)' } : { transform: 'scale(1)' }}
+                      />
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => setBannerIdx((current) => (current + 1) % activeBanners.length)}
-                      className="absolute right-2 top-1/2 z-20 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/85 text-text shadow-card transition active:scale-95 md:flex"
-                      aria-label="Next"
-                    >
-                      <ChevronRight className="h-4 w-4" strokeWidth={2.2} />
-                    </button>
-                  </>
-                )}
-              </div>
-              {activeBanners.length > 1 && (
-                <div className="flex justify-center gap-2 pt-3 pb-1">
-                  {activeBanners.map((_, index) => (
-                    <button
-                      key={index}
-                      type="button"
-                      onClick={() => setBannerIdx(index)}
-                      className={`h-2 w-2 rounded-full transition-colors ${index === bannerIdx ? 'bg-primary' : 'bg-border'}`}
-                      aria-label={`Go to slide ${index + 1}`}
-                    />
                   ))}
                 </div>
-              )}
               </div>
+            </div>
           </section>
         )}
 
