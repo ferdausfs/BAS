@@ -6,6 +6,7 @@ import {
   Copy, Share2, Navigation, Loader2, Tag, ClipboardList, Camera, Mail, Phone, Banknote, Search
 } from 'lucide-react';
 import { useUI, useAuthStore, useSettingsStore, getReferralCode, claimReferralRewards, WALLET_REFERRAL_BONUS } from '../lib/store';
+import { translate, useLanguageStore, useT, type Language } from '../lib/i18n';
 import { useAuth } from '../hooks/useAuth';
 import { doc, setDoc } from 'firebase/firestore';
 import { db, isFirebaseConfigured } from '../lib/firebase';
@@ -119,6 +120,9 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
   const { go } = useUI();
   const { user } = useAuthStore();
   const { settings } = useSettingsStore();
+  const language = useLanguageStore((state) => state.language);
+  const setLanguage = useLanguageStore((state) => state.setLanguage);
+  const t = useT();
   const effectiveIsAdmin = isAdmin || !!user?.isAdmin;
   const { signOut } = useAuth();
   const referralCode = getReferralCode(user);
@@ -142,6 +146,16 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
     } else {
       useUI.getState().addNotification('WhatsApp', 'WhatsApp number not set — use Customer Service chat.');
     }
+  };
+
+  const changeLanguage = (nextLanguage: Language) => {
+    setLanguage(nextLanguage);
+    useUI.getState().addNotification(
+      translate(nextLanguage, 'profile.languageChangedTitle'),
+      nextLanguage === 'bn'
+        ? translate(nextLanguage, 'profile.languageChangedBn')
+        : translate(nextLanguage, 'profile.languageChangedEn')
+    );
   };
 
   const [, setSavedProfile] = useState<CustomerProfile>(() =>
@@ -387,42 +401,42 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
   const profileRows = [
     {
       Icon: User,
-      label: 'Your profile',
+      label: t('profile.yourProfile'),
       action: () => setProfileView('edit'),
     },
     {
       Icon: MapPin,
-      label: 'Manage Address',
+      label: t('profile.manageAddress'),
       action: () => setProfileView('address'),
     },
     {
       Icon: CreditCard,
-      label: 'Payment Methods',
+      label: t('profile.paymentMethods'),
       action: () => setProfileView('payment'),
     },
     {
       Icon: ClipboardList,
-      label: 'My Orders',
+      label: t('profile.myOrders'),
       action: () => go({ name: 'tabs', tab: 'orders' }),
     },
     {
       Icon: Tag,
-      label: 'My Coupons',
+      label: t('profile.myCoupons'),
       action: () => go({ name: 'coupons' }),
     },
     {
       Icon: WalletIcon,
-      label: 'My Wallet',
+      label: t('profile.myWallet'),
       action: () => setWalletHistoryOpen(true),
     },
     {
       Icon: HelpCircle,
-      label: 'Help Center',
+      label: t('profile.help'),
       action: () => setProfileView('help'),
     },
     {
       Icon: Settings,
-      label: 'Settings',
+      label: t('profile.settings'),
       action: () => setProfileView('settings'),
     },
   ];
@@ -430,22 +444,22 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
   const settingsRows = [
     {
       Icon: Bell,
-      label: 'Notification Settings · Coming soon',
+      label: t('profile.notificationSettings'),
       action: () => useUI.getState().addNotification('Notifications', 'Notification preferences — Coming soon. Order updates live in Orders tab.'),
     },
     {
       Icon: KeyRound,
-      label: 'Password Manager · Contact support',
+      label: t('profile.passwordManager'),
       action: () => useUI.getState().addNotification('Password Manager', 'To change password, please contact support securely.'),
     },
     {
       Icon: Sun,
-      label: 'Theme',
+      label: t('profile.theme'),
       action: () => useUI.getState().addNotification('Theme', 'Bake Art Style theme is already active.'),
     },
     {
       Icon: Trash2,
-      label: 'Delete Account',
+      label: t('profile.deleteAccount'),
       action: () => useUI.getState().addNotification('Delete Account', 'Please contact support to delete your account securely.'),
     },
   ];
@@ -457,15 +471,15 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
         <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-secondary text-coral shadow-card">
           <User size={36} strokeWidth={1.75} />
         </div>
-        <h2 className="text-2xl font-bold text-ink mb-2">Sign In</h2>
+        <h2 className="text-2xl font-bold text-ink mb-2">{t('profile.signInTitle')}</h2>
         <p className="text-sm text-ink-300 mb-6">
-          Sign in to save your delivery info, orders, wishlist, and profile.
+          {t('profile.signInBody')}
         </p>
         <button
           onClick={onAuthOpen}
           className="flex items-center gap-2 px-8 py-3.5 rounded-2xl bg-coral text-white font-bold text-sm shadow-btn transition active:scale-95"
         >
-          <LogIn className="w-4 h-4" /> Sign In
+          <LogIn className="w-4 h-4" /> {t('common.signIn')}
         </button>
       </div>
     );
@@ -487,12 +501,12 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
               type="button"
               onClick={() => profileView === 'main' ? go({ name: 'tabs', tab: 'home' }) : setProfileView('main')}
               className="absolute left-0 flex h-12 w-12 items-center justify-center rounded-full bg-surface text-ink-200 shadow-card transition active:scale-95"
-              aria-label="Back"
+              aria-label={t('common.back')}
             >
               <ArrowLeft className="h-5 w-5" strokeWidth={1.9} />
             </button>
             <h1 className="text-[20px] font-semibold tracking-tight text-ink">
-              {profileView === 'settings' ? 'Settings' : profileView === 'help' ? 'Help Center' : profileView === 'edit' ? 'Your Profile' : profileView === 'address' ? 'Manage Address' : profileView === 'payment' ? 'Payment Methods' : 'Profile'}
+              {profileView === 'settings' ? t('profile.settings') : profileView === 'help' ? t('profile.help') : profileView === 'edit' ? t('profile.yourProfile') : profileView === 'address' ? t('profile.manageAddress') : profileView === 'payment' ? t('profile.paymentMethods') : t('profile.title')}
             </h1>
           </div>
         </header>
@@ -551,6 +565,31 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
 
       {profileView === 'settings' && (
         <div className="no-scrollbar flex-1 overflow-y-auto px-6 pb-32 pt-6 anim-up">
+          <section className="mb-5 rounded-2xl border border-border bg-surface p-4 shadow-card">
+            <div className="flex items-center gap-3">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-secondary text-coral">
+                <Globe2 className="h-5 w-5" strokeWidth={1.8} />
+              </span>
+              <div className="min-w-0 flex-1">
+                <h2 className="text-card-title font-bold text-ink">{t('profile.language')}</h2>
+                <p className="mt-1 text-sm text-ink-300">{t('profile.languageSub')}</p>
+              </div>
+            </div>
+            <div className="mt-4 grid grid-cols-2 gap-2 rounded-2xl bg-bg p-1" role="group" aria-label={t('profile.language')}>
+              {(['bn', 'en'] as const).map((option) => (
+                <button
+                  key={option}
+                  type="button"
+                  onClick={() => changeLanguage(option)}
+                  className={`h-11 rounded-xl text-sm font-bold transition active:scale-95 ${language === option ? 'bg-primary text-white shadow-btn' : 'text-text-secondary'}`}
+                  aria-pressed={language === option}
+                >
+                  {option === 'bn' ? t('profile.bangla') : t('profile.english')}
+                </button>
+              ))}
+            </div>
+          </section>
+
           <div className="mt-2">
             {settingsRows.map((row, i) => (
               <ProfileReferenceRow
@@ -570,7 +609,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
             className="mt-5 flex w-full items-center justify-center gap-2 rounded-[18px] border border-border bg-surface py-4 text-[15px] font-bold text-error shadow-card transition active:scale-[.98]"
           >
             <LogOut className="h-4 w-4" />
-            Sign out
+            {t('common.signOut')}
           </button>
         </div>
       )}
@@ -909,7 +948,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
                 type="button"
                 onClick={() => { setAddrLocateError(''); setEditingAddress(null); setShowAddressModal(false); }}
                 className="absolute left-0 flex h-12 w-12 items-center justify-center rounded-full bg-surface text-ink-200 shadow-card transition active:scale-95"
-                aria-label="Back"
+                aria-label={t('common.back')}
               >
                 <ArrowLeft className="h-5 w-5" strokeWidth={1.9} />
               </button>

@@ -2,6 +2,7 @@ import { Bell, ChevronDown, MapPin } from 'lucide-react';
 import { useUI, useLocation, useAuthStore } from '../lib/store';
 import SearchBar from './SearchBar';
 import NotificationBadge from './NotificationBadge';
+import { useT } from '../lib/i18n';
 
 interface Props {
   search: string;
@@ -30,6 +31,7 @@ export default function HomeTopBar({
   const district = useLocation((state) => state.district);
   const initial = (user?.name?.trim()?.[0] ?? 'B').toUpperCase();
   const unreadCount = notifications.filter((notification) => !notification.read).length;
+  const t = useT();
 
   return (
     <div className="relative z-10 anim-up bg-primary px-6 pb-[18px] pt-3">
@@ -38,7 +40,7 @@ export default function HomeTopBar({
           type="button"
           onClick={() => setTab('profile')}
           className="flex h-[50px] w-[50px] shrink-0 items-center justify-center overflow-hidden rounded-full bg-white/20 text-white transition active:scale-95"
-          aria-label="Profile"
+          aria-label={t('home.profile')}
         >
           {user?.avatar ? (
             <img src={user.avatar} alt="" className="h-full w-full object-cover" />
@@ -51,12 +53,12 @@ export default function HomeTopBar({
           type="button"
           onClick={() => setTab('profile')}
           className="min-w-0 flex-1 text-left leading-tight"
-          aria-label="Delivery location"
+          aria-label={t('home.deliveryLocation')}
         >
-          <span className="block text-sm text-white/75">Delivery to</span>
+          <span className="block text-sm text-white/75">{t('home.deliveryTo')}</span>
           <span className="mt-[3px] flex items-center gap-[7px] text-card-title font-medium text-white/95">
             <MapPin className="h-[18px] w-[18px] shrink-0 text-white/95" strokeWidth={1.8} />
-            <span className="truncate">{district || 'Set your location'}</span>
+            <span className="truncate">{district || t('home.setLocation')}</span>
             <ChevronDown className="h-[14px] w-[14px] shrink-0 text-white/70" strokeWidth={2.2} />
           </span>
         </button>
@@ -65,7 +67,7 @@ export default function HomeTopBar({
           type="button"
           onClick={onNotificationsOpen ?? (() => setTab('profile'))}
           className="relative flex h-[50px] w-[50px] shrink-0 items-center justify-center rounded-full bg-white/16 text-white transition active:scale-95"
-          aria-label="Notifications"
+          aria-label={t('home.notifications')}
         >
           <Bell className="h-[21px] w-[21px]" strokeWidth={1.8} />
           <NotificationBadge count={unreadCount} tone="light" className="right-[7px] top-[7px]" />

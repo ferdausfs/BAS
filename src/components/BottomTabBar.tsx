@@ -1,21 +1,23 @@
 import React from 'react';
 import { Home, CakeSlice, ShoppingBag, User } from 'lucide-react';
 import { useUI } from '../lib/store';
+import { useT } from '../lib/i18n';
 
 export default React.memo(function BottomTabBar() {
   const { tab, setTab } = useUI();
+  const t = useT();
   const tabs = [
-    { id: 'home' as const, icon: Home, label: 'Home' },
-    { id: 'categories' as const, icon: CakeSlice, label: 'Cake' },
-    { id: 'orders' as const, icon: ShoppingBag, label: 'Orders' },
-    { id: 'profile' as const, icon: User, label: 'Profile' },
+    { id: 'home' as const, icon: Home, label: t('nav.home') },
+    { id: 'categories' as const, icon: CakeSlice, label: t('nav.categories') },
+    { id: 'orders' as const, icon: ShoppingBag, label: t('nav.orders') },
+    { id: 'profile' as const, icon: User, label: t('nav.profile') },
   ];
   const activeIndex = Math.max(0, tabs.findIndex((item) => item.id === tab));
 
   return (
     <nav
       className="fixed bottom-0 left-0 right-0 z-[100] pointer-events-none"
-      aria-label="Primary navigation"
+      aria-label={t('nav.primary')}
       style={{ paddingBottom: 'env(safe-area-inset-bottom)', transform: 'translateZ(0)' }}
     >
       <div className="pointer-events-auto relative mx-4 mb-3 rounded-[24px] border border-border bg-surface p-1.5 shadow-float">

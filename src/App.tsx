@@ -22,6 +22,7 @@ import CouponsScreen from './screens/CouponsScreen';
 import AppErrorBoundary from './components/AppErrorBoundary';
 import { ChatBot } from './components/ChatBot';
 import OccasionZoomOverlay from './components/OccasionZoomOverlay';
+import I18nRuntimeTranslator from './components/I18nRuntimeTranslator';
 
 export default function App() {
   const { view, tab, chatOpen, modalDepth } = useUI();
@@ -148,6 +149,7 @@ export default function App() {
         <AuthSheet open={authOpen} onClose={() => setAuthOpen(false)} />
         <ChatBot />
         <OccasionZoomOverlay />
+        <I18nRuntimeTranslator />
       </div>
     </AppErrorBoundary>
   );

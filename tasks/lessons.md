@@ -324,3 +324,9 @@ For data-heavy mobile screens, avoid centered bouncing-dot loaders in empty spac
 
 ## Search intent state should prioritize results above browse/promotional modules (2026-07-24)
 When a screen enters an active search state, suppress non-search browse/promotional modules above the results (categories, banners, helper cards) instead of merely hiding the hero. Search results/no-results should appear immediately after the search chrome so typed intent gets priority. Keep the hidden modules in JSX behind `!hasSearch` rather than deleting them, so normal browse mode is unchanged.
+
+## Bangla-first i18n should be phased with sentence-level keys (2026-07-24)
+For the BAS bilingual rollout, default language is Bangla (`bn`) with English (`en`) as secondary. Do not big-bang translate every hard-coded string across Checkout/Admin/ChatBot in one pass; add i18n foundation first, then migrate screen batches. Prefer sentence-level translation keys with interpolation (`orders.summary`, `checkout.errors.invalidPhone`) over tiny word-by-word keys, and keep common Bangali-used English terms (Order, Checkout, Profile, Wallet, Coupon, Delivery, Payment, Search, Tracking, Support, bKash, Nagad) when they read more natural in Bangla mode.
+
+## Runtime i18n bridge is temporary broad coverage, not a replacement for explicit keys (2026-07-24)
+For a large existing app with hundreds of hard-coded strings, a runtime text/placeholder/aria-label translator can provide broad Bangla-first coverage quickly while preserving English mode. Treat it as a bridge: keep exact-match maps conservative, verify every phase with typecheck/build, and gradually migrate high-traffic screens to explicit `useT()` sentence-level keys. Product/admin-entered Firestore content still needs localized fields or owner-provided translations; runtime maps only translate known exact UI strings.

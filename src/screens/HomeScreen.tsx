@@ -13,6 +13,7 @@ import OccasionSheet from '../components/OccasionSheet';
 import OccasionIcon from '../components/OccasionIcon';
 import { useModalDepth } from '../hooks/useModalDepth';
 import type { Banner, CartItem, Product, SpecialDate } from '../types';
+import { useT } from '../lib/i18n';
 
 const STAGGER_DELAYS = ['delay-1', 'delay-2', 'delay-3', 'delay-4', 'delay-5'];
 
@@ -55,6 +56,7 @@ export default function HomeScreen({
   const { user } = useAuthStore();
   const { products, loading: productsLoading } = useProducts();
   const { banners } = useBanners();
+  const t = useT();
 
   const availableProducts = useMemo(
     () => safeArray<Product>(products).filter((product) => (product.approved ?? true) && (product.inStock ?? true)),
@@ -170,10 +172,10 @@ export default function HomeScreen({
   }, [availableProducts, orders, wishlist]);
 
   const forYouLabel = orders.length > 0
-    ? 'Inspired by your last order'
+    ? t('home.forYouLastOrder')
     : wishlist.length > 0
-      ? 'Pulled from your saved collection'
-      : 'A calm edit of best sellers this week';
+      ? t('home.forYouWishlist')
+      : t('home.forYouDefault');
 
   const searchResults = useMemo(() => {
     const query = debouncedSearch.trim().toLowerCase();
@@ -231,9 +233,9 @@ export default function HomeScreen({
         {!hasSearch && activeBanners.length > 0 && (
           <section className="mt-6 anim-up delay-1">
             <SectionHeader
-              title="Exclusive Offers"
-              subtitle="Tap any offer image to open it"
-              action={{ label: 'See all', onClick: () => go({ name: 'tabs', tab: 'categories' }) }}
+              title={t('home.exclusiveOffers')}
+              subtitle={t('home.exclusiveOffersSub')}
+              action={{ label: t('common.seeAll'), onClick: () => go({ name: 'tabs', tab: 'categories' }) }}
             />
             <div className="mt-4 px-6">
               <div className="bas-banner-frame relative h-[190px] overflow-hidden rounded-[24px] p-[5px] shadow-card">
@@ -268,9 +270,9 @@ export default function HomeScreen({
         {!hasSearch && (
           <section className="mt-6 anim-up delay-2">
             <SectionHeader
-              title="Explore Categories"
-              subtitle="Browse by occasion with soft pastel cues and quick jumps"
-              action={{ label: 'See all', onClick: () => go({ name: 'tabs', tab: 'categories' }) }}
+              title={t('home.exploreCategories')}
+              subtitle={t('home.exploreCategoriesSub')}
+              action={{ label: t('common.seeAll'), onClick: () => go({ name: 'tabs', tab: 'categories' }) }}
             />
             <div className="no-scrollbar mt-4 flex gap-3 overflow-x-auto px-6 pb-1">
               {categories.map((category) => (
@@ -304,15 +306,15 @@ export default function HomeScreen({
                     <Cake size={22} strokeWidth={1.9} />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-card-title font-semibold text-text">Save wishlist & track orders</p>
-                    <p className="mt-1 text-base leading-relaxed text-text-secondary">Sign in once and keep every favourite cake, promo, and past order in one place.</p>
+                    <p className="text-card-title font-semibold text-text">{t('home.signinHelperTitle')}</p>
+                    <p className="mt-1 text-base leading-relaxed text-text-secondary">{t('home.signinHelperBody')}</p>
                   </div>
                   <button
                     type="button"
                     onClick={() => onAuthOpen?.()}
                     className="flex h-11 shrink-0 items-center justify-center rounded-[16px] bg-primary px-4 text-base font-semibold text-white shadow-btn transition hover:bg-primary-hover active:scale-95"
                   >
-                    Sign in
+                    {t('common.signIn')}
                   </button>
                 </div>
               </div>
@@ -326,16 +328,18 @@ export default function HomeScreen({
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-card-title font-semibold text-text">
-                      {upcoming.name} {upcoming.daysLeft === 0 ? 'is today' : `is in ${upcoming.daysLeft} day${upcoming.daysLeft > 1 ? 's' : ''}`}
+                      {upcoming.daysLeft === 0
+                      ? t('home.upcomingToday', { name: upcoming.name })
+                      : t('home.upcomingInDays', { name: upcoming.name, days: upcoming.daysLeft, plural: upcoming.daysLeft > 1 ? 's' : '' })}
                     </p>
-                    <p className="mt-1 text-base leading-relaxed text-text-secondary">Plan a cake early to lock your preferred flavour, finish, and delivery slot.</p>
+                    <p className="mt-1 text-base leading-relaxed text-text-secondary">{t('home.upcomingBody')}</p>
                   </div>
                   <button
                     type="button"
                     onClick={() => go({ name: 'tabs', tab: 'categories' })}
                     className="flex h-11 shrink-0 items-center justify-center rounded-[16px] border border-border bg-secondary px-4 text-base font-semibold text-primary shadow-card transition active:scale-95"
                   >
-                    Order
+                    {t('common.order')}
                   </button>
                 </div>
               </div>
@@ -348,16 +352,16 @@ export default function HomeScreen({
             <div className="rounded-2xl border border-border bg-surface p-4 shadow-card">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
-                  <p className="text-sm font-semibold uppercase tracking-[0.16em] text-primary">Search results</p>
-                  <h2 className="mt-1 text-section-title font-semibold tracking-[-0.02em] text-text">Results for “{search.trim()}”</h2>
-                  <p className="mt-1 text-md text-text-secondary">{searchResults.length} cakes match your taste right now.</p>
+                  <p className="text-sm font-semibold uppercase tracking-[0.16em] text-primary">{t('home.searchPanelEyebrow')}</p>
+                  <h2 className="mt-1 text-section-title font-semibold tracking-[-0.02em] text-text">{t('home.searchPanelTitle', { query: search.trim() })}</h2>
+                  <p className="mt-1 text-md text-text-secondary">{t('home.searchPanelBody', { count: searchResults.length })}</p>
                 </div>
                 <button
                   type="button"
                   onClick={() => go({ name: 'tabs', tab: 'categories' })}
                   className="rounded-full border border-border bg-bg px-3 py-2 text-sm font-semibold text-primary transition active:scale-95"
                 >
-                  View all
+                  {t('common.seeAll')}
                 </button>
               </div>
               <div className="mt-4 grid grid-cols-2 gap-4">
@@ -383,15 +387,15 @@ export default function HomeScreen({
               <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-[22px] bg-secondary text-primary shadow-card">
                 <Search className="h-7 w-7" strokeWidth={1.75} />
               </div>
-              <h2 className="mt-5 text-2xl font-bold tracking-[-0.02em] text-text">No results for “{searchTerm}”</h2>
-              <p className="mt-2 text-md leading-relaxed text-text-secondary">Try a simpler cake name, another flavour, or browse by occasion instead.</p>
+              <h2 className="mt-5 text-2xl font-bold tracking-[-0.02em] text-text">{t('home.noResultsTitle', { query: searchTerm })}</h2>
+              <p className="mt-2 text-md leading-relaxed text-text-secondary">{t('home.noResultsBody')}</p>
               <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
                 <button
                   type="button"
                   onClick={() => setSearch('')}
                   className="flex h-12 items-center justify-center rounded-[18px] border border-border bg-bg px-5 text-base font-semibold text-text transition active:scale-95"
                 >
-                  Clear search
+                  {t('home.clearSearch')}
                 </button>
                 <button
                   type="button"
@@ -401,7 +405,7 @@ export default function HomeScreen({
                   }}
                   className="flex h-12 items-center justify-center rounded-[18px] bg-primary px-5 text-base font-semibold text-white shadow-btn transition hover:bg-primary-hover active:scale-95"
                 >
-                  Browse all cakes
+                  {t('home.browseAllCakes')}
                 </button>
               </div>
             </div>
@@ -432,12 +436,12 @@ export default function HomeScreen({
                   </div>
                 )}
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold uppercase tracking-[0.16em] text-primary">Order again</p>
+                  <p className="text-sm font-semibold uppercase tracking-[0.16em] text-primary">{t('home.orderAgain')}</p>
                   <h3 className="mt-1 truncate text-xl font-semibold tracking-[-0.02em] text-text">
                     {firstItem?.name ?? 'Your last order'}
                     {lastOrder.items.length > 1 ? ` + ${lastOrder.items.length - 1} more` : ''}
                   </h3>
-                  <p className="mt-1 text-base text-text-secondary">Re-add everything from your most recent order in one tap.</p>
+                  <p className="mt-1 text-base text-text-secondary">{t('home.orderAgainBody')}</p>
                 </div>
                 <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[16px] bg-secondary text-primary shadow-card transition group-hover:translate-x-0.5">
                   <ArrowRight className="h-4 w-4" strokeWidth={2.1} />
@@ -449,9 +453,9 @@ export default function HomeScreen({
 
         <section className="mt-6 anim-up delay-3">
           <SectionHeader
-            title="Featured Products"
-            subtitle="Best sellers and fresh arrivals in the BAS collection"
-            action={{ label: 'See all', onClick: () => go({ name: 'tabs', tab: 'categories' }) }}
+            title={t('home.featuredProducts')}
+            subtitle={t('home.featuredProductsSub')}
+            action={{ label: t('common.seeAll'), onClick: () => go({ name: 'tabs', tab: 'categories' }) }}
           />
           <div className="mt-4 grid grid-cols-2 gap-4 px-6">
             {productsLoading
@@ -474,16 +478,16 @@ export default function HomeScreen({
             <div className="flex items-center gap-4">
               <div className="min-w-0 flex-1">
                 <span className="inline-flex items-center gap-2 rounded-full bg-secondary px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-primary">
-                  For you
+                  {t('home.forYou')}
                 </span>
-                <h3 className="mt-3 text-2xl font-bold tracking-[-0.02em] text-text">Picked for your taste</h3>
+                <h3 className="mt-3 text-2xl font-bold tracking-[-0.02em] text-text">{t('home.pickedForTaste')}</h3>
                 <p className="mt-2 text-md leading-relaxed text-text-secondary">{forYouLabel}</p>
                 <button
                   type="button"
                   onClick={() => (forYouProduct ? go({ name: 'product', productId: forYouProduct.id }) : go({ name: 'customize' }))}
                   className="mt-5 inline-flex h-11 items-center gap-2 rounded-[18px] bg-primary px-4 text-base font-semibold text-white shadow-btn transition hover:bg-primary-hover active:scale-95"
                 >
-                  {forYouProduct ? 'View cake' : 'Customize yours'}
+                  {forYouProduct ? t('common.viewCake') : t('common.customizeYours')}
                   <ArrowRight className="h-4 w-4" strokeWidth={2.2} />
                 </button>
               </div>
@@ -502,7 +506,7 @@ export default function HomeScreen({
 
         <div className="mt-9 px-6 pb-4 text-center">
           <div className="text-xl font-semibold tracking-[-0.02em] text-text">Bake Art Style</div>
-          <div className="mt-1 text-sm font-medium uppercase tracking-[0.18em] text-text-tertiary">Handcrafted since 2018</div>
+          <div className="mt-1 text-sm font-medium uppercase tracking-[0.18em] text-text-tertiary">{t('home.handcrafted')}</div>
         </div>
       </div>
 

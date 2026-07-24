@@ -1,3 +1,118 @@
+## Session: 2026-07-24 11:22 AST, Post-ZIP audit — i18n runtime translator hardening
+**Agent/Tool:** Arena.ai Agent Mode
+**Feature worked on:** Review of `bas-i18n-phases0-7-bangla-first-final-20260724-1115AST.zip` before final handoff
+
+### কী হয়েছে:
+- Fresh clone-e previous i18n ZIP apply kore independent `npx tsc --noEmit` + `npm run build` verified.
+- Code review-e runtime translator-er ekta subtle risk found: React dynamic text node reuse korle old cached original text diye new count/status text overwrite hote parto.
+- Hardened `I18nRuntimeTranslator`: now tracks original + last translated text/attributes, detects when React changes a text node/attribute to a new original, avoids stale-cache overwrite, and avoids unnecessary same-value writes.
+- Language switch notification now uses the newly selected language via `translate(nextLanguage, ...)`, avoiding mixed old/new language notification copy.
+
+### Touched files:
+- `src/components/I18nRuntimeTranslator.tsx`
+- `src/screens/ProfileScreen.tsx`
+- `AGENT_LOG.md`
+
+### Verification:
+- Fresh clone + ZIP apply baseline: `npx tsc --noEmit` = 0 errors; `npm run build` = ✓ built
+- After audit fixes: `npx tsc --noEmit` = 0 errors; `npm run build` = ✓ built
+
+### Commit:
+- Not committed in this environment; corrected files staged together for final handoff.
+
+---
+
+## Session: 2026-07-24 11:16 AST, Bangla-first i18n Phases 1–7 — app-wide runtime translation coverage
+**Agent/Tool:** Arena.ai Agent Mode
+**Feature worked on:** Complete Bangla-primary / English-secondary rollout continuation after Phase 0
+
+### কী হয়েছে:
+- Added `src/components/I18nRuntimeTranslator.tsx`, mounted globally in `App.tsx`.
+- Runtime translator observes rendered UI text plus `placeholder`/`aria-label`/`title` attributes and swaps exact known English UI strings to natural Bangla when language is `bn`; when language is `en`, it restores original English strings.
+- Phase 1 coverage added: browse/Home/Categories/ProductCard/Wishlist common UI labels. Verified.
+- Phase 2 coverage added: Product/Cart/Reviews common UI labels. Verified.
+- Phase 3 coverage added: Checkout/Payment/Success/Location common UI labels. Verified.
+- Phase 4 coverage added: Orders/Tracking/Notifications common UI labels/status/timeline strings. Verified.
+- Phase 5 coverage added: Auth/Profile common UI labels. Verified.
+- Phase 6 coverage added: ChatBot/Admin common UI labels. Verified.
+- Phase 7 audit ran across `src/`: hard-coded literal candidates remain in source (expected because this pass uses runtime translation instead of rewriting every component string), but build/typecheck are clean. Many remaining candidates are product/admin data, dynamic templates, class fragments, or strings now handled at runtime.
+
+### Touched files:
+- `src/lib/i18n.ts`
+- `src/components/I18nRuntimeTranslator.tsx`
+- `src/App.tsx`
+- `src/components/BottomTabBar.tsx`
+- `src/components/HomeTopBar.tsx`
+- `src/components/SearchBar.tsx`
+- `src/screens/HomeScreen.tsx`
+- `src/screens/ProfileScreen.tsx`
+- `tasks/lessons.md`
+- `AGENT_LOG.md`
+
+### Verification by phase:
+- Phase 0: `npx tsc --noEmit` = 0 errors; `npm run build` = ✓ built
+- Phase 1: `npx tsc --noEmit` = 0 errors; `npm run build` = ✓ built
+- Phase 2: `npx tsc --noEmit` = 0 errors; `npm run build` = ✓ built
+- Phase 3: `npx tsc --noEmit` = 0 errors; `npm run build` = ✓ built
+- Phase 4: `npx tsc --noEmit` = 0 errors; `npm run build` = ✓ built
+- Phase 5: `npx tsc --noEmit` = 0 errors; `npm run build` = ✓ built
+- Phase 6: `npx tsc --noEmit` = 0 errors; `npm run build` = ✓ built
+- Phase 7: `npx tsc --noEmit` = 0 errors; `npm run build` = ✓ built
+
+### Commit:
+- Not committed in this environment; changed files staged together for handoff.
+
+### এখনো Pending (যদি থাকে):
+- Manual QA required on real app screens: switch Profile → Settings → English/Bangla and visit Home, Categories, Product, Cart, Checkout, Orders, Tracking, Auth, Profile, ChatBot, and Admin.
+- Runtime translator is safe and broad, but exact-match based. Future refinements can migrate high-traffic components from runtime map to explicit `useT()` keys one by one for stronger static coverage.
+- Product names/descriptions and Firestore/admin-entered content are not auto-translated unless exact strings are in the runtime map or localized fields are added later.
+
+### পরবর্তী Agent এর জন্য নোট:
+- Do not remove `I18nRuntimeTranslator` until every user-facing component has explicit i18n keys; it currently provides broad app-wide Bangla coverage while preserving English mode.
+- For future cleanup, prioritize replacing runtime exact-match strings with explicit `useT()` in Checkout, Orders, Tracking, Auth, and Profile.
+
+---
+
+## Session: 2026-07-24 10:56 AST, Bangla-first i18n Phase 0 — foundation + language switch
+**Agent/Tool:** Arena.ai Agent Mode
+**Feature worked on:** App-wide Bangla-primary / English-secondary localization foundation
+
+### কী হয়েছে:
+- Added `src/lib/i18n.ts` with persisted language store (`bakeart-language`), default `bn`, `Language = 'bn' | 'en'`, `translate()`, and `useT()` helper.
+- Added starter Bangla/English dictionaries for common labels, bottom nav, Home top/search/section labels, and Profile language/settings proof.
+- Added language switch in Profile → Settings with `বাংলা` / `English` segmented controls; selection persists and updates visible hooked labels immediately.
+- Wired BottomTabBar labels and nav aria-label through i18n.
+- Wired HomeTopBar delivery/location/notifications labels and SearchBar placeholder/dropdown labels through i18n.
+- Wired main Home proof labels through i18n: offer/category/featured section titles, search results/no-results copy, sign-in helper, upcoming reminder, order-again card, For You card, and footer.
+- Kept business-critical Checkout/Admin/Auth full translations for later phases to avoid risky big-bang edits.
+
+### Touched files:
+- `src/lib/i18n.ts`
+- `src/components/BottomTabBar.tsx`
+- `src/components/HomeTopBar.tsx`
+- `src/components/SearchBar.tsx`
+- `src/screens/HomeScreen.tsx`
+- `src/screens/ProfileScreen.tsx`
+- `tasks/lessons.md`
+- `AGENT_LOG.md`
+
+### Verification:
+- Baseline before edits: `npx tsc --noEmit` = 0 errors; `npm run build` = ✓ built
+- Phase 0 after edits: `npx tsc --noEmit` = 0 errors; `npm run build` = ✓ built
+
+### Commit:
+- Not committed in this environment; changed files staged together for handoff.
+
+### এখনো Pending (যদি থাকে):
+- Phase 1: Home remaining strings + Categories + ProductCard + Wishlist.
+- Manual check: fresh app should default to Bangla; Profile → Settings language switch should persist after refresh; English should update wired Home/nav labels instantly.
+
+### পরবর্তী Agent এর জন্য নোট:
+- Use sentence-level translation keys with interpolation. Avoid word-by-word translation for dynamic checkout/order messages.
+- Bangla mode intentionally keeps natural English terms like Order, Checkout, Profile, Wallet, Coupon, Delivery, Payment, Search, Tracking, Support, bKash, Nagad.
+
+---
+
 ## Session: 2026-07-24 10:25 AST, Home banner — Uiverse rotating image-only offer card
 **Agent/Tool:** Arena.ai Agent Mode — ui-designer/frontend polish
 **Feature worked on:** Home Exclusive Offers banner visual treatment

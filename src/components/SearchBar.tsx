@@ -1,6 +1,7 @@
 import { Search, SlidersHorizontal } from 'lucide-react';
 import { forwardRef, useState } from 'react';
 import TransitionClearInput from './TransitionClearInput';
+import { useT } from '../lib/i18n';
 
 type Props = {
   value: string;
@@ -19,7 +20,7 @@ const SearchBar = forwardRef<HTMLInputElement, Props>(
     value,
     onChange,
     onSearch,
-    placeholder = 'Search cakes, flavors, occasions',
+    placeholder,
     className = '',
     suggestions = [],
     recentSearches = [],
@@ -27,6 +28,8 @@ const SearchBar = forwardRef<HTMLInputElement, Props>(
     onOpenOccasions,
   }, ref) => {
     const [focused, setFocused] = useState(false);
+    const t = useT();
+    const resolvedPlaceholder = placeholder ?? t('home.searchPlaceholder');
     const visibleSuggestions = (value ? suggestions : recentSearches).slice(0, 5);
     const showDropdown = focused && visibleSuggestions.length > 0;
 
@@ -47,7 +50,7 @@ const SearchBar = forwardRef<HTMLInputElement, Props>(
             onFocus={() => setFocused(true)}
             onBlur={() => window.setTimeout(() => setFocused(false), 120)}
             onKeyDown={(event) => event.key === 'Enter' && onSearch?.(value)}
-            placeholder={placeholder}
+            placeholder={resolvedPlaceholder}
             inputClassName="h-11 w-full rounded-full border border-border bg-surface pl-12 pr-11 text-md font-medium text-text shadow-card outline-none transition placeholder:font-normal placeholder:text-transparent focus:border-accent focus:ring-4 focus:ring-primary/10"
             textLayerClassName="pl-12 pr-11 text-md font-medium text-text placeholder:font-normal text-text-tertiary"
           />
@@ -55,7 +58,7 @@ const SearchBar = forwardRef<HTMLInputElement, Props>(
           {showDropdown && (
             <div className="absolute left-0 right-0 top-[calc(100%+0.75rem)] z-30 rounded-2xl border border-border bg-surface p-3 shadow-float">
               <div className="mb-2 flex items-center justify-between px-1">
-                <span className="text-base font-semibold text-text">{value ? 'Search Results' : 'Recent Search'}</span>
+                <span className="text-base font-semibold text-text">{value ? t('home.searchResultsLabel') : t('home.recentSearch')}</span>
                 {!value && onClearRecent && (
                   <button
                     type="button"
@@ -63,7 +66,7 @@ const SearchBar = forwardRef<HTMLInputElement, Props>(
                     onClick={onClearRecent}
                     className="text-xs font-medium text-text-tertiary"
                   >
-                    Clear All
+                    {t('common.clearAll')}
                   </button>
                 )}
               </div>
@@ -92,7 +95,7 @@ const SearchBar = forwardRef<HTMLInputElement, Props>(
             onMouseDown={(event) => event.preventDefault()}
             onClick={onOpenOccasions}
             className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-surface text-primary shadow-card transition active:scale-95"
-            aria-label="Browse by occasion"
+            aria-label={t('home.browseOccasion')}
           >
             <SlidersHorizontal className="h-5 w-5" strokeWidth={1.9} />
           </button>
