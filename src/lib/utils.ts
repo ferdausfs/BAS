@@ -97,15 +97,20 @@ export const shareOrCopy = async (payload: {
   text: string;
   url: string;
 }): Promise<'shared' | 'copied' | 'failed'> => {
+  const text = payload.text.trim();
   if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
     try {
-      await navigator.share({ title: payload.title, text: payload.text, url: payload.url });
+      await navigator.share({
+        title: payload.title,
+        url: payload.url,
+        ...(text ? { text } : {}),
+      });
       return 'shared';
     } catch (error) {
       if (error instanceof DOMException && error.name === 'AbortError') return 'failed';
     }
   }
-  const ok = await copyText(`${payload.text}\n${payload.url}`);
+  const ok = await copyText(text ? `${text}\n${payload.url}` : payload.url);
   return ok ? 'copied' : 'failed';
 };
 

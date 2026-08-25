@@ -115,8 +115,8 @@ export default function ProductScreen() {
     if (!product) return;
     const url = productShareUrl(product.id);
     const result = await shareOrCopy({
-      title: `${product.name} — Bake Art Style`,
-      text: `${product.name} — বেক আর্ট স্টাইল থেকে অর্ডার করুন`,
+      title: product.name,
+      text: '',
       url,
     });
     if (result === 'copied') {
