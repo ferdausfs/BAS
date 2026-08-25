@@ -62,8 +62,8 @@ export default function WalletHistoryModal({ open, onClose }: Props) {
               <Wallet className="h-6 w-6" strokeWidth={1.7} />
             </span>
           </div>
-          <button type="button" className="mt-5 flex h-12 w-full items-center justify-center rounded-[16px] bg-primary text-[15px] font-bold text-white shadow-btn active:scale-[.98]">
-            Add Money
+          <button type="button" disabled className="mt-5 flex h-12 w-full cursor-not-allowed items-center justify-center rounded-[16px] bg-primary/40 text-[15px] font-bold text-white">
+            Add Money · Coming soon
           </button>
         </section>
 

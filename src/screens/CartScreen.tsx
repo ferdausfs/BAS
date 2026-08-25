@@ -60,6 +60,13 @@ export default function CartScreen() {
     }
   }, [subtotal, balance, pendingLoyaltyRedeem, maxRedeemable, setPendingLoyaltyRedeem]);
 
+  useEffect(() => {
+    if (items.length === 0 && (promoDiscount > 0 || pendingLoyaltyRedeem > 0)) {
+      clearPromo();
+      clearLoyalty();
+    }
+  }, [items.length, promoDiscount, pendingLoyaltyRedeem, clearPromo, clearLoyalty]);
+
   const handleCheckout = () => {
     go({ name: 'checkout' });
   };
@@ -69,11 +76,6 @@ export default function CartScreen() {
   const confirmItem = confirmIdx !== null ? items[confirmIdx] : null;
 
   if (items.length === 0) {
-    // clear any stale discounts when cart empties
-    if (promoDiscount > 0 || pendingLoyaltyRedeem > 0) {
-      clearPromo();
-      clearLoyalty();
-    }
     return (
       <div className="flex h-full flex-col bg-bg">
         <Header title="আমার কার্ট" onBack={back} />

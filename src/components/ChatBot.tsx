@@ -39,6 +39,7 @@ export function ChatBot({ embedded = false, fullPage = false, onClose }: Props) 
   const [showQuick, setShowQuick] = useState(true);
   const [imageUploading, setImageUploading] = useState(false);
   const [imageError, setImageError] = useState<string | null>(null);
+  const skipPersistRef = useRef(true);
   const endRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -50,6 +51,7 @@ export function ChatBot({ embedded = false, fullPage = false, onClose }: Props) 
   const geminiKey = import.meta.env.VITE_GEMINI_API_KEY || settings.geminiApiKey || '';
 
   useEffect(() => {
+    skipPersistRef.current = true;
     try {
       const raw = localStorage.getItem(chatHistoryKey(user?.id, chatOrderContext));
       if (!raw) {
@@ -78,6 +80,10 @@ export function ChatBot({ embedded = false, fullPage = false, onClose }: Props) 
   }, [messages, loading]);
 
   useEffect(() => {
+    if (skipPersistRef.current) {
+      skipPersistRef.current = false;
+      return;
+    }
     try {
       localStorage.setItem(chatHistoryKey(user?.id, chatOrderContext), JSON.stringify(messages));
     } catch {
@@ -335,14 +341,6 @@ export function ChatBot({ embedded = false, fullPage = false, onClose }: Props) 
       return { text: `Custom cake করতে পারবেন।\n\nProduct খুলুন → Customize চাপুন → size/flavour/topping/message দিন → cart এ add করুন।\n\nআপনি চাইলে cake-এর ওপর নাম/ছোট message লিখতে পারেন।`, matched: true };
     }
 
-    if (has(q, ['delivery', 'ডেলিভারি', 'zone', 'জোন', 'area', 'এলাকা', 'কোথায়', 'kothay', 'লোকেশন', 'deliver', 'pathabo', 'pathate', 'pathano', 'niye jabe', 'niye asbe', 'delivery ki', 'deliver ki', 'kothay daw', 'kothay pathaw'])) {
-      return { text: zoneText(), matched: true };
-    }
-
-    if (has(q, ['time', 'সময়', 'কতক্ষণ', 'kotokkhon', 'delivery estimate'])) {
-      return { text: `ডেলিভারি estimate: ${settings.deliveryEstimate}\n\nসময় এলাকা, অর্ডার rush এবং cake customization অনুযায়ী বদলাতে পারে। Same-day order চাইলে যত দ্রুত সম্ভব checkout করুন।`, matched: true };
-    }
-
     // Delay complaint — "deri hocche", "ashe nai" ইত্যাদি generic delivery/zone info-এর বদলে
     // real order status + empathy + support দেখাবে
     if (has(q, ['deri', 'দেরি', 'delay', 'ashe nai', 'asheni', 'আসেনি', 'ekhono ashe nai', 'koto deri', 'onek deri', 'late hoye gese', 'time shesh hoye gese', 'ekhono pai nai'])) {
@@ -350,6 +348,14 @@ export function ChatBot({ embedded = false, fullPage = false, onClose }: Props) 
         text: `${orderStatusText('')}\n\nদেরির জন্য দুঃখিত 🙏 উপরের status অনুযায়ী থাকার পরেও যদি অনেক দেরি মনে হয়, সরাসরি WhatsApp-এ জানান — আমরা দ্রুত check করে জানাবো।\n\n${supportText()}`,
         matched: true,
       };
+    }
+
+    if (has(q, ['delivery', 'ডেলিভারি', 'zone', 'জোন', 'area', 'এলাকা', 'কোথায়', 'kothay', 'লোকেশন', 'deliver', 'pathabo', 'pathate', 'pathano', 'niye jabe', 'niye asbe', 'delivery ki', 'deliver ki', 'kothay daw', 'kothay pathaw'])) {
+      return { text: zoneText(), matched: true };
+    }
+
+    if (has(q, ['time', 'সময়', 'কতক্ষণ', 'kotokkhon', 'delivery estimate'])) {
+      return { text: `ডেলিভারি estimate: ${settings.deliveryEstimate}\n\nসময় এলাকা, অর্ডার rush এবং cake customization অনুযায়ী বদলাতে পারে। Same-day order চাইলে যত দ্রুত সম্ভব checkout করুন।`, matched: true };
     }
 
     // "payment koresi / diyechi / already dise" — user বলছে টাকা পাঠিয়ে দিয়েছে,

@@ -18,7 +18,7 @@ import {
 } from 'firebase/auth';
 import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
 import { auth, db, isFirebaseConfigured } from '../lib/firebase';
-import { claimReferralRewards, getReferralCode, hydrateWalletFromFirestore, useAuthStore, useLocation, useUI } from '../lib/store';
+import { claimReferralRewards, getReferralCode, hydrateWalletFromFirestore, useAuthStore, useCart, useLocation, useUI } from '../lib/store';
 import type { User } from '../types';
 
 type ProfileDoc = {
@@ -150,7 +150,9 @@ export function useAuth() {
 
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
       if (!firebaseUser) {
-        logout();
+        // Only clear a persisted signed-in session. Guests have user === null
+        // and must keep their cart/location across reloads.
+        if (useAuthStore.getState().user) logout();
         return;
       }
       void mapFirebaseUser(firebaseUser).then(async (hydrated) => {
@@ -246,6 +248,7 @@ export function useAuth() {
 
   const signOut = useCallback(async () => {
     await firebaseSignOut(auth);
+    useCart.getState().clear();
     logout();
   }, [logout]);
 

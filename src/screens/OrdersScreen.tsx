@@ -108,11 +108,11 @@ export default function OrdersScreen() {
     });
   };
 
-  const ACTIVE_ORDER_STATUSES: Order['status'][] = ['placed', 'confirmed', 'baking', 'ready', 'out'];
   const tabbedOrders = safeArray<Order>(orders)
     .filter(Boolean)
     .filter((o) => {
-      if (activeTab === 'pending') return ACTIVE_ORDER_STATUSES.includes(o.status);
+      // Pending tab is cart-only (unsubmitted checkout). Placed orders live in Active.
+      if (activeTab === 'pending') return false;
       return categorize(o.status) === activeTab;
     })
     .filter((o) => {

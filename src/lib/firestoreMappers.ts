@@ -126,6 +126,17 @@ export const mapOrderDoc = (id: string, o: any): Order => ({
   },
   delivery: { date: o.delivery_date ?? o.delivery?.date ?? '', time: o.delivery_time ?? o.delivery?.time ?? '' },
   payment: normalizePayment(o.payment_method ?? o.payment),
+  advancePayment: o.advance_payment === 'nagad' || o.advancePayment === 'nagad'
+    ? 'nagad'
+    : o.advance_payment === 'bkash' || o.advancePayment === 'bkash'
+      ? 'bkash'
+      : undefined,
+  advanceAmount: o.advance_amount != null || o.advanceAmount != null
+    ? Number(o.advance_amount ?? o.advanceAmount)
+    : undefined,
+  remainingAmount: o.remaining_amount != null || o.remainingAmount != null
+    ? Number(o.remaining_amount ?? o.remainingAmount)
+    : undefined,
   subtotal: Number(o.subtotal ?? 0),
   discount: Number(o.discount ?? 0),
   deliveryFee: Number(o.delivery_fee ?? o.deliveryFee ?? 0),
@@ -156,6 +167,9 @@ export const orderToDoc = (o: Order) => ({
   delivery_time: o.delivery.time,
   payment_method: o.payment,
   payment_screenshot: o.paymentScreenshot ?? null,
+  advance_payment: o.advancePayment ?? null,
+  advance_amount: o.advanceAmount ?? null,
+  remaining_amount: o.remainingAmount ?? null,
   items: o.items,
   subtotal: o.subtotal,
   discount: Math.max(0, Math.round(o.discount ?? (o.subtotal + o.deliveryFee - o.total))),

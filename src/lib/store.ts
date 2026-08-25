@@ -96,6 +96,9 @@ type UIState = {
   modalDepth: number;
   openModal: () => void;
   closeModal: () => void;
+  // Overlay/wizard back interceptor. Return true to consume Android/browser back.
+  backHandler: (() => boolean) | null;
+  setBackHandler: (handler: (() => boolean) | null) => void;
   // Occasion-icon zoom-in page transition (Home screen occasion row → Categories)
   occasionZoom: {
     x: number;
@@ -119,6 +122,8 @@ export const useUI = create<UIState>((set, get) => ({
   chatOpen: false,
   chatOrderContext: null,
   modalDepth: 0,
+  backHandler: null,
+  setBackHandler: (handler) => set({ backHandler: handler }),
   occasionZoom: null,
   setOccasionZoom: (v) => set({ occasionZoom: v }),
   setView: (v) =>
@@ -363,8 +368,8 @@ export const useAuthStore = create<AuthState>()(
       logout: () => {
         set({ user: null });
         useLocation.getState().clearLocation();
-        // Clear ephemeral guest state so the next account starts clean.
-        useCart.getState().clear();
+        // Cart is only cleared on explicit signOut (useAuth) so guests keep
+        // items across reloads / anonymous Firebase sessions.
       },
     }),
     { name: 'bakeart-auth' }

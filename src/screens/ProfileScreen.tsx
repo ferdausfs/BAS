@@ -182,7 +182,6 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
   useModalDepth(showAddressModal);
   useModalDepth(showDatesModal);
   useModalDepth(inviteOpen);
-  useModalDepth(walletHistoryOpen);
   useModalDepth(contactOpen);
   useModalDepth(customerOpen);
   useModalDepth(profileView === 'chat');

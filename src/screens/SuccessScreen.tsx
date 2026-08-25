@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Check, Home, Receipt, Copy } from 'lucide-react';
 import { useUI, useOrders } from '../lib/store';
-import { safeArray } from '../lib/utils';
+import { copyText, safeArray } from '../lib/utils';
 import SuccessCheckTransition from '../components/SuccessCheckTransition';
 
 export default function SuccessScreen() {
@@ -12,12 +12,13 @@ export default function SuccessScreen() {
   const itemCount = safeArray(order?.items).reduce((sum: number, item: any) => sum + (item.quantity ?? 1), 0);
   const [copied, setCopied] = useState(false);
 
-  const copyOrderId = () => {
+  const copyOrderId = async () => {
     const id = orderId || order?.id || '';
-    navigator.clipboard.writeText(id).then(() => {
+    const ok = await copyText(id);
+    if (ok) {
       setCopied(true);
       setTimeout(() => setCopied(false), 1800);
-    });
+    }
   };
 
   return (

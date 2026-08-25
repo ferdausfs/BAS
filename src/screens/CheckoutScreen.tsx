@@ -53,14 +53,16 @@ const getMinDeliveryDate = () => {
 
 interface Props {
   onBack?: () => void;
+  onAuthOpen?: () => void;
 }
 
-export default function CheckoutScreen({ onBack }: Props) {
+export default function CheckoutScreen({ onBack, onAuthOpen }: Props) {
   const { items, clear } = useCart();
   const { placeOrder, orders } = useOrders();
   const {
     back, go, promoDiscount, pendingLoyaltyRedeem,
     setPendingLoyaltyRedeem, clearLoyalty, applyPromo, clearPromo,
+    setBackHandler,
   } = useUI();
   const { verified: locationVerified, district: detectedDistrict, lat: locationLat, lng: locationLng } = useLocation();
   const user = useAuthStore((s) => s.user);
@@ -135,10 +137,8 @@ export default function CheckoutScreen({ onBack }: Props) {
       hapticTap();
     } catch (e) {
       console.warn('Referral validation failed:', e);
-      // Offline / transient failure — allow optimistic mark; final server check
-      // at submit will still reject invalid codes.
-      setReferralApplied(true);
-      hapticTap();
+      setReferralError('Referral code চেক করা যায়নি। আবার চেষ্টা করুন।');
+      setReferralApplied(false);
     } finally {
       setReferralLoading(false);
     }
@@ -245,11 +245,18 @@ export default function CheckoutScreen({ onBack }: Props) {
 
   const dateOptions = useMemo(() => {
     const start = new Date(getMinDeliveryDate());
+    const tomorrow = new Date();
+    tomorrow.setHours(0, 0, 0, 0);
+    tomorrow.setDate(tomorrow.getDate() + 1);
     return Array.from({ length: 14 }).map((_, index) => {
       const date = new Date(start);
       date.setDate(start.getDate() + index);
       const value = date.toISOString().split('T')[0];
-      const label = index === 0 ? 'Tomorrow' : date.toLocaleDateString('en-BD', { weekday: 'short' });
+      const isTomorrow =
+        date.getFullYear() === tomorrow.getFullYear() &&
+        date.getMonth() === tomorrow.getMonth() &&
+        date.getDate() === tomorrow.getDate();
+      const label = isTomorrow ? 'Tomorrow' : date.toLocaleDateString('en-BD', { weekday: 'short' });
       const day = date.toLocaleDateString('en-BD', { day: '2-digit' });
       const month = date.toLocaleDateString('en-BD', { month: 'short' });
       const full = date.toLocaleDateString('en-BD', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
@@ -348,12 +355,18 @@ export default function CheckoutScreen({ onBack }: Props) {
     return uploadToCloudinary(paymentScreenshotFile, 'bake-art-style/payment-screenshots');
   };
 
-  const checkoutPhone = selectedCheckoutAddress?.phone || form.phone;
-  const checkoutAddress = selectedCheckoutAddress?.address || form.address;
-  const checkoutDistrict = selectedCheckoutAddress?.district || form.district;
+  const checkoutPhone = form.phone || selectedCheckoutAddress?.phone || '';
+  const checkoutAddress = form.address || selectedCheckoutAddress?.address || '';
+  const checkoutDistrict = form.district || selectedCheckoutAddress?.district || '';
 
   const handleSubmit = async () => {
     if (items.length === 0) return;
+    if (!user?.id || user.id.startsWith('local-')) {
+      setSubmitError('অর্ডার করতে Sign In করুন।');
+      onAuthOpen?.();
+      scrollToTop();
+      return;
+    }
     if (!form.name || !checkoutPhone || !checkoutAddress) {
       setSubmitError('নাম, ফোন এবং ঠিকানা পূরণ করুন।');
       scrollToTop();
@@ -411,16 +424,20 @@ export default function CheckoutScreen({ onBack }: Props) {
         gift: giftMode ? gift : undefined,
       });
 
-      if (isFirebaseConfigured() && user?.id) {
-        await setDoc(doc(db, 'profiles', user.id), {
-          id: user.id,
-          name: form.name,
-          contact: checkoutPhone,
-          email: user.email,
-          district: checkoutDistrict,
-          location_address: checkoutAddress,
-          updated_at: new Date().toISOString(),
-        }, { merge: true });
+      if (isFirebaseConfigured() && user?.id && !user.id.startsWith('local-')) {
+        try {
+          await setDoc(doc(db, 'profiles', user.id), {
+            id: user.id,
+            name: form.name,
+            contact: checkoutPhone,
+            email: user.email,
+            district: checkoutDistrict,
+            location_address: checkoutAddress,
+            updated_at: new Date().toISOString(),
+          }, { merge: true });
+        } catch (e) {
+          console.warn('Profile update after order failed:', e);
+        }
       }
 
       // BUG 3 FIX: Apply referral code using new applyReferralCode function
@@ -527,6 +544,30 @@ export default function CheckoutScreen({ onBack }: Props) {
     }
   };
 
+  useEffect(() => {
+    setBackHandler(() => {
+      if (addressPickerOpen) { setAddressPickerOpen(false); return true; }
+      if (datePickerOpen) { setDatePickerOpen(false); return true; }
+      if (selectedCartItem) { setSelectedCartItem(null); return true; }
+      if (showLocationGate) { setShowLocationGate(false); return true; }
+      if (step > 0) {
+        setSubmitError('');
+        setStep((s) => (s - 1) as 0 | 1 | 2);
+        return true;
+      }
+      return false;
+    });
+    return () => setBackHandler(null);
+  }, [addressPickerOpen, datePickerOpen, selectedCartItem, showLocationGate, step, setBackHandler]);
+
+  useEffect(() => {
+    return () => {
+      if (paymentScreenshotPreview.startsWith('blob:')) {
+        URL.revokeObjectURL(paymentScreenshotPreview);
+      }
+    };
+  }, [paymentScreenshotPreview]);
+
   if (items.length === 0) {
     return (
       <div className="flex h-full flex-col">
@@ -571,7 +612,7 @@ export default function CheckoutScreen({ onBack }: Props) {
         <Section icon={ShoppingCart} title="অর্ডারের আইটেম">
           <div className="space-y-2.5">
             {(checkoutItemsExpanded ? safeArray<CartItem>(items) : safeArray<CartItem>(items).slice(0, 3)).map((it, i) => (
-              <button key={i} type="button" onClick={() => setSelectedCartItem(it)} className="flex w-full items-center gap-3 rounded-xl text-left transition active:scale-[.99]">
+              <button key={`${it.productId}-${it.size}-${it.flavor}-${it.topping ?? ''}-${it.message ?? ''}-${i}`} type="button" onClick={() => setSelectedCartItem(it)} className="flex w-full items-center gap-3 rounded-xl text-left transition active:scale-[.99]">
                 <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-xl bg-cream">
                   <img src={it.image} alt="" className="h-full w-full object-cover" />
                 </div>
@@ -1160,7 +1201,13 @@ export default function CheckoutScreen({ onBack }: Props) {
                 <img src={paymentScreenshotPreview} alt="payment screenshot" className="h-24 w-24 rounded-xl object-cover" />
                 <button
                   type="button"
-                  onClick={() => { setPaymentScreenshotFile(null); setPaymentScreenshotPreview(''); }}
+                  onClick={() => {
+                    setPaymentScreenshotPreview((prev) => {
+                      if (prev.startsWith('blob:')) URL.revokeObjectURL(prev);
+                      return '';
+                    });
+                    setPaymentScreenshotFile(null);
+                  }}
                   className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-ink text-white"
                 >
                   <X className="h-3 w-3" />
@@ -1460,7 +1507,7 @@ export default function CheckoutScreen({ onBack }: Props) {
             disabled={step === 2 ? (!form.name || !checkoutPhone || !checkoutAddress || !paymentScreenshotFile || submitting) : false}
             className="ml-auto flex h-14 flex-1 items-center justify-center gap-2 rounded-2xl bg-coral hover:bg-coral-600 text-white text-[14px] font-bold tracking-tight shadow-btn active:scale-[0.985] disabled:opacity-50 transition"
           >
-            {step < 2 ? 'পরবর্তী' : submitting ? 'Submitting...' : 'Continue to Payment'}
+            {step < 2 ? 'পরবর্তী' : submitting ? 'Submitting...' : 'অর্ডার কনফার্ম'}
             {step < 2 ? null : submitting ? <Loader2 className="h-[18px] w-[18px] animate-spin" strokeWidth={2.5} /> : <Check className="h-[18px] w-[18px]" strokeWidth={2.5} />}
           </button>
         </div>

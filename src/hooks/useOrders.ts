@@ -32,7 +32,8 @@ export function useOrdersHook() {
   // One-shot customer fetch (used e.g. by TrackingScreen).
   const fetchMyOrders = useCallback(async () => {
     if (!isFirebaseConfigured() || !user?.id) return;
-    setLoading(true);
+    const hasData = useOrdersStore.getState().orders.length > 0;
+    if (!hasData) setLoading(true);
     try {
       const q = query(collection(db, 'orders'), where('userId', '==', user.id));
       const snap = await getDocs(q);
@@ -59,8 +60,11 @@ export function useOrdersHook() {
     const q = query(collection(db, 'orders'), where('userId', '==', user.id));
     const unsub = onSnapshot(q, (snap) => {
       const remoteOrders = sortOrders(snap.docs.map((d) => mapOrderDoc(d.id, d.data())));
-      const otherOrders = useOrdersStore.getState().orders.filter((o) => o.userId && o.userId !== user.id);
-      setOrders(sortOrders([...remoteOrders, ...otherOrders]));
+      const remoteIds = new Set(remoteOrders.map((o) => o.id));
+      const current = useOrdersStore.getState().orders;
+      const localOnly = current.filter((o) => !remoteIds.has(o.id) && (!o.userId || o.userId === user.id));
+      const otherOrders = current.filter((o) => o.userId && o.userId !== user.id && !remoteIds.has(o.id));
+      setOrders(sortOrders([...remoteOrders, ...localOnly, ...otherOrders]));
       setLoading(false);
     }, (e) => {
       console.warn('Customer orders snapshot failed:', e);
@@ -75,41 +79,13 @@ export function useOrdersHook() {
     if (!isFirebaseConfigured() || !user?.isAdmin) return;
 
     setLoading(true);
+    if ('Notification' in window && Notification.permission === 'default') void Notification.requestPermission();
     const q = collection(db, 'orders');
+    let initialized = false;
     const unsub = onSnapshot(q, (snap) => {
       const nextOrders = sortOrders(snap.docs.map((d) => mapOrderDoc(d.id, d.data()))).slice(0, 300);
       setOrders(nextOrders);
       setLoading(false);
-    }, (e) => {
-      console.warn('Admin orders snapshot failed:', e);
-      setLoading(false);
-    });
-
-    return () => unsub();
-  }, [setOrders, user?.isAdmin]);
-
-  const updateStatus = useCallback(async (id: string, status: Order['status'], reason?: string) => {
-    setOrderStatus(id, status, reason);
-    if (!isFirebaseConfigured()) return;
-    try {
-      await updateDoc(doc(db, 'orders', id), {
-        status: toDbOrderStatus(status),
-        updated_at: new Date().toISOString(),
-        ...(reason ? { cancel_reason: reason } : {}),
-      });
-    } catch (error) {
-      console.error('Status update error:', error);
-    }
-  }, [setOrderStatus]);
-
-  const subscribeToNewOrders = useCallback(() => {
-    if (!isFirebaseConfigured()) return () => {};
-    if ('Notification' in window && Notification.permission === 'default') void Notification.requestPermission();
-
-    let initialized = false;
-    const unsub = onSnapshot(collection(db, 'orders'), (snap) => {
-      const nextOrders = sortOrders(snap.docs.map((d) => mapOrderDoc(d.id, d.data()))).slice(0, 300);
-      setOrders(nextOrders);
       if (!initialized) {
         initialized = true;
         return;
@@ -123,10 +99,37 @@ export function useOrdersHook() {
           }
         }
       });
-    }, (e) => console.warn('Realtime subscription failed:', e));
+    }, (e) => {
+      console.warn('Admin orders snapshot failed:', e);
+      setLoading(false);
+    });
 
-    return unsub;
-  }, [incrementNewOrders, setOrders]);
+    return () => unsub();
+  }, [setOrders, user?.isAdmin, incrementNewOrders]);
+
+  const updateStatus = useCallback(async (id: string, status: Order['status'], reason?: string) => {
+    if (!isFirebaseConfigured()) {
+      setOrderStatus(id, status, reason);
+      return;
+    }
+    try {
+      await updateDoc(doc(db, 'orders', id), {
+        status: toDbOrderStatus(status),
+        updated_at: new Date().toISOString(),
+        ...(reason ? { cancel_reason: reason } : {}),
+      });
+      setOrderStatus(id, status, reason);
+    } catch (error) {
+      console.error('Status update error:', error);
+    }
+  }, [setOrderStatus]);
+
+  const subscribeToNewOrders = useCallback(() => {
+    // Beeps now live on the admin onSnapshot above — keep this as a no-op
+    // so existing AdminPanel callers don't open a second full-collection listener.
+    if ('Notification' in window && Notification.permission === 'default') void Notification.requestPermission();
+    return () => {};
+  }, []);
 
   return { orders: Array.isArray(orders) ? orders : [], loading, fetchOrders, fetchMyOrders, updateStatus, subscribeToNewOrders };
 }

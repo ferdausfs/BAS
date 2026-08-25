@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ArrowLeft, Star, Camera, X } from 'lucide-react';
 import { useUI, useAuthStore } from '../lib/store';
 import { useReviews } from '../hooks/useReviews';
@@ -20,6 +20,12 @@ export default function WriteReviewScreen() {
   const [submitting, setSubmitting] = useState(false);
   const [imageError, setImageError] = useState('');
 
+  useEffect(() => {
+    return () => {
+      if (imagePreview.startsWith('blob:')) URL.revokeObjectURL(imagePreview);
+    };
+  }, [imagePreview]);
+
   const handleSubmit = async () => {
     if (!comment.trim() || !user) return;
     setSubmitting(true);
@@ -39,6 +45,8 @@ export default function WriteReviewScreen() {
         created_at: new Date().toISOString(),
       });
       back();
+    } catch (error) {
+      setImageError(error instanceof Error ? error.message : 'রিভিউ পাঠানো যায়নি। আবার চেষ্টা করুন।');
     } finally {
       setSubmitting(false);
     }
@@ -108,7 +116,13 @@ export default function WriteReviewScreen() {
             <div className="relative inline-block">
               <img src={imagePreview} className="w-24 h-24 rounded-2xl object-cover ring-1 ring-border" />
               <button
-                onClick={() => { setImageFile(null); setImagePreview(''); }}
+                onClick={() => {
+                  setImagePreview((prev) => {
+                    if (prev.startsWith('blob:')) URL.revokeObjectURL(prev);
+                    return '';
+                  });
+                  setImageFile(null);
+                }}
                 className="absolute -top-1 -right-1 bg-error text-white rounded-full p-1"
               >
                 <X className="h-3 w-3" />
@@ -127,7 +141,10 @@ export default function WriteReviewScreen() {
                 }
                 setImageError('');
                 setImageFile(file);
-                setImagePreview(URL.createObjectURL(file));
+                setImagePreview((prev) => {
+                  if (prev.startsWith('blob:')) URL.revokeObjectURL(prev);
+                  return URL.createObjectURL(file);
+                });
               }} />
             </label>
           )}

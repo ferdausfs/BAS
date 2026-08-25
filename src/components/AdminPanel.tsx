@@ -571,6 +571,10 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                       const file = e.target.files?.[0]; if (!file) return;
                       setImgUploading(true);
                       try { const url = await uploadProductImage(file); setEditProduct(prev => prev ? { ...prev, image: url } : prev); }
+                      catch (e) {
+                        console.warn('Product image upload failed:', e);
+                        addNotification('Upload failed', 'Product image upload করা যায়নি। আবার চেষ্টা করুন।');
+                      }
                       finally { setImgUploading(false); }
                     }} />
                     <button onClick={() => productImgRef.current?.click()} disabled={imgUploading}
@@ -639,6 +643,9 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                             const combined = [...currentGallery, ...newUrls].slice(0, 4);
                             return { ...prev, gallery: combined };
                           });
+                        } catch (err) {
+                          console.warn('Product gallery upload failed:', err);
+                          addNotification('Upload failed', 'Gallery image upload করা যায়নি। আবার চেষ্টা করুন।');
                         } finally {
                           setImgUploading(false);
                           if (e.target) e.target.value = '';
@@ -922,6 +929,10 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                       const file = e.target.files?.[0]; if (!file) return;
                       setBannerImgUploading(true);
                       try { const url = await uploadBannerImage(file); setEditBanner(prev => prev ? { ...prev, image: url } : prev); }
+                      catch (err) {
+                        console.warn('Banner image upload failed:', err);
+                        addNotification('Upload failed', 'Banner image upload করা যায়নি। আবার চেষ্টা করুন।');
+                      }
                       finally { setBannerImgUploading(false); }
                     }} />
                     <button onClick={() => bannerImgRef.current?.click()} disabled={bannerImgUploading}

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useUI, useAuthStore, useSettingsStore, pushBrowserRouteState } from './lib/store';
 import BottomTabBar from './components/BottomTabBar';
 import SplashScreen from './screens/SplashScreen';
@@ -47,10 +47,34 @@ export default function App() {
     useSettingsStore.getState().loadRemoteSettings().finally(() => setSettingsLoading(false));
   }, []);
 
+  const authOpenRef = useRef(authOpen);
+  const notificationsOpenRef = useRef(notificationsOpen);
+  authOpenRef.current = authOpen;
+  notificationsOpenRef.current = notificationsOpen;
+
   useEffect(() => {
     pushBrowserRouteState();
     const handlePopState = () => {
-      const { history: uiHistory, back: uiBack } = useUI.getState();
+      if (authOpenRef.current) {
+        setAuthOpen(false);
+        pushBrowserRouteState();
+        return;
+      }
+      if (notificationsOpenRef.current) {
+        setNotificationsOpen(false);
+        pushBrowserRouteState();
+        return;
+      }
+      const { chatOpen: isChatOpen, setChatOpen, history: uiHistory, back: uiBack, backHandler } = useUI.getState();
+      if (isChatOpen) {
+        setChatOpen(false);
+        pushBrowserRouteState();
+        return;
+      }
+      if (backHandler?.()) {
+        pushBrowserRouteState();
+        return;
+      }
       if (uiHistory.length > 0) {
         uiBack();
         pushBrowserRouteState();
@@ -130,7 +154,7 @@ export default function App() {
                 {view.name === 'product' && <ProductScreen />}
                 {view.name === 'customize' && <CustomizeScreen />}
                 {view.name === 'cart' && <CartScreen />}
-                {view.name === 'checkout' && <CheckoutScreen />}
+                {view.name === 'checkout' && <CheckoutScreen onAuthOpen={() => setAuthOpen(true)} />}
                 {view.name === 'success' && <SuccessScreen />}
                 {view.name === 'wishlist' && <WishlistScreen onAuthOpen={() => setAuthOpen(true)} />}
                 {view.name === 'tracking' && <TrackingScreen />}

@@ -12,8 +12,12 @@ export default function CustomizeScreen() {
   if (view.name !== 'customize') return null;
 
   const whatsappNumber = settings?.whatsappNumber ?? '';
+  const waDetails = [
+    note ? `বিস্তারিত: ${note}` : '',
+    refImagePreview ? '(রেফারেন্স ছবি চ্যাটে পাঠাবো — এই মেসেজে ছবি যায় না)' : '',
+  ].filter(Boolean).join('\n\n');
   const waMessage = encodeURIComponent(
-    `আসসালামু আলাইকুম! আমি একটা কাস্টম কেক অর্ডার করতে চাই।${note ? `\n\n can বিস্তারিত: ${note}` : ''}${refImagePreview ? '\n\n(রেফারেন্স ছবি সংযুক্ত আছে, চ্যাটে পাঠাবো)' : ''}`
+    `আসসালামু আলাইকুম! আমি একটা কাস্টম কেক অর্ডার করতে চাই।${waDetails ? `\n\n${waDetails}` : ''}`
   );
   const waLink = whatsappNumber
     ? `https://wa.me/${whatsappNumber.replace(/[^0-9]/g, '')}?text=${waMessage}`

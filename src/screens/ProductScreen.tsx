@@ -122,6 +122,12 @@ export default function ProductScreen() {
   const [submittingReview, setSubmittingReview] = useState(false);
   const [reviewSuccess, setReviewSuccess] = useState(false);
 
+  useEffect(() => {
+    return () => {
+      if (reviewImagePreview.startsWith('blob:')) URL.revokeObjectURL(reviewImagePreview);
+    };
+  }, [reviewImagePreview]);
+
   const handleSubmitReview = async () => {
     if (!product || !reviewComment.trim() || submittingReview) return;
     setSubmittingReview(true);
@@ -725,8 +731,10 @@ export default function ProductScreen() {
                       if (!file) return;
                       if (file.size > 2 * 1024 * 1024) { alert('সর্বোচ্চ ২MB'); return; }
                       setReviewImageFile(file);
-                      const url = URL.createObjectURL(file);
-                      setReviewImagePreview(url);
+                      setReviewImagePreview((prev) => {
+                        if (prev.startsWith('blob:')) URL.revokeObjectURL(prev);
+                        return URL.createObjectURL(file);
+                      });
                     }} />
                   </label>
                 )}
