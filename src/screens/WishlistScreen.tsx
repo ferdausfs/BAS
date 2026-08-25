@@ -7,7 +7,7 @@ import { safeArray } from '../lib/utils';
 import { addStockAlert } from '../lib/stockAlerts';
 import type { Product } from '../types';
 import ProductCard from '../components/ProductCard';
-import OccasionIcon from '../components/OccasionIcon';
+import UnderlineTabs from '../components/UnderlineTabs';
 
 const ALL_CAT = { id: 'all' as const, name: 'All' };
 
@@ -96,30 +96,15 @@ export default function WishlistScreen({
               </div>
             </div>
 
-            <div className="no-scrollbar mt-4 flex gap-3 overflow-x-auto pb-1">
-              {[ALL_CAT, ...categories].map((category) => {
-                const isActive = activeCat === category.id;
-                const tint = category.id === 'all'
-                  ? { background: 'var(--color-surface)', color: 'var(--color-text-secondary)' }
-                  : { background: category.color, color: category.fg };
-
-                return (
-                  <button
-                    key={category.id}
-                    type="button"
-                    onClick={() => setActiveCat(category.id)}
-                    className={`flex shrink-0 items-center gap-2.5 rounded-[20px] border px-3.5 py-2.5 text-[13px] font-semibold shadow-card transition active:scale-95 ${
-                      isActive ? 'border-primary bg-secondary text-primary' : 'border-border bg-bg text-text-secondary'
-                    }`}
-                  >
-                    <span className="flex h-8 w-8 items-center justify-center rounded-[12px]" style={tint}>
-                      <OccasionIcon id={category.id} size={16} />
-                    </span>
-                    <span>{category.name}</span>
-                  </button>
-                );
-              })}
-            </div>
+            <UnderlineTabs
+              className="mt-4"
+              value={activeCat}
+              onChange={setActiveCat}
+              tabs={[ALL_CAT, ...categories].map((category) => ({
+                value: category.id,
+                label: category.name,
+              }))}
+            />
           </section>
         )}
 

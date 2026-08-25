@@ -10,7 +10,7 @@ import HomeTopBar from '../components/HomeTopBar';
 import ProductCard from '../components/ProductCard';
 import SectionHeader from '../components/SectionHeader';
 import OccasionSheet from '../components/OccasionSheet';
-import OccasionIcon from '../components/OccasionIcon';
+import UnderlineTabs from '../components/UnderlineTabs';
 import { useModalDepth } from '../hooks/useModalDepth';
 import type { Banner, CartItem, Product, SpecialDate } from '../types';
 import { useT } from '../lib/i18n';
@@ -280,23 +280,14 @@ export default function HomeScreen({
               subtitle={t('home.exploreCategoriesSub')}
               action={{ label: t('common.seeAll'), onClick: () => go({ name: 'tabs', tab: 'categories' }) }}
             />
-            <div className="no-scrollbar mt-4 flex gap-3 overflow-x-auto px-6 pb-1">
-              {categories.map((category) => (
-                <button
-                  key={category.id}
-                  type="button"
-                  onClick={(event) => openOccasion(category, event.currentTarget)}
-                  className="flex h-11 shrink-0 items-center gap-2 rounded-full bg-secondary pl-2 pr-4 text-left transition duration-200 active:scale-[0.97]"
-                >
-                  <span
-                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full"
-                    style={{ background: category.color, color: category.fg }}
-                  >
-                    <OccasionIcon id={category.icon} size={14} />
-                  </span>
-                  <span className="whitespace-nowrap text-base font-medium text-text">{category.name}</span>
-                </button>
-              ))}
+            <div className="mt-4 px-6">
+              <UnderlineTabs
+                tabs={categories.map((category) => ({ value: category.id, label: category.name }))}
+                onChange={(id) => {
+                  const category = categories.find((item) => item.id === id);
+                  if (category) go({ name: 'tabs', tab: 'categories', categoryId: category.id });
+                }}
+              />
             </div>
           </section>
         )}

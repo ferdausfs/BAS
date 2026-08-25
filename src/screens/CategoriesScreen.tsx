@@ -17,6 +17,7 @@ import { useProducts } from '../hooks/useProducts';
 import { productMatchesQuery, safeArray } from '../lib/utils';
 import { useModalDepth } from '../hooks/useModalDepth';
 import ProductCard from '../components/ProductCard';
+import UnderlineTabs from '../components/UnderlineTabs';
 import { useDebounce } from '../hooks/useDebounce';
 import type { Product } from '../types';
 
@@ -142,35 +143,25 @@ export default function CategoriesScreen() {
       </header>
 
       <div className="flex-shrink-0 px-6 pb-4">
-        <div className="flex items-center gap-3">
-          <div className="no-scrollbar flex flex-1 gap-3 overflow-x-auto pb-1">
-            {[ALL_CAT, ...categories].map((category) => {
-              const isActive = active === category.id;
-              return (
-                <button
-                  key={category.id}
-                  type="button"
-                  onClick={() => setActive(category.id)}
-                  className={`flex h-11 shrink-0 items-center rounded-full px-4 text-[14px] font-semibold shadow-card transition active:scale-95 ${
-                    isActive
-                      ? 'bg-primary text-white'
-                      : 'bg-surface text-text-secondary'
-                  }`}
-                >
-                  {category.name}
-                </button>
-              );
-            })}
-          </div>
+        <div className="flex items-end gap-3">
+          <UnderlineTabs
+            className="min-w-0 flex-1"
+            value={active}
+            onChange={setActive}
+            tabs={[ALL_CAT, ...categories].map((category) => ({
+              value: category.id,
+              label: category.name,
+            }))}
+          />
 
           <button
             type="button"
             onClick={() => setFilterOpen(true)}
-            className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-surface text-text shadow-card transition active:scale-95"
+            className="relative mb-1.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-surface text-text shadow-card transition active:scale-95"
             aria-label="Open filters"
           >
-            <SlidersHorizontal className="h-5 w-5" strokeWidth={1.9} />
-            {filterActive && <span className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-primary" />}
+            <SlidersHorizontal className="h-4 w-4" strokeWidth={1.9} />
+            {filterActive && <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-primary" />}
           </button>
         </div>
       </div>
