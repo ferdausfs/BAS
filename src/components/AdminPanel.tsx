@@ -8,7 +8,7 @@ import { useCustomers } from '../hooks/useCustomers';
 import { useBanners } from '../hooks/useBanners';
 import { useSettingsStore, useUI } from '../lib/store';
 import { DEFAULT_SETTINGS } from '../lib/data';
-import { formatINR, waLink, ls } from '../lib/utils';
+import { formatINR, giftRecipientNote, waLink } from '../lib/utils';
 import type { Product, Order, Banner, CustomAddon } from '../types';
 
 type AdminTab = 'dashboard' | 'orders' | 'products' | 'banners' | 'gallery' | 'reviews' | 'customers' | 'zones' | 'settings';
@@ -168,6 +168,10 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
     if (status === 'cancelled') {
       setCancelReasonInput('');
       setCancelModal(o);
+      return;
+    }
+    if (['baking', 'ready', 'out', 'delivered'].includes(status) && o.status === 'placed' && !o.paymentVerified) {
+      addNotification('আগে Confirm করুন', 'পেমেন্ট ভেরিফাই না করে বেকিং/ডেলিভারি শুরু নয়। আগে Confirmed চাপুন।');
       return;
     }
     updateStatus(o.id, status);
@@ -376,6 +380,19 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                       <span className="font-bold text-ink">Remaining:</span> {formatINR(o.remainingAmount ?? 0)} via {o.payment || 'cash'}
                     </p>
                   )}
+                  <p className="mt-1">
+                    <span className="font-bold text-ink">Payment:</span>{' '}
+                    {o.paymentVerified ? 'Verified' : 'Screenshot pending — Confirm করলে verify হবে'}
+                  </p>
+                  {o.gift && (
+                    <p className="mt-1">
+                      <span className="font-bold text-ink">Gift:</span>{' '}
+                      {o.gift.recipientName || 'Recipient'}
+                      {o.gift.recipientPhone ? ` · ${o.gift.recipientPhone}` : ''}
+                      {o.gift.hidePrice ? ' · hide price from recipient' : ''}
+                      {o.gift.message ? ` · “${o.gift.message}”` : ''}
+                    </p>
+                  )}
                 </div>
 
                 <div className="mt-2 space-y-2">
@@ -440,6 +457,16 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                   >
                     WhatsApp customer
                   </a>
+                  {o.gift?.recipientPhone && (
+                    <a
+                      href={waLink(o.gift.recipientPhone, giftRecipientNote(o))}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 rounded-xl bg-coral/10 py-2 text-center text-xs font-bold text-coral"
+                    >
+                      WhatsApp recipient{o.gift.hidePrice ? ' (no price)' : ''}
+                    </a>
+                  )}
                   {o.paymentScreenshot && (
                     <button
                       onClick={() => void openPaymentScreenshot(o.paymentScreenshot)}
@@ -823,12 +850,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                       const wasOutOfStock = p.inStock === false;
                       await saveProduct({ ...p, inStock: wasOutOfStock ? true : false });
                       if (wasOutOfStock) {
-                        const alerts = ls.get<{productId: string; productName: string}[]>('bakeart-alerts', []);
-                        const hasAlerts = alerts.filter(a => a.productId === p.id);
-                        if (hasAlerts.length > 0) {
-                          addNotification('Restocked!', `${hasAlerts.length} customer${hasAlerts.length > 1 ? 's' : ''} waiting for ${p.name} — they've been notified.`);
-                          ls.set('bakeart-alerts', alerts.filter(a => a.productId !== p.id));
-                        }
+                        addNotification('Restocked', `${p.name} এখন স্টকে। কাস্টমার অ্যাপ খুললে জানতে পারবে — পুশ যায়নি।`);
                       }
                     }}
                     className={`rounded-lg px-2 py-1 text-[10px] font-bold transition ${

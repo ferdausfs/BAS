@@ -40,6 +40,10 @@ export default function App() {
       if (ref && /^[A-Z0-9]{8}$/i.test(ref.trim())) {
         localStorage.setItem('bas-pending-ref', ref.trim().toUpperCase());
       }
+      const productId = params.get('p')?.trim() || '';
+      if (productId && /^[\w-]{1,64}$/.test(productId)) {
+        sessionStorage.setItem('bas-pending-product', productId);
+      }
     } catch { /* ignore */ }
   }, []);
 

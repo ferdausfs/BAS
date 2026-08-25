@@ -9,6 +9,21 @@ export function safeArray<T>(v: unknown, fallback: T[] = []): T[] {
   return Array.isArray(v) ? (v as T[]) : fallback;
 }
 
+export const productMatchesQuery = (product: import('../types').Product, raw: string): boolean => {
+  const query = raw.trim().toLowerCase();
+  if (!query) return true;
+  const haystack = [
+    product.name,
+    product.tagline,
+    product.description,
+    product.occasion,
+    ...(product.flavors ?? []),
+    ...(product.tags ?? []),
+    ...(product.toppings ?? []),
+  ].join(' ').toLowerCase();
+  return haystack.includes(query);
+};
+
 // LocalStorage helpers
 export const ls = {
   get: <T>(key: string, fallback: T): T => {
@@ -46,6 +61,53 @@ export const isValidPhone = (p: string): boolean => {
 // WhatsApp link builder
 export const waLink = (number: string, msg: string): string =>
   `https://wa.me/${number.replace(/\D/g, '')}?text=${encodeURIComponent(msg)}`;
+
+export const giftRecipientNote = (order: import('../types').Order): string => {
+  const gift = order.gift;
+  const names = safeArray<import('../types').CartItem>(order.items).map((item) => item.name).filter(Boolean).join(', ');
+  const who = gift?.recipientName ? `${gift.recipientName}, ` : '';
+  const lines = [
+    `${who}Bake Art Style থেকে আপনার জন্য একটি গিফট কেক আসছে।`,
+    names ? `কেক: ${names}` : '',
+    order.delivery?.date ? `ডেলিভারি: ${order.delivery.date}${order.delivery.time ? ` · ${order.delivery.time}` : ''}` : '',
+    gift?.message ? `মেসেজ: ${gift.message}` : '',
+    gift?.hidePrice ? 'মূল্য গোপন রাখা হয়েছে।' : `মোট: ${formatBDT(order.total)}`,
+  ];
+  return lines.filter(Boolean).join('\n');
+};
+
+export const APP_PUBLIC_URL = 'https://bas.umuhammadiswa.workers.dev';
+export const PENDING_PRODUCT_KEY = 'bas-pending-product';
+
+export const isValidProductId = (id: string): boolean => /^[\w-]{1,64}$/.test(id);
+
+export const appOrigin = (): string => {
+  if (typeof window === 'undefined') return APP_PUBLIC_URL;
+  return window.location.origin || APP_PUBLIC_URL;
+};
+
+export const productShareUrl = (productId: string): string => {
+  const origin = appOrigin();
+  const path = typeof window !== 'undefined' ? window.location.pathname || '/' : '/';
+  return `${origin}${path}?p=${encodeURIComponent(productId)}`;
+};
+
+export const shareOrCopy = async (payload: {
+  title: string;
+  text: string;
+  url: string;
+}): Promise<'shared' | 'copied' | 'failed'> => {
+  if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
+    try {
+      await navigator.share({ title: payload.title, text: payload.text, url: payload.url });
+      return 'shared';
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') return 'failed';
+    }
+  }
+  const ok = await copyText(`${payload.text}\n${payload.url}`);
+  return ok ? 'copied' : 'failed';
+};
 
 // Copy text to clipboard. Returns true on success. Falls back to a hidden
 // textarea + execCommand for older/in-app WebViews where navigator.clipboard

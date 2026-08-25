@@ -6,7 +6,9 @@ import {
   isSignInWithEmailLink,
   onAuthStateChanged,
   RecaptchaVerifier,
+  sendPasswordResetEmail,
   sendSignInLinkToEmail,
+  signInAnonymously,
   signInWithEmailAndPassword,
   signInWithEmailLink,
   signInWithPhoneNumber,
@@ -17,8 +19,8 @@ import {
   type User as FirebaseUser,
 } from 'firebase/auth';
 import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
-import { auth, db, isFirebaseConfigured } from '../lib/firebase';
-import { claimReferralRewards, getReferralCode, hydrateWalletFromFirestore, useAuthStore, useCart, useLocation, useUI } from '../lib/store';
+import { auth, db, isFirebaseConfigured, uploadToCloudinary } from '../lib/firebase';
+import { claimReferralRewards, getReferralCode, hydrateWalletFromFirestore, useAuthStore, useCart, useLocation, useUI, useUser, useWallet } from '../lib/store';
 import type { User } from '../types';
 
 type ProfileDoc = {
@@ -158,6 +160,8 @@ export function useAuth() {
       void mapFirebaseUser(firebaseUser).then(async (hydrated) => {
         if (active) {
           login(hydrated);
+          useUser.getState().switchOwner(hydrated.id);
+          useWallet.getState().switchOwner(hydrated.id);
 
           // Hydrate wallet balance from Firestore (cross-device sync), then
           // auto-claim any pending referral rewards (which credit the wallet).
@@ -269,6 +273,26 @@ export function useAuth() {
   // Email magic-link — no password, no Cloud Function needed. Firebase sends
   // the email itself; clicking the link (handled above, on mount) creates the
   // account automatically if it doesn't exist yet.
+  const ensureSignedIn = useCallback(async (): Promise<User> => {
+    if (auth.currentUser) {
+      const mapped = await mapFirebaseUser(auth.currentUser);
+      login(mapped);
+      return mapped;
+    }
+    const cred = await signInAnonymously(auth);
+    const mapped = await mapFirebaseUser(cred.user);
+    login(mapped);
+    useUser.getState().switchOwner(mapped.id);
+    useWallet.getState().switchOwner(mapped.id);
+    return mapped;
+  }, [login]);
+
+  const resetPassword = useCallback(async (email: string) => {
+    await sendPasswordResetEmail(auth, email, {
+      url: window.location.origin + window.location.pathname,
+    });
+  }, []);
+
   const sendMagicLink = useCallback(async (email: string) => {
     await sendSignInLinkToEmail(auth, email, {
       url: window.location.origin + window.location.pathname,
@@ -277,8 +301,22 @@ export function useAuth() {
     window.localStorage.setItem(MAGIC_LINK_EMAIL_KEY, email);
   }, []);
 
+  const updateAvatar = useCallback(async (file: File): Promise<void> => {
+    const current = useAuthStore.getState().user;
+    if (!current?.id) throw new Error('Sign in required');
+    if (file.size > 2 * 1024 * 1024) throw new Error('ছবি সর্বোচ্চ ২MB হতে পারবে');
+    const url = await uploadToCloudinary(file, 'bake-art-style/avatars');
+    if (auth.currentUser) {
+      await updateProfile(auth.currentUser, { photoURL: url });
+    }
+    if (isFirebaseConfigured()) {
+      await setDoc(profileRef(current.id), { avatar: url, updated_at: serverTimestamp() }, { merge: true });
+    }
+    login({ ...current, avatar: url });
+  }, [login]);
+
   return {
     user, loading, signUp, signIn, signOut, signInWithGoogle, signInWithFacebook,
-    sendPhoneOtp, confirmPhoneOtp, sendMagicLink,
+    sendPhoneOtp, confirmPhoneOtp, sendMagicLink, resetPassword, ensureSignedIn, updateAvatar,
   };
 }

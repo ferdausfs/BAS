@@ -18,6 +18,19 @@ export default function SplashScreen() {
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
+      let pendingProduct = '';
+      try {
+        pendingProduct = sessionStorage.getItem('bas-pending-product') || '';
+        if (pendingProduct) sessionStorage.removeItem('bas-pending-product');
+      } catch { /* ignore */ }
+      if (pendingProduct && /^[\w-]{1,64}$/.test(pendingProduct)) {
+        useUI.setState({
+          view: { name: 'product', productId: pendingProduct },
+          tab: 'home',
+          history: [{ name: 'tabs', tab: 'home' }],
+        });
+        return;
+      }
       setView({ name: 'tabs', tab: readLastTab() });
     }, 2000);
     return () => window.clearTimeout(timer);

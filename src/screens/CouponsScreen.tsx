@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { ArrowLeft, Ticket } from 'lucide-react';
 import { useUI, useSettingsStore } from '../lib/store';
+import { hapticTap } from '../lib/utils';
 
 function isExpired(expiresAt: string) {
   if (!expiresAt) return false;
@@ -20,7 +21,7 @@ function daysLeft(expiresAt: string): number | null {
 }
 
 export default function CouponsScreen() {
-  const { back } = useUI();
+  const { back, go, applyPromo } = useUI();
   const { settings } = useSettingsStore();
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
@@ -86,13 +87,26 @@ export default function CouponsScreen() {
                           <h3 className="text-[18px] font-semibold tracking-wide text-ink">{c.code}</h3>
                           <p className="mt-1 text-[13px] font-medium text-ink-300">Enjoy {c.discount}% OFF on cake orders</p>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => handleCopy(c.id, c.code)}
-                          className="rounded-full bg-secondary px-3 py-1.5 text-[11px] font-bold text-coral transition active:scale-95"
-                        >
-                          {copiedId === c.id ? 'Copied' : 'Copy'}
-                        </button>
+                        <div className="flex flex-col items-end gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => handleCopy(c.id, c.code)}
+                            className="rounded-full bg-secondary px-3 py-1.5 text-[11px] font-bold text-coral transition active:scale-95"
+                          >
+                            {copiedId === c.id ? 'Copied' : 'Copy'}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              applyPromo(c.discount, c.code);
+                              hapticTap();
+                              go({ name: 'checkout' });
+                            }}
+                            className="rounded-full bg-coral px-3 py-1.5 text-[11px] font-bold text-white transition active:scale-95"
+                          >
+                            Apply
+                          </button>
+                        </div>
                       </div>
                       <div className="my-3 border-t border-dashed border-border" />
                       <p className="text-[13px] font-medium text-ink-300">Add items to unlock this sweet offer</p>

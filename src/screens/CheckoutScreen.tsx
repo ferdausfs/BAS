@@ -17,6 +17,7 @@ import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db, isFirebaseConfigured, uploadToCloudinary } from '../lib/firebase';
 import { safeArray, isValidPhone, copyText, ls, hapticTap } from '../lib/utils';
 import { LocationGate } from '../components/LocationGate';
+import { useAuth } from '../hooks/useAuth';
 import PaymentAppPopup from '../components/PaymentAppPopup';
 import { BD_DISTRICTS } from '../lib/zones';
 import type { CartItem, Order, SavedAddress } from '../types';
@@ -60,12 +61,13 @@ export default function CheckoutScreen({ onBack, onAuthOpen }: Props) {
   const { items, clear } = useCart();
   const { placeOrder, orders } = useOrders();
   const {
-    back, go, promoDiscount, pendingLoyaltyRedeem,
+    back, go, promoDiscount, appliedPromoCode, pendingLoyaltyRedeem,
     setPendingLoyaltyRedeem, clearLoyalty, applyPromo, clearPromo,
     setBackHandler,
   } = useUI();
   const { verified: locationVerified, district: detectedDistrict, lat: locationLat, lng: locationLng } = useLocation();
   const user = useAuthStore((s) => s.user);
+  const { ensureSignedIn } = useAuth();
   const walletBalance = useWallet((s) => s.balance);
 
   // Referral
@@ -340,7 +342,7 @@ export default function CheckoutScreen({ onBack, onAuthOpen }: Props) {
   // so Cart and Checkout always stay in sync with whatever was applied).
   const maxRedeemable = Math.min(walletBalance, WALLET_MAX_REDEEM, subtotal);
   const canRedeem = walletBalance > 0 && subtotal >= WALLET_MIN_ORDER_TO_REDEEM && promoDiscount === 0;
-  const [promoInput, setPromoInput] = useState('');
+  const [promoInput, setPromoInput] = useState(appliedPromoCode);
   const [promoError, setPromoError] = useState('');
 
   // Extras (wallet redeem / promo code / referral code) collapsed by default —
@@ -361,11 +363,16 @@ export default function CheckoutScreen({ onBack, onAuthOpen }: Props) {
 
   const handleSubmit = async () => {
     if (items.length === 0) return;
-    if (!user?.id || user.id.startsWith('local-')) {
-      setSubmitError('অর্ডার করতে Sign In করুন।');
-      onAuthOpen?.();
-      scrollToTop();
-      return;
+    let checkoutUser = user;
+    if (!checkoutUser?.id || checkoutUser.id.startsWith('local-')) {
+      try {
+        checkoutUser = await ensureSignedIn();
+      } catch {
+        setSubmitError('গেস্ট অর্ডার চালু করতে anonymous login লাগবে, অথবা Sign In করুন।');
+        onAuthOpen?.();
+        scrollToTop();
+        return;
+      }
     }
     if (!form.name || !checkoutPhone || !checkoutAddress) {
       setSubmitError('নাম, ফোন এবং ঠিকানা পূরণ করুন।');
@@ -400,7 +407,7 @@ export default function CheckoutScreen({ onBack, onAuthOpen }: Props) {
         customer: {
           name: form.name,
           phone: checkoutPhone,
-          email: user?.email || '',
+          email: checkoutUser?.email || '',
           address: checkoutAddress,
           city: checkoutDistrict,
           pin: '',
@@ -414,7 +421,7 @@ export default function CheckoutScreen({ onBack, onAuthOpen }: Props) {
         deliveryFee: delivery,
         total,
         discount: Math.round(discountAmount),
-        promoCode: promoDiscount > 0 ? settings.promoCode : undefined,
+        promoCode: promoDiscount > 0 ? (appliedPromoCode || settings.promoCode) : undefined,
         loyaltyPointsRedeemed: pendingLoyaltyRedeem > 0 ? pendingLoyaltyRedeem : undefined,
         paymentScreenshot,
         gpsLat: locationLat,
@@ -424,13 +431,13 @@ export default function CheckoutScreen({ onBack, onAuthOpen }: Props) {
         gift: giftMode ? gift : undefined,
       });
 
-      if (isFirebaseConfigured() && user?.id && !user.id.startsWith('local-')) {
+      if (isFirebaseConfigured() && checkoutUser?.id && !checkoutUser.id.startsWith('local-')) {
         try {
-          await setDoc(doc(db, 'profiles', user.id), {
-            id: user.id,
+          await setDoc(doc(db, 'profiles', checkoutUser.id), {
+            id: checkoutUser.id,
             name: form.name,
             contact: checkoutPhone,
-            email: user.email,
+            email: checkoutUser.email,
             district: checkoutDistrict,
             location_address: checkoutAddress,
             updated_at: new Date().toISOString(),
@@ -943,7 +950,7 @@ export default function CheckoutScreen({ onBack, onAuthOpen }: Props) {
                       });
 
                       if (matchedCoupon) {
-                        applyPromo(matchedCoupon.discount);
+                        applyPromo(matchedCoupon.discount, matchedCoupon.code);
                         hapticTap();
                         setPromoError('');
                         return;
@@ -955,7 +962,7 @@ export default function CheckoutScreen({ onBack, onAuthOpen }: Props) {
                         return;
                       }
                       if (enteredCode === settings.promoCode.trim().toUpperCase()) {
-                        applyPromo(settings.promoPercent);
+                        applyPromo(settings.promoPercent, settings.promoCode);
                         hapticTap();
                         setPromoError('');
                       } else {

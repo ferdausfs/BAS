@@ -117,6 +117,7 @@ export function useOrdersHook() {
         status: toDbOrderStatus(status),
         updated_at: new Date().toISOString(),
         ...(reason ? { cancel_reason: reason } : {}),
+        ...(status !== 'placed' && status !== 'cancelled' ? { payment_verified: true } : {}),
       });
       setOrderStatus(id, status, reason);
     } catch (error) {

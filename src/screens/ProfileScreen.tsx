@@ -124,7 +124,9 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
   const setLanguage = useLanguageStore((state) => state.setLanguage);
   const t = useT();
   const effectiveIsAdmin = isAdmin || !!user?.isAdmin;
-  const { signOut } = useAuth();
+  const { signOut, updateAvatar, resetPassword } = useAuth();
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+  const [avatarBusy, setAvatarBusy] = useState(false);
   const referralCode = getReferralCode(user);
   const [walletHistoryOpen, setWalletHistoryOpen] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
@@ -429,6 +431,21 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
       action: () => setWalletHistoryOpen(true),
     },
     {
+      Icon: Heart,
+      label: t('profile.wishlist'),
+      action: () => go({ name: 'wishlist' }),
+    },
+    {
+      Icon: Gift,
+      label: t('profile.inviteEarn'),
+      action: () => setInviteOpen(true),
+    },
+    {
+      Icon: Cake,
+      label: t('profile.specialDates'),
+      action: () => setShowDatesModal(true),
+    },
+    {
       Icon: HelpCircle,
       label: t('profile.help'),
       action: () => setProfileView('help'),
@@ -449,7 +466,19 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
     {
       Icon: KeyRound,
       label: t('profile.passwordManager'),
-      action: () => useUI.getState().addNotification('Password Manager', 'To change password, please contact support securely.'),
+      action: () => {
+        const email = user?.email?.trim();
+        if (!email) {
+          useUI.getState().addNotification('পাসওয়ার্ড', 'ইমেইল নেই — ফোন লগইনে reset পাঠানো যায় না।');
+          return;
+        }
+        void resetPassword(email)
+          .then(() => useUI.getState().addNotification('Reset পাঠানো হয়েছে', `${email}-এ password reset link গেছে।`))
+          .catch((error: unknown) => useUI.getState().addNotification(
+            'Reset যায়নি',
+            error instanceof Error ? error.message : 'আবার চেষ্টা করুন।'
+          ));
+      },
     },
     {
       Icon: Sun,
@@ -677,15 +706,42 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
               <div className="flex h-28 w-28 items-center justify-center overflow-hidden rounded-full bg-secondary text-[30px] font-semibold text-coral shadow-card">
                 {user.avatar && user.avatar.length > 2 ? <img src={user.avatar} alt="" className="h-full w-full object-cover" /> : initials}
               </div>
-              <span className="absolute bottom-1 right-1 flex h-9 w-9 items-center justify-center rounded-full bg-coral text-white shadow-btn ring-4 ring-bg">
-                <Camera className="h-4 w-4" strokeWidth={1.8} />
-              </span>
+              <input
+                ref={avatarInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(event) => {
+                  const file = event.target.files?.[0];
+                  event.target.value = '';
+                  if (!file) return;
+                  setAvatarBusy(true);
+                  void updateAvatar(file)
+                    .then(() => useUI.getState().addNotification('ছবি আপডেট', 'প্রোফাইল ছবি সেভ হয়েছে।'))
+                    .catch((error: unknown) => {
+                      useUI.getState().addNotification(
+                        'ছবি আপলোড হয়নি',
+                        error instanceof Error ? error.message : 'আবার চেষ্টা করুন।'
+                      );
+                    })
+                    .finally(() => setAvatarBusy(false));
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => avatarInputRef.current?.click()}
+                disabled={avatarBusy}
+                className="absolute bottom-1 right-1 flex h-9 w-9 items-center justify-center rounded-full bg-coral text-white shadow-btn ring-4 ring-bg disabled:opacity-60"
+                aria-label="Change profile photo"
+              >
+                {avatarBusy ? <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2} /> : <Camera className="h-4 w-4" strokeWidth={1.8} />}
+              </button>
             </div>
           </div>
 
           <div className="mt-8 space-y-4">
             <ProfileInput label="Name" icon={User} value={draftProfile.name} onChange={(value) => setDraftProfile({ ...draftProfile, name: value })} placeholder="Your name" />
-            <ProfileInput label="Email" icon={Mail} value={user.email ?? ''} readOnly action="Change" />
+            <ProfileInput label="Email" icon={Mail} value={user.email?.trim() ? user.email : 'ফোন লগইন — ইমেইল নেই'} readOnly />
             <ProfileInput label="Phone Number" icon={Phone} value={draftProfile.phone} onChange={(value) => setDraftProfile({ ...draftProfile, phone: value })} placeholder="01XXXXXXXXX" inputMode="tel" />
             <label className="block">
               <span className="mb-2 block text-[13px] font-semibold text-ink-300">Delivery Address</span>
@@ -768,13 +824,9 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
             <PaymentOption icon={WalletIcon} label="bKash" active={draftProfile.payment === 'bkash'} onClick={() => setDraftProfile({ ...draftProfile, payment: 'bkash' })} />
             <PaymentOption icon={WalletIcon} label="Nagad" active={draftProfile.payment === 'nagad'} onClick={() => setDraftProfile({ ...draftProfile, payment: 'nagad' })} />
           </PaymentSection>
-          <PaymentSection title="Credit & Debit Card">
-            <button type="button" className="flex h-14 w-full items-center gap-4 rounded-[18px] border border-border bg-surface px-4 text-left shadow-card active:scale-[.98]">
-              <CreditCard className="h-5 w-5 text-coral" strokeWidth={1.8} />
-              <span className="flex-1 text-[15px] font-semibold text-ink">Add Card</span>
-              <ChevronRight className="h-5 w-5 text-ink-200" />
-            </button>
-          </PaymentSection>
+          <p className="mb-6 text-[12px] font-medium text-ink-300">
+            কার্ড পেমেন্ট নেই — শুধু bKash, Nagad বা ক্যাশ অন ডেলিভারি।
+          </p>
           <button
             type="button"
             onClick={() => void handleSaveCustomer().then(() => setProfileView('main'))}

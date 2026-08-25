@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Check, Home, Receipt, Copy } from 'lucide-react';
 import { useUI, useOrders } from '../lib/store';
-import { copyText, safeArray } from '../lib/utils';
+import { appOrigin, copyText, giftRecipientNote, safeArray, shareOrCopy, waLink } from '../lib/utils';
 import SuccessCheckTransition from '../components/SuccessCheckTransition';
 
 export default function SuccessScreen() {
@@ -39,10 +39,10 @@ export default function SuccessScreen() {
         </div>
 
         <h1 className="text-[24px] font-semibold leading-tight tracking-[-0.03em] text-ink">
-          Payment Successful!
+          অর্ডার প্লেস হয়েছে
         </h1>
         <p className="mt-3 text-[15px] font-medium text-text-secondary">
-          Order placed successfully!
+          পেমেন্ট ভেরিফাই হচ্ছে — অ্যাডমিন চেক করে কেক শুরু করবে।
         </p>
 
         <section className="mt-8 w-full max-w-[320px] rounded-[18px] border border-border bg-surface px-4 py-4 text-left shadow-card">
@@ -75,6 +75,30 @@ export default function SuccessScreen() {
               </div>
               <p className="shrink-0 text-[16px] font-semibold tabular text-ink">৳{order.total?.toLocaleString()}</p>
             </div>
+            {order.gift && (
+              <div className="mt-3 border-t border-border pt-3">
+                <p className="text-[12px] font-medium text-text-secondary">
+                  গিফট নোট{order.gift.hidePrice ? ' — প্রাপক দাম দেখবে না' : ''}
+                </p>
+                <div className="mt-2 flex gap-2">
+                  {order.gift.recipientPhone && (
+                    <a
+                      href={waLink(order.gift.recipientPhone, giftRecipientNote(order))}
+                      className="flex h-10 flex-1 items-center justify-center rounded-full bg-success/10 text-[12px] font-bold text-success"
+                    >
+                      প্রাপককে পাঠান
+                    </a>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => void shareOrCopy({ title: 'Gift cake', text: giftRecipientNote(order), url: appOrigin() })}
+                    className="flex h-10 flex-1 items-center justify-center rounded-full bg-secondary text-[12px] font-bold text-coral"
+                  >
+                    নোট শেয়ার
+                  </button>
+                </div>
+              </div>
+            )}
           </section>
         )}
       </main>

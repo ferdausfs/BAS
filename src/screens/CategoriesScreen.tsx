@@ -14,7 +14,7 @@ import {
 import { useUI, useUser } from '../lib/store';
 import { categories } from '../lib/data';
 import { useProducts } from '../hooks/useProducts';
-import { safeArray } from '../lib/utils';
+import { productMatchesQuery, safeArray } from '../lib/utils';
 import { useModalDepth } from '../hooks/useModalDepth';
 import ProductCard from '../components/ProductCard';
 import { useDebounce } from '../hooks/useDebounce';
@@ -65,7 +65,7 @@ export default function CategoriesScreen() {
   const filtered = useMemo(() => {
     let list = approvedProducts
       .filter((product) => (active === 'all' ? true : product.occasion === active))
-      .filter((product) => (debouncedSearch.trim() ? product.name.toLowerCase().includes(debouncedSearch.trim().toLowerCase()) : true))
+      .filter((product) => productMatchesQuery(product, debouncedSearch))
       .filter((product) => (product.price ?? 0) <= priceMax)
       .filter((product) => (product.rating ?? 0) >= minRating);
 

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { ArrowRight, Cake, Megaphone, RotateCcw, Search } from 'lucide-react';
 import { useDebounce } from '../hooks/useDebounce';
 import { useUI, useUser, useOrders, useAuthStore, useCart } from '../lib/store';
-import { ls, safeArray } from '../lib/utils';
+import { ls, productMatchesQuery, safeArray } from '../lib/utils';
 import { categories } from '../lib/data';
 import { useProducts } from '../hooks/useProducts';
 import { useBanners } from '../hooks/useBanners';
@@ -14,6 +14,7 @@ import OccasionIcon from '../components/OccasionIcon';
 import { useModalDepth } from '../hooks/useModalDepth';
 import type { Banner, CartItem, Product, SpecialDate } from '../types';
 import { useT } from '../lib/i18n';
+import { consumeRestockedAlerts } from '../lib/stockAlerts';
 
 const STAGGER_DELAYS = ['delay-1', 'delay-2', 'delay-3', 'delay-4', 'delay-5'];
 
@@ -181,7 +182,7 @@ export default function HomeScreen({
     const query = debouncedSearch.trim().toLowerCase();
     if (!query) return [];
     return availableProducts
-      .filter((product) => product.name.toLowerCase().includes(query) || product.tagline.toLowerCase().includes(query))
+      .filter((product) => productMatchesQuery(product, query))
       .slice(0, 8);
   }, [availableProducts, debouncedSearch]);
 
@@ -189,7 +190,7 @@ export default function HomeScreen({
     const query = search.trim().toLowerCase();
     if (!query || query.length < 2) return [];
     return availableProducts
-      .filter((product) => product.name.toLowerCase().includes(query))
+      .filter((product) => productMatchesQuery(product, query))
       .map((product) => product.name)
       .slice(0, 5);
   }, [availableProducts, search]);
@@ -197,6 +198,11 @@ export default function HomeScreen({
   const hasSearch = search.trim().length > 0;
   const searchTerm = debouncedSearch.trim();
   const featuredProducts = trending.slice(0, 6);
+
+  useEffect(() => {
+    if (availableProducts.length === 0) return;
+    consumeRestockedAlerts(availableProducts);
+  }, [availableProducts]);
 
   useEffect(() => {
     if (activeBanners.length === 0) return;

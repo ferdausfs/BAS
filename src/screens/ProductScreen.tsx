@@ -4,7 +4,8 @@ import { useUI, formatINR, useCart, useUser, useAuthStore, useSettingsStore } fr
 import { useProducts } from '../hooks/useProducts';
 import { useReviews } from '../hooks/useReviews';
 
-import { ls, safeArray, servingFor, servingForPounds, formatWeight } from '../lib/utils';
+import { safeArray, servingFor, servingForPounds, formatWeight, productShareUrl, shareOrCopy } from '../lib/utils';
+import { addStockAlert } from '../lib/stockAlerts';
 import type { Product, Review } from '../types';
 
 // Small reusable component for description Read more
@@ -108,6 +109,21 @@ export default function ProductScreen() {
   const handleWish = () => {
     setHeartKey(k => k + 1);
     if (product) toggleWish(product.id);
+  };
+
+  const handleShare = async () => {
+    if (!product) return;
+    const url = productShareUrl(product.id);
+    const result = await shareOrCopy({
+      title: `${product.name} — Bake Art Style`,
+      text: `${product.name} — বেক আর্ট স্টাইল থেকে অর্ডার করুন`,
+      url,
+    });
+    if (result === 'copied') {
+      useUI.getState().addNotification('লিংক কপি হয়েছে', 'বন্ধুকে পাঠালে এই কেকটাই খুলবে।');
+    } else if (result === 'failed') {
+      useUI.getState().addNotification('শেয়ার হয়নি', url);
+    }
   };
 
   // Reviews state
@@ -442,7 +458,7 @@ export default function ProductScreen() {
             <div className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3.5 py-1.5">
               <Clock className="h-3.5 w-3.5 text-emerald-600 flex-shrink-0" strokeWidth={2.5} />
               <p className="text-[11.5px] font-bold text-emerald-700">
-                আজ অর্ডার করলে {settings.deliveryEstimate} এর মধ্যে পৌঁছাবে
+                আজ বিকেল ৪টার আগে অর্ডার করলে আগামীকাল পাবেন — ৪টার পরে হলে পরশু
               </p>
             </div>
           )}
@@ -806,6 +822,8 @@ export default function ProductScreen() {
         </button>
         <div className="flex gap-2.5 pointer-events-auto">
           <button
+            type="button"
+            onClick={() => void handleShare()}
             className="flex h-12 w-12 items-center justify-center rounded-full bg-surface text-ink shadow-card transition active:scale-90"
             aria-label="Share"
           >
@@ -879,21 +897,16 @@ export default function ProductScreen() {
               </div>
               <button
                 onClick={() => {
-                  const key = `bakeart-alerts`;
-                  const alerts = ls.get<{productId: string; productName: string; date: number}[]>(key, []);
-                  const exists = alerts.find(a => a.productId === product.id);
-                  if (!exists) {
-                    ls.set(key, [...alerts, { productId: product.id, productName: product.name, date: Date.now() }]);
-                  }
+                  addStockAlert(product.id, product.name);
                   useUI.getState().addNotification(
-                    'Alert set!',
-                    `We'll notify you when ${product.name} is back in stock.`
+                    'মনে রাখা হয়েছে',
+                    `${product.name} স্টকে এলে এই অ্যাপ খুললে জানাবো — পুশ নোটিফিকেশন যাবে না।`
                   );
                 }}
                 className="btn-primary flex w-full items-center justify-center gap-2 rounded-2xl py-4 text-[15px] font-bold shadow-btn"
               >
                 <Bell size={16} />
-                Notify Me When Available
+                স্টকে এলে মনে রাখুন
               </button>
             </div>
           )}

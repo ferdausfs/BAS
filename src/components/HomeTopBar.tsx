@@ -3,6 +3,8 @@ import { useUI, useLocation, useAuthStore } from '../lib/store';
 import SearchBar from './SearchBar';
 import NotificationBadge from './NotificationBadge';
 import { useT } from '../lib/i18n';
+import { ls } from '../lib/utils';
+import type { SavedAddress } from '../types';
 
 interface Props {
   search: string;
@@ -29,6 +31,9 @@ export default function HomeTopBar({
   const { setTab, notifications } = useUI();
   const { user } = useAuthStore();
   const district = useLocation((state) => state.district);
+  const savedAddresses = user?.id ? ls.get<SavedAddress[]>(`bakeart-addresses-${user.id}`, []) : [];
+  const defaultAddress = savedAddresses.find((addr) => addr.isDefault) ?? savedAddresses[0];
+  const deliveryLabel = (user?.locationAddress || defaultAddress?.address || district || '').trim();
   const initial = (user?.name?.trim()?.[0] ?? 'B').toUpperCase();
   const unreadCount = notifications.filter((notification) => !notification.read).length;
   const t = useT();
@@ -58,7 +63,7 @@ export default function HomeTopBar({
           <span className="block text-sm text-white/75">{t('home.deliveryTo')}</span>
           <span className="mt-[3px] flex items-center gap-[7px] text-card-title font-medium text-white/95">
             <MapPin className="h-[18px] w-[18px] shrink-0 text-white/95" strokeWidth={1.8} />
-            <span className="truncate">{district || t('home.setLocation')}</span>
+            <span className="truncate">{deliveryLabel || t('home.setLocation')}</span>
             <ChevronDown className="h-[14px] w-[14px] shrink-0 text-white/70" strokeWidth={2.2} />
           </span>
         </button>

@@ -30,7 +30,7 @@ const toE164Bangladesh = (raw: string): string | null => {
 export function AuthSheet({ open, onClose, onSuccess }: Props) {
   const {
     user, loading, signUp, signIn, signOut, signInWithGoogle, signInWithFacebook,
-    sendPhoneOtp, confirmPhoneOtp, sendMagicLink,
+    sendPhoneOtp, confirmPhoneOtp, sendMagicLink, resetPassword,
   } = useAuth();
 
   const [method, setMethod] = useState<'email' | 'phone'>('email');
@@ -371,14 +371,34 @@ export function AuthSheet({ open, onClose, onSuccess }: Props) {
                   </button>
 
                   {mode === 'signin' && (
-                    <button
-                      type="button"
-                      onClick={() => { setEmailLoginMode('magiclink'); setToast(null); }}
-                      className="w-full flex items-center justify-center gap-1.5 text-xs font-bold text-primary"
-                    >
-                      <Link2 className="w-3.5 h-3.5" />
-                      Password ছাড়া, email-এ login link পাঠান
-                    </button>
+                    <>
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          if (!email.trim() || !validateEmail(email)) {
+                            showToast('Reset পাঠাতে সঠিক email দিন।', 'err');
+                            return;
+                          }
+                          try {
+                            await resetPassword(email.trim());
+                            showToast(`${email.trim()}-এ password reset link পাঠানো হয়েছে।`, 'ok');
+                          } catch (error: unknown) {
+                            showToast(error instanceof Error ? error.message : 'Reset পাঠানো যায়নি।', 'err');
+                          }
+                        }}
+                        className="w-full text-xs font-bold text-text-secondary"
+                      >
+                        Password ভুলে গেছেন?
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setEmailLoginMode('magiclink'); setToast(null); }}
+                        className="w-full flex items-center justify-center gap-1.5 text-xs font-bold text-primary"
+                      >
+                        <Link2 className="w-3.5 h-3.5" />
+                        Password ছাড়া, email-এ login link পাঠান
+                      </button>
+                    </>
                   )}
                 </div>
               )}

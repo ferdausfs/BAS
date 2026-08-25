@@ -74,7 +74,16 @@ service cloud.firestore {
     match /orders/{id} {
       allow create: if signedIn();
       allow read: if isAdmin() || (signedIn() && (resource.data.userId == request.auth.uid || resource.data.user_id == request.auth.uid));
-      allow update, delete: if isAdmin();
+      allow update: if isAdmin()
+        || (
+          signedIn()
+          && (resource.data.userId == request.auth.uid || resource.data.user_id == request.auth.uid)
+          && resource.data.status in ['placed', 'pending', 'confirmed']
+          && request.resource.data.status == 'cancelled'
+          && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['status', 'cancel_reason', 'cancelReason', 'updated_at'])
+        );
+      allow delete: if isAdmin();
     }
 
     // App settings: public read; admin-only writes EXCEPT for the referral
@@ -88,6 +97,7 @@ service cloud.firestore {
           key.matches('referral_pending_.*')
           || key.matches('referral_consumed_.*')
           || key.matches('referral_uses_.*')
+          || key == 'coupon_uses'
         ));
     }
   }

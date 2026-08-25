@@ -61,7 +61,7 @@ function TrackingSkeletonCard() {
 }
 
 const TIMELINE_STEPS: { key: string; Icon: typeof ShoppingCart; label: string; sub: string }[] = [
-  { key: 'placed',    Icon: ShoppingCart, label: 'Order Placed',      sub: 'We received your order' },
+  { key: 'placed',    Icon: ShoppingCart, label: 'Order Placed',      sub: 'Screenshot গেছে — পেমেন্ট এখনো ভেরিফাই হয়নি' },
   { key: 'confirmed', Icon: CheckCircle2, label: 'Baker Assigned',     sub: 'A baker is on it' },
   { key: 'baking',    Icon: Flame,        label: 'Baking Started',     sub: 'Your cake is in the oven' },
   { key: 'ready',     Icon: Cake,         label: 'Quality Check',      sub: 'Almost ready!' },
@@ -76,7 +76,10 @@ export default function TrackingScreen() {
   const initial = view.name === 'tracking' ? view.orderId ?? '' : '';
   const [query, setQuery] = useState(initial);
   const [match, setMatch] = useState<Order | null>(null);
-  const { orders, loading, fetchMyOrders } = useOrdersHook();
+  const [cancelOpen, setCancelOpen] = useState(false);
+  const [cancelReason, setCancelReason] = useState('');
+  const [cancelBusy, setCancelBusy] = useState(false);
+  const { orders, loading, fetchMyOrders, updateStatus } = useOrdersHook();
   const user = useAuthStore((s) => s.user);
   const { settings } = useSettingsStore();
 
@@ -227,7 +230,9 @@ export default function TrackingScreen() {
             <div className="border-t border-border px-4 py-3.5">
               <div className="mb-2 flex items-center justify-between">
                 <span className="text-[10px] font-bold tracking-wider text-text-tertiary uppercase">Live status</span>
-                <span className="text-[12px] font-bold capitalize text-ink">{match.status}</span>
+                <span className="text-[12px] font-bold capitalize text-ink">
+                  {!match.paymentVerified && match.status === 'placed' ? 'পেমেন্ট চেক হচ্ছে' : match.status}
+                </span>
               </div>
               {/* Vertical timeline */}
               <div className="mt-3 space-y-0">
@@ -268,6 +273,15 @@ export default function TrackingScreen() {
                   );
                 })}
               </div>
+              {(match.status === 'placed' || match.status === 'confirmed') && (
+                <button
+                  type="button"
+                  onClick={() => { setCancelReason(''); setCancelOpen(true); }}
+                  className="mt-3 flex h-11 w-full items-center justify-center rounded-2xl border border-error/20 bg-error/8 text-[13px] font-bold text-error"
+                >
+                  অর্ডার বাতিল করুন
+                </button>
+              )}
               {match.status !== 'delivered' && (
                 <div className="mt-3 mx-1 flex items-center justify-between rounded-xl bg-secondary px-3 py-2.5">
                   <div className="flex items-center gap-2">
@@ -340,6 +354,40 @@ export default function TrackingScreen() {
           <MessageCircle className="h-4 w-4 text-white" strokeWidth={2} />
           <span className="text-[12px] font-bold text-white">সাহায্য দরকার?</span>
         </button>
+      )}
+
+      {cancelOpen && match && (
+        <div className="fixed inset-0 z-[140] flex items-end justify-center bg-ink/45" onClick={() => !cancelBusy && setCancelOpen(false)}>
+          <div className="w-full max-w-[420px] rounded-t-[22px] border-t border-border bg-surface p-5 pb-8 shadow-float" onClick={(event) => event.stopPropagation()}>
+            <h2 className="text-[16px] font-bold text-ink">অর্ডার বাতিল করবেন?</h2>
+            <p className="mt-1 text-[12px] text-ink-300">#{match.id} — বেকিং শুরু হওয়ার আগে বাতিল করা যাবে।</p>
+            <textarea
+              value={cancelReason}
+              onChange={(event) => setCancelReason(event.target.value)}
+              placeholder="কারণ লিখুন (ঐচ্ছিক)"
+              rows={3}
+              className="mt-3 w-full resize-none rounded-2xl border border-border bg-bg px-3 py-2.5 text-[13px] text-ink outline-none focus:border-coral"
+            />
+            <div className="mt-4 flex gap-2">
+              <button type="button" disabled={cancelBusy} onClick={() => setCancelOpen(false)} className="flex h-11 flex-1 items-center justify-center rounded-2xl bg-ink-50 text-[13px] font-bold text-ink-300">রাখুন</button>
+              <button
+                type="button"
+                disabled={cancelBusy}
+                onClick={() => {
+                  setCancelBusy(true);
+                  void updateStatus(match.id, 'cancelled', cancelReason.trim() || 'কাস্টমার নিজে বাতিল করেছেন')
+                    .finally(() => {
+                      setCancelBusy(false);
+                      setCancelOpen(false);
+                    });
+                }}
+                className="flex h-11 flex-1 items-center justify-center rounded-2xl bg-error text-[13px] font-bold text-white disabled:opacity-50"
+              >
+                {cancelBusy ? 'বাতিল হচ্ছে...' : 'বাতিল নিশ্চিত'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

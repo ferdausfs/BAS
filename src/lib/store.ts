@@ -4,7 +4,7 @@ import type { CartItem, Order } from '../types';
 import { doc, getDoc, onSnapshot, setDoc } from 'firebase/firestore';
 import { db, isFirebaseConfigured } from './firebase';
 import { sanitizeForFirestore, orderToDoc } from './firestoreMappers';
-import { formatBDT as _formatBDT } from './utils';
+import { formatBDT as _formatBDT, ls } from './utils';
 
 
 
@@ -74,7 +74,8 @@ type UIState = {
   go: (v: View) => void;
   // Promo
   promoDiscount: number;
-  applyPromo: (pct: number) => void;
+  appliedPromoCode: string;
+  applyPromo: (pct: number, code?: string) => void;
   clearPromo: () => void;
   // Loyalty (pending redemption applied at checkout)
   pendingLoyaltyRedeem: number;
@@ -116,6 +117,7 @@ export const useUI = create<UIState>((set, get) => ({
   tab: 'home',
   history: [],
   promoDiscount: 0,
+  appliedPromoCode: '',
   pendingLoyaltyRedeem: 0,
   newOrderCount: 0,
   notifications: [],
@@ -161,11 +163,11 @@ export const useUI = create<UIState>((set, get) => ({
     });
     requestAnimationFrame(() => window.scrollTo({ top: 0 }));
   },
-  applyPromo: (pct) => set({ promoDiscount: pct, pendingLoyaltyRedeem: 0 }),
-  clearPromo: () => set({ promoDiscount: 0 }),
-  setPendingLoyaltyRedeem: (pts) => set({ pendingLoyaltyRedeem: Math.max(0, pts), promoDiscount: 0 }),
+  applyPromo: (pct, code) => set({ promoDiscount: pct, appliedPromoCode: (code ?? '').trim().toUpperCase(), pendingLoyaltyRedeem: 0 }),
+  clearPromo: () => set({ promoDiscount: 0, appliedPromoCode: '' }),
+  setPendingLoyaltyRedeem: (pts) => set({ pendingLoyaltyRedeem: Math.max(0, pts), promoDiscount: 0, appliedPromoCode: '' }),
   clearLoyalty: () => set({ pendingLoyaltyRedeem: 0 }),
-  clearAllCheckoutDiscounts: () => set({ promoDiscount: 0, pendingLoyaltyRedeem: 0 }),
+  clearAllCheckoutDiscounts: () => set({ promoDiscount: 0, appliedPromoCode: '', pendingLoyaltyRedeem: 0 }),
   addNotification: (title, body) => set((s) => ({
     notifications: [
       { id: `nt-${Date.now()}`, title, body, createdAt: Date.now(), read: false },
@@ -257,6 +259,7 @@ export const useOrders = create<OrderState>((set) => ({
           userId: user?.id && !user.id.startsWith('local-') ? user.id : undefined,
           createdAt: Date.now(),
           status: 'placed',
+          paymentVerified: false,
           loyaltyPointsRedeemed: pendingRedeem > 0 ? pendingRedeem : undefined,
         };
 
@@ -275,6 +278,9 @@ export const useOrders = create<OrderState>((set) => ({
         if (pendingRedeem > 0) {
           useWallet.getState().redeemBalance(pendingRedeem, o.id);
         }
+        if (o.promoCode) {
+          void incrementCouponUse(o.promoCode, o.id);
+        }
         // clear both promo + loyalty after order
         useUI.getState().clearAllCheckoutDiscounts();
 
@@ -289,7 +295,12 @@ export const useOrders = create<OrderState>((set) => ({
 
       setOrderStatus: (id, status, reason) => {
         set((s) => ({
-          orders: s.orders.map((o) => (o.id === id ? { ...o, status, ...(reason ? { cancelReason: reason } : {}) } : o)),
+          orders: s.orders.map((o) => (o.id === id ? {
+            ...o,
+            status,
+            ...(reason ? { cancelReason: reason } : {}),
+            ...(status !== 'placed' && status !== 'cancelled' ? { paymentVerified: true } : {}),
+          } : o)),
         }));
 
         useUI.getState().addNotification('📦 Order updated', `Order #${id} status changed to ${status}.`);
@@ -318,19 +329,30 @@ export const useOrders = create<OrderState>((set) => ({
 // ===== Wishlist =====
 type UserState = {
   wishlist: string[];
+  ownerId: string;
   toggleWish: (id: string) => void;
+  switchOwner: (id: string) => void;
 };
 
 export const useUser = create<UserState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       wishlist: [],
+      ownerId: 'guest',
       toggleWish: (id) =>
         set((s) => ({
           wishlist: s.wishlist.includes(id)
             ? s.wishlist.filter((x) => x !== id)
             : [...s.wishlist, id],
         })),
+      switchOwner: (id) => {
+        const nextId = id || 'guest';
+        const current = get();
+        if (current.ownerId === nextId) return;
+        ls.set(`bakeart-wishlist-${current.ownerId}`, current.wishlist);
+        const scoped = ls.get<string[]>(`bakeart-wishlist-${nextId}`, nextId === 'guest' ? current.wishlist : []);
+        set({ ownerId: nextId, wishlist: scoped });
+      },
     }),
     { name: 'bakeart-user' }
   )
@@ -387,6 +409,38 @@ type SettingsState = {
   updateSettings: (patch: Partial<SiteSettings>) => void;
 };
 
+export const incrementCouponUse = async (code: string, orderId: string): Promise<void> => {
+  const normalized = code.trim().toUpperCase();
+  if (!normalized || !orderId) return;
+  const settings = useSettingsStore.getState().settings;
+  const coupons = (settings.coupons ?? []).map((coupon) =>
+    coupon.code.trim().toUpperCase() === normalized
+      ? { ...coupon, usedCount: coupon.usedCount + 1 }
+      : coupon
+  );
+  useSettingsStore.setState({ settings: { ...settings, coupons } });
+
+  if (!isFirebaseConfigured()) return;
+  try {
+    const { updateDoc } = await import('firebase/firestore');
+    const ref = doc(db, 'app_settings', 'coupon_uses');
+    await setDoc(ref, { key: 'coupon_uses', updated_at: new Date().toISOString() }, { merge: true });
+    await updateDoc(ref, { [`value.${normalized}.${orderId}`]: true });
+  } catch (error) {
+    console.warn('Coupon use increment failed:', error);
+  }
+};
+
+const mergeCouponUses = async (coupons: SiteSettings['coupons']): Promise<SiteSettings['coupons']> => {
+  if (!coupons?.length) return coupons;
+  const remote = await readRemoteSetting<Record<string, Record<string, boolean>>>('coupon_uses');
+  if (!remote) return coupons;
+  return coupons.map((coupon) => {
+    const used = Object.keys(remote[coupon.code.trim().toUpperCase()] ?? {}).length;
+    return { ...coupon, usedCount: Math.max(coupon.usedCount, used) };
+  });
+};
+
 export const useSettingsStore = create<SettingsState>()(
   persist(
     (set, get) => ({
@@ -407,15 +461,15 @@ export const useSettingsStore = create<SettingsState>()(
         };
 
         if (remoteSite || remoteAdmin || Object.keys(rowBasedSettings).length > 0) {
-          set({
-            settings: {
-              ...DEFAULT_SETTINGS,
-              ...get().settings,
-              ...(remoteSite || {}),
-              ...(remoteAdmin || {}),
-              ...rowBasedSettings,
-            },
-          });
+          const merged = {
+            ...DEFAULT_SETTINGS,
+            ...get().settings,
+            ...(remoteSite || {}),
+            ...(remoteAdmin || {}),
+            ...rowBasedSettings,
+          };
+          merged.coupons = await mergeCouponUses(merged.coupons ?? []);
+          set({ settings: merged });
         }
 
         if (isFirebaseConfigured() && !siteSettingsUnsubscribe) {
@@ -540,10 +594,10 @@ export const WALLET_MIN_ORDER_TO_REDEEM = 500;     // minimum order subtotal to 
 
 // Derive referral code from user profile
 export const getReferralCode = (user: { email?: string; id?: string } | null): string | null => {
-  if (!user?.email || !user?.id) return null;
-  const emailPart = user.email.replace('@', '').replace('.', '').slice(0, 4).toUpperCase();
-  const idPart = user.id.replace(/-/g, '').slice(-4).toUpperCase();
-  return emailPart + idPart;
+  if (!user?.id) return null;
+  const source = (user.email || 'USER').replace(/[^a-zA-Z0-9]/g, '').slice(0, 4).toUpperCase().padEnd(4, 'X');
+  const idPart = user.id.replace(/[^a-zA-Z0-9]/g, '').slice(-4).toUpperCase().padEnd(4, '0');
+  return (source + idPart).slice(0, 8);
 };
 
 // How much wallet balance an order earns (pending until confirmed)
@@ -595,13 +649,16 @@ export const hydrateWalletFromFirestore = async (uid: string): Promise<void> => 
   }
 };
 
-type WalletState = {
-  balance: number;                                    // ৳ balance (confirmed only)
-  totalEarned: number;                                // lifetime ৳ earned
-  txns: WalletTx[];                                   // full transaction history
-  pendingEarn: { orderId: string; amount: number }[]; // unconfirmed order earnings
+type WalletSnapshot = {
+  balance: number;
+  totalEarned: number;
+  txns: WalletTx[];
+  pendingEarn: { orderId: string; amount: number }[];
+};
 
-  // Actions
+type WalletState = WalletSnapshot & {
+  ownerId: string;
+  switchOwner: (id: string) => void;
   setWallet: (data: { balance: number; totalEarned: number }) => void;
   earnFromOrder: (orderId: string, orderTotal: number) => void;      // add pending earn
   confirmOrderEarn: (orderId: string) => void;                       // pending → balance
@@ -618,6 +675,27 @@ export const useWallet = create<WalletState>()(
       totalEarned: 0,
       txns: [],
       pendingEarn: [],
+      ownerId: 'guest',
+
+      switchOwner: (id) => {
+        const nextId = id || 'guest';
+        const current = get();
+        if (current.ownerId === nextId) return;
+        const snapshot: WalletSnapshot = {
+          balance: current.balance,
+          totalEarned: current.totalEarned,
+          txns: current.txns,
+          pendingEarn: current.pendingEarn,
+        };
+        ls.set(`bakeart-wallet-${current.ownerId}`, snapshot);
+        const next = ls.get<WalletSnapshot>(`bakeart-wallet-${nextId}`, {
+          balance: 0,
+          totalEarned: 0,
+          txns: [],
+          pendingEarn: [],
+        });
+        set({ ownerId: nextId, ...next });
+      },
 
       setWallet: (data) => set({ balance: data.balance, totalEarned: data.totalEarned }),
 

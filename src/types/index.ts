@@ -71,6 +71,8 @@ export type Order = {
   loyaltyPointsRedeemed?: number;
   // Proof-of-payment screenshot for the advance amount.
   paymentScreenshot?: string;
+  // False until admin confirms the screenshot. `placed` ≠ paid.
+  paymentVerified?: boolean;
   gpsLat?: number | null;
   gpsLng?: number | null;
   locationAddress?: string;

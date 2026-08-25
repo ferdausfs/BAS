@@ -77,15 +77,18 @@ const STATUSES: { key: string; label: string; icon: any; color: string; bg: stri
 ];
 
 export default function OrdersScreen() {
-  const { orders, loading, fetchMyOrders } = useOrdersHook();
+  const { orders, loading, fetchMyOrders, updateStatus } = useOrdersHook();
   const user = useAuthStore((s) => s.user);
   const { setTab, go } = useUI();
   const { wishlist } = useUser();
   const { items: cartItems } = useCart();
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
-  const [activeTab, setActiveTab] = useState<'pending' | 'active' | 'completed' | 'cancelled'>('pending');
+  const [activeTab, setActiveTab] = useState<'pending' | 'active' | 'completed' | 'cancelled'>('active');
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState('');
+  const [cancelTarget, setCancelTarget] = useState<Order | null>(null);
+  const [cancelReason, setCancelReason] = useState('');
+  const [cancelBusy, setCancelBusy] = useState(false);
 
   const categorize = (status: string) =>
     status === 'cancelled' ? 'cancelled' : status === 'delivered' ? 'completed' : 'active';
@@ -268,12 +271,12 @@ export default function OrdersScreen() {
                       <span
                         className="mt-1 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9.5px] font-bold uppercase tracking-wide"
                         style={{
-                          background: isCancelled ? 'rgba(231,76,60,.1)' : currentStatus.bg,
-                          color: isCancelled ? 'var(--color-error)' : currentStatus.color,
+                          background: isCancelled ? 'rgba(231,76,60,.1)' : (!o.paymentVerified && o.status === 'placed' ? '#FFF4E5' : currentStatus.bg),
+                          color: isCancelled ? 'var(--color-error)' : (!o.paymentVerified && o.status === 'placed' ? '#C2410C' : currentStatus.color),
                         }}
                       >
                         {isDelivered && <Check className="h-2.5 w-2.5" strokeWidth={3} />}
-                        {isCancelled ? 'Cancelled' : STATUSES[currentIdx]?.label || 'Placed'}
+                        {isCancelled ? 'Cancelled' : (!o.paymentVerified && o.status === 'placed' ? 'পেমেন্ট চেক হচ্ছে' : STATUSES[currentIdx]?.label || 'Placed')}
                       </span>
                     </div>
                   </div>
@@ -382,20 +385,29 @@ export default function OrdersScreen() {
                         >
                           <Search className="h-3.5 w-3.5" /> Track order
                         </button>
-                        <button
-                          onClick={() => {
-                            const safeItems = safeArray<import('../types').CartItem>(o.items);
-                            safeItems.forEach((item) => useCart.getState().add({ ...item }));
-                            useUI.getState().addNotification(
-                              'Added to cart!',
-                              `${safeItems.length} item${safeItems.length > 1 ? 's' : ''} from Order #${o.id} added to cart.`
-                            );
-                            setTimeout(() => go({ name: 'cart' }), 600);
-                          }}
-                          className="flex h-11 items-center justify-center gap-1.5 rounded-2xl bg-coral text-[12px] font-bold text-white shadow-btn transition active:scale-[.98]"
-                        >
-                          <RefreshCw className="h-3.5 w-3.5" /> Order again
-                        </button>
+                        {(o.status === 'placed' || o.status === 'confirmed') ? (
+                          <button
+                            onClick={() => { setCancelReason(''); setCancelTarget(o); }}
+                            className="flex h-11 items-center justify-center gap-1.5 rounded-2xl border border-error/20 bg-error/8 text-[12px] font-bold text-error transition active:scale-[.98]"
+                          >
+                            অর্ডার বাতিল
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => {
+                              const safeItems = safeArray<import('../types').CartItem>(o.items);
+                              safeItems.forEach((item) => useCart.getState().add({ ...item }));
+                              useUI.getState().addNotification(
+                                'Added to cart!',
+                                `${safeItems.length} item${safeItems.length > 1 ? 's' : ''} from Order #${o.id} added to cart.`
+                              );
+                              setTimeout(() => go({ name: 'cart' }), 600);
+                            }}
+                            className="flex h-11 items-center justify-center gap-1.5 rounded-2xl bg-coral text-[12px] font-bold text-white shadow-btn transition active:scale-[.98]"
+                          >
+                            <RefreshCw className="h-3.5 w-3.5" /> Order again
+                          </button>
+                        )}
                       </div>
                     )}
                   </div>
@@ -405,6 +417,40 @@ export default function OrdersScreen() {
           </div>
         )}
       </div>
+
+      {cancelTarget && (
+        <div className="fixed inset-0 z-[140] flex items-end justify-center bg-ink/45" onClick={() => !cancelBusy && setCancelTarget(null)}>
+          <div className="w-full max-w-[420px] rounded-t-[22px] border-t border-border bg-surface p-5 pb-8 shadow-float" onClick={(event) => event.stopPropagation()}>
+            <h2 className="text-[16px] font-bold text-ink">অর্ডার বাতিল করবেন?</h2>
+            <p className="mt-1 text-[12px] text-ink-300">#{cancelTarget.id} — বেকিং শুরু হওয়ার আগে বাতিল করা যাবে।</p>
+            <textarea
+              value={cancelReason}
+              onChange={(event) => setCancelReason(event.target.value)}
+              placeholder="কারণ লিখুন (ঐচ্ছিক)"
+              rows={3}
+              className="mt-3 w-full resize-none rounded-2xl border border-border bg-bg px-3 py-2.5 text-[13px] text-ink outline-none focus:border-coral"
+            />
+            <div className="mt-4 flex gap-2">
+              <button type="button" disabled={cancelBusy} onClick={() => setCancelTarget(null)} className="flex h-11 flex-1 items-center justify-center rounded-2xl bg-ink-50 text-[13px] font-bold text-ink-300">রাখুন</button>
+              <button
+                type="button"
+                disabled={cancelBusy}
+                onClick={() => {
+                  setCancelBusy(true);
+                  void updateStatus(cancelTarget.id, 'cancelled', cancelReason.trim() || 'কাস্টমার নিজে বাতিল করেছেন')
+                    .finally(() => {
+                      setCancelBusy(false);
+                      setCancelTarget(null);
+                    });
+                }}
+                className="flex h-11 flex-1 items-center justify-center rounded-2xl bg-error text-[13px] font-bold text-white disabled:opacity-50"
+              >
+                {cancelBusy ? 'বাতিল হচ্ছে...' : 'বাতিল নিশ্চিত'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
