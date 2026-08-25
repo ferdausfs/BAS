@@ -5,7 +5,8 @@ import { useT } from '../lib/i18n';
 import { useProducts } from '../hooks/useProducts';
 import { useReviews } from '../hooks/useReviews';
 
-import { safeArray, servingFor, servingForPounds, formatWeight, productShareUrl, shareOrCopy } from '../lib/utils';
+import { safeArray, servingFor, servingForPounds, formatWeight, productShareUrl, shareOrCopy, hapticTap } from '../lib/utils';
+import { flavorSwatch, useFlavorThemeStore } from '../lib/flavorTheme';
 import { addStockAlert } from '../lib/stockAlerts';
 import type { Product, Review } from '../types';
 
@@ -47,6 +48,7 @@ export default function ProductScreen() {
   const { wishlist, toggleWish } = useUser();
   const { products } = useProducts();
   const { settings } = useSettingsStore();
+  const setFlavorTheme = useFlavorThemeStore((state) => state.setFlavor);
 
   const typedProducts = products as Product[];
   const product = view.name === 'product' ? typedProducts.find((p) => p.id === view.productId) : null;
@@ -505,8 +507,8 @@ export default function ProductScreen() {
             </div>
           </div>
 
-          {/* Flavor selector */}
-          {safeFlavors.length > 1 && (
+          {/* Flavor selector — tap also retints the whole app */}
+          {safeFlavors.length > 0 && (
             <section className="mt-5">
               <h3 className="font-sans text-[14px] font-semibold tracking-tight text-ink">Flavor</h3>
               <div className="mt-3 flex flex-wrap gap-2">
@@ -515,13 +517,23 @@ export default function ProductScreen() {
                   return (
                     <button
                       key={f}
-                      onClick={() => setSelectedFlavor(f)}
-                      className={`min-h-[42px] rounded-full border px-4 py-2 text-[13px] font-bold transition active:scale-95 ${
+                      type="button"
+                      onClick={() => {
+                        setSelectedFlavor(f);
+                        setFlavorTheme(f);
+                        hapticTap();
+                      }}
+                      className={`inline-flex min-h-[42px] items-center gap-2 rounded-full border px-4 py-2 text-[13px] font-bold transition-colors duration-500 active:scale-95 ${
                         active
                           ? 'border-coral bg-coral text-white shadow-btn'
                           : 'border-border bg-surface text-ink hover:border-coral-300'
                       }`}
                     >
+                      <span
+                        className="h-2.5 w-2.5 shrink-0 rounded-full ring-1 ring-black/10"
+                        style={{ background: flavorSwatch(f) }}
+                        aria-hidden="true"
+                      />
                       {f}
                     </button>
                   );

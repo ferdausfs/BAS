@@ -25,6 +25,7 @@ import AppErrorBoundary from './components/AppErrorBoundary';
 import { ChatBot } from './components/ChatBot';
 import OccasionZoomOverlay from './components/OccasionZoomOverlay';
 import I18nRuntimeTranslator from './components/I18nRuntimeTranslator';
+import FlavorThemeSync from './components/FlavorThemeSync';
 
 function LanguageDocumentSync() {
   const language = useLanguageStore((state) => state.language);
@@ -153,6 +154,7 @@ export default function App() {
   return (
     <AppErrorBoundary>
       <LanguageDocumentSync />
+      <FlavorThemeSync />
       <div className="h-[100dvh] w-full flex flex-col overflow-hidden relative">
         <div className="lux-canvas" aria-hidden="true">
           <span className="lux-orb a" />

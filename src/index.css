@@ -117,6 +117,47 @@
   --spacing-12: 48px;
 }
 
+@property --flavor-primary {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #F65F8F;
+}
+@property --flavor-hover {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #E84E80;
+}
+@property --flavor-deep {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #C73B68;
+}
+@property --flavor-mid {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #FB9DC0;
+}
+@property --flavor-accent {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #FFD6E4;
+}
+@property --flavor-secondary {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #FFE8F0;
+}
+@property --flavor-bg {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #FFF9FB;
+}
+@property --flavor-border {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #F1E8EC;
+}
+
 :root {
   font-family: "Poppins", "Hind Siliguri", system-ui, -apple-system, sans-serif;
   color: #2C2C2C;
@@ -154,6 +195,15 @@
   --space-8: 32px;
   --space-10: 40px;
   --space-12: 48px;
+
+  --flavor-primary: #F65F8F;
+  --flavor-hover: #E84E80;
+  --flavor-deep: #C73B68;
+  --flavor-mid: #FB9DC0;
+  --flavor-accent: #FFD6E4;
+  --flavor-secondary: #FFE8F0;
+  --flavor-bg: #FFF9FB;
+  --flavor-border: #F1E8EC;
 }
 
 html[lang="bn"],
@@ -179,7 +229,7 @@ html[lang="bn"] .leading-none {
 html, body {
   margin: 0;
   padding: 0;
-  background: #FFF9FB;
+  background: var(--flavor-bg);
   overflow-x: hidden;
 }
 
@@ -187,6 +237,38 @@ html {
   scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
+  --color-primary: var(--flavor-primary);
+  --color-primary-hover: var(--flavor-hover);
+  --color-coral: var(--flavor-primary);
+  --color-coral-50: var(--flavor-bg);
+  --color-coral-100: var(--flavor-secondary);
+  --color-coral-200: var(--flavor-accent);
+  --color-coral-300: var(--flavor-accent);
+  --color-coral-400: var(--flavor-mid);
+  --color-coral-500: var(--flavor-primary);
+  --color-coral-600: var(--flavor-hover);
+  --color-coral-700: var(--flavor-deep);
+  --color-secondary: var(--flavor-secondary);
+  --color-accent: var(--flavor-accent);
+  --color-bg: var(--flavor-bg);
+  --color-cream: var(--flavor-bg);
+  --color-blush: var(--flavor-secondary);
+  --color-blush-50: var(--flavor-bg);
+  --color-blush-100: var(--flavor-secondary);
+  --color-blush-200: var(--flavor-accent);
+  --color-blush-300: var(--flavor-accent);
+  --color-border: var(--flavor-border);
+  --color-ink-50: var(--flavor-bg);
+  transition:
+    --flavor-primary .7s var(--ease-premium),
+    --flavor-hover .7s var(--ease-premium),
+    --flavor-deep .7s var(--ease-premium),
+    --flavor-mid .7s var(--ease-premium),
+    --flavor-accent .7s var(--ease-premium),
+    --flavor-secondary .7s var(--ease-premium),
+    --flavor-bg .7s var(--ease-premium),
+    --flavor-border .7s var(--ease-premium),
+    background-color .7s var(--ease-premium);
 }
 
 /* Font utilities resolve to Poppins (with Hind Siliguri Bengali fallback).
@@ -199,15 +281,15 @@ html {
 /* === Scrollbar (pink-tinted) === */
 ::-webkit-scrollbar       { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(246,95,143,.22); border-radius: 999px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(246,95,143,.4); }
+::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--flavor-primary) 22%, transparent); border-radius: 999px; }
+::-webkit-scrollbar-thumb:hover { background: color-mix(in srgb, var(--flavor-primary) 40%, transparent); }
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
 
 /* === Focus ring (pink) === */
 *:focus { outline: none; }
 *:focus-visible {
-  outline: 2px solid #F65F8F;
+  outline: 2px solid var(--flavor-primary);
   outline-offset: 3px;
   border-radius: 10px;
 }
@@ -268,13 +350,13 @@ button { -webkit-tap-highlight-color: transparent; }
    BAS0001: solid opaque CTAs in the primary pink with soft single-source
    pink-tinted shadows (no gradients). Large tap targets, 16–20px radius. */
 .btn-primary {
-  background: #F65F8F;
+  background: var(--flavor-primary);
   color: #fff;
-  box-shadow: 0 2px 12px rgba(246,95,143,0.28);
-  transition: transform .22s var(--ease-premium), box-shadow .22s var(--ease-premium), background .22s var(--ease-premium);
+  box-shadow: 0 2px 12px color-mix(in srgb, var(--flavor-primary) 28%, transparent);
+  transition: transform .22s var(--ease-premium), box-shadow .22s var(--ease-premium), background .7s var(--ease-premium);
 }
-.btn-primary:hover  { background: #E84E80; box-shadow: 0 6px 20px -4px rgba(246,95,143,0.40); }
-.btn-primary:active { transform: scale(.97); box-shadow: 0 2px 8px -2px rgba(246,95,143,0.28); }
+.btn-primary:hover  { background: var(--flavor-hover); box-shadow: 0 6px 20px -4px color-mix(in srgb, var(--flavor-primary) 40%, transparent); }
+.btn-primary:active { transform: scale(.97); box-shadow: 0 2px 8px -2px color-mix(in srgb, var(--flavor-primary) 28%, transparent); }
 .btn-primary:disabled,
 .btn-primary[aria-disabled="true"] {
   opacity: 0.5;
@@ -285,7 +367,7 @@ button { -webkit-tap-highlight-color: transparent; }
 .btn-primary:disabled:hover,
 .btn-primary[aria-disabled="true"]:hover {
   transform: none;
-  background: #F65F8F;
+  background: var(--flavor-primary);
   box-shadow: none;
 }
 .btn-primary.loading {
@@ -321,10 +403,10 @@ button { -webkit-tap-highlight-color: transparent; }
 
 .btn-ghost {
   background: transparent;
-  color: #F65F8F;
+  color: var(--flavor-primary);
   transition: background .15s ease;
 }
-.btn-ghost:hover { background: rgba(246,95,143,.08); }
+.btn-ghost:hover { background: color-mix(in srgb, var(--flavor-primary) 8%, transparent); }
 
 /* ===== Surfaces =====
    BAS0001: solid opaque white cards, soft low-opacity single-source
@@ -403,10 +485,10 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 .chip:hover { background: #FFF9FB; border-color: #FFD6E4; }
 .chip-active {
-  background: #F65F8F;
+  background: var(--flavor-primary);
   color: #fff;
   border-color: transparent;
-  box-shadow: 0 4px 14px -4px rgba(246,95,143,.40);
+  box-shadow: 0 4px 14px -4px color-mix(in srgb, var(--flavor-primary) 40%, transparent);
 }
 
 /* ===== Section headings ===== */
@@ -415,7 +497,7 @@ button { -webkit-tap-highlight-color: transparent; }
   font-weight: 700;
   letter-spacing: .16em;
   text-transform: uppercase;
-  color: #E84E80;
+  color: var(--flavor-hover);
 }
 
 .section-title {
@@ -458,8 +540,8 @@ button { -webkit-tap-highlight-color: transparent; }
   width: 4px;
   height: 4px;
   border-radius: 999px;
-  background: #F65F8F;
-  box-shadow: 0 0 8px 2px rgba(246,95,143,.5);
+  background: var(--flavor-primary);
+  box-shadow: 0 0 8px 2px color-mix(in srgb, var(--flavor-primary) 50%, transparent);
 }
 
 
@@ -476,7 +558,7 @@ button { -webkit-tap-highlight-color: transparent; }
   width: 120px;
   height: 140%;
   transform: translate(-50%, -50%);
-  background-image: linear-gradient(180deg, #F65F8F, #FFD6E4, #E8A33C, #F65F8F);
+  background-image: linear-gradient(180deg, var(--flavor-primary), var(--flavor-accent), #E8A33C, var(--flavor-primary));
   animation: basBannerRotate 3.5s linear infinite;
   z-index: 0;
 }
@@ -524,7 +606,7 @@ button { -webkit-tap-highlight-color: transparent; }
 
 /* flat soft-pink canvas (no heavy gradient per brief) */
 html, body{
-  background: #FFF9FB;
+  background: var(--flavor-bg);
   background-attachment: fixed;
 }
 
@@ -710,6 +792,15 @@ html, body{
   0% { transform: translateX(-120%); }
   100% { transform: translateX(245%); }
 }
+@keyframes flavorWash {
+  0% { opacity: 0; }
+  28% { opacity: 1; }
+  100% { opacity: 0; }
+}
+.flavor-wash {
+  animation: flavorWash .7s var(--ease-premium) both;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .bas-splash-glass,
   .bas-logo-heart,
@@ -719,5 +810,17 @@ html, body{
   .bas-splash-loader,
   .bas-splash-loader span {
     animation: none !important;
+  }
+  html {
+    transition: none;
+  }
+  .lux-canvas,
+  .lux-orb,
+  .btn-primary {
+    transition: none;
+  }
+  .flavor-wash {
+    display: none;
+    animation: none;
   }
 }
