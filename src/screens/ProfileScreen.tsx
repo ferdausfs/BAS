@@ -1362,7 +1362,7 @@ function ProfileReferenceRow({
       <span className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-secondary text-coral">
         <Icon className="h-5 w-5" strokeWidth={1.75} />
       </span>
-      <span className="flex-1 text-[15.5px] font-semibold leading-none tracking-tight text-ink">
+      <span className="flex-1 text-[15.5px] font-semibold leading-snug tracking-tight text-ink">
         {label}
       </span>
       <ChevronRight className="h-5 w-5 text-ink-200" strokeWidth={1.8} />
@@ -1396,7 +1396,7 @@ function HelpProfileRow({
         <Icon className="h-5 w-5" strokeWidth={1.75} />
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block text-[15.5px] font-semibold leading-none tracking-tight text-ink">{label}</span>
+        <span className="block text-[15.5px] font-semibold leading-snug tracking-tight text-ink">{label}</span>
         <span className="mt-1.5 block line-clamp-1 text-[12px] font-medium text-ink-300">{detail}</span>
       </span>
       <ChevronRight className={`h-5 w-5 text-ink-200 ${disabled ? 'opacity-50' : ''}`} strokeWidth={1.8} />

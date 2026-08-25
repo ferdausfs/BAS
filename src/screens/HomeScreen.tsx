@@ -307,47 +307,47 @@ export default function HomeScreen({
           <div className="mt-5 space-y-3 px-6">
             {!user && (
               <div className="anim-up rounded-2xl border border-border bg-surface p-4 shadow-card">
-                <div className="flex items-center gap-3">
+                <div className="flex items-start gap-3">
                   <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[18px] bg-secondary text-primary shadow-card">
                     <Cake size={22} strokeWidth={1.9} />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-card-title font-semibold text-text">{t('home.signinHelperTitle')}</p>
+                    <p className="text-card-title font-semibold leading-snug text-text">{t('home.signinHelperTitle')}</p>
                     <p className="mt-1 text-base leading-relaxed text-text-secondary">{t('home.signinHelperBody')}</p>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => onAuthOpen?.()}
-                    className="flex h-11 shrink-0 items-center justify-center rounded-[16px] bg-primary px-4 text-base font-semibold text-white shadow-btn transition hover:bg-primary-hover active:scale-95"
-                  >
-                    {t('common.signIn')}
-                  </button>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => onAuthOpen?.()}
+                  className="mt-3 flex h-11 w-full items-center justify-center rounded-[16px] bg-primary px-4 text-base font-semibold text-white shadow-btn transition hover:bg-primary-hover active:scale-95"
+                >
+                  {t('common.signIn')}
+                </button>
               </div>
             )}
 
             {upcoming && (
               <div className="anim-up rounded-2xl border border-border bg-surface p-4 shadow-card">
-                <div className="flex items-center gap-3">
+                <div className="flex items-start gap-3">
                   <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[18px] bg-secondary text-primary shadow-card">
                     <Cake size={22} strokeWidth={1.9} />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-card-title font-semibold text-text">
+                    <p className="text-card-title font-semibold leading-snug text-text">
                       {upcoming.daysLeft === 0
                       ? t('home.upcomingToday', { name: upcoming.name })
                       : t('home.upcomingInDays', { name: upcoming.name, days: upcoming.daysLeft, plural: upcoming.daysLeft > 1 ? 's' : '' })}
                     </p>
                     <p className="mt-1 text-base leading-relaxed text-text-secondary">{t('home.upcomingBody')}</p>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => go({ name: 'tabs', tab: 'categories' })}
-                    className="flex h-11 shrink-0 items-center justify-center rounded-[16px] border border-border bg-secondary px-4 text-base font-semibold text-primary shadow-card transition active:scale-95"
-                  >
-                    {t('common.order')}
-                  </button>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => go({ name: 'tabs', tab: 'categories' })}
+                  className="mt-3 flex h-11 w-full items-center justify-center rounded-[16px] border border-border bg-secondary px-4 text-base font-semibold text-primary shadow-card transition active:scale-95"
+                >
+                  {t('common.order')}
+                </button>
               </div>
             )}
           </div>
@@ -529,7 +529,7 @@ export default function HomeScreen({
               onClick={() => setActiveNotice(null)}
               className="mt-6 flex h-12 w-full items-center justify-center rounded-[18px] bg-primary text-base font-semibold text-white shadow-btn transition hover:bg-primary-hover active:scale-95"
             >
-              Close
+              {t('common.close')}
             </button>
           </div>
         </div>

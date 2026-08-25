@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Heart, Plus, Star, Check, Award, Sparkles } from 'lucide-react';
 import { useCart, formatINR } from '../lib/store';
 import { hapticTap } from '../lib/utils';
+import { useT } from '../lib/i18n';
 import type { Product } from '../types';
 
 type Props = {
@@ -14,6 +15,7 @@ type Props = {
 
 export default function ProductCard({ product, wished, onOpen, onWish, variant = 'horizontal' }: Props) {
   const add = useCart((s) => s.add);
+  const t = useT();
   const [heartKey, setHeartKey] = useState(0);
   const [added, setAdded] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
@@ -145,11 +147,11 @@ export default function ProductCard({ product, wished, onOpen, onWish, variant =
             <button
               type="button"
               onClick={handleAdd}
-              className={`flex h-8 min-w-[72px] shrink-0 items-center justify-center gap-1 rounded-full bg-white px-3 text-[12px] font-bold text-text shadow-card transition-all duration-300 hover:bg-primary hover:text-white hover:shadow-btn hover:-translate-y-0.5 active:scale-90 ${added ? '!bg-success !text-white' : ''}`}
+              className={`flex h-8 min-w-[4.5rem] shrink-0 items-center justify-center gap-0.5 rounded-full bg-white px-2.5 text-[12px] font-bold leading-none text-text shadow-card transition-all duration-300 hover:bg-primary hover:text-white hover:shadow-btn hover:-translate-y-0.5 active:scale-90 ${added ? '!bg-success !text-white' : ''}`}
               aria-label={added ? `${product.name} added to cart` : `Add ${product.name} to cart`}
               aria-live="polite"
             >
-              {added ? <><Check className="h-4 w-4 anim-pop" strokeWidth={2.5} />Added</> : <>Add <Plus className="h-4 w-4 text-primary transition-colors duration-300 group-hover:text-white" strokeWidth={2.4} /></>}
+              {added ? <><Check className="h-4 w-4 anim-pop" strokeWidth={2.5} />{t('product.added')}</> : <>{t('product.add')} <Plus className="h-4 w-4 text-primary transition-colors duration-300 group-hover:text-white" strokeWidth={2.4} /></>}
             </button>
           )}
         </div>

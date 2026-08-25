@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { ShoppingBag } from 'lucide-react';
 import { useUI, useAuthStore, useSettingsStore, pushBrowserRouteState } from './lib/store';
+import { useLanguageStore, useT } from './lib/i18n';
 import BottomTabBar from './components/BottomTabBar';
 import SplashScreen from './screens/SplashScreen';
 import HomeScreen from './screens/HomeScreen';
@@ -23,6 +25,33 @@ import AppErrorBoundary from './components/AppErrorBoundary';
 import { ChatBot } from './components/ChatBot';
 import OccasionZoomOverlay from './components/OccasionZoomOverlay';
 import I18nRuntimeTranslator from './components/I18nRuntimeTranslator';
+
+function LanguageDocumentSync() {
+  const language = useLanguageStore((state) => state.language);
+  useEffect(() => {
+    document.documentElement.lang = language;
+  }, [language]);
+  return null;
+}
+
+function GuestOrdersEmpty({ onSignIn }: { onSignIn: () => void }) {
+  const t = useT();
+  return (
+    <div className="flex h-full flex-col items-center justify-center px-8 text-center">
+      <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-3xl bg-secondary text-coral shadow-card">
+        <ShoppingBag size={32} strokeWidth={1.7} />
+      </div>
+      <h2 className="mb-6 text-xl font-bold leading-snug text-ink">{t('home.signInToOrders')}</h2>
+      <button
+        type="button"
+        onClick={onSignIn}
+        className="rounded-2xl bg-coral px-6 py-3 text-sm font-bold text-white shadow-btn"
+      >
+        {t('common.signIn')}
+      </button>
+    </div>
+  );
+}
 
 export default function App() {
   const { view, tab, chatOpen, modalDepth } = useUI();
@@ -123,6 +152,7 @@ export default function App() {
 
   return (
     <AppErrorBoundary>
+      <LanguageDocumentSync />
       <div className="h-[100dvh] w-full flex flex-col overflow-hidden relative">
         <div className="lux-canvas" aria-hidden="true">
           <span className="lux-orb a" />
@@ -142,15 +172,7 @@ export default function App() {
                 )}
                 {view.name === 'tabs' && activeTab === 'categories' && <CategoriesScreen />}
                 {view.name === 'tabs' && activeTab === 'orders' && (
-                  user ? <OrdersScreen /> : (
-                    <div className="flex h-full flex-col items-center justify-center px-8 text-center">
-                      <div className="text-5xl mb-4">📋</div>
-                      <h2 className="font-bold text-lg mb-2">Sign in to view orders</h2>
-                      <button onClick={() => setAuthOpen(true)} className="px-6 py-3 rounded-2xl bg-coral text-white font-bold text-sm">
-                        Sign In
-                      </button>
-                    </div>
-                  )
+                  user ? <OrdersScreen /> : <GuestOrdersEmpty onSignIn={() => setAuthOpen(true)} />
                 )}
                 {view.name === 'tabs' && activeTab === 'profile' && (
                   <ProfileScreen onAuthOpen={() => setAuthOpen(true)} isAdmin={isAdminUser} />

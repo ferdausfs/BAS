@@ -156,6 +156,26 @@
   --space-12: 48px;
 }
 
+html[lang="bn"],
+html[lang="bn"] body,
+html[lang="bn"] .font-body,
+html[lang="bn"] .font-sans,
+html[lang="bn"] .section-title,
+html[lang="bn"] .price-display {
+  font-family: "Hind Siliguri", "Poppins", system-ui, -apple-system, sans-serif;
+}
+
+/* Bengali has no case; wide Latin tracking makes মাত্রা look broken. */
+html[lang="bn"] .uppercase {
+  text-transform: none;
+  letter-spacing: 0.01em;
+}
+
+/* leading-none clips conjuncts/matras on Hind Siliguri. */
+html[lang="bn"] .leading-none {
+  line-height: 1.25;
+}
+
 html, body {
   margin: 0;
   padding: 0;

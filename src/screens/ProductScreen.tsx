@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, Heart, Star, ShoppingBag, Check, Share2, Sparkles, Cake, Pencil, CheckCircle2, Camera, X, AlertTriangle, Bell, Eye, Clock, ChevronLeft, ChevronRight, Plus, Minus, Flame, MessageSquare, Gift, UtensilsCrossed, Phone } from 'lucide-react';
 import { useUI, formatINR, useCart, useUser, useAuthStore, useSettingsStore } from '../lib/store';
+import { useT } from '../lib/i18n';
 import { useProducts } from '../hooks/useProducts';
 import { useReviews } from '../hooks/useReviews';
 
@@ -41,6 +42,7 @@ const WEIGHT_PRESETS = ['0.5', '1', '1.5', '2'];
 
 export default function ProductScreen() {
   const { view, back, go } = useUI();
+  const t = useT();
   const { add } = useCart();
   const { wishlist, toggleWish } = useUser();
   const { products } = useProducts();
@@ -671,16 +673,16 @@ export default function ProductScreen() {
             className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-coral-200 bg-secondary/20 py-3.5 text-[13.5px] font-bold text-coral transition active:scale-[.98] hover:bg-secondary/35 shadow-sm"
           >
             <Sparkles className="h-4 w-4" strokeWidth={2} />
-            Fully customize this cake
+            {t('product.customize')}
           </button>
         </div>
 
         {/* Reviews Section inside scroll container */}
         <section className="px-6 mt-5 pb-4">
-          <div className="flex items-center justify-between mb-3.5">
+          <div className="mb-3.5 flex flex-wrap items-center justify-between gap-2">
             <h2 className="font-sans text-[17px] font-bold text-ink">রিভিউ</h2>
             {!showReviewForm && (
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <button
                   onClick={() => go({ name: 'reviews' })}
                   className="rounded-xl border border-border bg-surface shadow-sm px-3.5 py-2 text-[11.5px] font-bold text-coral transition active:scale-95"
@@ -883,10 +885,10 @@ export default function ProductScreen() {
               </div>
               <button
                 onClick={handleAdd}
-                className="btn-primary flex h-13 flex-1 items-center justify-center gap-2 rounded-full text-[14px] font-bold tracking-tight shadow-btn"
+                className="btn-primary flex h-13 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-full px-3 text-[13px] font-bold tracking-tight shadow-btn"
               >
-                <ShoppingBag className="h-[18px] w-[18px]" strokeWidth={2.2} />
-                Add to Cart
+                <ShoppingBag className="h-[18px] w-[18px] shrink-0" strokeWidth={2.2} />
+                <span className="truncate">{t('product.addToCart')}</span>
               </button>
             </div>
           ) : (

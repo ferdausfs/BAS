@@ -46,7 +46,7 @@ export default React.memo(function BottomTabBar() {
                 aria-current={active ? 'page' : undefined}
               >
                 <Icon className="h-6 w-6" strokeWidth={active ? 2.2 : 1.7} />
-                <span className="text-[11px] font-semibold leading-none">{item.label}</span>
+                <span className="max-w-full truncate px-0.5 text-[11px] font-semibold leading-tight">{item.label}</span>
               </button>
             );
           })}
