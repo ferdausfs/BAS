@@ -3,6 +3,7 @@ import { Check, Package, ChefHat, Truck, Receipt, Search, RefreshCw, ShoppingCar
 import { useUI, formatINR, useAuthStore, useCart, useUser, cartSubtotal } from '../lib/store';
 import { useOrdersHook } from '../hooks/useOrders';
 import { safeArray } from '../lib/utils';
+import UnderlineTabs from '../components/UnderlineTabs';
 import type { CartItem, Order } from '../types';
 
 
@@ -158,28 +159,17 @@ export default function OrdersScreen() {
           />
         )}
 
-        {/* Active / Completed / Cancelled tabs */}
-        <div className="mt-3 flex gap-5 border-b border-border">
-          {([
-            { v: 'pending', label: 'Pending' },
-            { v: 'active', label: 'Active' },
-            { v: 'completed', label: 'Completed' },
-            { v: 'cancelled', label: 'Cancelled' },
-          ] as const).map((t) => (
-            <button
-              key={t.v}
-              onClick={() => setActiveTab(t.v)}
-              className={`relative origin-bottom pb-2.5 font-bold transition-all duration-300 ease-out active:scale-95 ${
-                activeTab === t.v ? 'scale-110 text-[15px] text-ink' : 'scale-100 text-[13px] text-text-tertiary'
-              }`}
-            >
-              <span className={activeTab === t.v ? 'inline-block anim-pop' : 'inline-block'}>{t.label}</span>
-              {activeTab === t.v && (
-                <span className="absolute inset-x-0 -bottom-px h-[2px] rounded-full bg-coral transition-all duration-300 ease-out" />
-              )}
-            </button>
-          ))}
-        </div>
+        <UnderlineTabs
+          className="mt-3"
+          value={activeTab}
+          onChange={setActiveTab}
+          tabs={[
+            { value: 'pending', label: 'Pending' },
+            { value: 'active', label: 'Active' },
+            { value: 'completed', label: 'Completed' },
+            { value: 'cancelled', label: 'Cancelled' },
+          ]}
+        />
       </header>
 
       <div className="no-scrollbar flex-1 overflow-y-auto px-6 pb-32">

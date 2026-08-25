@@ -19,6 +19,7 @@ import { safeArray, isValidPhone, copyText, ls, hapticTap } from '../lib/utils';
 import { LocationGate } from '../components/LocationGate';
 import { useAuth } from '../hooks/useAuth';
 import PaymentAppPopup from '../components/PaymentAppPopup';
+import UnderlineTabs from '../components/UnderlineTabs';
 import { BD_DISTRICTS } from '../lib/zones';
 import type { CartItem, Order, SavedAddress } from '../types';
 
@@ -1128,69 +1129,39 @@ export default function CheckoutScreen({ onBack, onAuthOpen }: Props) {
             </div>
             <div className=" text-[20px] font-bold tabular text-coral-700">{formatINR(advanceAmount)}</div>
           </div>
-          <div className="space-y-2">
-            {ADVANCE_METHODS.map((method) => {
-              const isSelected = advancePayment === method.id;
-              const methodNumber = method.id === 'bkash' ? settings.bkashNumber : settings.nagadNumber;
+          <UnderlineTabs
+            value={advancePayment}
+            onChange={(id) => { hapticTap(); setAdvancePayment(id); setNumberCopied(false); }}
+            tabs={ADVANCE_METHODS.map((method) => ({ value: method.id, label: method.name }))}
+          />
+          <div key={advancePayment} className="mt-3 anim-fade">
+            {(() => {
+              const methodNumber = advancePayment === 'bkash' ? settings.bkashNumber : settings.nagadNumber;
               return (
-                <div
-                  key={method.id}
-                  className={`overflow-hidden rounded-2xl border-2 transition ${
-                    isSelected ? 'border-coral bg-coral/[0.08] shadow-card scale-[1.01] transition-all duration-200' : 'border-border bg-surface transition-all duration-200'
-                  }`}
-                >
-                  <button
-                    type="button"
-                    onClick={() => { setAdvancePayment(method.id); setNumberCopied(false); }}
-                    className="flex w-full items-center gap-4 p-3.5"
-                  >
-                    <div
-                      className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl text-[13px] font-bold text-white"
-                      style={{ background: method.color }}
+                <>
+                  <p className="mb-1.5 text-[11px] text-ink-200">এই নাম্বারে Send Money করুন</p>
+                  <div className="flex items-center gap-2 rounded-xl border border-coral/20 bg-white px-3 py-2.5">
+                    <span className="flex-1 text-[15px] font-bold tabular tracking-wide text-ink">
+                      {methodNumber}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        const ok = await copyText(methodNumber);
+                        if (ok) {
+                          setNumberCopied(true);
+                          setAppPopupOpen(true);
+                        }
+                      }}
+                      className="flex h-9 items-center gap-1 rounded-full bg-coral px-3.5 text-[11.5px] font-bold text-white shadow-btn active:scale-95"
                     >
-                      {method.name.slice(0, 2)}
-                    </div>
-                    <div className="flex-1 text-left">
-                      <p className="text-[13.5px] font-bold text-ink">{method.name}</p>
-                      <p className="text-[12px] text-ink-200">{method.desc}</p>
-                    </div>
-                    <div
-                      className={`flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full border-2 ${
-                        isSelected ? 'border-coral' : 'border-ink-100'
-                      }`}
-                    >
-                      {isSelected && <div className="h-2.5 w-2.5 rounded-full bg-coral" />}
-                    </div>
-                  </button>
-
-                  {isSelected && (
-                    <div className="border-t border-coral/20 px-3.5 pb-3.5 pt-3 anim-fade">
-                      <p className="mb-1.5 text-[11px] text-ink-200">এই নাম্বারে Send Money করুন</p>
-                      <div className="flex items-center gap-2 rounded-xl border border-coral/20 bg-white px-3 py-2.5">
-                        <span className="flex-1 text-[15px] font-bold tabular tracking-wide text-ink">
-                          {methodNumber}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={async (e) => {
-                            e.stopPropagation();
-                            const ok = await copyText(methodNumber);
-                            if (ok) {
-                              setNumberCopied(true);
-                              setAppPopupOpen(true);
-                            }
-                          }}
-                          className="flex h-9 items-center gap-1 rounded-full bg-coral px-3.5 text-[11.5px] font-bold text-white shadow-btn active:scale-95"
-                        >
-                          {numberCopied ? <><Check className="h-3.5 w-3.5" /> Copied</> : <><Copy className="h-3.5 w-3.5" /> Copy</>}
-                        </button>
-                      </div>
-                      <p className="mt-1.5 text-[10.5px] text-ink/40">Personal number · Send Money অপশন ব্যবহার করুন</p>
-                    </div>
-                  )}
-                </div>
+                      {numberCopied ? <><Check className="h-3.5 w-3.5" /> Copied</> : <><Copy className="h-3.5 w-3.5" /> Copy</>}
+                    </button>
+                  </div>
+                  <p className="mt-1.5 text-[10.5px] text-ink/40">Personal number · Send Money অপশন ব্যবহার করুন</p>
+                </>
               );
-            })}
+            })()}
           </div>
 
           <PaymentAppPopup
@@ -1254,38 +1225,22 @@ export default function CheckoutScreen({ onBack, onAuthOpen }: Props) {
             </div>
             <div className=" text-[20px] font-bold tabular text-ink">{formatINR(remainingAmount)}</div>
           </div>
-          <div className="space-y-2">
-            {PAYMENT_METHODS.map((method) => {
-              const isSelected = form.payment === method.id;
-              return (
-                <button
-                  key={method.id}
-                  onClick={() => setForm({ ...form, payment: method.id })}
-                  className={`flex w-full items-center gap-4 rounded-2xl border-2 p-3.5 transition ${
-                    isSelected ? 'border-coral bg-coral/[0.08] shadow-card scale-[1.01] transition-all duration-200' : 'border-border bg-surface transition-all duration-200'
-                  }`}
-                >
-                  <div
-                    className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl text-[13px] font-bold text-white"
-                    style={{ background: method.color }}
-                  >
-                    {method.name.slice(0, 2)}
-                  </div>
-                  <div className="flex-1 text-left">
-                    <p className="text-[13.5px] font-bold text-ink">{method.name}</p>
-                    <p className="text-[12px] text-ink-200">{method.desc}</p>
-                  </div>
-                  <div
-                    className={`flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full border-2 ${
-                      isSelected ? 'border-coral' : 'border-ink-100'
-                    }`}
-                  >
-                    {isSelected && <div className="h-2.5 w-2.5 rounded-full bg-coral" />}
-                  </div>
-                </button>
-              );
-            })}
-          </div>
+          <UnderlineTabs
+            value={form.payment}
+            onChange={(id) => { hapticTap(); setForm({ ...form, payment: id }); }}
+            tabs={[
+              { value: 'bkash', label: 'bKash' },
+              { value: 'nagad', label: 'Nagad' },
+              { value: 'cash', label: 'Cash' },
+            ]}
+          />
+          <p className="mt-3 text-[12px] font-medium text-ink-300">
+            {form.payment === 'cash'
+              ? 'ডেলিভারির সময় ক্যাশ দিয়ে পরিশোধ করবেন।'
+              : form.payment === 'bkash'
+                ? 'ডেলিভারির সময় bKash দিয়ে বাকি টাকা দিবেন।'
+                : 'ডেলিভারির সময় Nagad দিয়ে বাকি টাকা দিবেন।'}
+          </p>
         </Section>
 
         <div className="mt-4 flex items-center justify-center gap-2 rounded-2xl border border-border bg-surface py-3 text-[11px] text-ink-300 font-semibold shadow-sm">

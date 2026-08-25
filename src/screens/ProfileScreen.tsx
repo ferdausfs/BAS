@@ -3,7 +3,7 @@ import {
   Heart, MapPin, CreditCard, Bell, HelpCircle, Settings, LogOut,
   ChevronRight, ArrowLeft, KeyRound, Trash2, Sun, Headphones, MessageCircle, Globe2,
   LogIn, X, Save, Check, User, AlertTriangle, Cake, Gift, Wallet as WalletIcon,
-  Copy, Share2, Navigation, Loader2, Tag, ClipboardList, Camera, Mail, Phone, Banknote, Search
+  Copy, Share2, Navigation, Loader2, Tag, ClipboardList, Camera, Mail, Phone, Search
 } from 'lucide-react';
 import { useUI, useAuthStore, useSettingsStore, getReferralCode, claimReferralRewards, WALLET_REFERRAL_BONUS } from '../lib/store';
 import { translate, useLanguageStore, useT, type Language } from '../lib/i18n';
@@ -18,6 +18,7 @@ import { AdminPanel } from '../components/AdminPanel';
 import { BD_DISTRICTS } from '../lib/zones';
 import type { SavedAddress, SpecialDate } from '../types';
 import { useModalDepth } from '../hooks/useModalDepth';
+import UnderlineTabs from '../components/UnderlineTabs';
 
 const loadAddresses = (userId?: string): SavedAddress[] => {
   if (!userId) return [];
@@ -48,12 +49,6 @@ type CustomerProfile = {
 };
 
 const CUSTOMER_PROFILE_KEY = 'bakeart-customer-profile';
-
-const PAYMENTS: { id: SavedPayment; label: string; sub: string }[] = [
-  { id: 'bkash', label: 'bKash', sub: 'Mobile payment' },
-  { id: 'nagad', label: 'Nagad', sub: 'Mobile payment' },
-  { id: 'cash', label: 'Cash on Delivery', sub: 'Pay when delivered' },
-];
 
 const emptyCustomerProfile = (name = ''): CustomerProfile => ({
   name,
@@ -817,15 +812,21 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
 
       {profileView === 'payment' && (
         <div className="no-scrollbar flex-1 overflow-y-auto px-6 pb-32 pt-6 anim-up">
-          <PaymentSection title="Cash">
-            <PaymentOption icon={Banknote} label="Cash" active={draftProfile.payment === 'cash'} onClick={() => setDraftProfile({ ...draftProfile, payment: 'cash' })} />
-          </PaymentSection>
-          <PaymentSection title="Mobile Payment">
-            <PaymentOption icon={WalletIcon} label="bKash" active={draftProfile.payment === 'bkash'} onClick={() => setDraftProfile({ ...draftProfile, payment: 'bkash' })} />
-            <PaymentOption icon={WalletIcon} label="Nagad" active={draftProfile.payment === 'nagad'} onClick={() => setDraftProfile({ ...draftProfile, payment: 'nagad' })} />
-          </PaymentSection>
-          <p className="mb-6 text-[12px] font-medium text-ink-300">
-            কার্ড পেমেন্ট নেই — শুধু bKash, Nagad বা ক্যাশ অন ডেলিভারি।
+          <UnderlineTabs
+            value={draftProfile.payment}
+            onChange={(id) => setDraftProfile({ ...draftProfile, payment: id })}
+            tabs={[
+              { value: 'bkash', label: 'bKash' },
+              { value: 'nagad', label: 'Nagad' },
+              { value: 'cash', label: 'Cash' },
+            ]}
+          />
+          <p className="mt-4 mb-6 text-[12px] font-medium text-ink-300">
+            {draftProfile.payment === 'cash'
+              ? 'ডেলিভারির সময় ক্যাশ অন ডেলিভারি। কার্ড পেমেন্ট নেই।'
+              : draftProfile.payment === 'bkash'
+                ? 'bKash দিয়ে পেমেন্ট — কার্ড পেমেন্ট নেই।'
+                : 'Nagad দিয়ে পেমেন্ট — কার্ড পেমেন্ট নেই।'}
           </p>
           <button
             type="button"
@@ -927,31 +928,15 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
                 <div className="mb-1 text-[10.5px] font-bold tracking-wider text-ink-200 uppercase">
                   Default payment
                 </div>
-                <div className="grid grid-cols-1 gap-2">
-                  {PAYMENTS.map((p) => (
-                    <button
-                      key={p.id}
-                      onClick={() => setDraftProfile({ ...draftProfile, payment: p.id })}
-                      className={`flex items-center justify-between rounded-xl border-2 p-3 text-left ${
-                        draftProfile.payment === p.id
-                          ? 'border-coral bg-coral-50/50'
-                          : 'border-border bg-surface'
-                      }`}
-                    >
-                      <div>
-                        <div className="text-[13px] font-bold text-ink">{p.label}</div>
-                        <div className="text-[10.5px] text-ink-200">{p.sub}</div>
-                      </div>
-                      <div className={`flex h-5 w-5 items-center justify-center rounded-full ${
-                        draftProfile.payment === p.id
-                          ? 'bg-coral text-white'
-                          : 'border border-border bg-surface'
-                      }`}>
-                        {draftProfile.payment === p.id && <Check className="h-3 w-3" strokeWidth={3} />}
-                      </div>
-                    </button>
-                  ))}
-                </div>
+                <UnderlineTabs
+                  value={draftProfile.payment}
+                  onChange={(id) => setDraftProfile({ ...draftProfile, payment: id })}
+                  tabs={[
+                    { value: 'bkash', label: 'bKash' },
+                    { value: 'nagad', label: 'Nagad' },
+                    { value: 'cash', label: 'Cash' },
+                  ]}
+                />
               </div>
 
               <button
@@ -1440,41 +1425,6 @@ function ProfileInput({
         {action && <span className="text-[12px] font-semibold text-coral">{action}</span>}
       </span>
     </label>
-  );
-}
-
-function PaymentSection({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <section className="mb-7">
-      <h2 className="mb-3 text-[20px] font-medium tracking-[-0.02em] text-ink-300">{title}</h2>
-      <div className="space-y-3">{children}</div>
-    </section>
-  );
-}
-
-function PaymentOption({
-  icon: Icon,
-  label,
-  active,
-  onClick,
-}: {
-  icon: React.ComponentType<{ className?: string; strokeWidth?: number }>;
-  label: string;
-  active: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="flex h-14 w-full items-center gap-4 rounded-[18px] border border-border bg-surface px-4 text-left shadow-card transition active:scale-[.98]"
-    >
-      <Icon className="h-5 w-5 text-coral" strokeWidth={1.8} />
-      <span className="flex-1 text-[15px] font-semibold text-ink">{label}</span>
-      <span className={`flex h-7 w-7 items-center justify-center rounded-full border-2 ${active ? 'border-coral' : 'border-border'}`}>
-        {active && <span className="h-4 w-4 rounded-full bg-coral" />}
-      </span>
-    </button>
   );
 }
 
