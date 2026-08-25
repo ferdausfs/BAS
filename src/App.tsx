@@ -157,9 +157,9 @@ export default function App() {
       <FlavorThemeSync />
       <div className="h-[100dvh] w-full flex flex-col overflow-hidden relative">
         <div className="lux-canvas" aria-hidden="true">
-          <span className="lux-orb a" />
-          <span className="lux-orb b" />
-          <span className="lux-orb c" />
+          <span className="lux-orb a anim-blob" />
+          <span className="lux-orb b anim-blob delay-2" />
+          <span className="lux-orb c anim-blob delay-4" />
         </div>
         <main className="flex-1 min-h-0 relative z-[1] overflow-hidden">
           {view.name === 'splash'

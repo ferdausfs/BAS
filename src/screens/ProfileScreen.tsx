@@ -521,7 +521,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
     .toUpperCase();
 
   return (
-    <div className="flex h-full flex-col bg-bg">
+    <div className="flex h-full flex-col">
       {profileView !== 'chat' && (
         <header className="flex-shrink-0 px-6 pt-6 pb-2">
           <div className="relative flex h-14 items-center justify-center">

@@ -104,7 +104,7 @@ export const buildFlavorPalette = (flavor: string): FlavorPalette => {
     mid: mixHex(primary, '#ffffff', 0.28),
     accent: mixHex(primary, '#ffffff', 0.55),
     secondary: mixHex(primary, '#ffffff', 0.88),
-    bg: mixHex(primary, '#ffffff', 0.94),
+    bg: mixHex(primary, '#ffffff', 0.90),
     border: mixHex(primary, '#ffffff', 0.82),
   };
 };

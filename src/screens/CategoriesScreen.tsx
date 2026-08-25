@@ -89,7 +89,7 @@ export default function CategoriesScreen() {
   };
 
   return (
-    <div className="flex h-full flex-col bg-bg">
+    <div className="flex h-full flex-col">
       <header className="flex-shrink-0 px-6 pt-6 pb-4">
         <div className="relative flex h-14 items-center justify-center">
           <button

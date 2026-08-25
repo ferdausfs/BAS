@@ -604,20 +604,27 @@ button { -webkit-tap-highlight-color: transparent; }
    App.tsx renders (kept extremely subtle for the minimalist brief).
    ═══════════════════════════════════════════════════════════ */
 
-/* flat soft-pink canvas (no heavy gradient per brief) */
 html, body{
   background: var(--flavor-bg);
   background-attachment: fixed;
 }
 
-/* fixed canvas + barely-there pink glow orbs (rendered by App.tsx).
-   Opacity kept low so this reads as calm white-pink, not candy. */
-.lux-canvas{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;
-  background:#FFF9FB;}
-.lux-orb{position:absolute;border-radius:9999px;filter:blur(40px)}
-.lux-orb.a{width:190px;height:190px;background:#FFD6E4;opacity:.40;top:-40px;right:-30px}
-.lux-orb.b{width:160px;height:160px;background:#FFE8F0;opacity:.45;bottom:12%;left:-46px}
-.lux-orb.c{width:130px;height:130px;background:#FFC1D6;opacity:.22;top:42%;right:-34px}
+.flavor-page,
+.lux-canvas {
+  background-color: var(--flavor-bg);
+  background-image:
+    radial-gradient(120% 70% at 50% -8%, color-mix(in srgb, var(--flavor-primary) 26%, transparent), transparent 58%),
+    radial-gradient(90% 55% at 108% 92%, color-mix(in srgb, var(--flavor-mid) 32%, transparent), transparent 54%),
+    radial-gradient(80% 50% at -8% 78%, color-mix(in srgb, var(--flavor-accent) 55%, transparent), transparent 52%);
+  background-attachment: fixed;
+  transition: background-color .7s var(--ease-premium);
+}
+
+.lux-canvas{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;}
+.lux-orb{position:absolute;border-radius:9999px;filter:blur(52px);transition:background-color .7s var(--ease-premium),opacity .7s var(--ease-premium)}
+.lux-orb.a{width:240px;height:240px;background:var(--flavor-primary);opacity:.20;top:-70px;right:-48px}
+.lux-orb.b{width:220px;height:220px;background:var(--flavor-mid);opacity:.26;bottom:6%;left:-80px}
+.lux-orb.c{width:190px;height:190px;background:var(--flavor-accent);opacity:.30;top:40%;right:-56px}
 
 /* ===== BAS0002 — layout foundation (Phase L0) =====
    Proportions translated from GroceryApp .appbar/.back/.round-act/.page/
@@ -816,8 +823,10 @@ html, body{
   }
   .lux-canvas,
   .lux-orb,
-  .btn-primary {
+  .btn-primary,
+  .anim-blob {
     transition: none;
+    animation: none !important;
   }
   .flavor-wash {
     display: none;

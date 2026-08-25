@@ -221,7 +221,7 @@ export default function ProductScreen() {
 
   if (!product) {
     return (
-      <div className="flex h-full flex-col items-center justify-center px-6 text-center bg-bg">
+      <div className="flex h-full flex-col items-center justify-center px-6 text-center">
         <div className="flex justify-center text-coral opacity-60">
           <Cake size={48} strokeWidth={1.5} />
         </div>
@@ -288,7 +288,7 @@ export default function ProductScreen() {
   };
 
   return (
-    <div className="relative flex h-full flex-col bg-bg">
+    <div className="relative flex h-full flex-col">
       {/* ONE scrollable area */}
       <div className="no-scrollbar relative flex-1 overflow-y-auto pb-32">
         {/* Hero image */}

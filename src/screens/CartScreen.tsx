@@ -77,7 +77,7 @@ export default function CartScreen() {
 
   if (items.length === 0) {
     return (
-      <div className="flex h-full flex-col bg-bg">
+      <div className="flex h-full flex-col">
         <Header title="আমার কার্ট" onBack={back} />
         <div className="flex flex-1 flex-col items-center justify-center px-8 text-center">
           <div className="flex h-24 w-24 items-center justify-center rounded-2xl border border-border bg-surface text-coral shadow-card">
@@ -101,7 +101,7 @@ export default function CartScreen() {
   }
 
   return (
-    <div className="flex h-full flex-col bg-bg">
+    <div className="flex h-full flex-col">
       <Header title="আমার কার্ট" onBack={back} badge={`${items.length}`} />
 
       <div className="no-scrollbar flex-1 overflow-y-auto px-6 pb-44 pt-1">

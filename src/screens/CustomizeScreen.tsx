@@ -24,7 +24,7 @@ export default function CustomizeScreen() {
     : `https://wa.me/?text=${waMessage}`;
 
   return (
-    <div className="flex h-full flex-col bg-bg">
+    <div className="flex h-full flex-col">
       <div className="flex items-center gap-3 px-6 pt-4 pb-3">
         <button
           onClick={back}

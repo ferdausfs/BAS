@@ -223,7 +223,7 @@ export default function HomeScreen({
   };
 
   return (
-    <div className="flex h-full flex-col bg-bg">
+    <div className="flex h-full flex-col">
       <div className="no-scrollbar flex-1 overflow-y-auto pb-36">
         <HomeTopBar
           search={search}

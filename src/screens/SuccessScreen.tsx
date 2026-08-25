@@ -22,7 +22,7 @@ export default function SuccessScreen() {
   };
 
   return (
-    <div className="relative flex h-full flex-col overflow-hidden bg-bg px-6 pb-8 pt-6">
+    <div className="relative flex h-full flex-col overflow-hidden px-6 pb-8 pt-6">
       <main className="flex flex-1 flex-col items-center justify-center text-center">
         <div className="mb-8 flex h-24 w-24 items-center justify-center rounded-[28px] bg-coral text-white shadow-btn">
           <SuccessCheckTransition>

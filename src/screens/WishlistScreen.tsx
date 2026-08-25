@@ -53,7 +53,7 @@ export default function WishlistScreen({
   };
 
   return (
-    <div className="flex h-full flex-col bg-bg">
+    <div className="flex h-full flex-col">
       <header className="flex-shrink-0 px-6 pb-4 pt-20 pr-18">
         <div className="flex items-center gap-3">
           <button
