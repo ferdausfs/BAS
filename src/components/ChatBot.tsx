@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { Phone, Send, Cake, X, Camera, Loader2 } from 'lucide-react';
-import { useAuthStore, useOrders, useSettingsStore, useUI } from '../lib/store';
+import { useAuthStore, useSettingsStore, useUI } from '../lib/store';
 import { useProducts } from '../hooks/useProducts';
-import { waLink, formatBDT } from '../lib/utils';
+import { useOrdersHook } from '../hooks/useOrders';
+import { waLink, formatBDT, safeArray } from '../lib/utils';
 import { uploadToCloudinary } from '../lib/firebase';
+import type { Order } from '../types';
 
 interface Message {
   role: 'user' | 'bot';
@@ -13,13 +15,23 @@ interface Message {
 }
 
 const QUICK_REPLIES = [
-  { q: 'তুমি কী করতে পারো?', label: 'কী পারো?' },
+  { q: 'আমার অর্ডার কোথায়?', label: 'আমার অর্ডার' },
+  { q: 'আমার পেমেন্ট স্ট্যাটাস?', label: 'পেমেন্ট' },
   { q: 'কেক মেনু দেখাও', label: 'মেনু' },
   { q: 'অর্ডার কীভাবে করবো?', label: 'অর্ডার' },
   { q: 'ডেলিভারি কোথায় দাও?', label: 'জোন' },
-  { q: 'অর্ডার ট্র্যাক করবো কীভাবে?', label: 'ট্র্যাক' },
   { q: 'মানুষের সাথে কথা বলতে চাই', label: 'সাপোর্ট' },
 ];
+
+const STATUS_BN: Record<string, string> = {
+  placed: 'অর্ডার প্লেস হয়েছে',
+  confirmed: 'অর্ডার confirm হয়েছে',
+  baking: 'কেক bake হচ্ছে',
+  ready: 'কেক ready',
+  out: 'ডেলিভারির জন্য বের হয়েছে',
+  delivered: 'ডেলিভারি complete হয়েছে',
+  cancelled: 'অর্ডার cancel হয়েছে',
+};
 
 const chatHistoryKey = (userId?: string, orderId?: string | null) =>
   orderId ? `bakeart-chat-order-${orderId}` : `bakeart-chat-history-${userId || 'guest'}`;
@@ -31,8 +43,6 @@ interface Props {
 }
 
 export function ChatBot({ embedded = false, fullPage = false, onClose }: Props) {
-  // মূল history load এখন নিচের useEffect-এ হয় ([user?.id, chatOrderContext] অনুযায়ী) —
-  // এখানে খালি রাখা হলো যাতে order-context থেকে খোলা হলে পুরনো general history flash না করে
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -45,10 +55,124 @@ export function ChatBot({ embedded = false, fullPage = false, onClose }: Props) 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { settings } = useSettingsStore();
   const { products } = useProducts();
-  const { orders } = useOrders();
+  const { orders, fetchMyOrders } = useOrdersHook();
   const { user } = useAuthStore();
   const { chatOpen, setChatOpen, chatOrderContext } = useUI();
   const geminiKey = import.meta.env.VITE_GEMINI_API_KEY || settings.geminiApiKey || '';
+
+  useEffect(() => {
+    void fetchMyOrders();
+  }, [fetchMyOrders, user?.id]);
+
+  const getSavedCustomer = (): { name?: string; phone?: string; address?: string; district?: string; payment?: string } => {
+    try {
+      const key = user?.id ? `bakeart-customer-profile-${user.id}` : 'bakeart-customer-profile';
+      return JSON.parse(localStorage.getItem(key) || '{}');
+    } catch {
+      return {};
+    }
+  };
+
+  const mineOrders = (): Order[] => {
+    const saved = getSavedCustomer();
+    const uid = user?.id && !user.id.startsWith('local-') ? user.id : '';
+    const phone = saved.phone?.trim() || user?.contact?.trim() || '';
+    const email = user?.email?.trim().toLowerCase() || '';
+
+    return safeArray<Order>(orders)
+      .filter((order) => {
+        if (uid && order.userId && order.userId !== uid) return false;
+        if (uid && order.userId === uid) return true;
+        if (phone && order.customer?.phone === phone) return true;
+        if (email && order.customer?.email?.trim().toLowerCase() === email) return true;
+        if (!uid && !order.userId) return true;
+        return false;
+      })
+      .sort((a, b) => b.createdAt - a.createdAt);
+  };
+
+  const extractOrderId = (text: string, known: Order[]): string | null => {
+    const compact = text.replace(/\s+/g, '');
+    const match = compact.match(/BAS\d{8,}[-]?[A-Za-z0-9]{0,8}/i);
+    if (match) {
+      const raw = match[0].toUpperCase();
+      const exact = known.find((order) => order.id.toUpperCase() === raw);
+      if (exact) return exact.id;
+      const loose = known.find((order) => order.id.replace(/-/g, '').toUpperCase() === raw.replace(/-/g, ''));
+      if (loose) return loose.id;
+      return raw;
+    }
+    const upper = text.toUpperCase();
+    return known.find((order) => upper.includes(order.id.toUpperCase()))?.id ?? null;
+  };
+
+  const pickOrder = (question: string): Order | undefined => {
+    const mine = mineOrders();
+    const askedId = extractOrderId(question, mine) || extractOrderId(chatOrderContext || '', mine);
+    if (askedId) return mine.find((order) => order.id.toUpperCase() === askedId.toUpperCase() || order.id.replace(/-/g, '').toUpperCase() === askedId.replace(/-/g, '').toUpperCase());
+    if (chatOrderContext) {
+      const focused = mine.find((order) => order.id === chatOrderContext);
+      if (focused) return focused;
+    }
+    return mine[0];
+  };
+
+  const describeOrder = (order: Order) => {
+    const items = safeArray<Order['items'][number]>(order.items).map((item) => `${item.name} ×${item.quantity}`).join(', ');
+    const advance = order.advanceAmount ?? 0;
+    const remaining = order.remainingAmount ?? Math.max(0, order.total - advance);
+    const cancelLine = order.status === 'cancelled' && order.cancelReason ? `\nবাতিলের কারণ: ${order.cancelReason}` : '';
+    return (
+      `Order #${order.id} — ${STATUS_BN[order.status] ?? order.status}${cancelLine}\n` +
+      `Items: ${items || '—'}\n` +
+      `Total: ${formatBDT(order.total)}\n` +
+      `অগ্রিম: ${formatBDT(advance)} (${order.advancePayment || 'bKash/Nagad'}) · ${order.paymentVerified ? 'verify হয়েছে' : 'এখনো verify হয়নি'}\n` +
+      `Screenshot: ${order.paymentScreenshot ? 'আছে' : 'নেই'}\n` +
+      `বাকি: ${formatBDT(remaining)} (${order.payment === 'cash' ? 'Cash on Delivery' : order.payment})\n` +
+      `Delivery: ${order.delivery?.date || '—'} · ${order.delivery?.time || '—'}`
+    );
+  };
+
+  const orderStatusText = (rawQuestion: string) => {
+    const mine = mineOrders();
+    const askedId = extractOrderId(rawQuestion, mine) || extractOrderId(chatOrderContext || '', mine);
+    if (askedId) {
+      const found = mine.find((order) =>
+        order.id.toUpperCase() === askedId.toUpperCase() ||
+        order.id.replace(/-/g, '').toUpperCase() === askedId.replace(/-/g, '').toUpperCase()
+      );
+      if (!found) {
+        return `Order #${askedId} আপনার অ্যাকাউন্টে পাইনি।\n\nশুধু আপনার নিজের Order ID দিয়ে খোঁজা হয় — অন্য কারো অর্ডার দেখানো হয় না। ID আবার চেক করুন, অথবা Orders tab খুলুন।`;
+      }
+      return `আপনার অর্ডার\n\n${describeOrder(found)}\n\nআরও detail: Orders tab → Open tracking।`;
+    }
+    const latest = mine[0];
+    if (!latest) {
+      return 'আপনার নামে কোনো অর্ডার পাচ্ছি না। Order ID লিখুন, অথবা আগে সাইন-ইন করুন। অন্য কাস্টমারের অর্ডার আমি দেখাই না।';
+    }
+    return `আপনার latest order\n\n${describeOrder(latest)}\n\nঅন্য অর্ডার হলে Order ID লিখুন।`;
+  };
+
+  const paymentStatusText = (question: string, asDone: boolean) => {
+    const order = pickOrder(question);
+    if (!order) {
+      return asDone
+        ? 'পেমেন্ট পাঠানোর কথা বললেন, কিন্তু আপনার নামে অর্ডার খুঁজে পাইনি। নিজের Order ID লিখুন — অন্য কারো পেমেন্ট মিলিয়ে বলব না।'
+        : 'আপনার অর্ডার খুঁজে পাইনি, তাই পেমেন্ট স্ট্যাটাস বলতে পারছি না। Order ID দিন।';
+    }
+    const advance = order.advanceAmount ?? 0;
+    const remaining = order.remainingAmount ?? Math.max(0, order.total - advance);
+    const head = asDone ? 'বুঝলাম, আপনি পেমেন্ট পাঠিয়েছেন। আপনার অর্ডার অনুযায়ী:' : 'আপনার পেমেন্ট স্ট্যাটাস:';
+    return (
+      `${head}\n\n${describeOrder(order)}\n\n` +
+      (order.paymentVerified
+        ? 'অগ্রিম verify হয়েছে — প্রস্তুতি চলতে পারে।'
+        : order.paymentScreenshot
+          ? 'Screenshot আছে, admin verify করছে। কিছুক্ষণ লাগতে পারে।'
+          : `অগ্রিম ${formatBDT(advance)} এখনো verify হয়নি — checkout-এ screenshot upload করুন।`) +
+      `\nবাকি ${formatBDT(remaining)} ডেলিভারির সময় (${order.payment === 'cash' ? 'ক্যাশ' : order.payment})।`
+    );
+  };
 
   useEffect(() => {
     skipPersistRef.current = true;
@@ -56,8 +180,6 @@ export function ChatBot({ embedded = false, fullPage = false, onClose }: Props) 
       const raw = localStorage.getItem(chatHistoryKey(user?.id, chatOrderContext));
       if (!raw) {
         if (chatOrderContext) {
-          // নির্দিষ্ট order থেকে chat খোলা হয়েছে — পুরনো general history এখানে দেখানো হবে না,
-          // এই order নিয়ে fresh conversation শুরু হবে
           setMessages([{ role: 'bot', text: orderStatusText(chatOrderContext), time: new Date() }]);
         } else {
           setMessages([]);
@@ -95,8 +217,6 @@ export function ChatBot({ embedded = false, fullPage = false, onClose }: Props) 
     setMessages((m) => [...m, { role: 'bot', text, time: new Date() }]);
   };
 
-  // Reference cake ছবি পাঠানো — user শুধু ছবি পাঠাতে পারবে (Cloudinary-তে upload),
-  // bot নিজে থেকে ছবি বুঝে respond করে না, শুধু acknowledgment + support route দেয়
   const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     e.target.value = '';
@@ -118,7 +238,7 @@ export function ChatBot({ embedded = false, fullPage = false, onClose }: Props) 
       const url = await uploadToCloudinary(file, 'bake-art-style/chat-references');
       setMessages((m) => [...m, { role: 'user', text: '', image: url, time: new Date() }]);
       await new Promise((r) => setTimeout(r, 250));
-      addBot('ছবিটা পেয়েছি! রেফারেন্স হিসেবে রাখা হলো — অর্ডার করার সময় Customize-এ message-এ mention করে দিতে পারেন, বা সরাসরি WhatsApp-এ পাঠিয়ে দিলে team দ্রুত দেখতে পারবে।');
+      addBot('ছবিটা পেয়েছি, রেফারেন্স হিসেবে রাখলাম। অর্ডার/পেমেন্ট নিয়ে কিছু জানতে চাইলে Order ID লিখুন।');
     } catch {
       setImageError('ছবি upload করা যায়নি, আবার চেষ্টা করুন।');
     } finally {
@@ -136,7 +256,6 @@ export function ChatBot({ embedded = false, fullPage = false, onClose }: Props) 
   const has = (text: string, words: string[]) =>
     words.some((w) => {
       const escaped = w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      // word-boundary aware: 'kha' এখন আর 'opekkha'-এর ভিতরের substring হিসেবে match করবে না
       const re = new RegExp(`(^|[^a-z0-9\\u0980-\\u09FF])${escaped}([^a-z0-9\\u0980-\\u09FF]|$)`, 'i');
       return re.test(text);
     });
@@ -144,9 +263,9 @@ export function ChatBot({ embedded = false, fullPage = false, onClose }: Props) 
   const supportText = () => {
     const digits = settings.whatsappNumber.replace(/\D/g, '');
     if (digits.length < 10) {
-      return 'WhatsApp number এখনো সেট করা নেই। Admin Panel → Settings থেকে WhatsApp Number দিন, তারপর আমি সরাসরি WhatsApp link দেখাতে পারবো।';
+      return 'এখন WhatsApp নম্বর সেট নেই। নিচের অপশন কাজ না করলে একটু পরে আবার চেষ্টা করুন।';
     }
-    return `আমাদের টিমের সাথে সরাসরি কথা বলতে পারেন\n\nনিচের সবুজ WhatsApp বাটনটি চাপুন — সাথে সাথে চ্যাট খুলে যাবে।\n\nসাধারণত সকাল ৯টা থেকে রাত ৯টা পর্যন্ত সাপোর্ট পাওয়া যায়।`;
+    return 'টিমের সাথে কথা বলতে নিচের সবুজ WhatsApp বাটন চাপুন। সাধারণত সকাল ৯টা–রাত ৯টা সাপোর্ট থাকে।';
   };
 
   const menuText = () => {
@@ -154,330 +273,168 @@ export function ChatBot({ embedded = false, fullPage = false, onClose }: Props) 
       .slice(0, 6)
       .map((p, i) => `${i + 1}. ${p.name} — ${formatBDT(p.price)}\n   ${p.tagline}`)
       .join('\n');
-    return `আমাদের জনপ্রিয় কেকগুলো\n\n${list}\n\nআরও দেখতে Shop/Browse tab খুলুন। কোনো কেক পছন্দ হলে Add to cart বা Customize করতে পারবেন।`;
+    return `আমাদের জনপ্রিয় কেকগুলো\n\n${list}\n\nআরও দেখতে Shop/Browse tab খুলুন।`;
   };
 
-  const appGuideText = () =>
-    `আমি BAS — Bake Art Style app-এর সহকারী। আমি এগুলোতে সাহায্য করতে পারি:\n\n` +
-    `• কেক মেনু, দাম ও বেস্টসেলার দেখানো\n` +
-    `• কাস্টম কেক অর্ডার করার ধাপ বলা\n` +
-    `• ডেলিভারি জোন/সময়/চার্জ বোঝানো\n` +
-    `• Payment বোঝানো — ১/৩ অগ্রিম (bKash/Nagad) + বাকি delivery-তে (Cash/bKash/Nagad)\n` +
-    `• Cart, Wishlist, Checkout, Order tracking বুঝিয়ে দেওয়া\n` +
-    `• সমস্যা হলে WhatsApp support link দেওয়া\n\n` +
-    `আপনি সাধারণভাবেও কথা বলতে পারেন — যেমন “kemon aso”, “ki koro”, “order korte chai”।`;
-
-  const adminGuideText = () =>
-    `Admin Panel-এ যা আছে\n\n` +
-    `• Dashboard: revenue, pending order, today order, products\n` +
-    `• Orders: অর্ডার দেখা, status দেখা, CSV export\n` +
-    `• Products: cake add/edit/delete, image upload\n` +
-    `• Gallery: gallery photo add/delete\n` +
-    `• Reviews: review approve/delete\n` +
-    `• Customers: customer list, total spent, order count\n` +
-    `• Zones: delivery zone add/remove, zone gating on/off\n` +
-    `• Settings: admin email/PIN, WhatsApp, delivery fee, promo, Gemini API key\n\n` +
-    `Admin খুলতে Profile footer logo ৫ বার tap করুন → admin email দিয়ে login → PIN দিন।`;
-
-  const orderText = () =>
-    `অর্ডার করার ধাপ\n\n` +
-    `1. Shop/Browse থেকে কেক সিলেক্ট করুন\n` +
-    `2. Size, flavour, topping বা message customize করুন\n` +
-    `3. Add to cart চাপুন\n` +
-    `4. Cart → Checkout এ নাম, ফোন, ঠিকানা দিন\n` +
-    `5. অর্ডার নিশ্চিত করুন, তারপর ১/৩ টাকা অগ্রিম bKash/Nagad-এ পাঠিয়ে screenshot upload করুন — কেক প্রস্তুতি তখনই শুরু হবে\n\n` +
-    `অর্ডার হলে Order ID পাবেন, তারপর Tracking screen থেকে status দেখতে পারবেন।`;
-
-  const zoneText = () => {
-    const zones = (settings.allowedZones ?? []).join(', ');
-    return `বর্তমান delivery zones\n${zones || 'এখনো zone সেট করা নেই'}\n\nCheckout-এর আগে location check করা যায়। আপনার এলাকা না থাকলে WhatsApp-এ কথা বলুন — admin চাইলে zone add করতে পারবেন।`;
-  };
-
-  const paymentText = () => {
-    const minPrice = products.length ? Math.min(...products.map((p) => p.price)) : 0;
-    return `Payment — ২ ধাপে\n\n` +
-      `1️⃣ অগ্রিম (১/৩ টাকা) — এখনই, checkout-এর শেষ ধাপে। কেক প্রস্তুতি শুরু হয় এই টাকা পাওয়ার পর। শুধু bKash বা Nagad-এ দিতে হয় (অনলাইন), আর screenshot upload করতে হয় verify-এর জন্য।\n` +
-      `2️⃣ বাকি (২/৩ টাকা) — ডেলিভারির সময় দেবেন, Cash on Delivery বা bKash/Nagad যেভাবে সুবিধা।\n\n` +
-      `দাম শুরু ${formatBDT(minPrice)} থেকে। Delivery fee ${formatBDT(settings.deliveryFee)}। ${settings.promoEnabled ? `Promo code ${settings.promoCode} দিলে ${settings.promoPercent}% discount পেতে পারেন।` : ''}`;
-  };
-
-  const getSavedCustomer = (): { name?: string; phone?: string; address?: string; district?: string; payment?: string } => {
-    try {
-      const key = user?.id ? `bakeart-customer-profile-${user.id}` : 'bakeart-customer-profile';
-      return JSON.parse(localStorage.getItem(key) || '{}');
-    } catch {
-      return {};
-    }
-  };
-
-  const myOrders = () => {
+  const customerFacts = () => {
     const saved = getSavedCustomer();
-    const userName = user?.name?.trim().toLowerCase();
-    const userEmail = user?.email?.trim().toLowerCase();
-    const phone = saved.phone?.trim();
-    const savedName = saved.name?.trim().toLowerCase();
-
-    const matched = orders.filter((o) => {
-      const orderName = o.customer?.name?.trim().toLowerCase();
-      const orderEmail = o.customer?.email?.trim().toLowerCase();
-      return (
-        (!!phone && o.customer?.phone === phone) ||
-        (!!userEmail && orderEmail === userEmail) ||
-        (!!savedName && orderName === savedName) ||
-        (!!userName && orderName === userName)
-      );
-    });
-
-    return (matched.length ? matched : orders).slice().sort((a, b) => b.createdAt - a.createdAt);
+    const mine = mineOrders();
+    const identity = [
+      user?.id ? `customerId: ${user.id}` : 'customerId: guest',
+      `name: ${saved.name || user?.name || '—'}`,
+      `phone: ${saved.phone || user?.contact || '—'}`,
+      `email: ${user?.email || '—'}`,
+    ].join('\n');
+    const orderLines = mine.slice(0, 8).map((order) => describeOrder(order)).join('\n---\n');
+    return `THIS CUSTOMER ONLY:\n${identity}\nfocusOrderId: ${chatOrderContext || 'none'}\norders (${mine.length}):\n${orderLines || 'none'}`;
   };
 
-  const orderStatusText = (rawQuestion: string) => {
-    const normalizedQuestion = rawQuestion.toLowerCase();
-    const idMatch = normalizedQuestion.match(/bas[-\s]?\d{3,}[a-z0-9]{0,4}/i);
-    const cleanId = idMatch?.[0]?.replace(/[-\s]/g, '').toUpperCase();
-
-    const list = cleanId
-      ? orders.filter((o) => o.id.toUpperCase() === cleanId)
-      : myOrders();
-
-    if (list.length === 0) {
-      return `আপনার কোনো saved order এখনো পাচ্ছি না।\n\nযদি order করে থাকেন, Order ID লিখুন — যেমন BAS123456। Profile → Orders থেকেও status দেখতে পারবেন।`;
-    }
-
-    const latest = list[0];
-    const itemText = latest.items.map((i) => `${i.name} ×${i.quantity}`).join(', ');
-    const statusMap: Record<string, string> = {
-      placed: 'অর্ডার প্লেস হয়েছে',
-      confirmed: 'অর্ডার confirm হয়েছে',
-      baking: 'কেক bake হচ্ছে',
-      ready: 'কেক ready',
-      out: 'ডেলিভারির জন্য বের হয়েছে',
-      delivered: 'ডেলিভারি complete হয়েছে',
-      cancelled: 'অর্ডার cancel হয়েছে',
-    };
-
-    const cancelLine = latest.status === 'cancelled' && latest.cancelReason ? `\nবাতিলের কারণ: ${latest.cancelReason}` : '';
-    return `আপনার latest order status\n\nOrder #${latest.id} — ${statusMap[latest.status] ?? latest.status}${cancelLine}\nItems: ${itemText}\nTotal: ${formatBDT(latest.total)}\nDelivery: ${latest.delivery.date} · ${latest.delivery.time}\n\nআরও detail দেখতে Orders tab → Open tracking চাপুন।`;
-  };
-
-  // "payment koresi / diyechi" জাতীয় completed-action message-এর জন্য —
-  // paymentText()-এর মতো process আবার না বলে, বরং user-এর real order status দেখানো হয়
-  const paymentDoneText = () => {
-    const latest = myOrders()[0];
-    const statusMap: Record<string, string> = {
-      placed: 'অর্ডার প্লেস হয়েছে',
-      confirmed: 'অর্ডার confirm হয়েছে',
-      baking: 'কেক bake হচ্ছে',
-      ready: 'কেক ready',
-      out: 'ডেলিভারির জন্য বের হয়েছে',
-      delivered: 'ডেলিভারি complete হয়েছে',
-      cancelled: 'অর্ডার cancel হয়েছে',
-    };
-    if (!latest) {
-      return `Payment পাঠানোর জন্য ধন্যবাদ! 🙏\n\nতবে আপনার নামে এখনো কোনো order খুঁজে পাচ্ছি না — Order ID (যেমন BAS123456) লিখুন, খুঁজে বের করি।\n\nScreenshot verify হতে কিছুক্ষণ সময় লাগতে পারে। জলদি দরকার হলে সরাসরি WhatsApp-এ screenshot পাঠান:\n\n${supportText()}`;
-    }
-    return `বুঝলাম, আপনি payment পাঠিয়ে দিয়েছেন 🙏\n\nআপনার latest order #${latest.id} এখন "${statusMap[latest.status] ?? latest.status}" অবস্থায় আছে।\n\nPayment পাঠানোর পরেও status আপডেট না হলে screenshot verify হতে কিছুক্ষণ সময় লাগতে পারে (admin manually check করেন)। জলদি দরকার হলে সরাসরি WhatsApp-এ screenshot পাঠিয়ে জানান:\n\n${supportText()}`;
-  };
-
-  const ruleBasedReply = (question: string): { text: string; matched: boolean } => {
+  const agentReply = (question: string): { text: string; kind: 'grounded' | 'local' | 'open' } => {
     const q = normalize(question);
+    const mine = mineOrders();
 
-    // Order-ID-এর মতো টেক্সট (যেমন BAS616606J7Z) দেখলেই সরাসরি real data দিয়ে answer —
-    // কখনো Gemini-কে fabricate করতে দেওয়া যাবে না (keyword match লাগবে না)
-    if (/bas[-\s]?\d{3,}[a-z0-9]{0,4}/i.test(question)) {
-      return { text: orderStatusText(question), matched: true };
+    if (extractOrderId(question, mine) || extractOrderId(question, [])) {
+      return { text: orderStatusText(question), kind: 'grounded' };
     }
 
-    if (has(q, ['hi', 'hello', 'hey', 'হাই', 'হ্যালো', 'সালাম', 'আসসালামু', 'salam', 'assalamu', 'helo', 'helo', 'helllo', 'ki obostha', 'ki khobor', 'ki korcho'])) {
-      return { text: 'হ্যালো! আমি BAS। কেক অর্ডার, দাম, ডেলিভারি, tracking বা app ব্যবহার নিয়ে যা জানতে চান বলুন।', matched: true };
-    }
-
-    if (has(q, ['kemon aso', 'কেমন আছ', 'kamon acho', 'kmn aso', 'how are you'])) {
-      return { text: 'আমি ভালো আছি, ধন্যবাদ! আপনি কেমন আছেন? আজ কি কোনো birthday/anniversary cake লাগবে, নাকি শুধু app নিয়ে সাহায্য চান?', matched: true };
-    }
-
-    if (has(q, ['ki koro', 'কি কর', 'ki korte paro', 'কী করতে পারো', 'what can you do', 'tumi ki', 'তুমি কে', 'who are you'])) {
-      return { text: appGuideText(), matched: true };
+    if (has(q, ['hi', 'hello', 'hey', 'হাই', 'হ্যালো', 'সালাম', 'আসসালামু', 'salam', 'assalamu'])) {
+      const latest = mine[0];
+      return {
+        text: latest
+          ? `হ্যালো! আমি BAS, আপনার অর্ডার এজেন্ট। Latest order #${latest.id} — ${STATUS_BN[latest.status] ?? latest.status}। অর্ডার, পেমেন্ট বা ID নিয়ে যা জানতে চান বলুন।`
+          : 'হ্যালো! আমি BAS, আপনার অর্ডার এজেন্ট। Order ID, পেমেন্ট বা স্ট্যাটাস লিখুন — শুধু আপনার ডেটা দিয়ে উত্তর দেব।',
+        kind: 'local',
+      };
     }
 
     if (has(q, ['thanks', 'thank you', 'ধন্যবাদ', 'tnx', 'thx'])) {
-      return { text: 'স্বাগতম! আর কিছু জানতে চাইলে বলুন — আমি আছি।', matched: true };
+      return { text: 'স্বাগতম। আর কিছু লাগলে অর্ডার/পেমেন্ট নিয়ে বলুন।', kind: 'local' };
     }
 
     if (has(q, ['bye', 'good night', 'বিদায়', 'আল্লাহ হাফেজ'])) {
-      return { text: 'আল্লাহ হাফেজ! ভালো থাকবেন। কেক লাগলে আবার Knock করবেন।', matched: true };
+      return { text: 'আল্লাহ হাফেজ।', kind: 'local' };
     }
 
-    if (has(q, ['admin', 'অ্যাডমিন', 'panel', 'প্যানেল', 'dashboard', 'ড্যাশবোর্ড'])) {
-      return { text: adminGuideText(), matched: true };
-    }
-
-    if (has(q, ['menu', 'মেনু', 'cake', 'কেক', 'product', 'প্রোডাক্ট', 'দেখাও', 'kek', 'cake koto', 'ki cake', 'kon cake', 'ki ache', 'product list', 'menu ta', 'dam koto', 'ki pawa jay', 'kemon cake', 'cake show'])) {
-      return { text: menuText(), matched: true };
-    }
-
-    if (has(q, ['bestsell', 'popular', 'বেস্ট', 'জনপ্রিয়', 'ভালো কোন', 'recommend', 'সাজেস্ট'])) {
-      const top = products.find((p) => p.bestseller) ?? products[0];
+    if (has(q, ['ki koro', 'কি কর', 'ki korte paro', 'কী করতে পারো', 'what can you do', 'tumi ki', 'তুমি কে', 'who are you'])) {
       return {
-        text: top
-          ? `আমার suggestion: ${top.name}\nদাম ${formatBDT(top.price)} — ${top.tagline}\n\nBirthday/anniversary হলে এটা safe choice। চাইলে Customize করে message/topping দিতে পারবেন।`
-          : 'এখনো product list load হয়নি। একটু পরে আবার চেষ্টা করুন।',
-        matched: true,
+        text: 'আমি আপনার BAS এজেন্ট। আপনি যা বলবেন — Order ID, পেমেন্ট, স্ট্যাটাস — সেটাই বিশ্লেষণ করে উত্তর দিই। অন্য কাস্টমারের অর্ডার বা অপ্রাসঙ্গিক অ্যাপ গাইড গুলিয়ে বলি না।',
+        kind: 'local',
       };
     }
 
     if (
-      has(q, ['track', 'tracking', 'ট্র্যাক', 'status', 'স্ট্যাটাস', 'order id', 'খবর', 'khobor', 'khabar', 'koi', 'কই']) ||
-      (has(q, ['order', 'অর্ডার']) && has(q, ['amar', 'আমার', 'my', 'খবর', 'khobor', 'khabar', 'status', 'স্ট্যাটাস']))
+      has(q, ['payment', 'পেমেন্ট', 'taka', 'টাকা', 'bkash', 'bikash', 'nagad', 'send', 'money', 'screenshot']) &&
+      has(q, ['koresi', 'kore disi', 'diyechi', 'diye disi', 'dise', 'disi', 'already', 'hoye gese', 'দিয়েছি', 'হয়ে গেছে', 'pathaisi', 'pathiye', 'screenshot dise', 'screenshot disi'])
     ) {
-      return { text: orderStatusText(question), matched: true };
+      return { text: paymentStatusText(question, true), kind: 'grounded' };
     }
 
-    if (has(q, ['order', 'অর্ডার', 'kinbo', 'kivabe kinbo', 'কিনব', 'checkout', 'cart', 'কার্ট', 'order dite', 'order korte', 'kivabe order', 'order process', 'kibhabe', 'ki vabe', 'kemon kore', 'kemon vabe'])) {
-      return { text: orderText(), matched: true };
-    }
-
-    if (has(q, ['custom', 'customize', 'কাস্টম', 'কাস্টমাইজ', 'design', 'ডিজাইন', 'message', 'নাম লিখ'])) {
-      return { text: `Custom cake করতে পারবেন।\n\nProduct খুলুন → Customize চাপুন → size/flavour/topping/message দিন → cart এ add করুন।\n\nআপনি চাইলে cake-এর ওপর নাম/ছোট message লিখতে পারেন।`, matched: true };
-    }
-
-    // Delay complaint — "deri hocche", "ashe nai" ইত্যাদি generic delivery/zone info-এর বদলে
-    // real order status + empathy + support দেখাবে
-    if (has(q, ['deri', 'দেরি', 'delay', 'ashe nai', 'asheni', 'আসেনি', 'ekhono ashe nai', 'koto deri', 'onek deri', 'late hoye gese', 'time shesh hoye gese', 'ekhono pai nai'])) {
-      return {
-        text: `${orderStatusText('')}\n\nদেরির জন্য দুঃখিত 🙏 উপরের status অনুযায়ী থাকার পরেও যদি অনেক দেরি মনে হয়, সরাসরি WhatsApp-এ জানান — আমরা দ্রুত check করে জানাবো।\n\n${supportText()}`,
-        matched: true,
-      };
-    }
-
-    if (has(q, ['delivery', 'ডেলিভারি', 'zone', 'জোন', 'area', 'এলাকা', 'কোথায়', 'kothay', 'লোকেশন', 'deliver', 'pathabo', 'pathate', 'pathano', 'niye jabe', 'niye asbe', 'delivery ki', 'deliver ki', 'kothay daw', 'kothay pathaw'])) {
-      return { text: zoneText(), matched: true };
-    }
-
-    if (has(q, ['time', 'সময়', 'কতক্ষণ', 'kotokkhon', 'delivery estimate'])) {
-      return { text: `ডেলিভারি estimate: ${settings.deliveryEstimate}\n\nসময় এলাকা, অর্ডার rush এবং cake customization অনুযায়ী বদলাতে পারে। Same-day order চাইলে যত দ্রুত সম্ভব checkout করুন।`, matched: true };
-    }
-
-    // "payment koresi / diyechi / already dise" — user বলছে টাকা পাঠিয়ে দিয়েছে,
-    // এটা payment-process জানতে চাওয়া না — তাই paymentText()-এর আগেই ধরতে হবে
     if (
-      has(q, ['payment', 'পেমেন্ট', 'taka', 'টাকা', 'bkash', 'bikash', 'nagad', 'send', 'money']) &&
-      has(q, ['koresi', 'kore disi', 'diyechi', 'diye disi', 'dise', 'disi', 'already', 'hoye gese', 'kore fellsi', 'দিয়েছি', 'হয়ে গেছে', 'send korsi', 'pathaisi', 'pathiye disi', 'screenshot dise', 'screenshot disi'])
+      has(q, ['amar payment', 'my payment', 'payment status', 'পেমেন্ট স্ট্যাটাস', 'payment koi', 'bkash gese', 'nagad gese', 'verify', 'screenshot']) ||
+      (has(q, ['payment', 'পেমেন্ট', 'bkash', 'nagad']) && has(q, ['amar', 'আমার', 'my', 'status', 'স্ট্যাটাস', 'koi', 'কই']))
     ) {
-      return { text: paymentDoneText(), matched: true };
+      return { text: paymentStatusText(question, false), kind: 'grounded' };
     }
 
-    // Wrong/damaged item complaint — এখন পর্যন্ত এই intent ধরার কোনো branch ছিল না,
-    // fallback message-এ চলে যেত যেটা food-damage complaint-এর জন্য একদম উপযুক্ত না
-    if (has(q, ['wrong item', 'ভুল কেক', 'vul cake', 'vul order eshe', 'damage', 'damaged', 'নষ্ট', 'noshto', 'vanga', 'bhanga', 'pocha', 'pochano', 'kharap ese', 'kharap cake', 'expired cake'])) {
-      return {
-        text: `দুঃখিত এই সমস্যার জন্য! 🙏\n\nCake ভুল আসা বা damage হয়ে যাওয়া হলে যত দ্রুত সম্ভব ছবিসহ জানানো ভালো, যাতে দ্রুত ব্যবস্থা নেওয়া যায়।\n\n${supportText()}`,
-        matched: true,
-      };
-    }
-
-    // Promo code not working — price/payment block-এ পড়ে গিয়ে generic info পেত আগে
     if (
-      has(q, ['promo', 'discount', 'ডিসকাউন্ট', 'কুপন', 'coupon', 'code']) &&
-      has(q, ['kaj korche na', 'hocche na', 'kore na', 'na hocche', 'invalid', 'error', 'কাজ করছে না', 'হচ্ছে না'])
+      has(q, ['track', 'tracking', 'ট্র্যাক', 'status', 'স্ট্যাটাস', 'order id', 'amar order', 'আমার অর্ডার', 'my order']) ||
+      (has(q, ['order', 'অর্ডার']) && has(q, ['amar', 'আমার', 'my', 'koi', 'কই', 'khobor', 'কই গেল']))
     ) {
+      return { text: orderStatusText(question), kind: 'grounded' };
+    }
+
+    if (has(q, ['deri', 'দেরি', 'delay', 'ashe nai', 'asheni', 'আসেনি', 'ekhono pai nai', 'late'])) {
       return {
-        text: settings.promoEnabled
-          ? `Promo code "${settings.promoCode}" দিলে ${settings.promoPercent}% discount পাওয়ার কথা — checkout screen-এ বানান ঠিক আছে কিনা (case অনুযায়ী) check করুন।\n\nতাও কাজ না করলে সরাসরি জানান:\n\n${supportText()}`
-          : `এই মুহূর্তে কোনো promo code active নেই। নতুন offer এলে app-এ জানিয়ে দেওয়া হবে।`,
-        matched: true,
+        text: `${orderStatusText(question)}\n\nদেরির জন্য দুঃখিত। উপরের স্ট্যাটাস আপনার অর্ডারের। তাও দেরি মনে হলে WhatsApp-এ নিজের Order ID দিন।\n\n${supportText()}`,
+        kind: 'grounded',
       };
     }
 
-    if (has(q, ['price', 'দাম', 'tk', 'টাকা', 'payment', 'পেমেন্ট', 'bkash', 'bikash', 'nagad', 'cash', 'koto taka', 'koto dam', 'daam', 'dam', 'taka koto', 'cost', 'charge', 'fee', 'koye taka', 'koto koye'])) {
-      return { text: paymentText(), matched: true };
-    }
-
-    if (has(q, ['track', 'tracking', 'ট্র্যাক', 'status', 'স্ট্যাটাস', 'order id'])) {
-      return { text: `Order tracking\n\nOrder confirm হলে যে Order ID পাবেন, সেটি Tracking screen-এ লিখুন। Orders page থেকেও “Open tracking” চাপতে পারবেন। Status: placed → confirmed → baking → ready → out → delivered।`, matched: true };
-    }
-
-    if (has(q, ['wishlist', 'wish', 'heart', 'পছন্দ', 'save'])) {
-      return { text: `Wishlist ব্যবহার করতে cake card-এর heart চাপুন। পরে Wishlist screen থেকে saved cake দেখতে, remove করতে বা cart-এ add করতে পারবেন।`, matched: true };
-    }
-
-    if (has(q, ['support', 'help', 'সাহায্য', 'মানুষ', 'human', 'whatsapp', 'contact', 'যোগাযোগ', 'problem', 'somossa', 'shomossha', 'issue', 'help lagbe', 'help koro', 'darkar', 'dorkar'])) {
-      return { text: supportText(), matched: true };
-    }
-
-    // User নিজে order cancel করতে চাইছে (future intent) — এটা "কেন cancel হলো" প্রশ্নের থেকে আলাদা,
-    // নিচের block-টা ধরে নেয় order ইতিমধ্যে cancelled, তাই আগে এখানেই ধরতে হবে
-    if (has(q, ['cancel korte chai', 'cancel korbo', 'order cancel korte', 'বাতিল করতে চাই', 'বাতিল করব', 'ami cancel korbo', 'cancel dite chai'])) {
+    if (has(q, ['cancel korte chai', 'cancel korbo', 'order cancel korte', 'বাতিল করতে চাই', 'বাতিল করব'])) {
+      const order = pickOrder(question);
       return {
-        text: `Order cancel করতে চাইলে —\n\nCake preparation এখনো শুরু না হয়ে থাকলে সরাসরি WhatsApp-এ Order ID দিয়ে জানান, আমরা cancel করে দেবো।\n\nBaking শুরু হয়ে গেলে cancel নাও করা যেতে পারে (ingredient/prep নষ্ট হয়ে যায় বলে) — তাই যত দ্রুত সম্ভব জানানো ভালো।\n\n${supportText()}`,
-        matched: true,
+        text: order
+          ? `Order #${order.id} এখন "${STATUS_BN[order.status] ?? order.status}"। Baking শুরু না হলে WhatsApp-এ এই ID দিয়ে cancel চাইতে পারেন।\n\n${supportText()}`
+          : `Cancel করতে চাইলে আপনার Order ID লাগবে।\n\n${supportText()}`,
+        kind: 'grounded',
       };
     }
 
     if (has(q, ['cancel', 'refund', 'বাতিল', 'রিফান্ড'])) {
-      const cancelled = myOrders().filter((o) => o.status === 'cancelled');
-      const latestCancelled = cancelled[0];
-      if (latestCancelled) {
-        const reasonLine = latestCancelled.cancelReason
-          ? `কারণ: ${latestCancelled.cancelReason}`
-          : 'কারণ এখনো লেখা হয়নি — সরাসরি জানতে সাপোর্টে যোগাযোগ করুন।';
+      const cancelled = mine.filter((order) => order.status === 'cancelled')[0];
+      if (cancelled) {
         return {
-          text: `Order #${latestCancelled.id} বাতিল হয়েছে।\n\n${reasonLine}\n\nআপনার পেমেন্ট ওয়ালেটে ফেরত দেওয়া হয়েছে বা দেওয়া হবে। আবার অর্ডার করতে চাইলে Tracking screen থেকে "পুনরায় অর্ডার করুন" চাপুন।\n\nকিছু জিজ্ঞাসা থাকলে:\n${supportText()}`,
-          matched: true,
+          text: `আপনার Order #${cancelled.id} বাতিল। ${cancelled.cancelReason ? `কারণ: ${cancelled.cancelReason}` : 'কারণ লেখা নেই।'}\n\n${supportText()}`,
+          kind: 'grounded',
         };
       }
-      return { text: `Order cancel/refund বিষয়ে দ্রুত support-এ কথা বলাই ভালো। Cake preparation শুরু হয়ে গেলে cancel policy আলাদা হতে পারে।\n\n${supportText()}`, matched: true };
+      const order = pickOrder(question);
+      return {
+        text: order
+          ? `Order #${order.id} এখনো cancelled নয় — স্ট্যাটাস ${STATUS_BN[order.status] ?? order.status}।`
+          : `আপনার কোনো cancelled অর্ডার পাইনি।`,
+        kind: 'grounded',
+      };
     }
 
-    // New friendly chat blocks (Task I2)
-    if (has(q, ['khabar', 'khaite', 'khite', 'bhook', 'bhuk', 'hungry', 'kha', 'misti'])) {
-      return { text: "মিষ্টি কিছু খেতে মন চাইলে একটা কেক অর্ডার করুন। আমাদের মেনু দেখতে বলুন!", matched: true };
+    if (has(q, ['wrong item', 'ভুল কেক', 'vul cake', 'damage', 'damaged', 'নষ্ট', 'noshto', 'kharap cake'])) {
+      const order = pickOrder(question);
+      return {
+        text: `দুঃখিত। ${order ? `আপনার Order #${order.id} নিয়ে ` : ''}ছবিসহ WhatsApp-এ জানালে দ্রুত দেখা হবে। অন্য অর্ডারের সাথে মিলিয়ে ব্যবস্থা নেওয়া হবে না।\n\n${supportText()}`,
+        kind: 'grounded',
+      };
     }
 
-    if (has(q, ['birthday', 'janmadin', 'anniversary', 'wedding', 'biye', 'celebration', 'party', 'উৎসব', 'biday', 'congratulation'])) {
-      return { text: "অভিনন্দন! বিশেষ দিনকে আরও মিষ্টি করুন একটা custom কেক দিয়ে। Size, flavor, message সব customize করা যায়। চাইলে মেনু দেখাই?", matched: true };
+    if (has(q, ['menu', 'মেনু', 'product list', 'কী কেক আছে', 'ki cake ache']) || (has(q, ['cake', 'কেক']) && has(q, ['দেখাও', 'list', 'মেনু', 'menu']))) {
+      return { text: menuText(), kind: 'local' };
     }
 
-    if (has(q, ['sundor', 'sundar', 'darun', 'nice', 'good', 'chomotkar', 'chomokdar', 'wow', 'great', 'ভালো', 'চমৎকার', 'সুন্দর', 'দারুণ'])) {
-      return { text: "ধন্যবাদ! আপনার ভালো লাগলেই আমরা খুশি। আর কিছু জানতে চান?", matched: true };
+    if (has(q, ['kivabe order', 'order korte', 'কীভাবে অর্ডার', 'how to order', 'order process'])) {
+      return {
+        text: 'অর্ডার: Shop থেকে কেক → size/flavour → cart → checkout → নাম/ফোন/ঠিকানা → অগ্রিম ১/৩ bKash বা Nagad + screenshot। ID পেলে এখানে দিলে স্ট্যাটাস বলব।',
+        kind: 'local',
+      };
     }
 
-    if (has(q, ['bore', 'bored', 'bor lage', 'ektu gopo kori', 'kotha boli', 'time pass', 'notun kiso'])) {
-      return { text: "আমি শুধু বকবক করা জানি। তবে cake নিয়ে গল্প করতে পারি সারাদিন! নতুন কোনো flavor try করতে চান?", matched: true };
+    if (has(q, ['zone', 'জোন', 'kothay daw', 'কোথায় দাও', 'delivery zone', 'এলাকা'])) {
+      const zones = (settings.allowedZones ?? []).join(', ');
+      return { text: `ডেলিভারি জোন: ${zones || 'এখনো সেট নেই'}।`, kind: 'local' };
+    }
+
+    if ((has(q, ['payment', 'পেমেন্ট', 'bkash', 'nagad']) && has(q, ['kivabe', 'কীভাবে', 'process', 'কিভাবে'])) || has(q, ['kivabe payment'])) {
+      return {
+        text: 'পেমেন্ট ২ ধাপ: এখন ১/৩ অগ্রিম (শুধু bKash/Nagad + screenshot), বাকি ডেলিভারিতে cash/bKash/Nagad। আপনার অর্ডারের হিসাব জানতে Order ID দিন।',
+        kind: 'local',
+      };
+    }
+
+    if (has(q, ['support', 'help', 'সাহায্য', 'মানুষ', 'whatsapp', 'যোগাযোগ'])) {
+      return { text: supportText(), kind: 'local' };
+    }
+
+    if (has(q, ['admin', 'অ্যাডমিন', 'dashboard', 'ড্যাশবোর্ড', 'panel'])) {
+      return { text: 'আমি কাস্টমার এজেন্ট — অ্যাডমিন প্যানেল এখানে বলি না। অর্ডার বা পেমেন্ট নিয়ে বলুন।', kind: 'local' };
     }
 
     return {
-      text: `হুম, ঠিক বুঝলাম না। একটু অন্যভাবে বলুন? বা এগুলো try করতে পারেন:\n• "কেক মেনু দেখাও"\n• "অর্ডার করতে চাই"\n• "ডেলিভারি কোথায় দাও"\n• "মানুষের সাথে কথা বলব"`,
-      matched: false,
+      text: 'আপনার কথাটা অর্ডার/পেমেন্ট হিসেবে মিলাতে পারিনি। Order ID, পেমেন্ট বা স্ট্যাটাস লিখুন — শুধু আপনার ডেটা দিয়ে উত্তর দেব।',
+      kind: 'open',
     };
   };
 
   const callGemini = async (userMsg: string, history: Message[]): Promise<string> => {
-    const productList = products.map((p) => `• ${p.name} — ${formatBDT(p.price)}: ${p.tagline}`).join('\n');
-    const zones = (settings.allowedZones ?? []).join(', ');
-    const systemPrompt = `তুমি "BAS", Bake Art Style বেকারির friendly AI assistant। তোমার সাথে যে কোনো বিষয়ে কথা বলা যাবে — সাধারণ গল্প, প্রশ্ন, বা বেকারির ব্যাপার।
-
-কথা বলার ধরন:
-- বাংলা বা Banglish — user যেভাবে লেখে সেভাবে reply করো
-- Short, warm, friendly — 2-5 লাইনের মধ্যে রাখো সাধারণত
-- Misspelled বা ভাঙা বাংলা হলেও বোঝার চেষ্টা করো, জিজ্ঞেস করো না "আপনি কী বললেন" — নিজেই best guess করো
-- Cake/bakery-related হলে নিচের info ব্যবহার করো, না হলে স্বাভাবিকভাবে কথা বলো
-- কখনো "আমি শুধু cake-related প্রশ্নে সাহায্য করতে পারি" বলবে না — সব বিষয়ে friendly থাকো
-
-Store info:
-- Currency: BDT (৳)
-- Delivery estimate: ${settings.deliveryEstimate}, fee: ৳${settings.deliveryFee}
-- Zones: ${zones}
-- Payment: ২ ধাপে — (1) অগ্রিম ১/৩ টাকা, checkout-এর শেষ ধাপে, শুধু bKash/Nagad (অনলাইন, screenshot লাগে) — কেক প্রস্তুতি শুরু হয় এই টাকা পাওয়ার পর, (2) বাকি ২/৩ টাকা ডেলিভারির সময়, Cash on Delivery বা bKash/Nagad যেকোনোটা
-${settings.promoEnabled ? `- Promo: ${settings.promoCode} = ${settings.promoPercent}% off` : ''}
-
-Products:
-${productList}
-
-উত্তর 2-6 লাইনের মধ্যে রাখো।`;
+    const facts = customerFacts();
+    const systemPrompt =
+      `তুমি BAS, Bake Art Style-এর customer-support agent। শুধু এই কাস্টমারের জন্য কথা বলো।\n\n` +
+      `নিয়ম:\n` +
+      `1. কাস্টমার যা জিজ্ঞেস করেছে শুধু সেটার উত্তর দাও। মেনু, অ্যাডমিন, অন্য ফিচার, গল্প — না চাইলে বলো না।\n` +
+      `2. অন্য কাস্টমারের অর্ডার/পেমেন্ট কখনো দেখাবে না, মিক্স করবে না, invent করবে না।\n` +
+      `3. Order ID, payment, status শুধু নিচের THIS CUSTOMER facts থেকে। না থাকলে বলো পাইনি, ID চাও।\n` +
+      `4. অ্যাপের সাধারণ নিয়ম (জোন, কীভাবে অর্ডার) শুধু তখনই যখন তারা সেটা চায়।\n` +
+      `5. বাংলা/Banglish, ২–৬ লাইন, উষ্ণ কিন্তু সংক্ষিপ্ত।\n` +
+      `6. Admin PIN, অন্য ইউজার, অভ্যন্তরীণ সেটিংস কখনো না।\n\n` +
+      `${facts}`;
     const recentHistory = history.slice(-8).map((m) => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.text}`).join('\n');
-    
-    // NOTE: client-side key — restrict this key in Google Cloud Console to your Vercel domain only
     const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -501,11 +458,11 @@ ${productList}
     setLoading(true);
 
     try {
-      const local = ruleBasedReply(text);
-      if (local.matched || !geminiKey) {
-        await new Promise((r) => setTimeout(r, 300));
-        addBot(local.matched ? local.text : `${local.text}\n\n${!geminiKey ? 'Tip: set VITE_GEMINI_API_KEY (or save Gemini API Key in Admin Settings) for AI-powered free chat.' : ''}`.trim());
-        if (!local.matched) setShowQuick(true);
+      const local = agentReply(text);
+      if (local.kind === 'grounded' || local.kind === 'local' || !geminiKey) {
+        await new Promise((r) => setTimeout(r, 280));
+        addBot(local.text);
+        if (local.kind === 'open') setShowQuick(true);
         return;
       }
 
@@ -536,8 +493,8 @@ ${productList}
           <Cake className="h-5 w-5" strokeWidth={1.8} />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="text-[15px] font-semibold">BAS support</p>
-          <p className="truncate text-[11px] text-white/80">কেক, অর্ডার, tracking বা সাধারণ প্রশ্ন করুন</p>
+          <p className="text-[15px] font-semibold">BAS agent</p>
+          <p className="truncate text-[11px] text-white/80">শুধু আপনার অর্ডার, পেমেন্ট ও ID</p>
         </div>
         {(!embedded || fullPage) && (
           <button type="button" onClick={() => (onClose ? onClose() : setChatOpen(false))} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-white/15 transition active:scale-90" aria-label="Close chat">
@@ -550,8 +507,8 @@ ${productList}
         {messages.length === 0 && (
           <div className="flex flex-col items-center px-5 py-8 text-center">
             <span className="flex h-14 w-14 items-center justify-center rounded-[20px] bg-secondary text-primary shadow-card"><Cake className="h-7 w-7" strokeWidth={1.5} /></span>
-            <p className="mt-3 text-[15px] font-semibold text-text">হ্যালো! আমি BAS</p>
-            <p className="mt-1 text-[12px] leading-relaxed text-text-secondary">আপনার কেক বা অর্ডার নিয়ে যেকোনো প্রশ্ন লিখুন, অথবা নিচের একটি option বেছে নিন।</p>
+            <p className="mt-3 text-[15px] font-semibold text-text">হ্যালো! আমি আপনার BAS এজেন্ট</p>
+            <p className="mt-1 text-[12px] leading-relaxed text-text-secondary">আপনি যা বলবেন — অর্ডার, পেমেন্ট, ID — সেটাই বিশ্লেষণ করব। অন্য কাস্টমারের তথ্য মিশাব না।</p>
           </div>
         )}
         {messages.map((message, index) => (
@@ -595,7 +552,7 @@ ${productList}
           value={input}
           onChange={(event) => setInput(event.target.value)}
           onKeyDown={(event) => event.key === 'Enter' && send()}
-          placeholder="মেসেজ লিখুন..."
+          placeholder="অর্ডার, পেমেন্ট বা ID লিখুন..."
           className="h-10 min-w-0 flex-1 rounded-[14px] border border-border bg-bg px-3 text-[12px] text-text outline-none transition placeholder:text-text-tertiary focus:border-accent focus:ring-4 focus:ring-primary/10"
         />
         <button type="button" onClick={() => send()} disabled={!input.trim() || loading} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-primary text-white shadow-btn transition hover:bg-primary-hover disabled:opacity-40 active:scale-90" aria-label="Send message"><Send className="h-4 w-4" /></button>
