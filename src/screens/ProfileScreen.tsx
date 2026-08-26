@@ -5,9 +5,10 @@ import {
   LogIn, X, Save, Check, User, AlertTriangle, Cake, Gift, Wallet as WalletIcon,
   Copy, Share2, Navigation, Loader2, Tag, ClipboardList, Camera, Mail, Phone, Search
 } from 'lucide-react';
-import { useUI, useAuthStore, useSettingsStore, getReferralCode, claimReferralRewards, WALLET_REFERRAL_BONUS } from '../lib/store';
+import { useUI, useAuthStore, useSettingsStore, useUser, useWallet, formatBDT, getReferralCode, claimReferralRewards, WALLET_REFERRAL_BONUS } from '../lib/store';
 import { translate, useLanguageStore, useT, type Language } from '../lib/i18n';
 import { useAuth } from '../hooks/useAuth';
+import { useOrdersHook } from '../hooks/useOrders';
 import { doc, setDoc } from 'firebase/firestore';
 import { db, isFirebaseConfigured } from '../lib/firebase';
 import { ls, waLink } from '../lib/utils';
@@ -16,7 +17,7 @@ import WalletHistoryModal from '../components/WalletHistoryModal';
 import { ChatBot } from '../components/ChatBot';
 import { AdminPanel } from '../components/AdminPanel';
 import { BD_DISTRICTS } from '../lib/zones';
-import type { SavedAddress, SpecialDate } from '../types';
+import type { Order, SavedAddress, SpecialDate } from '../types';
 import { useModalDepth } from '../hooks/useModalDepth';
 import UnderlineTabs from '../components/UnderlineTabs';
 
@@ -115,6 +116,9 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
   const { go } = useUI();
   const { user } = useAuthStore();
   const { settings } = useSettingsStore();
+  const { orders, fetchMyOrders } = useOrdersHook();
+  const { wishlist } = useUser();
+  const { balance } = useWallet();
   const language = useLanguageStore((state) => state.language);
   const setLanguage = useLanguageStore((state) => state.setLanguage);
   const t = useT();
@@ -214,6 +218,10 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
     })();
     return () => { active = false; };
   }, [referralCode]);
+
+  useEffect(() => {
+    if (user) void fetchMyOrders();
+  }, [fetchMyOrders, user]);
 
   useEffect(() => {
     if (user?.id) saveAddresses(user.id, addresses);
@@ -394,64 +402,6 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
     });
   };
 
-  const profileRows = [
-    {
-      Icon: User,
-      label: t('profile.yourProfile'),
-      action: () => setProfileView('edit'),
-    },
-    {
-      Icon: MapPin,
-      label: t('profile.manageAddress'),
-      action: () => setProfileView('address'),
-    },
-    {
-      Icon: CreditCard,
-      label: t('profile.paymentMethods'),
-      action: () => setProfileView('payment'),
-    },
-    {
-      Icon: ClipboardList,
-      label: t('profile.myOrders'),
-      action: () => go({ name: 'tabs', tab: 'orders' }),
-    },
-    {
-      Icon: Tag,
-      label: t('profile.myCoupons'),
-      action: () => go({ name: 'coupons' }),
-    },
-    {
-      Icon: WalletIcon,
-      label: t('profile.myWallet'),
-      action: () => setWalletHistoryOpen(true),
-    },
-    {
-      Icon: Heart,
-      label: t('profile.wishlist'),
-      action: () => go({ name: 'wishlist' }),
-    },
-    {
-      Icon: Gift,
-      label: t('profile.inviteEarn'),
-      action: () => setInviteOpen(true),
-    },
-    {
-      Icon: Cake,
-      label: t('profile.specialDates'),
-      action: () => setShowDatesModal(true),
-    },
-    {
-      Icon: HelpCircle,
-      label: t('profile.help'),
-      action: () => setProfileView('help'),
-    },
-    {
-      Icon: Settings,
-      label: t('profile.settings'),
-      action: () => setProfileView('settings'),
-    },
-  ];
-
   const settingsRows = [
     {
       Icon: Bell,
@@ -488,22 +438,37 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
   ];
 
 
+
+  const myOrders = orders.filter((order: Order) => !order.userId || order.userId === user?.id);
+  const lastOrder = myOrders[0] ?? null;
+  const couponCount = (settings.coupons ?? []).filter((coupon) => {
+    if (!coupon.active) return false;
+    if (!coupon.expiresAt) return true;
+    return new Date(coupon.expiresAt).getTime() >= Date.now();
+  }).length;
+
   if (!user) {
     return (
-      <div className="flex h-full flex-col items-center justify-center px-8 text-center">
-        <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-secondary text-coral shadow-card">
-          <User size={36} strokeWidth={1.75} />
+      <div className="flex h-full flex-col overflow-hidden">
+        <div className="relative h-[240px] shrink-0 overflow-hidden">
+          <img src="/cakes/strawberry-pink.png" alt="" className="h-full w-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-t from-bg via-bg/35 to-transparent" />
         </div>
-        <h2 className="text-2xl font-bold text-ink mb-2">{t('profile.signInTitle')}</h2>
-        <p className="text-sm text-ink-300 mb-6">
-          {t('profile.signInBody')}
-        </p>
-        <button
-          onClick={onAuthOpen}
-          className="flex items-center gap-2 px-8 py-3.5 rounded-2xl bg-coral text-white font-bold text-sm shadow-btn transition active:scale-95"
-        >
-          <LogIn className="w-4 h-4" /> {t('common.signIn')}
-        </button>
+        <div className="-mt-16 flex flex-1 flex-col items-center px-6 pb-28 text-center">
+          <div className="mb-4 flex h-24 w-24 items-center justify-center overflow-hidden rounded-full border-4 border-bg bg-secondary text-coral shadow-float">
+            <Cake size={40} strokeWidth={1.6} />
+          </div>
+          <h2 className="text-[26px] font-bold tracking-tight text-ink">{t('profile.signInTitle')}</h2>
+          <p className="mt-2 max-w-[280px] text-[14px] leading-relaxed text-ink-300">{t('profile.guestHero')}</p>
+          <p className="mt-1 max-w-[280px] text-[13px] leading-relaxed text-ink-200">{t('profile.signInBody')}</p>
+          <button
+            type="button"
+            onClick={onAuthOpen}
+            className="mt-6 flex h-12 w-full max-w-[280px] items-center justify-center gap-2 rounded-2xl bg-coral text-[15px] font-bold text-white shadow-btn transition active:scale-95"
+          >
+            <LogIn className="h-4 w-4" /> {t('common.signIn')}
+          </button>
+        </div>
       </div>
     );
   }
@@ -517,12 +482,12 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
 
   return (
     <div className="flex h-full flex-col">
-      {profileView !== 'chat' && (
+      {profileView !== 'chat' && profileView !== 'main' && (
         <header className="flex-shrink-0 px-6 pt-6 pb-2">
           <div className="relative flex h-14 items-center justify-center">
             <button
               type="button"
-              onClick={() => profileView === 'main' ? go({ name: 'tabs', tab: 'home' }) : setProfileView('main')}
+              onClick={() => setProfileView('main')}
               className="absolute left-0 flex h-12 w-12 items-center justify-center rounded-full bg-surface text-ink-200 shadow-card transition active:scale-95"
               aria-label={t('common.back')}
             >
@@ -536,28 +501,155 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
       )}
 
       {profileView === 'main' && (
-        <div className="no-scrollbar flex-1 overflow-y-auto px-6 pb-32 pt-6 anim-up">
-          <div className="flex flex-col items-center text-center">
-            <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-full bg-secondary text-[28px] font-semibold text-coral shadow-card">
-              {user.avatar && user.avatar.length > 2 ? (
-                <img src={user.avatar} alt="" className="h-full w-full object-cover" />
-              ) : initials}
-            </div>
-            <div className="mt-4 text-[20px] font-semibold leading-none tracking-tight text-ink">
-              {user.name}
-            </div>
+        <div className="no-scrollbar flex-1 overflow-y-auto pb-32 anim-up">
+          <div className="relative h-[168px] overflow-hidden">
+            <img src="/cakes/strawberry-pink.png" alt="" className="h-full w-full object-cover" />
+            <div className="absolute inset-0 bg-gradient-to-t from-bg via-bg/40 to-ink/10" />
+            <button
+              type="button"
+              onClick={() => setProfileView('settings')}
+              className="absolute right-4 top-4 flex h-11 w-11 items-center justify-center rounded-full bg-surface/95 text-ink shadow-card transition active:scale-95"
+              aria-label={t('profile.settings')}
+            >
+              <Settings className="h-5 w-5" strokeWidth={1.8} />
+            </button>
           </div>
 
-          <div className="mt-8">
-            {profileRows.map((row, i) => (
-              <ProfileReferenceRow
-                key={row.label}
-                Icon={row.Icon}
-                label={row.label}
-                onClick={row.action}
-                bordered={i !== profileRows.length - 1}
-              />
-            ))}
+          <div className="-mt-12 px-5">
+            <div className="flex items-end gap-3">
+              <button
+                type="button"
+                onClick={() => setProfileView('edit')}
+                className="flex h-[88px] w-[88px] shrink-0 items-center justify-center overflow-hidden rounded-full border-4 border-bg bg-secondary text-[26px] font-semibold text-coral shadow-float"
+              >
+                {user.avatar && user.avatar.length > 2 ? (
+                  <img src={user.avatar} alt="" className="h-full w-full object-cover" />
+                ) : initials}
+              </button>
+              <div className="min-w-0 flex-1 pb-1">
+                <h1 className="truncate text-[22px] font-bold tracking-tight text-ink">{user.name}</h1>
+                <p className="mt-0.5 truncate text-[12px] text-ink-300">{user.email || user.contact || t('profile.tagline')}</p>
+                <span className="mt-2 inline-flex items-center gap-1 rounded-full bg-secondary px-2.5 py-1 text-[11px] font-bold text-coral">
+                  <Heart className="h-3 w-3" strokeWidth={2.2} /> {t('profile.member')}
+                </span>
+              </div>
+            </div>
+
+            <div className="mt-4 grid grid-cols-4 gap-2 rounded-[22px] border border-border bg-surface p-3 shadow-card">
+              {[
+                { n: myOrders.length, label: t('profile.statOrders'), onClick: () => go({ name: 'tabs', tab: 'orders' }) },
+                { n: wishlist.length, label: t('profile.statWishlist'), onClick: () => go({ name: 'wishlist' }) },
+                { n: couponCount, label: t('profile.statCoupons'), onClick: () => go({ name: 'coupons' }) },
+                { n: addresses.length, label: t('profile.statAddresses'), onClick: () => setProfileView('address') },
+              ].map((stat) => (
+                <button key={stat.label} type="button" onClick={stat.onClick} className="flex flex-col items-center py-1 transition active:scale-95">
+                  <span className="text-[18px] font-bold tabular text-ink">{stat.n}</span>
+                  <span className="mt-0.5 text-[10px] font-semibold text-ink-300">{stat.label}</span>
+                </button>
+              ))}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setWalletHistoryOpen(true)}
+              className="mt-3 flex w-full items-center justify-between rounded-[20px] border border-border bg-surface px-4 py-3.5 shadow-card transition active:scale-[0.99]"
+            >
+              <span className="text-[13px] font-semibold text-ink-300">{t('profile.walletBalance')}</span>
+              <span className="text-[18px] font-bold tabular text-coral">{formatBDT(balance)}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setInviteOpen(true)}
+              className="mt-3 flex w-full items-center gap-3 overflow-hidden rounded-[22px] bg-coral px-4 py-4 text-left text-white shadow-btn transition active:scale-[0.99]"
+            >
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white/15">
+                <Gift className="h-5 w-5" />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-[14px] font-bold leading-snug">{t('profile.inviteBanner')}</span>
+              </span>
+              <ChevronRight className="h-5 w-5 shrink-0 opacity-80" />
+            </button>
+
+            <div className="mt-6">
+              <div className="mb-2 flex items-center justify-between px-0.5">
+                <h2 className="text-[15px] font-bold text-ink">{t('profile.recentOrders')}</h2>
+                <button type="button" onClick={() => go({ name: 'tabs', tab: 'orders' })} className="text-[12px] font-bold text-coral">{t('common.seeAll')}</button>
+              </div>
+              {lastOrder ? (
+                <button
+                  type="button"
+                  onClick={() => go({ name: 'tracking', orderId: lastOrder.id })}
+                  className="flex w-full items-center gap-3 rounded-[22px] border border-border bg-surface p-3 text-left shadow-card transition active:scale-[0.99]"
+                >
+                  <img
+                    src={lastOrder.items[0]?.image || '/cakes/logo-cake.png'}
+                    alt=""
+                    className="h-16 w-16 shrink-0 rounded-[16px] object-cover"
+                  />
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-[14px] font-bold text-ink">{lastOrder.items[0]?.name || lastOrder.id}</span>
+                    <span className="mt-0.5 block text-[11px] text-ink-300">
+                      {new Date(lastOrder.createdAt).toLocaleDateString(language === 'en' ? 'en-BD' : 'bn-BD', { day: 'numeric', month: 'short', year: 'numeric' })} · #{lastOrder.id.slice(0, 10)}
+                    </span>
+                    <span className="mt-1 inline-block text-[15px] font-bold tabular text-coral">{formatBDT(lastOrder.total)}</span>
+                  </span>
+                  <span className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-bold ${lastOrder.status === 'delivered' ? 'bg-success/10 text-success' : lastOrder.status === 'cancelled' ? 'bg-error/10 text-error' : 'bg-secondary text-coral'}`}>
+                    {orderStatusLabel(lastOrder.status, language)}
+                  </span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => go({ name: 'tabs', tab: 'categories' })}
+                  className="flex w-full flex-col items-center rounded-[22px] border border-dashed border-border bg-surface px-4 py-6 text-center shadow-card"
+                >
+                  <Cake className="h-7 w-7 text-coral" strokeWidth={1.7} />
+                  <p className="mt-2 text-[13px] font-semibold text-ink">{t('profile.noOrdersYet')}</p>
+                  <p className="mt-2 text-[12px] font-bold text-coral">{t('profile.orderCake')}</p>
+                </button>
+              )}
+            </div>
+
+            <div className="mt-6">
+              <h2 className="mb-2 px-0.5 text-[15px] font-bold text-ink">{t('profile.quickAccess')}</h2>
+              <div className="grid grid-cols-4 gap-2">
+                {[
+                  { Icon: ClipboardList, label: t('profile.myOrders'), onClick: () => go({ name: 'tabs', tab: 'orders' }) },
+                  { Icon: Heart, label: t('profile.wishlist'), onClick: () => go({ name: 'wishlist' }) },
+                  { Icon: MapPin, label: t('profile.manageAddress'), onClick: () => setProfileView('address') },
+                  { Icon: Tag, label: t('profile.myCoupons'), onClick: () => go({ name: 'coupons' }) },
+                ].map((item) => (
+                  <button
+                    key={item.label}
+                    type="button"
+                    onClick={item.onClick}
+                    className="flex flex-col items-center gap-2 rounded-[20px] border border-border bg-surface px-1 py-3 shadow-card transition active:scale-95"
+                  >
+                    <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-secondary text-coral">
+                      <item.Icon className="h-5 w-5" strokeWidth={1.8} />
+                    </span>
+                    <span className="text-center text-[10px] font-bold leading-tight text-ink">{item.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="mt-6 overflow-hidden rounded-[22px] border border-border bg-surface px-4 shadow-card">
+              <p className="pt-3 text-[11px] font-bold uppercase tracking-[0.14em] text-ink-200">{t('profile.accountSection')}</p>
+              <ProfileReferenceRow Icon={User} label={t('profile.yourProfile')} onClick={() => setProfileView('edit')} bordered />
+              <ProfileReferenceRow Icon={CreditCard} label={t('profile.paymentMethods')} onClick={() => setProfileView('payment')} bordered />
+              <ProfileReferenceRow Icon={WalletIcon} label={t('profile.myWallet')} onClick={() => setWalletHistoryOpen(true)} />
+            </div>
+
+            <div className="mt-3 overflow-hidden rounded-[22px] border border-border bg-surface px-4 shadow-card">
+              <p className="pt-3 text-[11px] font-bold uppercase tracking-[0.14em] text-ink-200">{t('profile.moreSection')}</p>
+              <ProfileReferenceRow Icon={Gift} label={t('profile.inviteEarn')} onClick={() => setInviteOpen(true)} bordered />
+              <ProfileReferenceRow Icon={Cake} label={t('profile.specialDates')} onClick={() => setShowDatesModal(true)} bordered />
+              <ProfileReferenceRow Icon={HelpCircle} label={t('profile.help')} onClick={() => setProfileView('help')} bordered />
+              <ProfileReferenceRow Icon={Settings} label={t('profile.settings')} onClick={() => setProfileView('settings')} />
+            </div>
           </div>
 
           <button
@@ -572,7 +664,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
           </button>
 
           {showAdmin && effectiveIsAdmin && user && (
-            <div className="mt-5 anim-up">
+            <div className="mt-5 px-5 anim-up">
               <div className="mb-3 flex items-center gap-2">
                 <Settings className="h-5 w-5 text-coral" strokeWidth={2} />
                 <h2 className="text-[17px] font-bold text-ink">Admin Dashboard</h2>
@@ -1294,6 +1386,30 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
       )}
     </div>
   );
+}
+
+function orderStatusLabel(status: Order['status'], language: Language): string {
+  const labels: Record<Language, Record<Order['status'], string>> = {
+    bn: {
+      placed: 'প্লেসড',
+      confirmed: 'কনফার্ম',
+      baking: 'বেক হচ্ছে',
+      ready: 'রেডি',
+      out: 'আউট',
+      delivered: 'ডেলিভারড',
+      cancelled: 'বাতিল',
+    },
+    en: {
+      placed: 'Placed',
+      confirmed: 'Confirmed',
+      baking: 'Baking',
+      ready: 'Ready',
+      out: 'Out',
+      delivered: 'Delivered',
+      cancelled: 'Cancelled',
+    },
+  };
+  return labels[language][status] || status;
 }
 
 function Field({
