@@ -39,12 +39,12 @@ export default function HomeTopBar({
   const t = useT();
 
   return (
-    <div className="relative z-10 anim-up bg-primary px-6 pb-[18px] pt-3">
+    <div className="relative z-10 anim-up px-6 pb-4 pt-3">
       <div className="flex items-center gap-3 py-[11px]">
         <button
           type="button"
           onClick={() => setTab('profile')}
-          className="flex h-[50px] w-[50px] shrink-0 items-center justify-center overflow-hidden rounded-full bg-white/20 text-white transition active:scale-95"
+          className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-surface text-primary shadow-card transition active:scale-95"
           aria-label={t('home.profile')}
         >
           {user?.avatar ? (
@@ -60,22 +60,22 @@ export default function HomeTopBar({
           className="min-w-0 flex-1 text-left leading-tight"
           aria-label={t('home.deliveryLocation')}
         >
-          <span className="block text-sm text-white/75">{t('home.deliveryTo')}</span>
-          <span className="mt-[3px] flex items-center gap-[7px] text-card-title font-medium text-white/95">
-            <MapPin className="h-[18px] w-[18px] shrink-0 text-white/95" strokeWidth={1.8} />
+          <span className="block text-sm text-text-tertiary">{t('home.deliveryTo')}</span>
+          <span className="mt-[3px] flex items-center gap-[7px] text-card-title font-medium text-text">
+            <MapPin className="h-[18px] w-[18px] shrink-0 text-primary" strokeWidth={1.8} />
             <span className="truncate">{deliveryLabel || t('home.setLocation')}</span>
-            <ChevronDown className="h-[14px] w-[14px] shrink-0 text-white/70" strokeWidth={2.2} />
+            <ChevronDown className="h-[14px] w-[14px] shrink-0 text-text-tertiary" strokeWidth={2.2} />
           </span>
         </button>
 
         <button
           type="button"
           onClick={onNotificationsOpen ?? (() => setTab('profile'))}
-          className="relative flex h-[50px] w-[50px] shrink-0 items-center justify-center rounded-full bg-white/16 text-white transition active:scale-95"
+          className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-surface text-text shadow-card transition active:scale-95"
           aria-label={t('home.notifications')}
         >
           <Bell className="h-[21px] w-[21px]" strokeWidth={1.8} />
-          <NotificationBadge count={unreadCount} tone="light" className="right-[7px] top-[7px]" />
+          <NotificationBadge count={unreadCount} className="right-[7px] top-[7px]" />
         </button>
       </div>
 

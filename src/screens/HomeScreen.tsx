@@ -262,37 +262,41 @@ export default function HomeScreen({
         />
 
         {!hasSearch && activeBanners.length > 0 && (
-          <section className="mt-6 anim-up delay-1">
-            <SectionHeader
-              title={t('home.exclusiveOffers')}
-              subtitle={t('home.exclusiveOffersSub')}
-              action={{ label: t('common.seeAll'), onClick: () => go({ name: 'tabs', tab: 'categories' }) }}
-            />
-            <div className="mt-4 px-6">
-              <div className="bas-banner-frame relative h-[190px] overflow-hidden rounded-[24px] p-[5px] shadow-card">
-                <div className="relative z-[2] h-full overflow-hidden rounded-[19px] bg-ink">
-                  {activeBanners.map((banner, index) => (
-                    <button
-                      key={banner.id}
-                      type="button"
-                      onClick={() => openBanner(banner)}
-                      aria-label={`Open offer: ${banner.title}`}
-                      className={`absolute inset-0 cursor-pointer overflow-hidden transition-opacity duration-700 ${
-                        index === bannerIdx ? 'z-10 opacity-100' : 'z-0 opacity-0'
-                      }`}
-                    >
-                      <img
-                        src={banner.image}
-                        alt={banner.title}
-                        loading="lazy"
-                        decoding="async"
-                        onError={(e) => { const i = e.currentTarget as HTMLImageElement; i.onerror = null; i.src = '/cakes/logo-cake.png'; }}
-                        className="h-full w-full object-cover transition-transform duration-[5000ms] ease-out"
-                        style={index === bannerIdx ? { transform: 'scale(1.05)' } : { transform: 'scale(1)' }}
-                      />
-                    </button>
-                  ))}
-                </div>
+          <section className="mt-5 anim-up delay-1">
+            <div className="px-6">
+              <div className="relative h-[214px] overflow-hidden rounded-[24px] border-[5px] border-white bg-ink shadow-card">
+                {activeBanners.map((banner, index) => (
+                  <button
+                    key={banner.id}
+                    type="button"
+                    onClick={() => openBanner(banner)}
+                    aria-label={banner.title}
+                    className={`absolute inset-0 cursor-pointer overflow-hidden transition-opacity duration-700 ${
+                      index === bannerIdx ? 'z-10 opacity-100' : 'z-0 opacity-0'
+                    }`}
+                  >
+                    <img
+                      src={banner.image}
+                      alt={banner.title}
+                      loading="lazy"
+                      decoding="async"
+                      onError={(e) => { const i = e.currentTarget as HTMLImageElement; i.onerror = null; i.src = '/cakes/logo-cake.png'; }}
+                      className="h-full w-full object-cover transition-transform duration-[5000ms] ease-out"
+                      style={index === bannerIdx ? { transform: 'scale(1.05)' } : { transform: 'scale(1)' }}
+                    />
+                  </button>
+                ))}
+                <span className="pointer-events-none absolute inset-0 z-20 bg-gradient-to-b from-black/0 via-black/8 to-black/62" />
+                {activeBanners[bannerIdx] && (
+                  <div className="pointer-events-none absolute inset-x-0 bottom-0 z-30 px-4 pb-4 text-white [text-shadow:0_2px_12px_rgba(0,0,0,.44)]">
+                    {activeBanners[bannerIdx].tag && (
+                      <span className="inline-flex rounded-full bg-white px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-primary">
+                        {activeBanners[bannerIdx].tag}
+                      </span>
+                    )}
+                    <p className="mt-2 line-clamp-1 text-xl font-bold tracking-[-0.02em]">{activeBanners[bannerIdx].title}</p>
+                  </div>
+                )}
               </div>
             </div>
           </section>
@@ -302,7 +306,6 @@ export default function HomeScreen({
           <section className="mt-6 anim-up delay-1">
             <SectionHeader
               title={t('home.coupons')}
-              subtitle={t('home.couponsSub')}
               action={{ label: t('common.seeAll'), onClick: () => go({ name: 'coupons' }) }}
             />
             <div className="mt-3 no-scrollbar flex gap-2 overflow-x-auto px-6 pb-1">
@@ -331,7 +334,6 @@ export default function HomeScreen({
           <section className="mt-6 anim-up delay-2">
             <SectionHeader
               title={t('home.exploreCategories')}
-              subtitle={t('home.exploreCategoriesSub')}
               action={{ label: t('common.seeAll'), onClick: () => go({ name: 'tabs', tab: 'categories' }) }}
             />
             <div className="mt-4 px-6">
@@ -502,10 +504,9 @@ export default function HomeScreen({
           );
         })()}
 
-        <section className="mt-6 anim-up delay-3">
+        <section className="mt-8 anim-up delay-3">
           <SectionHeader
             title={t('home.featuredProducts')}
-            subtitle={t('home.featuredProductsSub')}
             action={{ label: t('common.seeAll'), onClick: () => go({ name: 'tabs', tab: 'categories' }) }}
           />
           <div className="mt-4 grid grid-cols-2 gap-4 px-6">
@@ -524,7 +525,8 @@ export default function HomeScreen({
           </div>
         </section>
 
-        <section className="mt-6 px-6 anim-up delay-4">
+        {!hasSearch && (
+        <section className="mt-8 px-6 anim-up delay-4">
           <button
             type="button"
             onClick={() => {
@@ -563,12 +565,12 @@ export default function HomeScreen({
             </div>
           </button>
         </section>
+        )}
 
         {!hasSearch && galleryStrip.length > 0 && (
           <section className="mt-10 anim-up delay-5">
             <SectionHeader
               title={t('home.gallery')}
-              subtitle={t('home.gallerySub')}
               action={{ label: t('common.seeAll'), onClick: () => go({ name: 'gallery' }) }}
             />
             <button
