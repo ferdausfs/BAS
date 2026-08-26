@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type CSSProperties } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ArrowRight, Cake, Megaphone, RotateCcw, Search, Ticket } from 'lucide-react';
 import { useDebounce } from '../hooks/useDebounce';
 import { useUI, useUser, useOrders, useAuthStore, useCart, useSettingsStore } from '../lib/store';
@@ -216,13 +216,12 @@ export default function HomeScreen({
     () => safeArray<GalleryItem>(gallery).filter((item) => !!item.image).slice(0, 8),
     [gallery],
   );
-  const galleryOrbit = useMemo(() => {
+  const galleryStrip = useMemo(() => {
     if (galleryPhotos.length === 0) return [];
-    const count = Math.max(6, galleryPhotos.length);
-    return Array.from({ length: count }, (_, index) => ({
-      item: galleryPhotos[index % galleryPhotos.length],
-      index,
-    }));
+    const base = galleryPhotos.length >= 4
+      ? galleryPhotos
+      : Array.from({ length: 4 }, (_, index) => galleryPhotos[index % galleryPhotos.length]);
+    return [...base, ...base];
   }, [galleryPhotos]);
 
   useEffect(() => {
@@ -503,53 +502,6 @@ export default function HomeScreen({
           );
         })()}
 
-        {galleryOrbit.length > 0 && (
-          <section className="mt-6 anim-up delay-3">
-            <SectionHeader
-              title={t('home.gallery')}
-              subtitle={t('home.gallerySub')}
-              action={{ label: t('common.seeAll'), onClick: () => go({ name: 'gallery' }) }}
-            />
-            <div className="mt-2 px-2">
-              <button
-                type="button"
-                onClick={() => {
-                  hapticTap();
-                  go({ name: 'gallery' });
-                }}
-                className="bas-gallery-orbit w-full"
-                style={{
-                  '--quantity': String(galleryOrbit.length),
-                  '--translateZ': `${Math.round((86 / 2) / Math.tan(Math.PI / galleryOrbit.length) + 18)}px`,
-                } as CSSProperties}
-                aria-label={t('home.gallery')}
-              >
-                <span className="bas-gallery-orbit-inner">
-                  {galleryOrbit.map(({ item, index }) => (
-                    <span
-                      key={`${item.id}-${index}`}
-                      className="bas-gallery-orbit-card"
-                      style={{ '--index': String(index) } as CSSProperties}
-                    >
-                      <img
-                        src={item.image}
-                        alt=""
-                        loading="lazy"
-                        decoding="async"
-                        onError={(event) => {
-                          const img = event.currentTarget as HTMLImageElement;
-                          img.onerror = null;
-                          img.src = '/cakes/logo-cake.png';
-                        }}
-                      />
-                    </span>
-                  ))}
-                </span>
-              </button>
-            </div>
-          </section>
-        )}
-
         <section className="mt-6 anim-up delay-3">
           <SectionHeader
             title={t('home.featuredProducts')}
@@ -602,6 +554,43 @@ export default function HomeScreen({
             </div>
           </div>
         </section>
+
+        {!hasSearch && galleryStrip.length > 0 && (
+          <section className="mt-10 anim-up delay-5">
+            <SectionHeader
+              title={t('home.gallery')}
+              subtitle={t('home.gallerySub')}
+              action={{ label: t('common.seeAll'), onClick: () => go({ name: 'gallery' }) }}
+            />
+            <button
+              type="button"
+              onClick={() => {
+                hapticTap();
+                go({ name: 'gallery' });
+              }}
+              className="bas-gallery-orbit mt-3 w-full"
+              aria-label={t('home.gallery')}
+            >
+              <span className="bas-gallery-orbit-inner">
+                {galleryStrip.map((item, index) => (
+                  <span key={`${item.id}-${index}`} className="bas-gallery-orbit-card">
+                    <img
+                      src={item.image}
+                      alt=""
+                      loading="lazy"
+                      decoding="async"
+                      onError={(event) => {
+                        const img = event.currentTarget as HTMLImageElement;
+                        img.onerror = null;
+                        img.src = '/cakes/logo-cake.png';
+                      }}
+                    />
+                  </span>
+                ))}
+              </span>
+            </button>
+          </section>
+        )}
 
         <div className="mt-9 px-6 pb-4 text-center">
           <div className="text-xl font-semibold tracking-[-0.02em] text-text">Bake Art Style</div>
