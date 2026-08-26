@@ -3,6 +3,9 @@ import React from 'react';
 interface Props { children: React.ReactNode; }
 interface State { hasError: boolean; error: Error | null; errorInfo: React.ErrorInfo | null; }
 
+const isAuthNetworkError = (error: Error | null) =>
+  /auth\/network-request-failed|network-request-failed/i.test(`${error?.name ?? ''} ${error?.message ?? ''}`);
+
 export default class AppErrorBoundary extends React.Component<Props, State> {
   constructor(props: Props) {
     super(props);
@@ -17,6 +20,33 @@ export default class AppErrorBoundary extends React.Component<Props, State> {
   }
   render() {
     if (this.state.hasError) {
+      if (isAuthNetworkError(this.state.error)) {
+        return (
+          <div className="flex min-h-[100dvh] flex-col items-center justify-center bg-bg px-6 text-center">
+            <div className="w-full max-w-sm rounded-[28px] border border-border bg-surface p-6 shadow-card">
+              <h2 className="text-[20px] font-bold text-ink">সংযোগ পাওয়া যায়নি</h2>
+              <p className="mt-2 text-[13px] leading-relaxed text-ink-300">
+                Login সার্ভারে পৌঁছানো যায়নি। ইনকগনিটো/প্রাইভেট মোডে কখনো IndexedDB ব্লক হয়, অথবা নেটওয়ার্ক আটকে যায়। কেক দেখা যাবে — অর্ডার/লগইনের জন্য সাধারণ ট্যাবে খুলুন, অথবা ইন্টারনেট চেক করুন।
+              </p>
+              <button
+                type="button"
+                onClick={() => this.setState({ hasError: false, error: null, errorInfo: null })}
+                className="mt-5 h-12 w-full rounded-2xl bg-coral text-[14px] font-bold text-white shadow-btn"
+              >
+                গেস্ট হিসেবে চালিয়ে যান
+              </button>
+              <button
+                type="button"
+                onClick={() => window.location.reload()}
+                className="mt-2 h-11 w-full rounded-2xl bg-secondary text-[13px] font-bold text-coral"
+              >
+                আবার চেষ্টা
+              </button>
+            </div>
+          </div>
+        );
+      }
+
       return (
         <div style={{ padding: '20px', background: '#fff0f3', minHeight: '100vh', fontFamily: 'system-ui, sans-serif', wordBreak: 'break-word' }}>
           <div style={{ textAlign: 'center', marginBottom: '20px' }}>

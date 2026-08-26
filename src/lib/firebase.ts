@@ -1,5 +1,11 @@
 import { initializeApp, getApps } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
+import {
+  browserLocalPersistence,
+  getAuth,
+  inMemoryPersistence,
+  indexedDBLocalPersistence,
+  initializeAuth,
+} from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
@@ -13,7 +19,20 @@ const firebaseConfig = {
 };
 
 export const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
-export const auth = getAuth(app);
+
+const createAuth = () => {
+  try {
+    // Incognito / Safari private often blocks IndexedDB. Fall through to
+    // localStorage, then memory, instead of crashing the whole app.
+    return initializeAuth(app, {
+      persistence: [indexedDBLocalPersistence, browserLocalPersistence, inMemoryPersistence],
+    });
+  } catch {
+    return getAuth(app);
+  }
+};
+
+export const auth = createAuth();
 export const db = getFirestore(app);
 export const storage = getStorage(app);
 
@@ -23,6 +42,37 @@ export const isFirebaseConfigured = (): boolean =>
     import.meta.env.VITE_FIREBASE_PROJECT_ID &&
     import.meta.env.VITE_FIREBASE_APP_ID
   );
+
+export const firebaseAuthMessage = (error: unknown): string => {
+  const code = typeof error === 'object' && error && 'code' in error
+    ? String((error as { code?: string }).code)
+    : '';
+  const raw = error instanceof Error ? error.message : '';
+  const haystack = `${code} ${raw}`;
+
+  if (/network-request-failed|network/i.test(haystack)) {
+    return 'ইন্টারনেট সংযোগ পাওয়া যায়নি। Wi-Fi বা মোবাইল ডাটা চেক করে আবার চেষ্টা করুন।';
+  }
+  if (/too-many-requests/i.test(haystack)) {
+    return 'অনেকবার চেষ্টা হয়েছে। একটু পরে আবার চেষ্টা করুন।';
+  }
+  if (/popup-closed-by-user|popup-blocked|cancelled-popup-request/i.test(haystack)) {
+    return 'Login উইন্ডো বন্ধ হয়ে গেছে। আবার চেষ্টা করুন।';
+  }
+  if (/operation-not-allowed/i.test(haystack)) {
+    return 'এই login পদ্ধতি এখন চালু নেই।';
+  }
+  if (/invalid-credential|wrong-password|user-not-found|invalid-email/i.test(haystack)) {
+    return 'ইমেইল বা পাসওয়ার্ড ঠিক নেই।';
+  }
+  if (/invalid-phone|invalid-verification/i.test(haystack)) {
+    return 'ফোন নম্বর বা OTP ঠিক নেই।';
+  }
+  if (code.startsWith('auth/')) {
+    return 'Login করা যায়নি। আবার চেষ্টা করুন।';
+  }
+  return raw || 'Login করা যায়নি। আবার চেষ্টা করুন।';
+};
 
 export async function uploadToCloudinary(file: File, folder = 'bake-art-style'): Promise<string> {
   const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;

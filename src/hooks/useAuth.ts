@@ -19,7 +19,7 @@ import {
   type User as FirebaseUser,
 } from 'firebase/auth';
 import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
-import { auth, db, isFirebaseConfigured, uploadToCloudinary } from '../lib/firebase';
+import { auth, db, firebaseAuthMessage, isFirebaseConfigured, uploadToCloudinary } from '../lib/firebase';
 import { claimReferralRewards, getReferralCode, hydrateWalletFromFirestore, useAuthStore, useCart, useLocation, useUI, useUser, useWallet } from '../lib/store';
 import type { User } from '../types';
 
@@ -150,38 +150,48 @@ export function useAuth() {
       }
     }
 
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      if (!firebaseUser) {
-        // Only clear a persisted signed-in session. Guests have user === null
-        // and must keep their cart/location across reloads.
-        if (useAuthStore.getState().user) logout();
-        return;
-      }
-      void mapFirebaseUser(firebaseUser).then(async (hydrated) => {
-        if (active) {
-          login(hydrated);
-          useUser.getState().switchOwner(hydrated.id);
-          useWallet.getState().switchOwner(hydrated.id);
+    const unsubscribe = onAuthStateChanged(
+      auth,
+      (firebaseUser) => {
+        if (!firebaseUser) {
+          // Only clear a persisted signed-in session. Guests have user === null
+          // and must keep their cart/location across reloads.
+          if (useAuthStore.getState().user) logout();
+          return;
+        }
+        void mapFirebaseUser(firebaseUser).then(async (hydrated) => {
+          if (active) {
+            login(hydrated);
+            useUser.getState().switchOwner(hydrated.id);
+            useWallet.getState().switchOwner(hydrated.id);
 
-          // Hydrate wallet balance from Firestore (cross-device sync), then
-          // auto-claim any pending referral rewards (which credit the wallet).
-          if (hydrated.id) await hydrateWalletFromFirestore(hydrated.id);
+            // Hydrate wallet balance from Firestore (cross-device sync), then
+            // auto-claim any pending referral rewards (which credit the wallet).
+            if (hydrated.id) await hydrateWalletFromFirestore(hydrated.id);
 
-          const myCode = getReferralCode(hydrated);
-          if (myCode) {
-            const claimed = await claimReferralRewards(myCode);
-            if (claimed > 0) {
-              // Sync the newly-claimed balance back up.
-              if (hydrated.id) await hydrateWalletFromFirestore(hydrated.id);
-              useUI.getState().addNotification(
-                '🎉 Referral reward!',
-                `৳${claimed * 100} wallet-এ যোগ হয়েছে`
-              );
+            const myCode = getReferralCode(hydrated);
+            if (myCode) {
+              const claimed = await claimReferralRewards(myCode);
+              if (claimed > 0) {
+                // Sync the newly-claimed balance back up.
+                if (hydrated.id) await hydrateWalletFromFirestore(hydrated.id);
+                useUI.getState().addNotification(
+                  '🎉 Referral reward!',
+                  `৳${claimed * 100} wallet-এ যোগ হয়েছে`
+                );
+              }
             }
           }
-        }
-      });
-    });
+        }).catch((error) => {
+          console.warn('Auth hydration failed:', error);
+        });
+      },
+      (error) => {
+        // Incognito / blocked IndexedDB / offline: keep browsing as guest.
+        console.warn('Auth state error:', error);
+        if (useAuthStore.getState().user) logout();
+      },
+    );
 
     return () => {
       active = false;
@@ -227,9 +237,8 @@ export function useAuth() {
       const cred = await signInWithEmailAndPassword(auth, email, password);
       login(await mapFirebaseUser(cred.user));
       return;
-    } catch (error: any) {
-      if (String(error?.code || '').startsWith('auth/')) throw new Error('Wrong email or password.');
-      throw error;
+    } catch (error: unknown) {
+      throw new Error(firebaseAuthMessage(error));
     } finally {
       setLoading(false);
     }
@@ -274,17 +283,21 @@ export function useAuth() {
   // the email itself; clicking the link (handled above, on mount) creates the
   // account automatically if it doesn't exist yet.
   const ensureSignedIn = useCallback(async (): Promise<User> => {
-    if (auth.currentUser) {
-      const mapped = await mapFirebaseUser(auth.currentUser);
+    try {
+      if (auth.currentUser) {
+        const mapped = await mapFirebaseUser(auth.currentUser);
+        login(mapped);
+        return mapped;
+      }
+      const cred = await signInAnonymously(auth);
+      const mapped = await mapFirebaseUser(cred.user);
       login(mapped);
+      useUser.getState().switchOwner(mapped.id);
+      useWallet.getState().switchOwner(mapped.id);
       return mapped;
+    } catch (error) {
+      throw new Error(firebaseAuthMessage(error));
     }
-    const cred = await signInAnonymously(auth);
-    const mapped = await mapFirebaseUser(cred.user);
-    login(mapped);
-    useUser.getState().switchOwner(mapped.id);
-    useWallet.getState().switchOwner(mapped.id);
-    return mapped;
   }, [login]);
 
   const resetPassword = useCallback(async (email: string) => {

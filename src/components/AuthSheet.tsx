@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import type { ConfirmationResult } from 'firebase/auth';
 import { X, Eye, EyeOff, Loader2, User, Mail, Phone as PhoneIcon, KeyRound, Link2, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
+import { firebaseAuthMessage } from '../lib/firebase';
 import { useModalDepth } from '../hooks/useModalDepth';
 import { useSheetTransition } from '../hooks/useSheetTransition';
 
@@ -129,8 +130,8 @@ export function AuthSheet({ open, onClose, onSuccess }: Props) {
       showToast('Signed in successfully!', 'ok');
       onSuccess?.();
       onClose();
-    } catch (e: any) {
-      showToast(e.message || 'Wrong email or password.', 'err');
+    } catch (e: unknown) {
+      showToast(firebaseAuthMessage(e), 'err');
     }
   };
 
@@ -160,8 +161,8 @@ export function AuthSheet({ open, onClose, onSuccess }: Props) {
         onSuccess?.();
         onClose();
       }
-    } catch (e: any) {
-      showToast(e.message || 'Failed to create account.', 'err');
+    } catch (e: unknown) {
+      showToast(firebaseAuthMessage(e), 'err');
     }
   };
 
@@ -169,7 +170,7 @@ export function AuthSheet({ open, onClose, onSuccess }: Props) {
     try {
       await signInWithGoogle();
     } catch (e: unknown) {
-      showToast(e instanceof Error ? e.message : 'Google login failed', 'err');
+      showToast(firebaseAuthMessage(e), 'err');
     }
   };
 
@@ -177,7 +178,7 @@ export function AuthSheet({ open, onClose, onSuccess }: Props) {
     try {
       await signInWithFacebook();
     } catch (e: unknown) {
-      showToast(e instanceof Error ? e.message : 'Facebook login failed', 'err');
+      showToast(firebaseAuthMessage(e), 'err');
     }
   };
 
@@ -190,7 +191,7 @@ export function AuthSheet({ open, onClose, onSuccess }: Props) {
       await sendMagicLink(email.trim());
       setMagicLinkSent(true);
     } catch (e: unknown) {
-      showToast(e instanceof Error ? e.message : 'Link পাঠাতে ব্যর্থ হয়েছে।', 'err');
+      showToast(firebaseAuthMessage(e), 'err');
     }
   };
 
@@ -207,7 +208,7 @@ export function AuthSheet({ open, onClose, onSuccess }: Props) {
       setPhoneStep('verify');
       showToast(`OTP পাঠানো হয়েছে ${e164} নম্বরে`, 'ok');
     } catch (e: unknown) {
-      showToast(e instanceof Error ? e.message : 'OTP পাঠাতে ব্যর্থ হয়েছে।', 'err');
+      showToast(firebaseAuthMessage(e), 'err');
     } finally {
       setPhoneBusy(false);
     }
@@ -383,7 +384,7 @@ export function AuthSheet({ open, onClose, onSuccess }: Props) {
                             await resetPassword(email.trim());
                             showToast(`${email.trim()}-এ password reset link পাঠানো হয়েছে।`, 'ok');
                           } catch (error: unknown) {
-                            showToast(error instanceof Error ? error.message : 'Reset পাঠানো যায়নি।', 'err');
+                            showToast(firebaseAuthMessage(error), 'err');
                           }
                         }}
                         className="w-full text-xs font-bold text-text-secondary"
