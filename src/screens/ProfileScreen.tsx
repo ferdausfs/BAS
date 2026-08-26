@@ -3,7 +3,7 @@ import {
   Heart, MapPin, CreditCard, Bell, HelpCircle, Settings, LogOut,
   ChevronRight, ArrowLeft, KeyRound, Trash2, Sun, Headphones, MessageCircle, Globe2,
   LogIn, X, Save, Check, User, AlertTriangle, Cake, Gift, Wallet as WalletIcon,
-  Copy, Share2, Navigation, Loader2, Tag, ClipboardList, Camera, Mail, Phone, Search
+  Copy, Share2, Navigation, Loader2, Tag, ClipboardList, Camera, Mail, Phone, Search, Pencil
 } from 'lucide-react';
 import { useUI, useAuthStore, useSettingsStore, useUser, useWallet, formatBDT, getReferralCode, claimReferralRewards, WALLET_REFERRAL_BONUS } from '../lib/store';
 import { translate, useLanguageStore, useT, type Language } from '../lib/i18n';
@@ -501,48 +501,51 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
       )}
 
       {profileView === 'main' && (
-        <div className="no-scrollbar flex-1 overflow-y-auto pb-32 anim-up">
-          <div className="relative h-[168px] overflow-hidden">
-            <img src="/cakes/strawberry-pink.png" alt="" className="h-full w-full object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-t from-bg via-bg/40 to-ink/10" />
+        <div className="no-scrollbar flex-1 overflow-y-auto pb-40">
+          <div className="relative h-[188px] overflow-hidden">
+            <img src="/cakes/strawberry-pink.png" alt="" className="h-full w-full object-cover object-[center_42%] anim-scale" />
+            <div className="absolute inset-0 bg-gradient-to-t from-bg via-bg/25 to-ink/15" />
             <button
               type="button"
               onClick={() => setProfileView('settings')}
-              className="absolute right-4 top-4 flex h-11 w-11 items-center justify-center rounded-full bg-surface/95 text-ink shadow-card transition active:scale-95"
+              className="absolute right-4 top-4 flex h-11 w-11 items-center justify-center rounded-full bg-surface text-ink shadow-card transition active:scale-95 anim-scale"
               aria-label={t('profile.settings')}
             >
               <Settings className="h-5 w-5" strokeWidth={1.8} />
             </button>
           </div>
 
-          <div className="-mt-12 px-5">
-            <div className="flex items-end gap-3">
+          <div className="-mt-14 px-5">
+            <div className="flex flex-col items-center text-center anim-pop delay-1">
               <button
                 type="button"
                 onClick={() => setProfileView('edit')}
-                className="flex h-[88px] w-[88px] shrink-0 items-center justify-center overflow-hidden rounded-full border-4 border-bg bg-secondary text-[26px] font-semibold text-coral shadow-float"
+                className="relative flex h-[96px] w-[96px] items-center justify-center rounded-full transition active:scale-95"
               >
-                {user.avatar && user.avatar.length > 2 ? (
-                  <img src={user.avatar} alt="" className="h-full w-full object-cover" />
-                ) : initials}
-              </button>
-              <div className="min-w-0 flex-1 pb-1">
-                <h1 className="truncate text-[22px] font-bold tracking-tight text-ink">{user.name}</h1>
-                <p className="mt-0.5 truncate text-[12px] text-ink-300">{user.email || user.contact || t('profile.tagline')}</p>
-                <span className="mt-2 inline-flex items-center gap-1 rounded-full bg-secondary px-2.5 py-1 text-[11px] font-bold text-coral">
-                  <Heart className="h-3 w-3" strokeWidth={2.2} /> {t('profile.member')}
+                <span className="flex h-full w-full items-center justify-center overflow-hidden rounded-full border-[3px] border-bg bg-secondary text-[28px] font-semibold text-coral shadow-float">
+                  {user.avatar && user.avatar.length > 2 ? (
+                    <img src={user.avatar} alt="" className="h-full w-full object-cover" />
+                  ) : initials}
                 </span>
-              </div>
+                <span className="absolute bottom-0 right-0 flex h-7 w-7 items-center justify-center rounded-full bg-coral text-white shadow-btn ring-2 ring-bg">
+                  <Pencil className="h-3.5 w-3.5" strokeWidth={2.2} />
+                </span>
+              </button>
+              <h1 className="mt-3 max-w-[280px] truncate text-[22px] font-bold tracking-tight text-ink">{user.name}</h1>
+              <p className="mt-0.5 max-w-[280px] truncate text-[12px] text-ink-300">{user.email || user.contact || t('profile.tagline')}</p>
+              <span className="mt-2 inline-flex items-center gap-1 rounded-full bg-secondary px-3 py-1 text-[11px] font-bold text-coral">
+                <Heart className="h-3 w-3" strokeWidth={2.2} /> {t('profile.member')}
+              </span>
             </div>
 
-            <div className="mt-4 grid grid-cols-4 gap-2 rounded-[22px] border border-border bg-surface p-3 shadow-card">
+            <div className="mt-5 grid grid-cols-4 divide-x divide-border rounded-[22px] border border-border bg-surface py-3.5 shadow-card anim-up delay-2">
               {[
                 { n: myOrders.length, label: t('profile.statOrders'), onClick: () => go({ name: 'tabs', tab: 'orders' }) },
                 { n: wishlist.length, label: t('profile.statWishlist'), onClick: () => go({ name: 'wishlist' }) },
                 { n: couponCount, label: t('profile.statCoupons'), onClick: () => go({ name: 'coupons' }) },
                 { n: addresses.length, label: t('profile.statAddresses'), onClick: () => setProfileView('address') },
               ].map((stat) => (
-                <button key={stat.label} type="button" onClick={stat.onClick} className="flex flex-col items-center py-1 transition active:scale-95">
+                <button key={stat.label} type="button" onClick={stat.onClick} className="flex flex-col items-center px-1 py-0.5 transition active:scale-95">
                   <span className="text-[18px] font-bold tabular text-ink">{stat.n}</span>
                   <span className="mt-0.5 text-[10px] font-semibold text-ink-300">{stat.label}</span>
                 </button>
@@ -552,19 +555,23 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
             <button
               type="button"
               onClick={() => setWalletHistoryOpen(true)}
-              className="mt-3 flex w-full items-center justify-between rounded-[20px] border border-border bg-surface px-4 py-3.5 shadow-card transition active:scale-[0.99]"
+              className="mt-3 flex w-full items-center gap-3 rounded-[20px] border border-border bg-surface px-4 py-3.5 shadow-card transition active:scale-[0.99] anim-up delay-3"
             >
-              <span className="text-[13px] font-semibold text-ink-300">{t('profile.walletBalance')}</span>
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-secondary text-coral">
+                <WalletIcon className="h-5 w-5" strokeWidth={1.8} />
+              </span>
+              <span className="min-w-0 flex-1 text-left text-[13px] font-semibold text-ink-300">{t('profile.walletBalance')}</span>
               <span className="text-[18px] font-bold tabular text-coral">{formatBDT(balance)}</span>
+              <ChevronRight className="h-4 w-4 shrink-0 text-ink-200" />
             </button>
 
             <button
               type="button"
               onClick={() => setInviteOpen(true)}
-              className="mt-3 flex w-full items-center gap-3 overflow-hidden rounded-[22px] bg-coral px-4 py-4 text-left text-white shadow-btn transition active:scale-[0.99]"
+              className="mt-3 flex w-full items-center gap-3 overflow-hidden rounded-[22px] bg-coral px-4 py-4 text-left text-white shadow-btn transition active:scale-[0.99] anim-up delay-4"
             >
               <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white/15">
-                <Gift className="h-5 w-5" />
+                <Gift className="h-5 w-5 anim-pop" />
               </span>
               <span className="min-w-0 flex-1">
                 <span className="block text-[14px] font-bold leading-snug">{t('profile.inviteBanner')}</span>
@@ -572,7 +579,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
               <ChevronRight className="h-5 w-5 shrink-0 opacity-80" />
             </button>
 
-            <div className="mt-6">
+            <div className="mt-6 anim-up delay-5">
               <div className="mb-2 flex items-center justify-between px-0.5">
                 <h2 className="text-[15px] font-bold text-ink">{t('profile.recentOrders')}</h2>
                 <button type="button" onClick={() => go({ name: 'tabs', tab: 'orders' })} className="text-[12px] font-bold text-coral">{t('common.seeAll')}</button>
@@ -612,38 +619,39 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
               )}
             </div>
 
-            <div className="mt-6">
+            <div className="mt-6 anim-up delay-6">
               <h2 className="mb-2 px-0.5 text-[15px] font-bold text-ink">{t('profile.quickAccess')}</h2>
-              <div className="grid grid-cols-4 gap-2">
+              <div className="grid grid-cols-2 gap-2.5">
                 {[
                   { Icon: ClipboardList, label: t('profile.myOrders'), onClick: () => go({ name: 'tabs', tab: 'orders' }) },
                   { Icon: Heart, label: t('profile.wishlist'), onClick: () => go({ name: 'wishlist' }) },
-                  { Icon: MapPin, label: t('profile.manageAddress'), onClick: () => setProfileView('address') },
+                  { Icon: MapPin, label: t('profile.statAddresses'), onClick: () => setProfileView('address') },
                   { Icon: Tag, label: t('profile.myCoupons'), onClick: () => go({ name: 'coupons' }) },
                 ].map((item) => (
                   <button
                     key={item.label}
                     type="button"
                     onClick={item.onClick}
-                    className="flex flex-col items-center gap-2 rounded-[20px] border border-border bg-surface px-1 py-3 shadow-card transition active:scale-95"
+                    className="flex items-center gap-3 rounded-[20px] border border-border bg-surface px-3.5 py-3.5 text-left shadow-card transition active:scale-[0.98]"
                   >
-                    <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-secondary text-coral">
+                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-secondary text-coral">
                       <item.Icon className="h-5 w-5" strokeWidth={1.8} />
                     </span>
-                    <span className="text-center text-[10px] font-bold leading-tight text-ink">{item.label}</span>
+                    <span className="min-w-0 flex-1 text-[13px] font-bold leading-snug text-ink">{item.label}</span>
+                    <ChevronRight className="h-4 w-4 shrink-0 text-ink-200" />
                   </button>
                 ))}
               </div>
             </div>
 
-            <div className="mt-6 overflow-hidden rounded-[22px] border border-border bg-surface px-4 shadow-card">
+            <div className="mt-6 overflow-hidden rounded-[22px] border border-border bg-surface px-4 shadow-card anim-up delay-6">
               <p className="pt-3 text-[11px] font-bold uppercase tracking-[0.14em] text-ink-200">{t('profile.accountSection')}</p>
               <ProfileReferenceRow Icon={User} label={t('profile.yourProfile')} onClick={() => setProfileView('edit')} bordered />
               <ProfileReferenceRow Icon={CreditCard} label={t('profile.paymentMethods')} onClick={() => setProfileView('payment')} bordered />
               <ProfileReferenceRow Icon={WalletIcon} label={t('profile.myWallet')} onClick={() => setWalletHistoryOpen(true)} />
             </div>
 
-            <div className="mt-3 overflow-hidden rounded-[22px] border border-border bg-surface px-4 shadow-card">
+            <div className="mt-3 overflow-hidden rounded-[22px] border border-border bg-surface px-4 shadow-card anim-up delay-6">
               <p className="pt-3 text-[11px] font-bold uppercase tracking-[0.14em] text-ink-200">{t('profile.moreSection')}</p>
               <ProfileReferenceRow Icon={Gift} label={t('profile.inviteEarn')} onClick={() => setInviteOpen(true)} bordered />
               <ProfileReferenceRow Icon={Cake} label={t('profile.specialDates')} onClick={() => setShowDatesModal(true)} bordered />
