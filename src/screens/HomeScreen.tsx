@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { ArrowRight, Cake, Megaphone, RotateCcw, Search, Ticket } from 'lucide-react';
 import { useDebounce } from '../hooks/useDebounce';
 import { useUI, useUser, useOrders, useAuthStore, useCart, useSettingsStore } from '../lib/store';
@@ -212,10 +212,18 @@ export default function HomeScreen({
   const hasSearch = search.trim().length > 0;
   const searchTerm = debouncedSearch.trim();
   const featuredProducts = trending.slice(0, 6);
-  const galleryPreview = useMemo(
-    () => safeArray<GalleryItem>(gallery).filter((item) => !!item.image).slice(0, 4),
+  const galleryPhotos = useMemo(
+    () => safeArray<GalleryItem>(gallery).filter((item) => !!item.image).slice(0, 8),
     [gallery],
   );
+  const galleryOrbit = useMemo(() => {
+    if (galleryPhotos.length === 0) return [];
+    const count = Math.max(6, galleryPhotos.length);
+    return Array.from({ length: count }, (_, index) => ({
+      item: galleryPhotos[index % galleryPhotos.length],
+      index,
+    }));
+  }, [galleryPhotos]);
 
   useEffect(() => {
     if (availableProducts.length === 0) return;
@@ -495,30 +503,49 @@ export default function HomeScreen({
           );
         })()}
 
-        {galleryPreview.length > 0 && (
+        {galleryOrbit.length > 0 && (
           <section className="mt-6 anim-up delay-3">
             <SectionHeader
               title={t('home.gallery')}
               subtitle={t('home.gallerySub')}
               action={{ label: t('common.seeAll'), onClick: () => go({ name: 'gallery' }) }}
             />
-            <div className="mt-4 grid grid-cols-4 gap-2 px-6">
-              {galleryPreview.map((item) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => go({ name: 'gallery' })}
-                  className="overflow-hidden rounded-[18px] border border-border bg-surface shadow-card transition active:scale-95"
-                >
-                  <img
-                    src={item.image}
-                    alt=""
-                    loading="lazy"
-                    decoding="async"
-                    className="h-20 w-full object-cover"
-                  />
-                </button>
-              ))}
+            <div className="mt-2 px-2">
+              <button
+                type="button"
+                onClick={() => {
+                  hapticTap();
+                  go({ name: 'gallery' });
+                }}
+                className="bas-gallery-orbit w-full"
+                style={{
+                  '--quantity': String(galleryOrbit.length),
+                  '--translateZ': `${Math.round((86 / 2) / Math.tan(Math.PI / galleryOrbit.length) + 18)}px`,
+                } as CSSProperties}
+                aria-label={t('home.gallery')}
+              >
+                <span className="bas-gallery-orbit-inner">
+                  {galleryOrbit.map(({ item, index }) => (
+                    <span
+                      key={`${item.id}-${index}`}
+                      className="bas-gallery-orbit-card"
+                      style={{ '--index': String(index) } as CSSProperties}
+                    >
+                      <img
+                        src={item.image}
+                        alt=""
+                        loading="lazy"
+                        decoding="async"
+                        onError={(event) => {
+                          const img = event.currentTarget as HTMLImageElement;
+                          img.onerror = null;
+                          img.src = '/cakes/logo-cake.png';
+                        }}
+                      />
+                    </span>
+                  ))}
+                </span>
+              </button>
             </div>
           </section>
         )}
