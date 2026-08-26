@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import type { ConfirmationResult } from 'firebase/auth';
-import { X, Eye, EyeOff, Loader2, User, Mail, Phone as PhoneIcon, KeyRound, Link2, ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Eye, EyeOff, Loader2, Mail, User, X } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { firebaseAuthMessage } from '../lib/firebase';
 import { useModalDepth } from '../hooks/useModalDepth';
 import { useSheetTransition } from '../hooks/useSheetTransition';
+import { hapticTap } from '../lib/utils';
 
 interface Props {
   open: boolean;
@@ -12,46 +13,43 @@ interface Props {
   onSuccess?: () => void;
 }
 
-// Flip to true once the Facebook App has passed Business Verification and is
-// Published/Live — until then, opening the real Facebook OAuth popup just
-// shows the user Facebook's own "Sorry, something went wrong" error page.
-const FACEBOOK_LOGIN_LIVE = false;
+const validateEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
-const validateEmail = (email: string) => {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-};
-
-// Bangladesh mobile numbers: 01XXXXXXXXX (11 digits) → +8801XXXXXXXXX for Firebase.
 const toE164Bangladesh = (raw: string): string | null => {
   const digits = raw.replace(/\D/g, '').replace(/^880/, '').replace(/^0/, '');
   if (!/^1[3-9]\d{8}$/.test(digits)) return null;
   return `+880${digits}`;
 };
 
+const GoogleMark = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+  </svg>
+);
+
+type Step = 'home' | 'otp' | 'email';
+
 export function AuthSheet({ open, onClose, onSuccess }: Props) {
   const {
-    user, loading, signUp, signIn, signOut, signInWithGoogle, signInWithFacebook,
+    user, loading, signUp, signIn, signOut, signInWithGoogle,
     sendPhoneOtp, confirmPhoneOtp, sendMagicLink, resetPassword,
   } = useAuth();
 
-  const [method, setMethod] = useState<'email' | 'phone'>('email');
-  const [emailLoginMode, setEmailLoginMode] = useState<'password' | 'magiclink'>('password');
-  const [magicLinkSent, setMagicLinkSent] = useState(false);
-
-  const [mode, setMode] = useState<'signin' | 'signup'>('signin');
+  const [step, setStep] = useState<Step>('home');
+  const [emailNew, setEmailNew] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [name, setName] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [needsConfirmation, setNeedsConfirmation] = useState(false);
+  const [magicSent, setMagicSent] = useState(false);
 
   const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState('');
-  const [phoneStep, setPhoneStep] = useState<'enter' | 'verify'>('enter');
   const [confirmation, setConfirmation] = useState<ConfirmationResult | null>(null);
-  const [phoneBusy, setPhoneBusy] = useState(false);
-
+  const [busy, setBusy] = useState(false);
   const [toast, setToast] = useState<{ msg: string; type: 'ok' | 'err' } | null>(null);
 
   const { mounted, closing } = useSheetTransition(open);
@@ -59,496 +57,372 @@ export function AuthSheet({ open, onClose, onSuccess }: Props) {
 
   const showToast = (msg: string, type: 'ok' | 'err' = 'ok') => {
     setToast({ msg, type });
-    setTimeout(() => setToast(null), 4000);
+    window.setTimeout(() => setToast(null), 4000);
+  };
+
+  const finish = () => {
+    hapticTap();
+    onSuccess?.();
+    onClose();
   };
 
   const reset = () => {
-    setMethod('email');
-    setEmailLoginMode('password');
-    setMagicLinkSent(false);
-    setMode('signin');
+    setStep('home');
+    setEmailNew(false);
     setEmail('');
     setPassword('');
-    setConfirmPassword('');
     setName('');
     setShowPassword(false);
-    setNeedsConfirmation(false);
+    setMagicSent(false);
     setPhone('');
     setOtp('');
-    setPhoneStep('enter');
     setConfirmation(null);
-    setPhoneBusy(false);
+    setBusy(false);
     setToast(null);
   };
 
-  useEffect(() => { if (!open) reset(); }, [open]);
+  useEffect(() => {
+    if (!open) reset();
+  }, [open]);
 
   if (!mounted) return null;
 
-  // Logged-in view
-  if (user) {
-    return (
-      <>
-        <div className={`fixed inset-0 bg-ink/45 z-[130] ${closing ? 'anim-fade-out' : 'anim-fade'}`} onClick={onClose} />
-        <div className={`fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[420px] z-[131] max-h-[90dvh] overflow-y-auto rounded-t-[28px] border border-border bg-surface p-6 shadow-float ${closing ? 'anim-down' : 'anim-up'}`}>
-          <div className="w-10 h-1 bg-divider rounded-full mx-auto mb-5" />
-          <div className="text-center mb-6">
-            <div className="w-16 h-16 rounded-full bg-secondary flex items-center justify-center mx-auto mb-3">
-              {user.avatar && user.avatar.length > 2 ? (
-                <img src={user.avatar} alt="" className="w-full h-full object-cover rounded-full" />
-              ) : (
-                <User className="w-8 h-8 text-primary" strokeWidth={1.75} />
-              )}
-            </div>
-            <p className=" font-bold text-text text-lg">{user.name}</p>
-            {user.email && <p className="text-sm text-text-secondary">{user.email}</p>}
-          </div>
-          <button onClick={() => { signOut(); onClose(); }}
-            className="mb-2 w-full rounded-[16px] bg-error/10 py-3 text-sm font-bold text-error transition active:scale-[0.98]">
-            Sign Out
-          </button>
-          <button onClick={onClose}
-            className="w-full py-2.5 text-text-secondary text-sm font-medium">
-            Close
-          </button>
-        </div>
-      </>
-    );
-  }
-
-  const handleSignIn = async () => {
-    if (!email.trim() || !validateEmail(email)) {
-      showToast('Please enter a valid email.', 'err');
-      return;
-    }
-    if (password.length < 6) {
-      showToast('Password must be at least 6 characters.', 'err');
-      return;
-    }
-    try {
-      await signIn(email.trim(), password);
-      showToast('Signed in successfully!', 'ok');
-      onSuccess?.();
-      onClose();
-    } catch (e: unknown) {
-      showToast(firebaseAuthMessage(e), 'err');
-    }
-  };
-
-  const handleSignUp = async () => {
-    if (!name.trim()) {
-      showToast('Please enter your name.', 'err');
-      return;
-    }
-    if (!email.trim() || !validateEmail(email)) {
-      showToast('Please enter a valid email.', 'err');
-      return;
-    }
-    if (password.length < 6) {
-      showToast('Password must be at least 6 characters.', 'err');
-      return;
-    }
-    if (password !== confirmPassword) {
-      showToast('Passwords do not match.', 'err');
-      return;
-    }
-    try {
-      const res = await signUp(email.trim(), password, name.trim());
-      if (res.needsEmailConfirmation) {
-        setNeedsConfirmation(true);
-      } else {
-        showToast('Account created successfully!', 'ok');
-        onSuccess?.();
-        onClose();
-      }
-    } catch (e: unknown) {
-      showToast(firebaseAuthMessage(e), 'err');
-    }
-  };
-
   const handleGoogle = async () => {
+    setBusy(true);
     try {
       await signInWithGoogle();
+      finish();
     } catch (e: unknown) {
       showToast(firebaseAuthMessage(e), 'err');
-    }
-  };
-
-  const handleFacebook = async () => {
-    try {
-      await signInWithFacebook();
-    } catch (e: unknown) {
-      showToast(firebaseAuthMessage(e), 'err');
-    }
-  };
-
-  const handleSendMagicLink = async () => {
-    if (!email.trim() || !validateEmail(email)) {
-      showToast('সঠিক email দিন।', 'err');
-      return;
-    }
-    try {
-      await sendMagicLink(email.trim());
-      setMagicLinkSent(true);
-    } catch (e: unknown) {
-      showToast(firebaseAuthMessage(e), 'err');
+    } finally {
+      setBusy(false);
     }
   };
 
   const handleSendOtp = async () => {
     const e164 = toE164Bangladesh(phone);
     if (!e164) {
-      showToast('সঠিক ফোন নম্বর দিন, যেমন 01XXXXXXXXX', 'err');
+      showToast('সঠিক মোবাইল নম্বর দিন, যেমন 01XXXXXXXXX', 'err');
       return;
     }
-    setPhoneBusy(true);
+    setBusy(true);
     try {
       const result = await sendPhoneOtp(e164, 'auth-recaptcha-container');
       setConfirmation(result);
-      setPhoneStep('verify');
-      showToast(`OTP পাঠানো হয়েছে ${e164} নম্বরে`, 'ok');
+      setOtp('');
+      setStep('otp');
+      showToast('কোড পাঠানো হয়েছে', 'ok');
     } catch (e: unknown) {
       showToast(firebaseAuthMessage(e), 'err');
     } finally {
-      setPhoneBusy(false);
+      setBusy(false);
     }
   };
 
   const handleVerifyOtp = async () => {
     if (!confirmation) return;
     if (otp.trim().length !== 6) {
-      showToast('৬ ডিজিটের কোড দিন।', 'err');
+      showToast('৬ ডিজিটের কোড দিন', 'err');
       return;
     }
-    setPhoneBusy(true);
+    setBusy(true);
     try {
       await confirmPhoneOtp(confirmation, otp.trim());
-      showToast('Login সফল হয়েছে!', 'ok');
-      onSuccess?.();
-      onClose();
-    } catch (e: unknown) {
-      showToast('ভুল কোড, আবার চেষ্টা করুন।', 'err');
+      finish();
+    } catch {
+      showToast('ভুল কোড, আবার চেষ্টা করুন', 'err');
     } finally {
-      setPhoneBusy(false);
+      setBusy(false);
     }
   };
 
-  const showSocialButtons = !magicLinkSent && phoneStep === 'enter';
+  const handleEmailContinue = async () => {
+    if (!email.trim() || !validateEmail(email)) {
+      showToast('সঠিক ইমেইল দিন', 'err');
+      return;
+    }
+    if (password.length < 6) {
+      showToast('পাসওয়ার্ড কমপক্ষে ৬ অক্ষর', 'err');
+      return;
+    }
+    if (emailNew) {
+      if (!name.trim()) {
+        showToast('আপনার নাম লিখুন', 'err');
+        return;
+      }
+      try {
+        await signUp(email.trim(), password, name.trim());
+        finish();
+      } catch (e: unknown) {
+        showToast(firebaseAuthMessage(e), 'err');
+      }
+      return;
+    }
+    try {
+      await signIn(email.trim(), password);
+      finish();
+    } catch (e: unknown) {
+      showToast(firebaseAuthMessage(e), 'err');
+    }
+  };
+
+  const handleMagic = async () => {
+    if (!email.trim() || !validateEmail(email)) {
+      showToast('লিংক পাঠাতে সঠিক ইমেইল দিন', 'err');
+      return;
+    }
+    try {
+      await sendMagicLink(email.trim());
+      setMagicSent(true);
+    } catch (e: unknown) {
+      showToast(firebaseAuthMessage(e), 'err');
+    }
+  };
+
+  const handleReset = async () => {
+    if (!email.trim() || !validateEmail(email)) {
+      showToast('রিসেট পাঠাতে সঠিক ইমেইল দিন', 'err');
+      return;
+    }
+    try {
+      await resetPassword(email.trim());
+      showToast('ইমেইলে রিসেট লিংক পাঠানো হয়েছে', 'ok');
+    } catch (e: unknown) {
+      showToast(firebaseAuthMessage(e), 'err');
+    }
+  };
+
+  const title =
+    step === 'otp' ? 'কোড দিন'
+      : step === 'email' ? (emailNew ? 'নতুন অ্যাকাউন্ট' : 'ইমেইল দিয়ে')
+        : 'লগইন করুন';
+  const subtitle =
+    step === 'otp' ? `${toE164Bangladesh(phone) ?? phone} নম্বরে ৬ ডিজিটের কোড গেছে`
+      : step === 'email' ? (emailNew ? 'নাম, ইমেইল আর একটি পাসওয়ার্ড দিলেই হবে' : 'আগের অ্যাকাউন্ট থাকলে ইমেইল ও পাসওয়ার্ড দিন')
+        : 'নম্বর বা Google — নতুন হলে নিজেই অ্যাকাউন্ট হবে';
 
   return (
     <>
-      <div className={`fixed inset-0 bg-ink/45 z-[130] ${closing ? 'anim-fade-out' : 'anim-fade'}`} onClick={onClose} />
-      <div className={`fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[420px] z-[131] max-h-[90dvh] overflow-y-auto rounded-t-[28px] border border-border bg-surface shadow-float ${closing ? 'anim-down' : 'anim-up'}`}>
-        {/* Handle */}
-        <div className="w-10 h-1 bg-divider rounded-full mx-auto mt-3" />
+      <div className={`fixed inset-0 z-[130] bg-ink/45 ${closing ? 'anim-fade-out' : 'anim-fade'}`} onClick={onClose} />
+      <div className={`fixed bottom-0 left-1/2 z-[131] max-h-[90dvh] w-full max-w-[420px] -translate-x-1/2 overflow-y-auto rounded-t-[28px] border border-border bg-surface shadow-float ${closing ? 'anim-down' : 'anim-up'}`}>
+        <div className="mx-auto mt-3 h-1 w-10 rounded-full bg-divider" />
 
-        {/* Header */}
-        <div className="px-6 pt-4 pb-3 flex items-center justify-between">
-          <div>
-            <h2 className=" font-bold text-text text-xl tracking-tight">
-              {needsConfirmation ? 'Check Your Email' : mode === 'signin' ? 'Sign In' : 'Create Account'}
-            </h2>
-            <p className="text-xs text-text-secondary mt-0.5">
-              {needsConfirmation
-                ? `Verification link sent to ${email}`
-                : mode === 'signin'
-                ? 'Sign in to access your orders and settings'
-                : 'Create an account to start ordering delicious cakes'}
-            </p>
+        <div className="flex items-start justify-between gap-3 px-6 pb-2 pt-4">
+          <div className="min-w-0">
+            {step !== 'home' && (
+              <button
+                type="button"
+                onClick={() => {
+                  setToast(null);
+                  if (step === 'otp') {
+                    setStep('home');
+                    setOtp('');
+                    setConfirmation(null);
+                    return;
+                  }
+                  setStep('home');
+                  setEmailNew(false);
+                  setMagicSent(false);
+                }}
+                className="mb-2 flex items-center gap-1 text-[12px] font-bold text-coral"
+              >
+                <ArrowLeft className="h-3.5 w-3.5" /> পেছনে
+              </button>
+            )}
+            <h2 className="text-[22px] font-bold tracking-tight text-ink">{title}</h2>
+            <p className="mt-1 text-[13px] leading-snug text-ink-300">{subtitle}</p>
           </div>
-          <button onClick={onClose} className="flex h-10 w-10 items-center justify-center rounded-[14px] bg-secondary text-text-secondary transition active:scale-90">
-            <X className="w-4 h-4 text-text-secondary" />
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-secondary text-ink-300 transition active:scale-90"
+            aria-label="বন্ধ"
+          >
+            <X className="h-4 w-4" />
           </button>
         </div>
 
-        <div className="px-6 pb-8 space-y-4">
-          {/* Toast */}
+        <div className="space-y-3 px-6 pb-8 pt-2">
           {toast && (
-            <div className={`px-4 py-2.5 rounded-[14px] text-sm font-medium transition-all ${toast.type === 'ok' ? 'bg-success/10 text-success' : 'bg-error/10 text-error'}`}>
+            <div className={`rounded-[14px] px-4 py-2.5 text-[13px] font-medium ${toast.type === 'ok' ? 'bg-success/10 text-success' : 'bg-error/10 text-error'}`}>
               {toast.msg}
             </div>
           )}
 
-          {needsConfirmation ? (
-            <div className="text-center py-4 space-y-4">
-              <div className="flex justify-center text-primary">
-                <Mail size={48} strokeWidth={1.5} />
+          {user ? (
+            <div className="text-center">
+              <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-secondary">
+                {user.avatar && user.avatar.length > 2 ? (
+                  <img src={user.avatar} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  <User className="h-8 w-8 text-coral" strokeWidth={1.75} />
+                )}
               </div>
-              <p className="text-sm text-text-secondary font-medium">
-                We have sent a verification link to <span className="font-bold text-text">{email}</span>. Please click the link to confirm your account before signing in.
-              </p>
+              <p className="text-[16px] font-bold text-ink">{user.name}</p>
+              {user.email && <p className="mt-0.5 text-[13px] text-ink-300">{user.email}</p>}
               <button
-                onClick={onClose}
-                className="w-full py-3.5 rounded-[16px] bg-primary text-white font-bold text-sm shadow-btn"
+                type="button"
+                onClick={() => { void signOut(); onClose(); }}
+                className="mt-5 h-12 w-full rounded-2xl bg-error/10 text-[14px] font-bold text-error transition active:scale-[0.98]"
               >
-                Got it
+                সাইন আউট
               </button>
             </div>
-          ) : (
+          ) : step === 'home' ? (
             <>
-              {/* Method switcher — Email / Phone */}
-              <div className="flex gap-1 p-1 bg-ink-50 rounded-[14px]">
-                {([
-                  { id: 'email' as const, label: 'Email', Icon: Mail },
-                  { id: 'phone' as const, label: 'Phone', Icon: PhoneIcon },
-                ]).map(({ id, label, Icon }) => (
-                  <button key={id} onClick={() => { setMethod(id); setToast(null); }}
-                    className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-[12px] text-xs font-bold transition-all ${method === id ? 'bg-surface text-primary shadow-card' : 'text-text-secondary'}`}>
-                    <Icon className="w-3.5 h-3.5" strokeWidth={2} />
-                    {label}
-                  </button>
-                ))}
+              <label className="block">
+                <span className="mb-1.5 block text-[12px] font-bold text-ink-300">মোবাইল নম্বর</span>
+                <input
+                  className="h-12 w-full rounded-2xl border border-border bg-surface px-4 text-[16px] font-medium tabular text-ink shadow-card outline-none placeholder:text-ink-200 focus:border-coral focus:ring-2 focus:ring-coral/15"
+                  type="tel"
+                  inputMode="numeric"
+                  autoComplete="tel"
+                  placeholder="01XXXXXXXXX"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 11))}
+                  onKeyDown={(e) => e.key === 'Enter' && void handleSendOtp()}
+                />
+              </label>
+              <button
+                type="button"
+                onClick={() => void handleSendOtp()}
+                disabled={busy}
+                className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-coral text-[15px] font-bold text-white shadow-btn transition active:scale-[0.98] disabled:opacity-60"
+              >
+                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                {busy ? 'পাঠানো হচ্ছে...' : 'কোড পাঠান'}
+              </button>
+
+              <div className="flex items-center gap-3 py-1">
+                <div className="h-px flex-1 bg-divider" />
+                <span className="text-[11px] font-medium text-ink-200">অথবা</span>
+                <div className="h-px flex-1 bg-divider" />
               </div>
 
-              {/* ---------------- EMAIL ---------------- */}
-              {method === 'email' && emailLoginMode === 'password' && (
-                <div className="space-y-4">
-                  {/* Sign in / Create account toggle */}
-                  <div className="flex gap-1 p-1 bg-ink-50 rounded-[14px]">
-                    {([
-                      { id: 'signin', label: 'Sign In' },
-                      { id: 'signup', label: 'Create Account' }
-                    ] as const).map((m) => (
-                      <button key={m.id} onClick={() => { setMode(m.id); setToast(null); }}
-                        className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-[12px] text-xs font-bold transition-all ${mode === m.id ? 'bg-surface text-primary shadow-card' : 'text-text-secondary'}`}>
-                        {m.label}
-                      </button>
-                    ))}
-                  </div>
+              <button
+                type="button"
+                onClick={() => void handleGoogle()}
+                disabled={busy}
+                className="flex h-12 w-full items-center justify-center gap-3 rounded-2xl border border-border bg-surface text-[14px] font-bold text-ink shadow-card transition active:scale-[0.98] disabled:opacity-60"
+              >
+                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <GoogleMark />}
+                Google দিয়ে চালিয়ে যান
+              </button>
 
-                  {mode === 'signup' && (
-                    <input
-                      className="w-full px-4 py-3 rounded-[16px] border border-border bg-surface text-text text-sm shadow-card focus:outline-none focus:ring-2 focus:ring-primary/20 transition-shadow"
-                      type="text"
-                      placeholder="Your Name"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && handleSignUp()}
-                    />
-                  )}
-
-                  <input
-                    className="w-full px-4 py-3 rounded-[16px] border border-border bg-surface text-text text-sm shadow-card focus:outline-none focus:ring-2 focus:ring-primary/20 transition-shadow"
-                    type="email"
-                    placeholder="your@email.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && (mode === 'signin' ? handleSignIn() : handleSignUp())}
-                  />
-
-                  <div className="relative">
-                    <input
-                      className="w-full px-4 py-3 pr-10 rounded-[16px] border border-border bg-surface text-text text-sm shadow-card focus:outline-none focus:ring-2 focus:ring-primary/20 transition-shadow"
-                      type={showPassword ? 'text' : 'password'}
-                      placeholder="Password (min 6 chars)"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && (mode === 'signin' ? handleSignIn() : handleSignUp())}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary hover:text-text-secondary"
-                    >
-                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
-
-                  {mode === 'signup' && (
-                    <input
-                      className="w-full px-4 py-3 rounded-[16px] border border-border bg-surface text-text text-sm shadow-card focus:outline-none focus:ring-2 focus:ring-primary/20 transition-shadow"
-                      type="password"
-                      placeholder="Confirm Password"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && handleSignUp()}
-                    />
-                  )}
-
-                  <button onClick={mode === 'signin' ? handleSignIn : handleSignUp} disabled={loading}
-                    className="w-full flex items-center justify-center gap-2 py-3.5 rounded-[16px] bg-primary text-white font-bold text-sm shadow-btn shadow-btn active:scale-[0.98] transition-transform disabled:opacity-60">
-                    {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-                    {loading ? (mode === 'signin' ? 'Signing In...' : 'Creating Account...') : (mode === 'signin' ? 'Sign In' : 'Create Account')}
-                  </button>
-
-                  {mode === 'signin' && (
-                    <>
-                      <button
-                        type="button"
-                        onClick={async () => {
-                          if (!email.trim() || !validateEmail(email)) {
-                            showToast('Reset পাঠাতে সঠিক email দিন।', 'err');
-                            return;
-                          }
-                          try {
-                            await resetPassword(email.trim());
-                            showToast(`${email.trim()}-এ password reset link পাঠানো হয়েছে।`, 'ok');
-                          } catch (error: unknown) {
-                            showToast(firebaseAuthMessage(error), 'err');
-                          }
-                        }}
-                        className="w-full text-xs font-bold text-text-secondary"
-                      >
-                        Password ভুলে গেছেন?
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => { setEmailLoginMode('magiclink'); setToast(null); }}
-                        className="w-full flex items-center justify-center gap-1.5 text-xs font-bold text-primary"
-                      >
-                        <Link2 className="w-3.5 h-3.5" />
-                        Password ছাড়া, email-এ login link পাঠান
-                      </button>
-                    </>
-                  )}
-                </div>
+              <button
+                type="button"
+                onClick={() => { setStep('email'); setToast(null); }}
+                className="flex h-11 w-full items-center justify-center gap-2 text-[13px] font-bold text-coral"
+              >
+                <Mail className="h-4 w-4" /> ইমেইল দিয়ে
+              </button>
+            </>
+          ) : step === 'otp' ? (
+            <>
+              <input
+                className="h-14 w-full rounded-2xl border border-border bg-surface px-4 text-center text-[22px] font-bold tabular tracking-[0.45em] text-ink outline-none focus:border-coral focus:ring-2 focus:ring-coral/15"
+                type="tel"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                maxLength={6}
+                placeholder="••••••"
+                value={otp}
+                onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                onKeyDown={(e) => e.key === 'Enter' && void handleVerifyOtp()}
+              />
+              <button
+                type="button"
+                onClick={() => void handleVerifyOtp()}
+                disabled={busy}
+                className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-coral text-[15px] font-bold text-white shadow-btn transition active:scale-[0.98] disabled:opacity-60"
+              >
+                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                {busy ? 'যাচাই হচ্ছে...' : 'নিশ্চিত করুন'}
+              </button>
+              <button
+                type="button"
+                onClick={() => void handleSendOtp()}
+                disabled={busy}
+                className="w-full text-center text-[12px] font-bold text-ink-300"
+              >
+                কোড আসেনি? আবার পাঠান
+              </button>
+            </>
+          ) : (
+            <>
+              {emailNew && (
+                <input
+                  className="h-12 w-full rounded-2xl border border-border bg-surface px-4 text-[15px] font-medium text-ink shadow-card outline-none placeholder:text-ink-200 focus:border-coral focus:ring-2 focus:ring-coral/15"
+                  type="text"
+                  autoComplete="name"
+                  placeholder="আপনার নাম"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                />
               )}
-
-              {method === 'email' && emailLoginMode === 'magiclink' && (
-                <div className="space-y-4">
-                  {!magicLinkSent ? (
-                    <>
-                      <div className="rounded-[16px] bg-secondary px-4 py-3 flex items-start gap-2.5">
-                        <KeyRound className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
-                        <p className="text-xs text-text-secondary leading-relaxed">
-                          Email দিন, আমরা একটা login link পাঠাবো। Link-এ ক্লিক করলেই login হয়ে যাবে — password লাগবে না।
-                        </p>
-                      </div>
-                      <input
-                        className="w-full px-4 py-3 rounded-[16px] border border-border bg-surface text-text text-sm shadow-card focus:outline-none focus:ring-2 focus:ring-primary/20 transition-shadow"
-                        type="email"
-                        placeholder="your@email.com"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && handleSendMagicLink()}
-                      />
-                      <button onClick={handleSendMagicLink}
-                        className="w-full py-3.5 rounded-[16px] bg-primary text-white font-bold text-sm shadow-btn shadow-btn active:scale-[0.98] transition-transform">
-                        Login Link পাঠান
-                      </button>
-                    </>
+              <input
+                className="h-12 w-full rounded-2xl border border-border bg-surface px-4 text-[15px] font-medium text-ink shadow-card outline-none placeholder:text-ink-200 focus:border-coral focus:ring-2 focus:ring-coral/15"
+                type="email"
+                autoComplete="email"
+                placeholder="আপনার ইমেইল"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+              <div className="relative">
+                <input
+                  className="h-12 w-full rounded-2xl border border-border bg-surface px-4 pr-12 text-[15px] font-medium text-ink shadow-card outline-none placeholder:text-ink-200 focus:border-coral focus:ring-2 focus:ring-coral/15"
+                  type={showPassword ? 'text' : 'password'}
+                  autoComplete={emailNew ? 'new-password' : 'current-password'}
+                  placeholder="পাসওয়ার্ড (কমপক্ষে ৬ অক্ষর)"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && void handleEmailContinue()}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-200"
+                  aria-label={showPassword ? 'পাসওয়ার্ড লুকান' : 'পাসওয়ার্ড দেখান'}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+              <button
+                type="button"
+                onClick={() => void handleEmailContinue()}
+                disabled={loading}
+                className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-coral text-[15px] font-bold text-white shadow-btn transition active:scale-[0.98] disabled:opacity-60"
+              >
+                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                {emailNew ? 'অ্যাকাউন্ট খুলুন' : 'লগইন'}
+              </button>
+              <button
+                type="button"
+                onClick={() => { setEmailNew((v) => !v); setToast(null); }}
+                className="w-full text-center text-[13px] font-bold text-coral"
+              >
+                {emailNew ? 'আগে অ্যাকাউন্ট আছে? লগইন করুন' : 'নতুন? অ্যাকাউন্ট খুলুন'}
+              </button>
+              {!emailNew && (
+                <div className="flex flex-col gap-2">
+                  <button type="button" onClick={() => void handleReset()} className="text-[12px] font-bold text-ink-300">
+                    পাসওয়ার্ড ভুলে গেছেন?
+                  </button>
+                  {magicSent ? (
+                    <p className="text-center text-[12px] font-medium text-ink-300">
+                      {email}-এ লগইন লিংক গেছে। ইমেইল খুলে ট্যাপ করুন।
+                    </p>
                   ) : (
-                    <div className="text-center py-2 space-y-3">
-                      <div className="flex justify-center text-primary">
-                        <Mail size={40} strokeWidth={1.5} />
-                      </div>
-                      <p className="text-sm text-text-secondary font-medium">
-                        <span className="font-bold text-text">{email}</span>-এ login link পাঠানো হয়েছে। Email খুলে link-এ ক্লিক করুন।
-                      </p>
-                    </div>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => { setEmailLoginMode('password'); setMagicLinkSent(false); setToast(null); }}
-                    className="w-full flex items-center justify-center gap-1.5 text-xs font-bold text-text-secondary"
-                  >
-                    <ArrowLeft className="w-3.5 h-3.5" />
-                    Password দিয়ে login করুন
-                  </button>
-                </div>
-              )}
-
-              {/* ---------------- PHONE ---------------- */}
-              {method === 'phone' && phoneStep === 'enter' && (
-                <div className="space-y-4">
-                  <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-text-secondary">+880</span>
-                    <input
-                      className="w-full pl-16 pr-4 py-3 rounded-[16px] border border-border bg-surface text-text text-sm shadow-card focus:outline-none focus:ring-2 focus:ring-primary/20 transition-shadow"
-                      type="tel"
-                      inputMode="numeric"
-                      placeholder="1XXXXXXXXX"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && handleSendOtp()}
-                    />
-                  </div>
-                  <button onClick={handleSendOtp} disabled={phoneBusy}
-                    className="w-full flex items-center justify-center gap-2 py-3.5 rounded-[16px] bg-primary text-white font-bold text-sm shadow-btn shadow-btn active:scale-[0.98] transition-transform disabled:opacity-60">
-                    {phoneBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-                    {phoneBusy ? 'পাঠানো হচ্ছে...' : 'OTP পাঠান'}
-                  </button>
-                </div>
-              )}
-
-              {method === 'phone' && phoneStep === 'verify' && (
-                <div className="space-y-4">
-                  <p className="text-xs text-text-secondary text-center">
-                    <span className="font-bold text-text">+880{phone.replace(/\D/g, '').replace(/^880/, '').replace(/^0/, '')}</span>-এ পাঠানো ৬ ডিজিটের কোড দিন
-                  </p>
-                  <input
-                    className="w-full px-4 py-3 rounded-[16px] border border-border bg-surface text-text text-center text-xl font-bold tracking-[0.5em] focus:outline-none focus:ring-2 focus:ring-primary/20 transition-shadow"
-                    type="tel"
-                    inputMode="numeric"
-                    maxLength={6}
-                    placeholder="······"
-                    value={otp}
-                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                    onKeyDown={(e) => e.key === 'Enter' && handleVerifyOtp()}
-                  />
-                  <button onClick={handleVerifyOtp} disabled={phoneBusy}
-                    className="w-full flex items-center justify-center gap-2 py-3.5 rounded-[16px] bg-primary text-white font-bold text-sm shadow-btn shadow-btn active:scale-[0.98] transition-transform disabled:opacity-60">
-                    {phoneBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-                    {phoneBusy ? 'যাচাই হচ্ছে...' : 'Verify & Continue'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => { setPhoneStep('enter'); setOtp(''); setConfirmation(null); setToast(null); }}
-                    className="w-full flex items-center justify-center gap-1.5 text-xs font-bold text-text-secondary"
-                  >
-                    <ArrowLeft className="w-3.5 h-3.5" />
-                    নম্বর বদলান
-                  </button>
-                </div>
-              )}
-
-              {/* Invisible reCAPTCHA mount point for Phone OTP — must stay in the DOM */}
-              <div id="auth-recaptcha-container" />
-
-              {showSocialButtons && (
-                <>
-                  <div className="flex items-center gap-3 py-1">
-                    <div className="flex-1 h-px bg-divider" />
-                    <span className="text-xs text-text-tertiary">or</span>
-                    <div className="flex-1 h-px bg-divider" />
-                  </div>
-
-                  {/* Google */}
-                  <button onClick={handleGoogle}
-                    className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-[16px] border border-border bg-surface font-bold shadow-card text-sm text-text active:scale-[0.98] transition-transform">
-                    <svg width="18" height="18" viewBox="0 0 24 24">
-                      <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                      <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                    </svg>
-                    Continue with Google
-                  </button>
-
-                  {/* Facebook — gated behind FACEBOOK_LOGIN_LIVE until the app is Published */}
-                  {FACEBOOK_LOGIN_LIVE ? (
-                    <button onClick={handleFacebook}
-                      className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-[16px] border border-border bg-surface font-bold shadow-card text-sm text-text active:scale-[0.98] transition-transform">
-                      <svg width="18" height="18" viewBox="0 0 24 24">
-                        <path fill="#1877F2" d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07c0 6.02 4.39 11.02 10.13 11.93v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.79-4.69 4.53-4.69 1.31 0 2.68.24 2.68.24v2.97h-1.51c-1.49 0-1.95.93-1.95 1.89v2.25h3.32l-.53 3.49h-2.79V24C19.61 23.09 24 18.09 24 12.07z"/>
-                      </svg>
-                      Continue with Facebook
+                    <button type="button" onClick={() => void handleMagic()} className="text-[12px] font-bold text-ink-300">
+                      পাসওয়ার্ড ছাড়া ইমেইল লিংক পাঠান
                     </button>
-                  ) : (
-                    <div
-                      title="Facebook App এখনো Meta-র Business Verification/Publish প্রক্রিয়ায় আছে"
-                      className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-[16px] border border-dashed border-border bg-bg font-bold text-sm text-text-tertiary cursor-not-allowed select-none"
-                    >
-                      <svg width="18" height="18" viewBox="0 0 24 24" opacity="0.5">
-                        <path fill="currentColor" d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07c0 6.02 4.39 11.02 10.13 11.93v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.79-4.69 4.53-4.69 1.31 0 2.68.24 2.68.24v2.97h-1.51c-1.49 0-1.95.93-1.95 1.89v2.25h3.32l-.53 3.49h-2.79V24C19.61 23.09 24 18.09 24 12.07z"/>
-                      </svg>
-                      Facebook — শীঘ্রই আসছে
-                    </div>
                   )}
-                </>
+                </div>
               )}
             </>
           )}
+
+          <div id="auth-recaptcha-container" />
         </div>
       </div>
     </>
