@@ -14,7 +14,6 @@ import {
   signInWithEmailLink,
   signInWithPhoneNumber,
   signInWithPopup,
-  signInWithRedirect,
   signOut as firebaseSignOut,
   updateProfile,
   type ConfirmationResult,
@@ -54,19 +53,6 @@ const googleProvider = () => {
   const provider = new GoogleAuthProvider();
   provider.setCustomParameters({ prompt: 'select_account' });
   return provider;
-};
-
-const shouldRedirectGoogle = (): boolean => {
-  if (typeof window === 'undefined') return false;
-  const ua = navigator.userAgent || '';
-  if (/Android|iPhone|iPad|iPod|webOS|Mobile|FBAN|FBAV|Instagram|Line\//i.test(ua)) return true;
-  const nav = navigator as Navigator & { standalone?: boolean };
-  if (nav.standalone) return true;
-  try {
-    if (window.matchMedia('(display-mode: standalone)').matches) return true;
-    if (window.matchMedia('(pointer: coarse)').matches) return true;
-  } catch { /* ignore */ }
-  return false;
 };
 
 const mapFirebaseUser = async (authUser: FirebaseUser): Promise<User> => {
@@ -282,28 +268,10 @@ export function useAuth() {
   }, [login]);
 
   const signInWithGoogle = useCallback(async (): Promise<'popup' | 'redirect'> => {
-    const provider = googleProvider();
-    // Mobile / in-app / PWA: popups are blocked, so open Google in this tab.
-    if (shouldRedirectGoogle()) {
-      try { window.sessionStorage.setItem(GOOGLE_REDIRECT_KEY, '1'); } catch { /* ignore */ }
-      await signInWithRedirect(auth, provider);
-      return 'redirect';
-    }
-    try {
-      const cred = await signInWithPopup(auth, provider);
-      login(await mapFirebaseUser(cred.user));
-      return 'popup';
-    } catch (error: unknown) {
-      const code = typeof error === 'object' && error && 'code' in error
-        ? String((error as { code?: string }).code)
-        : '';
-      if (code === 'auth/popup-blocked' || code === 'auth/operation-not-supported-in-this-environment') {
-        try { window.sessionStorage.setItem(GOOGLE_REDIRECT_KEY, '1'); } catch { /* ignore */ }
-        await signInWithRedirect(auth, provider);
-        return 'redirect';
-      }
-      throw error;
-    }
+    // Popup only — redirect loses session across workers.dev → firebaseapp.com.
+    const cred = await signInWithPopup(auth, googleProvider());
+    login(await mapFirebaseUser(cred.user));
+    return 'popup';
   }, [login]);
 
   // Requires the Facebook provider to be turned on in Firebase Console

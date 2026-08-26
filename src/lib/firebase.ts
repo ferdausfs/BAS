@@ -1,6 +1,7 @@
 import { initializeApp, getApps } from 'firebase/app';
 import {
   browserLocalPersistence,
+  browserPopupRedirectResolver,
   getAuth,
   inMemoryPersistence,
   indexedDBLocalPersistence,
@@ -26,6 +27,7 @@ const createAuth = () => {
     // localStorage, then memory, instead of crashing the whole app.
     return initializeAuth(app, {
       persistence: [indexedDBLocalPersistence, browserLocalPersistence, inMemoryPersistence],
+      popupRedirectResolver: browserPopupRedirectResolver,
     });
   } catch {
     return getAuth(app);
@@ -56,8 +58,14 @@ export const firebaseAuthMessage = (error: unknown): string => {
   if (/too-many-requests/i.test(haystack)) {
     return 'অনেকবার চেষ্টা হয়েছে। একটু পরে আবার চেষ্টা করুন।';
   }
-  if (/popup-closed-by-user|popup-blocked|cancelled-popup-request/i.test(haystack)) {
+  if (/popup-blocked|operation-not-supported-in-this-environment/i.test(haystack)) {
+    return 'ব্রাউজার Google উইন্ডো আটকেছে। পপআপ allow করে আবার চেষ্টা করুন।';
+  }
+  if (/popup-closed-by-user|cancelled-popup-request/i.test(haystack)) {
     return 'Login উইন্ডো বন্ধ হয়ে গেছে। আবার চেষ্টা করুন।';
+  }
+  if (/unauthorized-domain/i.test(haystack)) {
+    return 'এই সাইট থেকে Google login অনুমোদিত নয়।';
   }
   if (/operation-not-allowed/i.test(haystack)) {
     return 'এই login পদ্ধতি এখন চালু নেই।';
@@ -69,7 +77,7 @@ export const firebaseAuthMessage = (error: unknown): string => {
     return 'ফোন নম্বর বা OTP ঠিক নেই।';
   }
   if (code.startsWith('auth/')) {
-    return 'Login করা যায়নি। আবার চেষ্টা করুন।';
+    return `Login করা যায়নি (${code.replace(/^auth\//, '')})। আবার চেষ্টা করুন।`;
   }
   return raw || 'Login করা যায়নি। আবার চেষ্টা করুন।';
 };
