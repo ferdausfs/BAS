@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { ConfirmationResult } from 'firebase/auth';
-import { ArrowLeft, Eye, EyeOff, Loader2, Mail, User, X } from 'lucide-react';
+import { ArrowLeft, Eye, EyeOff, Loader2, User, X } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { firebaseAuthMessage } from '../lib/firebase';
 import { useModalDepth } from '../hooks/useModalDepth';
@@ -46,7 +46,7 @@ export function AuthSheet({ open, onClose, onSuccess }: Props) {
   const [showPassword, setShowPassword] = useState(false);
   const [magicSent, setMagicSent] = useState(false);
 
-  const [phone, setPhone] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [otp, setOtp] = useState('');
   const [confirmation, setConfirmation] = useState<ConfirmationResult | null>(null);
   const [busy, setBusy] = useState(false);
@@ -74,7 +74,7 @@ export function AuthSheet({ open, onClose, onSuccess }: Props) {
     setName('');
     setShowPassword(false);
     setMagicSent(false);
-    setPhone('');
+    setIdentifier('');
     setOtp('');
     setConfirmation(null);
     setBusy(false);
@@ -87,22 +87,22 @@ export function AuthSheet({ open, onClose, onSuccess }: Props) {
 
   if (!mounted) return null;
 
-  const handleGoogle = async () => {
-    setBusy(true);
-    try {
-      await signInWithGoogle();
-      finish();
-    } catch (e: unknown) {
-      showToast(firebaseAuthMessage(e), 'err');
-    } finally {
-      setBusy(false);
-    }
+  const handleGoogle = () => {
+    // Must start Firebase in this click tick — setState first blocks the popup.
+    void signInWithGoogle()
+      .then((kind) => {
+        if (kind === 'redirect') return;
+        finish();
+      })
+      .catch((e: unknown) => {
+        showToast(firebaseAuthMessage(e), 'err');
+      });
   };
 
   const handleSendOtp = async () => {
-    const e164 = toE164Bangladesh(phone);
+    const e164 = toE164Bangladesh(identifier);
     if (!e164) {
-      showToast('সঠিক মোবাইল নম্বর দিন, যেমন 01XXXXXXXXX', 'err');
+      showToast('সঠিক মোবাইল নম্বর বা ইমেইল দিন', 'err');
       return;
     }
     setBusy(true);
@@ -117,6 +117,17 @@ export function AuthSheet({ open, onClose, onSuccess }: Props) {
     } finally {
       setBusy(false);
     }
+  };
+
+  const handleContinue = () => {
+    const raw = identifier.trim();
+    if (validateEmail(raw)) {
+      setEmail(raw);
+      setToast(null);
+      setStep('email');
+      return;
+    }
+    void handleSendOtp();
   };
 
   const handleVerifyOtp = async () => {
@@ -197,9 +208,9 @@ export function AuthSheet({ open, onClose, onSuccess }: Props) {
       : step === 'email' ? (emailNew ? 'নতুন অ্যাকাউন্ট' : 'ইমেইল দিয়ে')
         : 'লগইন করুন';
   const subtitle =
-    step === 'otp' ? `${toE164Bangladesh(phone) ?? phone} নম্বরে ৬ ডিজিটের কোড গেছে`
+    step === 'otp' ? `${toE164Bangladesh(identifier) ?? identifier} নম্বরে ৬ ডিজিটের কোড গেছে`
       : step === 'email' ? (emailNew ? 'নাম, ইমেইল আর একটি পাসওয়ার্ড দিলেই হবে' : 'আগের অ্যাকাউন্ট থাকলে ইমেইল ও পাসওয়ার্ড দিন')
-        : 'নম্বর বা Google — নতুন হলে নিজেই অ্যাকাউন্ট হবে';
+        : 'নম্বর, ইমেইল বা Google — নতুন হলে নিজেই অ্যাকাউন্ট হবে';
 
   return (
     <>
@@ -271,26 +282,29 @@ export function AuthSheet({ open, onClose, onSuccess }: Props) {
           ) : step === 'home' ? (
             <>
               <label className="block">
-                <span className="mb-1.5 block text-[12px] font-bold text-ink-300">মোবাইল নম্বর</span>
+                <span className="mb-1.5 block text-[12px] font-bold text-ink-300">নম্বর বা ইমেইল</span>
                 <input
-                  className="h-12 w-full rounded-2xl border border-border bg-surface px-4 text-[16px] font-medium tabular text-ink shadow-card outline-none placeholder:text-ink-200 focus:border-coral focus:ring-2 focus:ring-coral/15"
-                  type="tel"
-                  inputMode="numeric"
-                  autoComplete="tel"
-                  placeholder="01XXXXXXXXX"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 11))}
-                  onKeyDown={(e) => e.key === 'Enter' && void handleSendOtp()}
+                  className="h-12 w-full rounded-2xl border border-border bg-surface px-4 text-[16px] font-medium text-ink shadow-card outline-none placeholder:text-ink-200 focus:border-coral focus:ring-2 focus:ring-coral/15"
+                  type="text"
+                  inputMode="email"
+                  autoComplete="username"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  placeholder="01XXXXXXXXX বা ইমেইল"
+                  value={identifier}
+                  onChange={(e) => setIdentifier(e.target.value.slice(0, 80))}
+                  onKeyDown={(e) => e.key === 'Enter' && handleContinue()}
                 />
               </label>
               <button
                 type="button"
-                onClick={() => void handleSendOtp()}
+                onClick={handleContinue}
                 disabled={busy}
                 className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-coral text-[15px] font-bold text-white shadow-btn transition active:scale-[0.98] disabled:opacity-60"
               >
                 {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                {busy ? 'পাঠানো হচ্ছে...' : 'কোড পাঠান'}
+                {busy ? 'অপেক্ষা করুন...' : validateEmail(identifier.trim()) ? 'চালিয়ে যান' : 'কোড পাঠান'}
               </button>
 
               <div className="flex items-center gap-3 py-1">
@@ -301,20 +315,11 @@ export function AuthSheet({ open, onClose, onSuccess }: Props) {
 
               <button
                 type="button"
-                onClick={() => void handleGoogle()}
-                disabled={busy}
-                className="flex h-12 w-full items-center justify-center gap-3 rounded-2xl border border-border bg-surface text-[14px] font-bold text-ink shadow-card transition active:scale-[0.98] disabled:opacity-60"
+                onClick={handleGoogle}
+                className="flex h-12 w-full items-center justify-center gap-3 rounded-2xl border border-border bg-surface text-[14px] font-bold text-ink shadow-card transition active:scale-[0.98]"
               >
-                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <GoogleMark />}
+                <GoogleMark />
                 Google দিয়ে চালিয়ে যান
-              </button>
-
-              <button
-                type="button"
-                onClick={() => { setStep('email'); setToast(null); }}
-                className="flex h-11 w-full items-center justify-center gap-2 text-[13px] font-bold text-coral"
-              >
-                <Mail className="h-4 w-4" /> ইমেইল দিয়ে
               </button>
             </>
           ) : step === 'otp' ? (

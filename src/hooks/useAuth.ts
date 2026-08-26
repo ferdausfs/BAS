@@ -3,6 +3,7 @@ import {
   createUserWithEmailAndPassword,
   FacebookAuthProvider,
   GoogleAuthProvider,
+  getRedirectResult,
   isSignInWithEmailLink,
   onAuthStateChanged,
   RecaptchaVerifier,
@@ -13,6 +14,7 @@ import {
   signInWithEmailLink,
   signInWithPhoneNumber,
   signInWithPopup,
+  signInWithRedirect,
   signOut as firebaseSignOut,
   updateProfile,
   type ConfirmationResult,
@@ -44,7 +46,28 @@ const profileRef = (id: string) => doc(db, 'profiles', id);
 // reCAPTCHA widget, and only ever try to consume a magic-link URL once.
 let recaptchaVerifier: RecaptchaVerifier | null = null;
 let magicLinkChecked = false;
+let googleRedirectChecked = false;
 const MAGIC_LINK_EMAIL_KEY = 'bas_emailForSignIn';
+const GOOGLE_REDIRECT_KEY = 'bas_google_redirect';
+
+const googleProvider = () => {
+  const provider = new GoogleAuthProvider();
+  provider.setCustomParameters({ prompt: 'select_account' });
+  return provider;
+};
+
+const shouldRedirectGoogle = (): boolean => {
+  if (typeof window === 'undefined') return false;
+  const ua = navigator.userAgent || '';
+  if (/Android|iPhone|iPad|iPod|webOS|Mobile|FBAN|FBAV|Instagram|Line\//i.test(ua)) return true;
+  const nav = navigator as Navigator & { standalone?: boolean };
+  if (nav.standalone) return true;
+  try {
+    if (window.matchMedia('(display-mode: standalone)').matches) return true;
+    if (window.matchMedia('(pointer: coarse)').matches) return true;
+  } catch { /* ignore */ }
+  return false;
+};
 
 const mapFirebaseUser = async (authUser: FirebaseUser): Promise<User> => {
   const fallbackName = authUser.displayName || authUser.email?.split('@')[0] || 'User';
@@ -133,6 +156,20 @@ export function useAuth() {
     // One-time: if the user opened this app from an email magic-link,
     // complete the sign-in. Guarded at module scope so it only runs once
     // even though useAuth() is called from more than one component.
+    if (!googleRedirectChecked) {
+      googleRedirectChecked = true;
+      getRedirectResult(auth)
+        .then(async (result) => {
+          try { window.sessionStorage.removeItem(GOOGLE_REDIRECT_KEY); } catch { /* ignore */ }
+          if (result?.user && active) login(await mapFirebaseUser(result.user));
+        })
+        .catch((error) => {
+          try { window.sessionStorage.removeItem(GOOGLE_REDIRECT_KEY); } catch { /* ignore */ }
+          console.warn('Google redirect sign-in failed:', error);
+          useUI.getState().addNotification('Google login', firebaseAuthMessage(error));
+        });
+    }
+
     if (!magicLinkChecked) {
       magicLinkChecked = true;
       if (isSignInWithEmailLink(auth, window.location.href)) {
@@ -244,10 +281,29 @@ export function useAuth() {
     }
   }, [login]);
 
-  const signInWithGoogle = useCallback(async () => {
-    const provider = new GoogleAuthProvider();
-    const cred = await signInWithPopup(auth, provider);
-    login(await mapFirebaseUser(cred.user));
+  const signInWithGoogle = useCallback(async (): Promise<'popup' | 'redirect'> => {
+    const provider = googleProvider();
+    // Mobile / in-app / PWA: popups are blocked, so open Google in this tab.
+    if (shouldRedirectGoogle()) {
+      try { window.sessionStorage.setItem(GOOGLE_REDIRECT_KEY, '1'); } catch { /* ignore */ }
+      await signInWithRedirect(auth, provider);
+      return 'redirect';
+    }
+    try {
+      const cred = await signInWithPopup(auth, provider);
+      login(await mapFirebaseUser(cred.user));
+      return 'popup';
+    } catch (error: unknown) {
+      const code = typeof error === 'object' && error && 'code' in error
+        ? String((error as { code?: string }).code)
+        : '';
+      if (code === 'auth/popup-blocked' || code === 'auth/operation-not-supported-in-this-environment') {
+        try { window.sessionStorage.setItem(GOOGLE_REDIRECT_KEY, '1'); } catch { /* ignore */ }
+        await signInWithRedirect(auth, provider);
+        return 'redirect';
+      }
+      throw error;
+    }
   }, [login]);
 
   // Requires the Facebook provider to be turned on in Firebase Console

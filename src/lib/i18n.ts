@@ -96,7 +96,7 @@ export const dictionaries = {
     'profile.inviteEarn': 'ইনভাইট ও আর্ন',
     'profile.specialDates': 'বিশেষ তারিখ',
     'profile.signInTitle': 'লগইন করুন',
-    'profile.signInBody': 'অর্ডার, উইশলিস্ট আর ঠিকানা রাখতে নম্বর বা Google দিন।',
+    'profile.signInBody': 'অর্ডার, উইশলিস্ট আর ঠিকানা রাখতে নম্বর, ইমেইল বা Google দিন।',
     'profile.language': 'ভাষা',
     'profile.languageSub': 'অ্যাপের ভাষা বদলান',
     'profile.bangla': 'বাংলা',
