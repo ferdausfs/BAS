@@ -14,6 +14,7 @@ import CartScreen from './screens/CartScreen';
 import CheckoutScreen from './screens/CheckoutScreen';
 import SuccessScreen from './screens/SuccessScreen';
 import { AuthSheet } from './components/AuthSheet';
+import WelcomeSheet from './components/WelcomeSheet';
 import NotificationsSheet from './components/NotificationsSheet';
 import WishlistScreen from './screens/WishlistScreen';
 import TrackingScreen from './screens/TrackingScreen';
@@ -60,8 +61,10 @@ export default function App() {
   const { settings } = useSettingsStore();
 
   const [authOpen, setAuthOpen] = useState(false);
+  const [welcomeOpen, setWelcomeOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [settingsLoading, setSettingsLoading] = useState(true);
+  const wantedWelcome = useRef(false);
 
   useEffect(() => {
     try {
@@ -81,14 +84,34 @@ export default function App() {
     useSettingsStore.getState().loadRemoteSettings().finally(() => setSettingsLoading(false));
   }, []);
 
+  useEffect(() => {
+    if (authOpen && !user) wantedWelcome.current = true;
+    if (!authOpen && !user) wantedWelcome.current = false;
+  }, [authOpen, user]);
+
+  useEffect(() => {
+    if (!user || !wantedWelcome.current) return;
+    wantedWelcome.current = false;
+    setAuthOpen(false);
+    const timer = window.setTimeout(() => setWelcomeOpen(true), 180);
+    return () => window.clearTimeout(timer);
+  }, [user]);
+
   const authOpenRef = useRef(authOpen);
+  const welcomeOpenRef = useRef(welcomeOpen);
   const notificationsOpenRef = useRef(notificationsOpen);
   authOpenRef.current = authOpen;
+  welcomeOpenRef.current = welcomeOpen;
   notificationsOpenRef.current = notificationsOpen;
 
   useEffect(() => {
     pushBrowserRouteState();
     const handlePopState = () => {
+      if (welcomeOpenRef.current) {
+        setWelcomeOpen(false);
+        pushBrowserRouteState();
+        return;
+      }
       if (authOpenRef.current) {
         setAuthOpen(false);
         pushBrowserRouteState();
@@ -149,7 +172,7 @@ export default function App() {
     view.name === 'admin' ? (view.tab ?? 'dashboard') : '',
   ].join('-');
 
-  const showTabBar = view.name === 'tabs' && !chatOpen && !authOpen && !notificationsOpen && modalDepth === 0;
+  const showTabBar = view.name === 'tabs' && !chatOpen && !authOpen && !welcomeOpen && !notificationsOpen && modalDepth === 0;
 
   return (
     <AppErrorBoundary>
@@ -199,6 +222,7 @@ export default function App() {
 
         <NotificationsSheet open={notificationsOpen} onClose={() => setNotificationsOpen(false)} />
         <AuthSheet open={authOpen} onClose={() => setAuthOpen(false)} />
+        <WelcomeSheet open={welcomeOpen} onClose={() => setWelcomeOpen(false)} />
         <ChatBot />
         <OccasionZoomOverlay />
         <I18nRuntimeTranslator />

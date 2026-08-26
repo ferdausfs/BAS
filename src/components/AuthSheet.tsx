@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { ConfirmationResult } from 'firebase/auth';
-import { ArrowLeft, Eye, EyeOff, Loader2, User, X } from 'lucide-react';
+import { ArrowLeft, Eye, EyeOff, Loader2, X } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { firebaseAuthMessage } from '../lib/firebase';
 import { useModalDepth } from '../hooks/useModalDepth';
@@ -34,7 +34,7 @@ type Step = 'home' | 'otp' | 'email';
 
 export function AuthSheet({ open, onClose, onSuccess }: Props) {
   const {
-    user, loading, signUp, signIn, signOut, signInWithGoogle,
+    user, loading, signUp, signIn, signInWithGoogle,
     sendPhoneOtp, confirmPhoneOtp, sendMagicLink, resetPassword,
   } = useAuth();
 
@@ -85,7 +85,15 @@ export function AuthSheet({ open, onClose, onSuccess }: Props) {
     if (!open) reset();
   }, [open]);
 
-  if (!mounted) return null;
+  useEffect(() => {
+    if (open && user) {
+      hapticTap();
+      onSuccess?.();
+      onClose();
+    }
+  }, [open, user]);
+
+  if (!mounted || user) return null;
 
   const handleGoogle = () => {
     // Must start Firebase in this click tick — setState first blocks the popup.
@@ -260,26 +268,7 @@ export function AuthSheet({ open, onClose, onSuccess }: Props) {
             </div>
           )}
 
-          {user ? (
-            <div className="text-center">
-              <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-secondary">
-                {user.avatar && user.avatar.length > 2 ? (
-                  <img src={user.avatar} alt="" className="h-full w-full object-cover" />
-                ) : (
-                  <User className="h-8 w-8 text-coral" strokeWidth={1.75} />
-                )}
-              </div>
-              <p className="text-[16px] font-bold text-ink">{user.name}</p>
-              {user.email && <p className="mt-0.5 text-[13px] text-ink-300">{user.email}</p>}
-              <button
-                type="button"
-                onClick={() => { void signOut(); onClose(); }}
-                className="mt-5 h-12 w-full rounded-2xl bg-error/10 text-[14px] font-bold text-error transition active:scale-[0.98]"
-              >
-                সাইন আউট
-              </button>
-            </div>
-          ) : step === 'home' ? (
+          {step === 'home' ? (
             <>
               <label className="block">
                 <span className="mb-1.5 block text-[12px] font-bold text-ink-300">নম্বর বা ইমেইল</span>
