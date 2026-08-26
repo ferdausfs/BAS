@@ -525,34 +525,43 @@ export default function HomeScreen({
         </section>
 
         <section className="mt-6 px-6 anim-up delay-4">
-          <div className="overflow-hidden rounded-[30px] border border-border bg-surface p-5 shadow-card">
-            <div className="flex items-center gap-4">
-              <div className="min-w-0 flex-1">
-                <span className="inline-flex items-center gap-2 rounded-full bg-secondary px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-primary">
-                  {t('home.forYou')}
-                </span>
-                <h3 className="mt-3 text-2xl font-bold tracking-[-0.02em] text-text">{t('home.pickedForTaste')}</h3>
-                <p className="mt-2 text-md leading-relaxed text-text-secondary">{forYouLabel}</p>
-                <button
-                  type="button"
-                  onClick={() => (forYouProduct ? go({ name: 'product', productId: forYouProduct.id }) : go({ name: 'customize' }))}
-                  className="mt-5 inline-flex h-11 items-center gap-2 rounded-[18px] bg-primary px-4 text-base font-semibold text-white shadow-btn transition hover:bg-primary-hover active:scale-95"
-                >
-                  {forYouProduct ? t('common.viewCake') : t('common.customizeYours')}
-                  <ArrowRight className="h-4 w-4" strokeWidth={2.2} />
-                </button>
-              </div>
-              <div className="flex h-28 w-28 shrink-0 items-center justify-center rounded-[24px] bg-secondary p-2 shadow-card">
-                <img
-                  loading="lazy"
-                  decoding="async"
-                  src={forYouProduct?.image || '/cakes/logo-cake.png'}
-                  alt={forYouProduct?.name || ''}
-                  className="h-full w-full rounded-[20px] object-cover"
-                />
-              </div>
+          <button
+            type="button"
+            onClick={() => {
+              hapticTap();
+              if (forYouProduct) go({ name: 'product', productId: forYouProduct.id });
+              else go({ name: 'customize' });
+            }}
+            className="group relative block h-[232px] w-full overflow-hidden rounded-[24px] border-[5px] border-white bg-ink text-left shadow-card transition duration-300 active:scale-[0.99]"
+            aria-label={forYouProduct ? t('common.viewCake') : t('common.customizeYours')}
+          >
+            <img
+              loading="lazy"
+              decoding="async"
+              src={forYouProduct?.image || '/cakes/logo-cake.png'}
+              alt={forYouProduct?.name || t('home.pickedForTaste')}
+              onError={(event) => {
+                const img = event.currentTarget as HTMLImageElement;
+                img.onerror = null;
+                img.src = '/cakes/logo-cake.png';
+              }}
+              className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.05]"
+            />
+            <span className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/0 via-black/10 to-black/72" />
+            <div className="absolute inset-x-0 bottom-0 z-[3] px-4 pb-4 text-white [text-shadow:0_2px_12px_rgba(0,0,0,.44)]">
+              <span className="inline-flex rounded-full bg-white px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-primary">
+                {t('home.forYou')}
+              </span>
+              <h3 className="mt-2 line-clamp-1 text-xl font-bold tracking-[-0.02em]">
+                {forYouProduct?.name || t('home.pickedForTaste')}
+              </h3>
+              <p className="mt-1 line-clamp-1 text-sm font-medium text-white/80">{forYouLabel}</p>
+              <span className="mt-3 inline-flex h-10 items-center gap-2 rounded-full bg-white px-4 text-sm font-semibold text-text shadow-card">
+                {forYouProduct ? t('common.viewCake') : t('common.customizeYours')}
+                <ArrowRight className="h-4 w-4" strokeWidth={2.2} />
+              </span>
             </div>
-          </div>
+          </button>
         </section>
 
         {!hasSearch && galleryStrip.length > 0 && (
