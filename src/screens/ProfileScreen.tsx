@@ -49,6 +49,14 @@ type CustomerProfile = {
   payment: SavedPayment;
 };
 
+const DEFAULT_COVER = '/cakes/strawberry-pink.png';
+const COVER_PRESETS = [
+  '/cakes/strawberry-pink.png',
+  '/cakes/red-velvet.png',
+  '/cakes/chocolate-truffle.png',
+  '/cakes/butterscotch.png',
+];
+
 const CUSTOMER_PROFILE_KEY = 'bakeart-customer-profile';
 
 const emptyCustomerProfile = (name = ''): CustomerProfile => ({
@@ -123,9 +131,11 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
   const setLanguage = useLanguageStore((state) => state.setLanguage);
   const t = useT();
   const effectiveIsAdmin = isAdmin || !!user?.isAdmin;
-  const { signOut, updateAvatar, resetPassword } = useAuth();
+  const { signOut, updateAvatar, updateCover, resetPassword } = useAuth();
   const avatarInputRef = useRef<HTMLInputElement>(null);
+  const coverInputRef = useRef<HTMLInputElement>(null);
   const [avatarBusy, setAvatarBusy] = useState(false);
+  const [coverBusy, setCoverBusy] = useState(false);
   const referralCode = getReferralCode(user);
   const [walletHistoryOpen, setWalletHistoryOpen] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
@@ -440,7 +450,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
 
 
   const myOrders = orders.filter((order: Order) => !order.userId || order.userId === user?.id);
-  const lastOrder = myOrders[0] ?? null;
+  const lastOrder = myOrders.find((order) => order.status !== 'cancelled') ?? myOrders[0] ?? null;
   const couponCount = (settings.coupons ?? []).filter((coupon) => {
     if (!coupon.active) return false;
     if (!coupon.expiresAt) return true;
@@ -502,20 +512,29 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
 
       {profileView === 'main' && (
         <div className="no-scrollbar flex-1 overflow-y-auto pb-40">
-          <div className="relative h-[188px] overflow-hidden">
-            <img src="/cakes/strawberry-pink.png" alt="" className="h-full w-full object-cover object-[center_42%] anim-scale" />
-            <div className="absolute inset-0 bg-gradient-to-t from-bg via-bg/25 to-ink/15" />
+          <div className="relative h-[220px] overflow-hidden">
             <button
               type="button"
-              onClick={() => setProfileView('settings')}
-              className="absolute right-4 top-4 flex h-11 w-11 items-center justify-center rounded-full bg-surface text-ink shadow-card transition active:scale-95 anim-scale"
-              aria-label={t('profile.settings')}
+              onClick={() => coverInputRef.current?.click()}
+              disabled={coverBusy}
+              className="absolute inset-0"
+              aria-label={t('profile.changeCover')}
             >
-              <Settings className="h-5 w-5" strokeWidth={1.8} />
+              <img
+                src={user.cover && user.cover.length > 2 ? user.cover : DEFAULT_COVER}
+                alt=""
+                className="h-full w-full object-cover object-[center_40%] profile-cover-blend anim-scale"
+              />
             </button>
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-bg" />
+            {coverBusy && (
+              <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                <Loader2 className="h-6 w-6 animate-spin text-coral" />
+              </div>
+            )}
           </div>
 
-          <div className="-mt-14 px-5">
+          <div className="relative z-10 -mt-16 px-5">
             <div className="flex flex-col items-center text-center anim-pop delay-1">
               <button
                 type="button"
@@ -832,6 +851,44 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
                 {avatarBusy ? <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2} /> : <Camera className="h-4 w-4" strokeWidth={1.8} />}
               </button>
             </div>
+          </div>
+
+          <div className="mt-6">
+            <p className="mb-2 text-[13px] font-semibold text-ink-300">{t('profile.changeCover')}</p>
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {COVER_PRESETS.map((src) => {
+                const active = (user.cover || DEFAULT_COVER) === src;
+                return (
+                  <button
+                    key={src}
+                    type="button"
+                    disabled={coverBusy}
+                    onClick={() => {
+                      setCoverBusy(true);
+                      void updateCover(src)
+                        .then(() => useUI.getState().addNotification('কভার আপডেট', 'কভার ছবি সেভ হয়েছে।'))
+                        .catch((error: unknown) => useUI.getState().addNotification(
+                          'কভার আপডেট হয়নি',
+                          error instanceof Error ? error.message : 'আবার চেষ্টা করুন।'
+                        ))
+                        .finally(() => setCoverBusy(false));
+                    }}
+                    className={`h-14 w-20 shrink-0 overflow-hidden rounded-2xl border-2 transition active:scale-95 ${active ? 'border-coral' : 'border-transparent'}`}
+                  >
+                    <img src={src} alt="" className="h-full w-full object-cover" />
+                  </button>
+                );
+              })}
+              <button
+                type="button"
+                disabled={coverBusy}
+                onClick={() => coverInputRef.current?.click()}
+                className="flex h-14 w-20 shrink-0 flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-surface text-coral"
+              >
+                {coverBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" strokeWidth={1.8} />}
+              </button>
+            </div>
+            <p className="mt-1.5 text-[11px] text-ink-200">{t('profile.coverHint')}</p>
           </div>
 
           <div className="mt-8 space-y-4">

@@ -36,6 +36,7 @@ type ProfileDoc = {
   location_address?: string | null;
   location_verified?: boolean | null;
   avatar?: string | null;
+  cover?: string | null;
   referral_code?: string | null;
 };
 
@@ -83,6 +84,7 @@ const mapFirebaseUser = async (authUser: FirebaseUser): Promise<User> => {
         location_address: profile?.location_address ?? null,
         location_verified: profile?.location_verified || false,
         avatar: profile?.avatar || fallbackAvatar,
+        cover: profile?.cover || '',
         referral_code: profile?.referral_code || refCode || null,
       };
       await setDoc(profileRef(authUser.uid), { ...nextProfile, updated_at: serverTimestamp() }, { merge: true });
@@ -116,6 +118,7 @@ const mapFirebaseUser = async (authUser: FirebaseUser): Promise<User> => {
     name: profile?.name || fallbackName,
     email: profile?.email || authUser.email || '',
     avatar: profile?.avatar || fallbackAvatar,
+    cover: profile?.cover || '',
     isAdmin: !!profile?.is_admin,
     contact: profile?.contact || '',
     district: profile?.district ?? null,
@@ -352,8 +355,23 @@ export function useAuth() {
     login({ ...current, avatar: url });
   }, [login]);
 
+  const updateCover = useCallback(async (source: File | string): Promise<void> => {
+    const current = useAuthStore.getState().user;
+    if (!current?.id) throw new Error('Sign in required');
+    let url = typeof source === 'string' ? source : '';
+    if (typeof source !== 'string') {
+      if (source.size > 2 * 1024 * 1024) throw new Error('ছবি সর্বোচ্চ ২MB হতে পারবে');
+      url = await uploadToCloudinary(source, 'bake-art-style/covers');
+    }
+    if (!url) throw new Error('Cover missing');
+    if (isFirebaseConfigured()) {
+      await setDoc(profileRef(current.id), { cover: url, updated_at: serverTimestamp() }, { merge: true });
+    }
+    login({ ...current, cover: url });
+  }, [login]);
+
   return {
     user, loading, signUp, signIn, signOut, signInWithGoogle, signInWithFacebook,
-    sendPhoneOtp, confirmPhoneOtp, sendMagicLink, resetPassword, ensureSignedIn, updateAvatar,
+    sendPhoneOtp, confirmPhoneOtp, sendMagicLink, resetPassword, ensureSignedIn, updateAvatar, updateCover,
   };
 }

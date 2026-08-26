@@ -136,6 +136,7 @@ export interface User {
   name: string;
   email: string;
   avatar?: string;
+  cover?: string;
   isAdmin?: boolean;
   contact?: string;
   district?: string | null;

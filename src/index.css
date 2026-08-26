@@ -346,6 +346,26 @@ button { -webkit-tap-highlight-color: transparent; }
 .delay-5 { animation-delay: .30s; }
 .delay-6 { animation-delay: .36s; }
 
+/* Profile cover melts into the pink canvas — no hard photo edge. */
+.profile-cover-blend {
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.88) 0%,
+    #000 16%,
+    #000 44%,
+    rgba(0, 0, 0, 0.42) 72%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.88) 0%,
+    #000 16%,
+    #000 44%,
+    rgba(0, 0, 0, 0.42) 72%,
+    transparent 100%
+  );
+}
+
 /* ===== Buttons =====
    BAS0001: solid opaque CTAs in the primary pink with soft single-source
    pink-tinted shadows (no gradients). Large tap targets, 16–20px radius. */
