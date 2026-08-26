@@ -62,7 +62,8 @@ export type View =
   | { name: 'admin'; tab?: string }
   | { name: 'reviews'; productId?: string }
   | { name: 'write-review'; productId: string }
-  | { name: 'coupons' };
+  | { name: 'coupons' }
+  | { name: 'gallery' };
 
 type UIState = {
   view: View;

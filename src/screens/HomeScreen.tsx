@@ -13,9 +13,10 @@ import SectionHeader from '../components/SectionHeader';
 import OccasionSheet from '../components/OccasionSheet';
 import UnderlineTabs from '../components/UnderlineTabs';
 import { useModalDepth } from '../hooks/useModalDepth';
-import type { Banner, CartItem, Product, SpecialDate } from '../types';
+import type { Banner, CartItem, GalleryItem, Product, SpecialDate } from '../types';
 import { useT } from '../lib/i18n';
 import { consumeRestockedAlerts } from '../lib/stockAlerts';
+import { useGallery } from '../hooks/useGallery';
 
 const STAGGER_DELAYS = ['delay-1', 'delay-2', 'delay-3', 'delay-4', 'delay-5'];
 
@@ -60,6 +61,7 @@ export default function HomeScreen({
   const { settings } = useSettingsStore();
   const { products, loading: productsLoading } = useProducts();
   const { banners } = useBanners();
+  const { gallery } = useGallery();
   const t = useT();
   const couponChips = useMemo(
     () =>
@@ -210,6 +212,10 @@ export default function HomeScreen({
   const hasSearch = search.trim().length > 0;
   const searchTerm = debouncedSearch.trim();
   const featuredProducts = trending.slice(0, 6);
+  const galleryPreview = useMemo(
+    () => safeArray<GalleryItem>(gallery).filter((item) => !!item.image).slice(0, 4),
+    [gallery],
+  );
 
   useEffect(() => {
     if (availableProducts.length === 0) return;
@@ -488,6 +494,34 @@ export default function HomeScreen({
             </section>
           );
         })()}
+
+        {galleryPreview.length > 0 && (
+          <section className="mt-6 anim-up delay-3">
+            <SectionHeader
+              title={t('home.gallery')}
+              subtitle={t('home.gallerySub')}
+              action={{ label: t('common.seeAll'), onClick: () => go({ name: 'gallery' }) }}
+            />
+            <div className="mt-4 grid grid-cols-4 gap-2 px-6">
+              {galleryPreview.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => go({ name: 'gallery' })}
+                  className="overflow-hidden rounded-[18px] border border-border bg-surface shadow-card transition active:scale-95"
+                >
+                  <img
+                    src={item.image}
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                    className="h-20 w-full object-cover"
+                  />
+                </button>
+              ))}
+            </div>
+          </section>
+        )}
 
         <section className="mt-6 anim-up delay-3">
           <SectionHeader

@@ -32,15 +32,15 @@ const EMPTY_PRODUCT = {
   rating: 4.5, reviews: 0,
   occasion: 'birthday' as const,
   flavors: ['Chocolate', 'Vanilla', 'Strawberry'],
-  weights: [{ size: '1 kg', price: 500 }],
+  weights: [{ size: '1 lb', price: 0 }],
   toppings: [] as string[],
   tags: [] as string[],
   bestseller: false,
   newArrival: true,
   tier: 'normal' as const,
   inStock: true,
-  pricePerUnit: undefined as number | undefined,
-  priceUnit: 'kg' as const,
+  pricePerUnit: 500,
+  priceUnit: 'pound' as const,
 };
 
 const EMPTY_BANNER = {
@@ -517,11 +517,32 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                       onChange={(e) => setEditProduct({ ...editProduct, [f]: e.target.value })} />
                   </div>
                 ))}
-                <div>
-                  <label className="text-[10px] font-bold text-ink/50 uppercase">Price (৳)</label>
-                  <input type="number" className="w-full mt-0.5 px-3 py-2 rounded-xl border border-border bg-surface text-xs text-ink focus:outline-none"
-                    value={editProduct.price}
-                    onChange={(e) => setEditProduct({ ...editProduct, price: +e.target.value })} />
+                <div className="space-y-2 border border-border rounded-2xl p-3">
+                  <label className="text-[10px] font-bold text-ink/50 uppercase">Price (৳) — this is what the customer pays</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="number"
+                      min={0}
+                      className="flex-1 mt-0.5 px-3 py-2 rounded-xl border border-border bg-surface text-xs text-ink focus:outline-none"
+                      value={editProduct.price}
+                      onChange={(e) => {
+                        const price = +e.target.value;
+                        setEditProduct({ ...editProduct, price, pricePerUnit: price });
+                      }}
+                    />
+                    <select
+                      className="w-32 mt-0.5 px-3 py-2 rounded-xl border border-border bg-surface text-xs text-ink focus:outline-none"
+                      value={editProduct.priceUnit ?? 'pound'}
+                      onChange={(e) => setEditProduct({ ...editProduct, priceUnit: e.target.value as 'kg' | 'pound' })}
+                    >
+                      <option value="pound">per pound</option>
+                      <option value="kg">per kg</option>
+                    </select>
+                  </div>
+                  <p className="text-[10px] text-coral font-semibold">
+                    Customer sees {formatINR(editProduct.price || 0)} / {editProduct.priceUnit === 'kg' ? 'kg' : 'pound'}
+                    {' · '}2 {(editProduct.priceUnit === 'kg' ? 'kg' : 'lb')} = {formatINR((editProduct.price || 0) * 2)}
+                  </p>
                 </div>
 
                 {/* Tier selector */}
@@ -545,40 +566,6 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                       </button>
                     ))}
                   </div>
-                </div>
-
-                {/* Weight-based Pricing */}
-                <div className="space-y-2 border border-border rounded-2xl p-3">
-                  <label className="text-[10px] font-bold text-ink/50 uppercase">Weight-based Pricing (optional)</label>
-                  <p className="text-[10px] text-ink/40">If set, price = customer's weight × rate below. Leave blank to use fixed price above.</p>
-                  <div className="flex gap-2">
-                    <div className="flex-1">
-                      <label className="text-[10px] font-bold text-ink/40">Rate per unit (৳)</label>
-                      <input
-                        type="number"
-                        placeholder="e.g. 100"
-                        className="w-full mt-0.5 px-3 py-2 rounded-xl border border-border bg-surface text-xs text-ink focus:outline-none"
-                        value={editProduct.pricePerUnit ?? ''}
-                        onChange={(e) => setEditProduct(prev => prev ? { ...prev, pricePerUnit: e.target.value ? +e.target.value : undefined } : prev)}
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <label className="text-[10px] font-bold text-ink/40">Unit</label>
-                      <select
-                        className="w-full mt-0.5 px-3 py-2 rounded-xl border border-border bg-surface text-xs text-ink focus:outline-none"
-                        value={editProduct.priceUnit ?? 'kg'}
-                        onChange={(e) => setEditProduct(prev => prev ? { ...prev, priceUnit: e.target.value as 'kg' | 'pound' } : prev)}
-                      >
-                        <option value="kg">per kg</option>
-                        <option value="pound">per pound</option>
-                      </select>
-                    </div>
-                  </div>
-                  {editProduct.pricePerUnit && (
-                    <p className="text-[10px] text-coral font-semibold">
-                      Example: 2 {editProduct.priceUnit ?? 'kg'} = ৳{(editProduct.pricePerUnit * 2).toLocaleString()}  ·  0.5 {editProduct.priceUnit ?? 'kg'} = ৳{(editProduct.pricePerUnit * 0.5).toLocaleString()}
-                    </p>
-                  )}
                 </div>
 
                 <div>
@@ -707,30 +694,19 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                   />
                 </div>
 
-                {/* Sizes & Prices */}
+                {/* Optional size labels — price always comes from the unit rate */}
                 <div className="space-y-2 border border-border rounded-2xl p-3">
-                  <label className="text-[10px] font-bold text-ink/50 uppercase">Sizes & Prices</label>
-                  <p className="text-[10px] text-ink/40">Customer selects size when ordering. Add at least one.</p>
+                  <label className="text-[10px] font-bold text-ink/50 uppercase">Size labels (optional)</label>
+                  <p className="text-[10px] text-ink/40">Customers already get 0.5 / 1 / 1.5 / 2. Extra labels do not add extra ৳.</p>
                   {(editProduct.weights ?? []).map((w, i) => (
                     <div key={i} className="flex gap-2 items-center">
                       <input
-                        placeholder="e.g. 1 kg"
+                        placeholder={editProduct.priceUnit === 'kg' ? 'e.g. 1 kg' : 'e.g. 1 lb'}
                         className="flex-1 px-3 py-2 rounded-xl border border-border bg-surface text-xs text-ink focus:outline-none"
                         value={w.size}
                         onChange={(e) => {
                           const next = [...(editProduct.weights ?? [])];
-                          next[i] = { ...next[i], size: e.target.value };
-                          setEditProduct(prev => prev ? { ...prev, weights: next } : prev);
-                        }}
-                      />
-                      <input
-                        type="number"
-                        placeholder="৳"
-                        className="w-20 px-3 py-2 rounded-xl border border-border bg-surface text-xs text-ink focus:outline-none"
-                        value={w.price}
-                        onChange={(e) => {
-                          const next = [...(editProduct.weights ?? [])];
-                          next[i] = { ...next[i], price: +e.target.value };
+                          next[i] = { ...next[i], size: e.target.value, price: 0 };
                           setEditProduct(prev => prev ? { ...prev, weights: next } : prev);
                         }}
                       />
@@ -750,7 +726,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                     type="button"
                     onClick={() => setEditProduct(prev => prev ? {
                       ...prev,
-                      weights: [...(prev.weights ?? []), { size: '', price: prev.price }]
+                      weights: [...(prev.weights ?? []), { size: '', price: 0 }]
                     } : prev)}
                     className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-ink/5 text-xs font-bold text-ink"
                   >
@@ -841,7 +817,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
                 <img src={p.image} alt={p.name} className="w-14 h-14 rounded-xl object-cover flex-shrink-0 bg-blush" />
                 <div className="flex-1 min-w-0">
                   <p className="font-bold text-sm text-ink truncate">{p.name || 'N/A'}</p>
-                  <p className="text-xs font-black text-coral">{formatINR(p.price || 0)}</p>
+                  <p className="text-xs font-black text-coral">{formatINR(p.price || 0)} / {p.priceUnit === 'kg' ? 'kg' : 'lb'}</p>
                   <p className="text-[10px] text-ink/40">{p.occasion || 'birthday'}</p>
                 </div>
                 <div className="flex flex-col gap-1">
@@ -1004,6 +980,7 @@ export function AdminPanel({ onClose, embedded = false }: Props) {
           <div className="space-y-3">
             <div className="rounded-2xl border border-border bg-surface p-4 shadow-card space-y-2">
               <p className="text-xs font-bold text-ink">Add Gallery Photo</p>
+              <p className="text-[10px] text-ink/45">These photos show on the public Gallery page in the app.</p>
               <input className="w-full px-3 py-2 rounded-xl border border-border bg-surface text-xs focus:outline-none"
                 placeholder="Caption (optional)" value={newGalleryCaption} onChange={(e) => setNewGalleryCaption(e.target.value)} />
               <input ref={galleryImgRef} type="file" accept="image/*" className="hidden" onChange={async (e) => {

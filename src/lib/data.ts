@@ -10,9 +10,9 @@ export const categories: Category[] = [
 
 const weights = [
   { size: '0.5 lb', price: 0 },
-  { size: '1 lb',   price: 100 },
-  { size: '1.5 lb', price: 250 },
-  { size: '2 lb',   price: 400 },
+  { size: '1 lb',   price: 0 },
+  { size: '1.5 lb', price: 0 },
+  { size: '2 lb',   price: 0 },
 ];
 
 const FLAVORS = ['Chocolate', 'Vanilla', 'Red Velvet', 'Butterscotch', 'Strawberry'];

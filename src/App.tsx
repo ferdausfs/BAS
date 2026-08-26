@@ -22,6 +22,7 @@ import AdminScreen from './screens/AdminScreen';
 import ReviewsListScreen from './screens/ReviewsListScreen';
 import WriteReviewScreen from './screens/WriteReviewScreen';
 import CouponsScreen from './screens/CouponsScreen';
+import GalleryScreen from './screens/GalleryScreen';
 import AppErrorBoundary from './components/AppErrorBoundary';
 import { ChatBot } from './components/ChatBot';
 import OccasionZoomOverlay from './components/OccasionZoomOverlay';
@@ -170,6 +171,7 @@ export default function App() {
     view.name === 'success' ? view.orderId : '',
     view.name === 'tracking' ? (view.orderId ?? '') : '',
     view.name === 'admin' ? (view.tab ?? 'dashboard') : '',
+    view.name === 'gallery' ? 'gallery' : '',
   ].join('-');
 
   const showTabBar = view.name === 'tabs' && !chatOpen && !authOpen && !welcomeOpen && !notificationsOpen && modalDepth === 0;
@@ -213,6 +215,7 @@ export default function App() {
                 {view.name === 'reviews' && <ReviewsListScreen />}
                 {view.name === 'write-review' && <WriteReviewScreen />}
                 {view.name === 'coupons' && <CouponsScreen />}
+                {view.name === 'gallery' && <GalleryScreen />}
               </div>
             )
           }

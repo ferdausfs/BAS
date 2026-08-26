@@ -175,6 +175,25 @@ export const formatBDT = (n: number): string => `৳${n.toLocaleString('en-BD')}
 // Backward-compatible alias: existing admin/components still import formatINR.
 export const formatINR = formatBDT;
 
+/** One rate: admin Price = what the customer pays per pound/kg. */
+export const productUnitRate = (product: { price?: number; pricePerUnit?: number }): number => {
+  const per = Number(product.pricePerUnit);
+  if (Number.isFinite(per) && per > 0) return per;
+  const base = Number(product.price);
+  return Number.isFinite(base) && base > 0 ? base : 0;
+};
+
+export const productPriceUnit = (unit?: 'kg' | 'pound'): 'kg' | 'pound' =>
+  unit === 'kg' ? 'kg' : 'pound';
+
+export const productLinePrice = (
+  product: { price?: number; pricePerUnit?: number },
+  weight: number,
+): number => {
+  const qty = Number.isFinite(weight) && weight > 0 ? weight : 1;
+  return Math.round(productUnitRate(product) * qty);
+};
+
 // ── ওজন → "কত জনের জন্য" (serving-size) helpers ─────────────────────────────
 // মালিকের নিশ্চিত করা হিসাব (2026-07-11): 0.5 পাউন্ড → 2-3 জন, 1 → 4-6,
 // 1.5 → 8-10, 2 → 12-15 জন। এর বাইরের ওজনের জন্য প্রতি পাউন্ডে ~6-7 জন ধরে

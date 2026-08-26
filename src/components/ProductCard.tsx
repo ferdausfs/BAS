@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Heart, Plus, Star, Check, Award, Sparkles } from 'lucide-react';
 import { useCart, formatINR } from '../lib/store';
-import { hapticTap } from '../lib/utils';
+import { hapticTap, productUnitRate, productPriceUnit } from '../lib/utils';
 import { useT } from '../lib/i18n';
 import type { Product } from '../types';
 
@@ -20,12 +20,14 @@ export default function ProductCard({ product, wished, onOpen, onWish, variant =
   const [added, setAdded] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
 
-  const safeWeights = product.weights?.length ? product.weights : [{ size: '1 lb', price: product.price }];
+  const unitRate = productUnitRate(product);
+  const priceUnit = productPriceUnit(product.priceUnit);
+  const unitWord = priceUnit === 'kg' ? 'kg' : 'lb';
   const safeFlavors = product.flavors?.length ? product.flavors : ['Chocolate'];
   const isGrid = variant === 'grid' || variant === 'catalog';
   const cardHeight = isGrid ? 260 : 248;
-  const discountPct = product.oldPrice && product.oldPrice > product.price
-    ? Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100)
+  const discountPct = product.oldPrice && product.oldPrice > unitRate
+    ? Math.round(((product.oldPrice - unitRate) / product.oldPrice) * 100)
     : null;
 
   const handleWish = (event: React.MouseEvent) => {
@@ -38,14 +40,13 @@ export default function ProductCard({ product, wished, onOpen, onWish, variant =
   const handleAdd = (event: React.MouseEvent) => {
     event.stopPropagation();
     event.preventDefault();
-    const firstWeight = safeWeights[0] ?? { size: '1 lb', price: 0 };
     add({
       productId: product.id,
       name: product.name,
       image: product.image,
-      size: firstWeight.size,
+      size: `1 ${unitWord}`,
       flavor: safeFlavors[0] ?? 'Chocolate',
-      price: product.price + (firstWeight.price ?? 0),
+      price: unitRate,
       quantity: 1,
     });
     hapticTap();
@@ -129,7 +130,7 @@ export default function ProductCard({ product, wished, onOpen, onWish, variant =
           <div className="min-w-0 flex-1">
             <h3 className="line-clamp-1 text-[16px] font-bold tracking-[-0.035em] text-white">{product.name}</h3>
             <div className="mt-1 line-clamp-1 text-[11px] font-semibold text-white/80">
-              {safeWeights[0]?.size ?? '1 lb'} · {safeFlavors[0] ?? 'Chocolate'}
+              1 {unitWord} · {safeFlavors[0] ?? 'Chocolate'}
             </div>
           </div>
           <span className="flex shrink-0 items-center gap-0.5 text-[11px] font-bold text-white transition-transform duration-300 group-hover:scale-105">
@@ -138,8 +139,9 @@ export default function ProductCard({ product, wished, onOpen, onWish, variant =
         </div>
         <div className="mt-2.5 flex items-center justify-between gap-2">
           <span className="min-w-0">
-            <span className="text-[18px] font-bold tabular text-white transition-transform duration-300 group-hover:scale-[1.03] group-hover:origin-left">{formatINR(product.price)}</span>
-            {product.oldPrice && product.oldPrice > product.price && (
+            <span className="text-[18px] font-bold tabular text-white transition-transform duration-300 group-hover:scale-[1.03] group-hover:origin-left">{formatINR(unitRate)}</span>
+            <span className="ml-1 text-[10px] font-semibold text-white/75">/{priceUnit === 'kg' ? t('product.unitKg') : t('product.unitPound')}</span>
+            {product.oldPrice && product.oldPrice > unitRate && (
               <span className="ml-1.5 text-[10px] tabular text-white/65 line-through">{formatINR(product.oldPrice)}</span>
             )}
           </span>

@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import {
-  Heart, MapPin, CreditCard, Bell, HelpCircle, Settings, LogOut,
+  Heart, MapPin, CreditCard, Bell, HelpCircle, Settings, LogOut, Images,
   ChevronRight, ArrowLeft, KeyRound, Trash2, Sun, Headphones, MessageCircle, Globe2,
   LogIn, X, Save, Check, User, AlertTriangle, Cake, Gift, Wallet as WalletIcon,
   Copy, Share2, Navigation, Loader2, Tag, ClipboardList, Camera, Mail, Phone, Search, Pencil
@@ -644,7 +644,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
                 {[
                   { Icon: ClipboardList, label: t('profile.myOrders'), onClick: () => go({ name: 'tabs', tab: 'orders' }) },
                   { Icon: Heart, label: t('profile.wishlist'), onClick: () => go({ name: 'wishlist' }) },
-                  { Icon: MapPin, label: t('profile.statAddresses'), onClick: () => setProfileView('address') },
+                  { Icon: Images, label: t('profile.gallery'), onClick: () => go({ name: 'gallery' }) },
                   { Icon: Tag, label: t('profile.myCoupons'), onClick: () => go({ name: 'coupons' }) },
                 ].map((item) => (
                   <button
@@ -672,6 +672,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
 
             <div className="mt-3 overflow-hidden rounded-[22px] border border-border bg-surface px-4 shadow-card anim-up delay-6">
               <p className="pt-3 text-[11px] font-bold uppercase tracking-[0.14em] text-ink-200">{t('profile.moreSection')}</p>
+              <ProfileReferenceRow Icon={Images} label={t('profile.gallery')} onClick={() => go({ name: 'gallery' })} bordered />
               <ProfileReferenceRow Icon={Gift} label={t('profile.inviteEarn')} onClick={() => setInviteOpen(true)} bordered />
               <ProfileReferenceRow Icon={Cake} label={t('profile.specialDates')} onClick={() => setShowDatesModal(true)} bordered />
               <ProfileReferenceRow Icon={HelpCircle} label={t('profile.help')} onClick={() => setProfileView('help')} bordered />

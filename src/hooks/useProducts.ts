@@ -3,7 +3,7 @@ import { collection, deleteDoc, doc, onSnapshot, setDoc } from 'firebase/firesto
 import { db, isFirebaseConfigured, uploadToCloudinary } from '../lib/firebase';
 import { products as DEFAULT_PRODUCTS } from '../lib/data';
 import { safeArray } from '../lib/utils';
-import { mapProductDoc, productToDoc, sanitizeForFirestore } from '../lib/firestoreMappers';
+import { mapProductDoc, normalizeProductPricing, productToDoc, sanitizeForFirestore } from '../lib/firestoreMappers';
 import type { Product } from '../types';
 
 export function useProducts() {
@@ -38,16 +38,17 @@ export function useProducts() {
   const refetch = useCallback(async () => {}, []);
 
   const saveProduct = useCallback(async (product: Product) => {
+    const next = normalizeProductPricing(product);
     setProducts((prev) => {
       const all = safeArray<Product>(prev, DEFAULT_PRODUCTS);
-      const updated = all.find((p) => p.id === product.id)
-        ? all.map((p) => (p.id === product.id ? product : p))
-        : [...all, product];
+      const updated = all.find((p) => p.id === next.id)
+        ? all.map((p) => (p.id === next.id ? next : p))
+        : [...all, next];
       const validated = safeArray<Product>(updated, DEFAULT_PRODUCTS);
       return validated.length > 0 ? validated : DEFAULT_PRODUCTS;
     });
     if (!isFirebaseConfigured()) return;
-    await setDoc(doc(db, 'products', product.id), sanitizeForFirestore(productToDoc(product)), { merge: true })
+    await setDoc(doc(db, 'products', next.id), sanitizeForFirestore(productToDoc(next)), { merge: true })
       .catch((e) => console.error('Product save failed:', e));
   }, []);
 

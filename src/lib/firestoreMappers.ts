@@ -29,7 +29,7 @@ export const mapProductDoc = (id: string, row: any): Product => {
     name: d?.name || 'Cake',
     tagline: d?.tag || d?.tagline || d?.name || 'Freshly baked',
     description: d?.description || '',
-    price: Number(d?.price ?? 0),
+    price: Number(d?.pricePerUnit ?? d?.price ?? 0) || 0,
     image: d?.image || '',
     rating: Number(d?.rating ?? 4.5),
     reviews: Number(d?.reviews ?? 0),
@@ -40,7 +40,8 @@ export const mapProductDoc = (id: string, row: any): Product => {
     bestseller: d?.bestseller ?? !!d?.badges?.includes('bestseller'),
     newArrival: d?.newArrival ?? !!d?.badges?.includes('new'),
     tier: d?.tier || (d?.badges?.includes('premium') ? 'premium' : 'normal'),
-    priceUnit: d?.priceUnit || 'pound',
+    pricePerUnit: Number(d?.pricePerUnit ?? d?.price ?? 0) || 0,
+    priceUnit: d?.priceUnit === 'kg' ? 'kg' : 'pound',
     inStock: d?.inStock ?? !(d?.badges?.includes('out_of_stock')),
     approved: d?.approved ?? true,
     sizes: d?.sizes,
@@ -49,44 +50,60 @@ export const mapProductDoc = (id: string, row: any): Product => {
   };
 };
 
+export const normalizeProductPricing = (product: Product): Product => {
+  const rate = Math.round(Number(product.pricePerUnit ?? product.price) || 0);
+  const unit = product.priceUnit === 'kg' ? 'kg' : 'pound';
+  return {
+    ...product,
+    price: rate,
+    pricePerUnit: rate,
+    priceUnit: unit,
+    weights: (product.weights ?? []).map((w) => ({
+      size: w.size || (unit === 'kg' ? '1 kg' : '1 lb'),
+      price: 0,
+    })),
+  };
+};
+
 export const productToDoc = (product: Product) => {
+  const next = normalizeProductPricing(product);
   const badges = [
-    product.bestseller ? 'bestseller' : null,
-    product.newArrival ? 'new' : null,
-    product.tier === 'premium' ? 'premium' : null,
-    product.inStock === false ? 'out_of_stock' : null,
+    next.bestseller ? 'bestseller' : null,
+    next.newArrival ? 'new' : null,
+    next.tier === 'premium' ? 'premium' : null,
+    next.inStock === false ? 'out_of_stock' : null,
   ].filter(Boolean);
 
   return {
-    id: product.id,
-    name: product.name,
-    tagline: product.tagline ?? null,
-    category: product.occasion || 'birthday',
-    occasion: product.occasion || 'birthday',
-    price: Math.round(product.price),
-    oldPrice: product.oldPrice ?? null,
-    pricePerUnit: product.pricePerUnit ?? null,
-    priceUnit: product.priceUnit ?? 'pound',
-    rating: product.rating ?? 4.5,
-    reviews: product.reviews ?? 0,
-    tag: product.tags?.[0] ?? product.tagline ?? null,
-    tags: product.tags ?? [],
-    weight: product.weights?.[0]?.size ?? '1 lb',
-    weights: product.weights ?? [],
-    flavors: product.flavors ?? [],
-    toppings: product.toppings ?? [],
-    sizes: product.sizes ?? [],
-    addons: product.addons ?? [],
-    gallery: product.gallery ?? [],
-    image: product.image ?? null,
-    description: product.description ?? null,
-    approved: product.approved ?? true,
-    inStock: product.inStock ?? true,
-    tier: product.tier ?? 'normal',
-    bestseller: product.bestseller ?? false,
-    newArrival: product.newArrival ?? false,
+    id: next.id,
+    name: next.name,
+    tagline: next.tagline ?? null,
+    category: next.occasion || 'birthday',
+    occasion: next.occasion || 'birthday',
+    price: Math.round(next.price),
+    oldPrice: next.oldPrice ?? null,
+    pricePerUnit: Math.round(next.pricePerUnit ?? next.price),
+    priceUnit: next.priceUnit ?? 'pound',
+    rating: next.rating ?? 4.5,
+    reviews: next.reviews ?? 0,
+    tag: next.tags?.[0] ?? next.tagline ?? null,
+    tags: next.tags ?? [],
+    weight: next.weights?.[0]?.size ?? '1 lb',
+    weights: next.weights ?? [],
+    flavors: next.flavors ?? [],
+    toppings: next.toppings ?? [],
+    sizes: next.sizes ?? [],
+    addons: next.addons ?? [],
+    gallery: next.gallery ?? [],
+    image: next.image ?? null,
+    description: next.description ?? null,
+    approved: next.approved ?? true,
+    inStock: next.inStock ?? true,
+    tier: next.tier ?? 'normal',
+    bestseller: next.bestseller ?? false,
+    newArrival: next.newArrival ?? false,
     badges,
-    created_at: product.createdAt ?? new Date().toISOString(),
+    created_at: next.createdAt ?? new Date().toISOString(),
     updated_at: new Date().toISOString(),
   };
 };
