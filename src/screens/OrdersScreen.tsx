@@ -5,6 +5,7 @@ import { useOrdersHook } from '../hooks/useOrders';
 import { safeArray } from '../lib/utils';
 import UnderlineTabs from '../components/UnderlineTabs';
 import type { CartItem, Order } from '../types';
+import { ORDER_STATUS_TONE } from '../lib/orderStatus';
 
 
 function ShimmerBlock({ className }: { className: string }) {
@@ -68,13 +69,13 @@ function OrdersSkeletonList() {
   );
 }
 
-const STATUSES: { key: string; label: string; icon: any; color: string; bg: string }[] = [
-  { key: 'placed',    label: 'Placed',    icon: Check,   color: '#FF8A65', bg: '#FFF3E0' },
-  { key: 'confirmed', label: 'Confirmed', icon: Package, color: '#FF9F68', bg: '#FFF4E8' },
-  { key: 'baking',    label: 'Baking',    icon: ChefHat, color: '#FFB74D', bg: '#FFF8E1' },
-  { key: 'ready',     label: 'Ready',     icon: Package, color: '#4DB6AC', bg: '#E0F2F1' },
-  { key: 'out',       label: 'Out',       icon: Truck,   color: '#64B5F6', bg: '#E3F2FD' },
-  { key: 'delivered', label: 'Delivered', icon: Check,  color: '#81C784', bg: '#E8F5E9' },
+const STATUSES: { key: string; label: string; icon: typeof Check; color: string; bg: string }[] = [
+  { key: 'placed',    label: 'Placed',    icon: Check,   ...ORDER_STATUS_TONE.placed },
+  { key: 'confirmed', label: 'Confirmed', icon: Package, ...ORDER_STATUS_TONE.confirmed },
+  { key: 'baking',    label: 'Baking',    icon: ChefHat, ...ORDER_STATUS_TONE.baking },
+  { key: 'ready',     label: 'Ready',     icon: Package, ...ORDER_STATUS_TONE.ready },
+  { key: 'out',       label: 'Out',       icon: Truck,   ...ORDER_STATUS_TONE.out },
+  { key: 'delivered', label: 'Delivered', icon: Check,  ...ORDER_STATUS_TONE.delivered },
 ];
 
 export default function OrdersScreen() {

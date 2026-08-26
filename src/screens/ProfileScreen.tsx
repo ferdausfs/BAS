@@ -49,6 +49,31 @@ type CustomerProfile = {
   payment: SavedPayment;
 };
 
+const PROFILE_TONE = {
+  orders: { color: '#C45B4A', bg: '#F8E8E4' },
+  wishlist: { color: '#C45A78', bg: '#F8E6ED' },
+  gallery: { color: '#B07A22', bg: '#F6EED8' },
+  coupons: { color: '#7A5A8A', bg: '#F1E8F4' },
+  wallet: { color: '#B07A22', bg: '#F6EED8' },
+  profile: { color: '#A45B6B', bg: '#F6E6EA' },
+  payment: { color: '#2C8A7C', bg: '#E3F3F0' },
+  invite: { color: '#C45A78', bg: '#F8E6ED' },
+  dates: { color: '#7A5A8A', bg: '#F1E8F4' },
+  help: { color: '#4A6F8A', bg: '#E6EEF4' },
+  settings: { color: '#6B5E58', bg: '#F0EBE8' },
+  address: { color: '#4A6F8A', bg: '#E6EEF4' },
+  notify: { color: '#B57A12', bg: '#F6EED8' },
+  password: { color: '#6B5E58', bg: '#F0EBE8' },
+  theme: { color: '#C45A78', bg: '#F8E6ED' },
+  delete: { color: '#C45B4A', bg: '#F8E8E4' },
+  chat: { color: '#2C8A7C', bg: '#E3F3F0' },
+  whatsapp: { color: '#2E8A5A', bg: '#E4F3EA' },
+  web: { color: '#4A6F8A', bg: '#E6EEF4' },
+  faq: { color: '#B07A22', bg: '#F6EED8' },
+  facebook: { color: '#3D5A8A', bg: '#E6ECF4' },
+  instagram: { color: '#C45A78', bg: '#F8E6ED' },
+} as const;
+
 const DEFAULT_COVER = '/cakes/strawberry-pink.png';
 const COVER_PRESETS = [
   '/cakes/strawberry-pink.png',
@@ -415,11 +440,13 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
   const settingsRows = [
     {
       Icon: Bell,
+      tone: PROFILE_TONE.notify,
       label: t('profile.notificationSettings'),
       action: () => useUI.getState().addNotification('Notifications', 'Notification preferences — Coming soon. Order updates live in Orders tab.'),
     },
     {
       Icon: KeyRound,
+      tone: PROFILE_TONE.password,
       label: t('profile.passwordManager'),
       action: () => {
         const email = user?.email?.trim();
@@ -437,11 +464,13 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
     },
     {
       Icon: Sun,
+      tone: PROFILE_TONE.theme,
       label: t('profile.theme'),
       action: () => useUI.getState().addNotification('Theme', 'Bake Art Style theme is already active.'),
     },
     {
       Icon: Trash2,
+      tone: PROFILE_TONE.delete,
       label: t('profile.deleteAccount'),
       action: () => useUI.getState().addNotification('Delete Account', 'Please contact support to delete your account securely.'),
     },
@@ -559,13 +588,13 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
 
             <div className="mt-5 grid grid-cols-4 divide-x divide-border rounded-[22px] border border-border bg-surface py-3.5 shadow-card anim-up delay-2">
               {[
-                { n: myOrders.length, label: t('profile.statOrders'), onClick: () => go({ name: 'tabs', tab: 'orders' }) },
-                { n: wishlist.length, label: t('profile.statWishlist'), onClick: () => go({ name: 'wishlist' }) },
-                { n: couponCount, label: t('profile.statCoupons'), onClick: () => go({ name: 'coupons' }) },
-                { n: addresses.length, label: t('profile.statAddresses'), onClick: () => setProfileView('address') },
+                { n: myOrders.length, label: t('profile.statOrders'), onClick: () => go({ name: 'tabs', tab: 'orders' }), tone: PROFILE_TONE.orders },
+                { n: wishlist.length, label: t('profile.statWishlist'), onClick: () => go({ name: 'wishlist' }), tone: PROFILE_TONE.wishlist },
+                { n: couponCount, label: t('profile.statCoupons'), onClick: () => go({ name: 'coupons' }), tone: PROFILE_TONE.coupons },
+                { n: addresses.length, label: t('profile.statAddresses'), onClick: () => setProfileView('address'), tone: PROFILE_TONE.address },
               ].map((stat) => (
                 <button key={stat.label} type="button" onClick={stat.onClick} className="flex flex-col items-center px-1 py-0.5 transition active:scale-95">
-                  <span className="text-[18px] font-bold tabular text-ink">{stat.n}</span>
+                  <span className="text-[18px] font-bold tabular" style={{ color: stat.tone.color }}>{stat.n}</span>
                   <span className="mt-0.5 text-[10px] font-semibold text-ink-300">{stat.label}</span>
                 </button>
               ))}
@@ -576,7 +605,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
               onClick={() => setWalletHistoryOpen(true)}
               className="mt-3 flex w-full items-center gap-3 rounded-[20px] border border-border bg-surface px-4 py-3.5 shadow-card transition active:scale-[0.99] anim-up delay-3"
             >
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-secondary text-coral">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl" style={{ backgroundColor: PROFILE_TONE.wallet.bg, color: PROFILE_TONE.wallet.color }}>
                 <WalletIcon className="h-5 w-5" strokeWidth={1.8} />
               </span>
               <span className="min-w-0 flex-1 text-left text-[13px] font-semibold text-ink-300">{t('profile.walletBalance')}</span>
@@ -642,10 +671,10 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
               <h2 className="mb-2 px-0.5 text-[15px] font-bold text-ink">{t('profile.quickAccess')}</h2>
               <div className="grid grid-cols-2 gap-2.5">
                 {[
-                  { Icon: ClipboardList, label: t('profile.myOrders'), onClick: () => go({ name: 'tabs', tab: 'orders' }) },
-                  { Icon: Heart, label: t('profile.wishlist'), onClick: () => go({ name: 'wishlist' }) },
-                  { Icon: Images, label: t('profile.gallery'), onClick: () => go({ name: 'gallery' }) },
-                  { Icon: Tag, label: t('profile.myCoupons'), onClick: () => go({ name: 'coupons' }) },
+                  { Icon: ClipboardList, label: t('profile.myOrders'), onClick: () => go({ name: 'tabs', tab: 'orders' }), tone: PROFILE_TONE.orders },
+                  { Icon: Heart, label: t('profile.wishlist'), onClick: () => go({ name: 'wishlist' }), tone: PROFILE_TONE.wishlist },
+                  { Icon: Images, label: t('profile.gallery'), onClick: () => go({ name: 'gallery' }), tone: PROFILE_TONE.gallery },
+                  { Icon: Tag, label: t('profile.myCoupons'), onClick: () => go({ name: 'coupons' }), tone: PROFILE_TONE.coupons },
                 ].map((item) => (
                   <button
                     key={item.label}
@@ -653,7 +682,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
                     onClick={item.onClick}
                     className="flex items-center gap-3 rounded-[20px] border border-border bg-surface px-3.5 py-3.5 text-left shadow-card transition active:scale-[0.98]"
                   >
-                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-secondary text-coral">
+                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl" style={{ backgroundColor: item.tone.bg, color: item.tone.color }}>
                       <item.Icon className="h-5 w-5" strokeWidth={1.8} />
                     </span>
                     <span className="min-w-0 flex-1 text-[13px] font-bold leading-snug text-ink">{item.label}</span>
@@ -665,18 +694,18 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
 
             <div className="mt-6 overflow-hidden rounded-[22px] border border-border bg-surface px-4 shadow-card anim-up delay-6">
               <p className="pt-3 text-[11px] font-bold uppercase tracking-[0.14em] text-ink-200">{t('profile.accountSection')}</p>
-              <ProfileReferenceRow Icon={User} label={t('profile.yourProfile')} onClick={() => setProfileView('edit')} bordered />
-              <ProfileReferenceRow Icon={CreditCard} label={t('profile.paymentMethods')} onClick={() => setProfileView('payment')} bordered />
-              <ProfileReferenceRow Icon={WalletIcon} label={t('profile.myWallet')} onClick={() => setWalletHistoryOpen(true)} />
+              <ProfileReferenceRow Icon={User} label={t('profile.yourProfile')} onClick={() => setProfileView('edit')} tone={PROFILE_TONE.profile} bordered />
+              <ProfileReferenceRow Icon={CreditCard} label={t('profile.paymentMethods')} onClick={() => setProfileView('payment')} tone={PROFILE_TONE.payment} bordered />
+              <ProfileReferenceRow Icon={WalletIcon} label={t('profile.myWallet')} onClick={() => setWalletHistoryOpen(true)} tone={PROFILE_TONE.wallet} />
             </div>
 
             <div className="mt-3 overflow-hidden rounded-[22px] border border-border bg-surface px-4 shadow-card anim-up delay-6">
               <p className="pt-3 text-[11px] font-bold uppercase tracking-[0.14em] text-ink-200">{t('profile.moreSection')}</p>
-              <ProfileReferenceRow Icon={Images} label={t('profile.gallery')} onClick={() => go({ name: 'gallery' })} bordered />
-              <ProfileReferenceRow Icon={Gift} label={t('profile.inviteEarn')} onClick={() => setInviteOpen(true)} bordered />
-              <ProfileReferenceRow Icon={Cake} label={t('profile.specialDates')} onClick={() => setShowDatesModal(true)} bordered />
-              <ProfileReferenceRow Icon={HelpCircle} label={t('profile.help')} onClick={() => setProfileView('help')} bordered />
-              <ProfileReferenceRow Icon={Settings} label={t('profile.settings')} onClick={() => setProfileView('settings')} />
+              <ProfileReferenceRow Icon={Images} label={t('profile.gallery')} onClick={() => go({ name: 'gallery' })} tone={PROFILE_TONE.gallery} bordered />
+              <ProfileReferenceRow Icon={Gift} label={t('profile.inviteEarn')} onClick={() => setInviteOpen(true)} tone={PROFILE_TONE.invite} bordered />
+              <ProfileReferenceRow Icon={Cake} label={t('profile.specialDates')} onClick={() => setShowDatesModal(true)} tone={PROFILE_TONE.dates} bordered />
+              <ProfileReferenceRow Icon={HelpCircle} label={t('profile.help')} onClick={() => setProfileView('help')} tone={PROFILE_TONE.help} bordered />
+              <ProfileReferenceRow Icon={Settings} label={t('profile.settings')} onClick={() => setProfileView('settings')} tone={PROFILE_TONE.settings} />
             </div>
           </div>
 
@@ -710,7 +739,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
         <div className="no-scrollbar flex-1 overflow-y-auto px-6 pb-32 pt-6 anim-up">
           <section className="mb-5 rounded-2xl border border-border bg-surface p-4 shadow-card">
             <div className="flex items-center gap-3">
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-secondary text-coral">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: PROFILE_TONE.web.bg, color: PROFILE_TONE.web.color }}>
                 <Globe2 className="h-5 w-5" strokeWidth={1.8} />
               </span>
               <div className="min-w-0 flex-1">
@@ -740,6 +769,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
                 Icon={row.Icon}
                 label={row.label}
                 onClick={row.action}
+                tone={row.tone}
                 bordered={i !== settingsRows.length - 1}
               />
             ))}
@@ -765,6 +795,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
               label="Customer Service"
               detail="Chat with Bake Art Style support"
               onClick={() => setProfileView('chat')}
+              tone={PROFILE_TONE.chat}
               bordered
             />
             <HelpProfileRow
@@ -772,6 +803,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
               label="WhatsApp"
               detail="Order help and quick support"
               onClick={handleWhatsApp}
+              tone={PROFILE_TONE.whatsapp}
               bordered
             />
             <HelpProfileRow
@@ -779,6 +811,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
               label="Website"
               detail="bas.umuhammadiswa.workers.dev"
               onClick={() => useUI.getState().addNotification('Website', 'You are already browsing the Bake Art Style website.')}
+              tone={PROFILE_TONE.web}
               bordered
             />
             <HelpProfileRow
@@ -786,6 +819,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
               label="FAQ"
               detail="FAQ — coming soon"
               onClick={() => useUI.getState().addNotification('FAQ', 'FAQ page coming soon — use Customer Service chat for now.')}
+              tone={PROFILE_TONE.faq}
               bordered
               disabled
             />
@@ -794,6 +828,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
               label="Facebook"
               detail="Link not available yet"
               onClick={() => useUI.getState().addNotification('Facebook', 'Facebook page not linked yet.')}
+              tone={PROFILE_TONE.facebook}
               bordered
               disabled
             />
@@ -802,6 +837,7 @@ export default function ProfileScreen({ onAuthOpen, isAdmin = false }: Props) {
               label="Instagram"
               detail="Link not available yet"
               onClick={() => useUI.getState().addNotification('Instagram', 'Instagram page not linked yet.')}
+              tone={PROFILE_TONE.instagram}
               disabled
             />
           </div>
@@ -1512,11 +1548,13 @@ function ProfileReferenceRow({
   label,
   onClick,
   bordered,
+  tone = PROFILE_TONE.settings,
 }: {
   Icon: React.ComponentType<{ className?: string; strokeWidth?: number }>;
   label: string;
   onClick: () => void;
   bordered?: boolean;
+  tone?: { color: string; bg: string };
 }) {
   return (
     <button
@@ -1526,7 +1564,7 @@ function ProfileReferenceRow({
         bordered ? 'border-b border-border' : ''
       }`}
     >
-      <span className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-secondary text-coral">
+      <span className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: tone.bg, color: tone.color }}>
         <Icon className="h-5 w-5" strokeWidth={1.75} />
       </span>
       <span className="flex-1 text-[15.5px] font-semibold leading-snug tracking-tight text-ink">
@@ -1544,6 +1582,7 @@ function HelpProfileRow({
   onClick,
   bordered,
   disabled = false,
+  tone = PROFILE_TONE.help,
 }: {
   Icon: React.ComponentType<{ className?: string; strokeWidth?: number }>;
   label: string;
@@ -1551,6 +1590,7 @@ function HelpProfileRow({
   onClick: () => void;
   bordered?: boolean;
   disabled?: boolean;
+  tone?: { color: string; bg: string };
 }) {
   return (
     <button
@@ -1559,7 +1599,7 @@ function HelpProfileRow({
       aria-disabled={disabled}
       className={`flex w-full items-center gap-4 px-0 py-4 text-left transition active:bg-secondary/40 ${bordered ? 'border-b border-border' : ''} ${disabled ? 'opacity-60' : ''}`}
     >
-      <span className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-secondary text-coral">
+      <span className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: tone.bg, color: tone.color }}>
         <Icon className="h-5 w-5" strokeWidth={1.75} />
       </span>
       <span className="min-w-0 flex-1">

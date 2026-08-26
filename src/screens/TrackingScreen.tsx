@@ -4,6 +4,7 @@ import { useUI, formatINR, useAuthStore, useCart, useSettingsStore } from '../li
 import { useOrdersHook } from '../hooks/useOrders';
 import { safeArray } from '../lib/utils';
 import type { Order } from '../types';
+import { ORDER_STATUS_TONE } from '../lib/orderStatus';
 
 
 function ShimmerBlock({ className }: { className: string }) {
@@ -60,16 +61,14 @@ function TrackingSkeletonCard() {
   );
 }
 
-const TIMELINE_STEPS: { key: string; Icon: typeof ShoppingCart; label: string; sub: string }[] = [
-  { key: 'placed',    Icon: ShoppingCart, label: 'Order Placed',      sub: 'Screenshot গেছে — পেমেন্ট এখনো ভেরিফাই হয়নি' },
-  { key: 'confirmed', Icon: CheckCircle2, label: 'Baker Assigned',     sub: 'A baker is on it' },
-  { key: 'baking',    Icon: Flame,        label: 'Baking Started',     sub: 'Your cake is in the oven' },
-  { key: 'ready',     Icon: Cake,         label: 'Quality Check',      sub: 'Almost ready!' },
-  { key: 'out',       Icon: Truck,        label: 'Out for Delivery',   sub: 'On the way to you' },
-  { key: 'delivered', Icon: PartyPopper,  label: 'Delivered',          sub: 'Enjoy your cake!' },
-];
-
-const STATUS_ORDER = TIMELINE_STEPS.map((s) => s.key);
+const TIMELINE_STEPS = [
+  { key: 'placed',    Icon: ShoppingCart, label: 'Order Placed',      sub: 'Screenshot গেছে — পেমেন্ট এখনো ভেরিফাই হয়নি', ...ORDER_STATUS_TONE.placed },
+  { key: 'confirmed', Icon: CheckCircle2, label: 'Baker Assigned',     sub: 'A baker is on it', ...ORDER_STATUS_TONE.confirmed },
+  { key: 'baking',    Icon: Flame,        label: 'Baking Started',     sub: 'Your cake is in the oven', ...ORDER_STATUS_TONE.baking },
+  { key: 'ready',     Icon: Cake,         label: 'Quality Check',      sub: 'Almost ready!', ...ORDER_STATUS_TONE.ready },
+  { key: 'out',       Icon: Truck,        label: 'Out for Delivery',   sub: 'On the way to you', ...ORDER_STATUS_TONE.out },
+  { key: 'delivered', Icon: PartyPopper,  label: 'Delivered',          sub: 'Enjoy your cake!', ...ORDER_STATUS_TONE.delivered },
+] as const;
 
 export default function TrackingScreen() {
   const { view, back, setTab, go, setChatOpen } = useUI();
@@ -230,15 +229,18 @@ export default function TrackingScreen() {
             <div className="border-t border-border px-4 py-3.5">
               <div className="mb-2 flex items-center justify-between">
                 <span className="text-[10px] font-bold tracking-wider text-text-tertiary uppercase">Live status</span>
-                <span className="text-[12px] font-bold capitalize text-ink">
+                <span
+                  className="text-[12px] font-bold capitalize"
+                  style={{ color: ORDER_STATUS_TONE[match.status as keyof typeof ORDER_STATUS_TONE]?.color ?? 'var(--color-ink)' }}
+                >
                   {!match.paymentVerified && match.status === 'placed' ? 'পেমেন্ট চেক হচ্ছে' : match.status}
                 </span>
               </div>
               {/* Vertical timeline */}
               <div className="mt-3 space-y-0">
                 {TIMELINE_STEPS.map((step, i, arr) => {
-                  const currentIdx = STATUS_ORDER.indexOf(match.status);
-                  const stepIdx = STATUS_ORDER.indexOf(step.key);
+                  const currentIdx = TIMELINE_STEPS.findIndex((item) => item.key === match.status);
+                  const stepIdx = i;
                   const done = stepIdx <= currentIdx && currentIdx !== -1;
                   const active = stepIdx === currentIdx;
                   const isLast = i === arr.length - 1;
@@ -247,23 +249,40 @@ export default function TrackingScreen() {
                     <div key={step.key} className="flex gap-3">
                       {/* Left: icon + connector */}
                       <div className="flex flex-col items-center">
-                        <div className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full transition-all ${
-                          done
-                            ? active
-                              ? 'bg-coral text-white ring-2 ring-coral ring-offset-2 scale-110'
-                              : 'bg-coral/15 text-coral'
-                            : 'bg-ink-50 text-text-tertiary'
-                        }`}>
+                        <div
+                          className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full transition-all ${
+                            done
+                              ? active
+                                ? 'scale-110 text-white'
+                                : ''
+                              : 'bg-ink-50 text-text-tertiary'
+                          }`}
+                          style={
+                            done
+                              ? active
+                                ? { backgroundColor: step.color, boxShadow: `0 0 0 2px #fff, 0 0 0 4px ${step.color}` }
+                                : { backgroundColor: step.bg, color: step.color }
+                              : undefined
+                          }
+                        >
                           <StepIcon className="h-4 w-4" strokeWidth={2} />
                         </div>
                         {!isLast && (
-                          <div className={`w-0.5 flex-1 my-1 rounded-full ${done && !active ? 'bg-coral/30' : 'bg-ink-50'}`}
-                            style={{ minHeight: 20 }} />
+                          <div
+                            className="my-1 w-0.5 flex-1 rounded-full"
+                            style={{
+                              minHeight: 20,
+                              backgroundColor: done && !active ? step.color : done ? `${step.color}55` : 'var(--color-ink-50)',
+                            }}
+                          />
                         )}
                       </div>
                       {/* Right: text */}
                       <div className={`pb-4 flex-1 ${active ? '' : 'opacity-60'}`}>
-                        <div className={`text-[13px] font-bold ${done ? 'text-ink' : 'text-ink/40'}`}>{step.label}</div>
+                        <div
+                          className="text-[13px] font-bold"
+                          style={{ color: done ? (active ? step.color : 'var(--color-ink)') : 'rgba(44,44,44,0.38)' }}
+                        >{step.label}</div>
                         <div className="text-[11px] text-text-tertiary">{step.sub}</div>
                         {active && match.status === 'delivered' && (
                           <div className="mt-1 text-[11px] font-bold text-success">Delivered successfully!</div>
