@@ -11,7 +11,11 @@ import {
   WALLET_REFERRAL_BONUS,
   WALLET_MAX_REDEEM,
   WALLET_MIN_ORDER_TO_REDEEM,
+  MAX_REFERRAL_USES,
   applyReferralCode,
+  getBuyerReferralUseCount,
+  readPendingReferralCode,
+  writePendingReferralCode,
 } from '../lib/store';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db, isFirebaseConfigured, uploadToCloudinary } from '../lib/firebase';
@@ -72,54 +76,57 @@ export default function CheckoutScreen({ onBack, onAuthOpen }: Props) {
   const { ensureSignedIn } = useAuth();
   const walletBalance = useWallet((s) => s.balance);
 
-  // Referral
+  // Referral — invite-link code stays attached for up to 3 orders. No Apply
+  // tap: they only choose whether to take ৳100 wallet on this order.
   const [referralInput, setReferralInput] = useState('');
   const [referralApplied, setReferralApplied] = useState(false);
   const [referralError, setReferralError] = useState('');
   const [referralLoading, setReferralLoading] = useState(false);
+  const [referralUses, setReferralUses] = useState(0);
+  const [useReferralBonus, setUseReferralBonus] = useState(true);
+  const attemptedReferralRef = useRef('');
   const userReferralCode = getReferralCode(user);
+  const referralEligible = referralUses < MAX_REFERRAL_USES;
+  const referralRemaining = Math.max(0, MAX_REFERRAL_USES - referralUses);
 
-  // Auto-fill referral code from URL ?ref= param (e.g. from shared link) or a
-  // pending deep-link stored by App.tsx. Runs once on mount.
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    let code = params.get('ref')?.trim().toUpperCase() || '';
-    if (!code) {
-      try {
-        const stored = localStorage.getItem('bas-pending-ref');
-        if (stored) {
-          code = stored.trim().toUpperCase();
-          localStorage.removeItem('bas-pending-ref');
-        }
-      } catch { /* ignore */ }
-    }
-    if (code && /^[A-Z0-9]{8}$/i.test(code) && code !== userReferralCode) {
+    const fromUrl = params.get('ref')?.trim().toUpperCase() || '';
+    const stored = readPendingReferralCode();
+    const code = /^[A-Z0-9]{8}$/.test(fromUrl) ? fromUrl : stored;
+    if (code && code !== userReferralCode) {
+      writePendingReferralCode(code);
       setReferralInput(code);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const applyReferralCodeHandler = async (codeOverride?: string) => {
-    if (!user) {
-      setReferralError('Login করুন');
+  useEffect(() => {
+    if (!user?.id || user.id.startsWith('local-')) {
+      setReferralUses(0);
       return;
     }
+    let cancelled = false;
+    void getBuyerReferralUseCount(user.id).then((count) => {
+      if (!cancelled) setReferralUses(count);
+    });
+    return () => { cancelled = true; };
+  }, [user?.id]);
 
+  const attachReferralCode = async (codeOverride?: string) => {
     const code = (codeOverride ?? referralInput).trim().toUpperCase();
-
     if (!/^[A-Z0-9]{8}$/.test(code)) {
-      setReferralError('Invalid code format');
+      setReferralApplied(false);
       return;
     }
 
     const myCode = getReferralCode(user);
     if (myCode && myCode.toUpperCase() === code) {
       setReferralError('নিজের code ব্যবহার করা যাবে না');
+      setReferralApplied(false);
       return;
     }
 
-    // Early validation: confirm the code exists in /referral_codes before marking
-    // it applied. Final 3-use limit + wallet credit still happen on order submit.
     setReferralLoading(true);
     setReferralError('');
     try {
@@ -131,14 +138,16 @@ export default function CheckoutScreen({ onBack, onAuthOpen }: Props) {
           return;
         }
         const ownerUid = (snap.data() as { uid?: string })?.uid;
-        if (ownerUid && ownerUid === user.id) {
+        if (ownerUid && user?.id && ownerUid === user.id) {
           setReferralError('নিজের code ব্যবহার করা যাবে না');
           setReferralApplied(false);
           return;
         }
       }
+      writePendingReferralCode(code);
+      setReferralInput(code);
       setReferralApplied(true);
-      hapticTap();
+      setUseReferralBonus(true);
     } catch (e) {
       console.warn('Referral validation failed:', e);
       setReferralError('Referral code চেক করা যায়নি। আবার চেষ্টা করুন।');
@@ -148,15 +157,17 @@ export default function CheckoutScreen({ onBack, onAuthOpen }: Props) {
     }
   };
 
-  // Auto-apply once we have both a pre-filled code (from the link, above) and a
-  // logged-in user — don't make them tap "Apply" for a link they already followed.
-  // Manual entry (typed in by hand) still requires the Apply button as before.
   useEffect(() => {
-    if (referralInput && user && !referralApplied) {
-      void applyReferralCodeHandler(referralInput);
+    if (!referralEligible) {
+      setReferralApplied(false);
+      return;
     }
+    if (!/^[A-Z0-9]{8}$/.test(referralInput) || referralApplied || referralLoading) return;
+    if (attemptedReferralRef.current === referralInput) return;
+    attemptedReferralRef.current = referralInput;
+    void attachReferralCode(referralInput);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [referralInput, user]);
+  }, [referralInput, user?.id, referralEligible]);
 
 
   const [showLocationGate, setShowLocationGate] = useState(false);
@@ -355,7 +366,7 @@ export default function CheckoutScreen({ onBack, onAuthOpen }: Props) {
   // keeps the payment step focused on the main task first. Auto-opens if the
   // user already applied one of these, so they don't lose track of it.
   const [showExtras, setShowExtras] = useState(false);
-  const extrasAlreadyApplied = pendingLoyaltyRedeem > 0 || promoDiscount > 0 || referralApplied;
+  const extrasAlreadyApplied = pendingLoyaltyRedeem > 0 || promoDiscount > 0 || (referralEligible && referralApplied && useReferralBonus);
   const extrasOpen = showExtras || extrasAlreadyApplied;
 
   const uploadPaymentScreenshot = async (): Promise<string | undefined> => {
@@ -459,18 +470,13 @@ export default function CheckoutScreen({ onBack, onAuthOpen }: Props) {
       // - Same order duplicate check
       // - Buyer gets ৳100 immediately
       // - Referrer gets ৳100 (pending claim)
-      if (referralApplied && referralInput.trim() && user?.id) {
+      if (referralEligible && useReferralBonus && referralApplied && referralInput.trim() && checkoutUser?.id) {
         const code = referralInput.trim().toUpperCase();
-        
-        // Use the new applyReferralCode function with orderId
-        const result = await applyReferralCode(code, user.id, user.email || '', o.id);
-        
+        const result = await applyReferralCode(code, checkoutUser.id, checkoutUser.email || '', o.id);
         if (!result.success) {
-          // Referral failed but order succeeded - show warning
           setReferralError(result.message);
           setReferralApplied(false);
         }
-        // Success message will be shown in the UI via the apply state
       }
       
       hapticTap();
@@ -994,48 +1000,60 @@ export default function CheckoutScreen({ onBack, onAuthOpen }: Props) {
                 )}
               </div>
 
-              {/* Referral Code - BUG 3 FIX */}
+              {referralEligible && (
               <div className="pt-3 border-t border-ink/5">
-                <div className="space-y-1.5">
-                  <div className="flex items-center gap-2">
-                    <Users className="h-4 w-4 text-ink-200" />
-                    <label htmlFor="referral-code" className="text-[12px] font-bold tracking-wider text-ink-200 uppercase">
-                      রেফারেল কোড (ঐচ্ছিক)
-                    </label>
-                    <span className="text-[11px] text-ink/40">(সর্বোচ্চ ৩ বার ব্যবহার করা যাবে)</span>
+                {referralApplied ? (
+                  <div
+                    className="flex cursor-pointer items-center justify-between rounded-2xl border border-border bg-cream/60 px-3.5 py-3"
+                    onClick={() => setUseReferralBonus((v) => !v)}
+                  >
+                    <div className="flex min-w-0 items-center gap-2.5">
+                      <Users className="h-4 w-4 shrink-0 text-ink-200" />
+                      <div className="min-w-0">
+                        <div className="text-[12.5px] font-bold text-ink">রেফারেল বোনাস ৳{WALLET_REFERRAL_BONUS}</div>
+                        <div className="text-[11px] text-ink-200">
+                          {useReferralBonus
+                            ? `এই অর্ডারে ওয়ালেট-এ যোগ · আরও ${referralRemaining} বার`
+                            : 'এই অর্ডারে নয়'}
+                        </div>
+                      </div>
+                    </div>
+                    <div className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${useReferralBonus ? 'bg-coral' : 'bg-ink/15'}`}>
+                      <div className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${useReferralBonus ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                ) : (
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-2">
+                      <Users className="h-4 w-4 text-ink-200" />
+                      <label htmlFor="referral-code" className="text-[12px] font-bold tracking-wider text-ink-200 uppercase">
+                        রেফারেল কোড
+                      </label>
+                      <span className="text-[11px] text-ink/40">আরও {referralRemaining} বার</span>
+                    </div>
                     <input
                       id="referral-code"
                       value={referralInput}
-                      onChange={(e) => { setReferralInput(e.target.value); setReferralError(''); }}
-                      placeholder="কারো রেফারেল কোড আছে?"
-                      disabled={referralApplied}
-                      className="flex-1 h-10 rounded-xl border border-ink-50 bg-white px-3 text-[13px] font-medium text-ink outline-none focus:border-coral focus:ring-2 focus:ring-coral/15 disabled:opacity-50"
+                      onChange={(e) => {
+                        const next = e.target.value.trim().toUpperCase();
+                        attemptedReferralRef.current = '';
+                        setReferralApplied(false);
+                        setReferralError('');
+                        setReferralInput(next);
+                      }}
+                      placeholder="কারো কোড থাকলে লিখুন"
+                      className="h-10 w-full rounded-xl border border-ink-50 bg-white px-3 text-[13px] font-medium text-ink outline-none focus:border-coral focus:ring-2 focus:ring-coral/15"
                     />
-                    <button
-                      onClick={() => void applyReferralCodeHandler()}
-                      disabled={referralApplied || !referralInput || referralLoading}
-                      className="rounded-xl bg-coral px-3.5 py-2 text-[12px] font-bold text-white active:scale-95 transition disabled:opacity-40 disabled:cursor-not-allowed"
-                    >
-                      {referralLoading ? 'Checking...' : 'Apply'}
-                    </button>
-                  </div>
-                </div>
-                {referralApplied && (
-                  <div className="mt-2 text-[11.5px] text-emerald-600 font-semibold">
-                    Referral code applied! ৳{WALLET_REFERRAL_BONUS} wallet credit — পরের অর্ডারে ব্যবহার করুন
+                    {referralLoading && (
+                      <div className="text-[11.5px] font-semibold text-ink-200">চেক করা হচ্ছে...</div>
+                    )}
                   </div>
                 )}
                 {referralError && (
                   <div className="mt-2 text-[11.5px] text-red-500 font-semibold">{referralError}</div>
                 )}
-                {userReferralCode && (
-                  <div className="mt-2 text-[11px] text-ink/40">
-                    Your code: <span className="font-mono font-bold">{userReferralCode}</span> — share it to earn ৳{WALLET_REFERRAL_BONUS} per referral
-                  </div>
-                )}
               </div>
+              )}
             </div>
           )}
         </section>

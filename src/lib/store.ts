@@ -591,6 +591,33 @@ export const WALLET_EARN_PER_TAKA = 20 / 1000;   // ৳20 per ৳1000 spent
 export const WALLET_REFERRAL_BONUS = 100;          // ৳100 for both referrer and new buyer
 export const WALLET_MAX_REDEEM = 200;              // ৳200 max discount per order
 export const WALLET_MIN_ORDER_TO_REDEEM = 500;     // minimum order subtotal to use wallet
+export const MAX_REFERRAL_USES = 3;
+export const PENDING_REFERRAL_KEY = 'bas-pending-ref';
+
+const isReferralCodeFormat = (code: string) => /^[A-Z0-9]{8}$/.test(code);
+
+export const readPendingReferralCode = (): string => {
+  try {
+    const value = (localStorage.getItem(PENDING_REFERRAL_KEY) ?? '').trim().toUpperCase();
+    return isReferralCodeFormat(value) ? value : '';
+  } catch {
+    return '';
+  }
+};
+
+export const writePendingReferralCode = (code: string): void => {
+  const value = code.trim().toUpperCase();
+  if (!isReferralCodeFormat(value)) return;
+  try {
+    localStorage.setItem(PENDING_REFERRAL_KEY, value);
+  } catch { /* ignore */ }
+};
+
+export const clearPendingReferralCode = (): void => {
+  try {
+    localStorage.removeItem(PENDING_REFERRAL_KEY);
+  } catch { /* ignore */ }
+};
 
 // Derive referral code from user profile
 export const getReferralCode = (user: { email?: string; id?: string } | null): string | null => {
@@ -917,6 +944,17 @@ export interface ReferralUseRecord {
   codes: ReferralUseEntry[];
 }
 
+export const getBuyerReferralUseCount = async (buyerUserId: string): Promise<number> => {
+  if (!buyerUserId || buyerUserId.startsWith('local-') || !isFirebaseConfigured()) return 0;
+  try {
+    const existing = await readRemoteSetting<ReferralUseRecord>(`referral_uses_${buyerUserId}`);
+    return existing?.codes?.length ?? 0;
+  } catch (e) {
+    console.warn('Referral use count failed:', e);
+    return 0;
+  }
+};
+
 /**
  * Apply a referral code for a buyer.
  * - Max 3 uses per buyer (tracked in Firestore)
@@ -977,7 +1015,7 @@ export const applyReferralCode = async (
     const existing = await readRemoteSetting<ReferralUseRecord>(buyerKey);
     const uses = existing?.codes ?? [];
 
-    if (uses.length >= 3) {
+    if (uses.length >= MAX_REFERRAL_USES) {
       return { success: false, message: 'আপনি সর্বোচ্চ ৩ বার referral code ব্যবহার করতে পারবেন' };
     }
 
@@ -988,10 +1026,14 @@ export const applyReferralCode = async (
     // Buyer gets ৳100.
     useWallet.getState().earnReferral(normalizedCode, 'buyer');
 
-    // Save buyer usage.
-    await writeRemoteSetting(buyerKey, {
-      codes: [...uses, { code: normalizedCode, usedAt: Date.now(), orderId }],
-    });
+    const nextUses = [...uses, { code: normalizedCode, usedAt: Date.now(), orderId }];
+    await writeRemoteSetting(buyerKey, { codes: nextUses });
+
+    if (nextUses.length >= MAX_REFERRAL_USES) {
+      clearPendingReferralCode();
+    } else {
+      writePendingReferralCode(normalizedCode);
+    }
 
     // Push referrer reward for auto-claim.
     await pushReferralReward(normalizedCode, {
