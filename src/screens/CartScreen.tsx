@@ -11,6 +11,7 @@ import {
   useSettingsStore,
 } from '../lib/store';
 import { safeArray } from '../lib/utils';
+import { discountLineLabel } from '../lib/coupons';
 import type { CartItem } from '../types';
 
 const ADDON_ICON: Record<string, React.ElementType> = {
@@ -26,6 +27,7 @@ export default function CartScreen() {
     back,
     go,
     promoDiscount,
+    appliedPromoCode,
     clearPromo,
     pendingLoyaltyRedeem,
     setPendingLoyaltyRedeem,
@@ -209,13 +211,13 @@ export default function CartScreen() {
             />
             {promoDiscountAmount > 0 && (
               <Row
-                label="প্রোমো ডিসকাউন্ট"
-                value={'-' + formatINR(Math.round(promoDiscountAmount))}
+                label={discountLineLabel(appliedPromoCode, '−' + formatINR(Math.round(promoDiscountAmount)))}
+                value=""
                 positive
               />
             )}
             {walletDiscount > 0 && (
-              <Row label="Wallet discount" value={'-৳' + walletDiscount} positive />
+              <Row label={`ওয়ালেট · −৳${walletDiscount}`} value="" positive />
             )}
             <div className="h-px bg-divider" />
             <div className="flex items-center justify-between pt-1">

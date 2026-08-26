@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowRight, Cake, Megaphone, RotateCcw, Search } from 'lucide-react';
+import { ArrowRight, Cake, Megaphone, RotateCcw, Search, Ticket } from 'lucide-react';
 import { useDebounce } from '../hooks/useDebounce';
-import { useUI, useUser, useOrders, useAuthStore, useCart } from '../lib/store';
-import { ls, productMatchesQuery, safeArray } from '../lib/utils';
+import { useUI, useUser, useOrders, useAuthStore, useCart, useSettingsStore } from '../lib/store';
+import { hapticTap, ls, productMatchesQuery, safeArray } from '../lib/utils';
+import { discountOfferChips } from '../lib/coupons';
 import { categories } from '../lib/data';
 import { useProducts } from '../hooks/useProducts';
 import { useBanners } from '../hooks/useBanners';
@@ -51,13 +52,24 @@ export default function HomeScreen({
   onAuthOpen?: () => void;
   onNotificationsOpen?: () => void;
 }) {
-  const { go } = useUI();
+  const { go, applyPromo } = useUI();
   const { wishlist, toggleWish } = useUser();
   const { orders } = useOrders();
   const { user } = useAuthStore();
+  const { items } = useCart();
+  const { settings } = useSettingsStore();
   const { products, loading: productsLoading } = useProducts();
   const { banners } = useBanners();
   const t = useT();
+  const couponChips = useMemo(
+    () =>
+      discountOfferChips(settings.coupons, {
+        enabled: settings.promoEnabled,
+        code: settings.promoCode,
+        percent: settings.promoPercent,
+      }),
+    [settings.coupons, settings.promoEnabled, settings.promoCode, settings.promoPercent],
+  );
 
   const availableProducts = useMemo(
     () => safeArray<Product>(products).filter((product) => (product.approved ?? true) && (product.inStock ?? true)),
@@ -269,6 +281,35 @@ export default function HomeScreen({
                   ))}
                 </div>
               </div>
+            </div>
+          </section>
+        )}
+
+        {!hasSearch && couponChips.length > 0 && (
+          <section className="mt-6 anim-up delay-1">
+            <SectionHeader
+              title={t('home.coupons')}
+              subtitle={t('home.couponsSub')}
+              action={{ label: t('common.seeAll'), onClick: () => go({ name: 'coupons' }) }}
+            />
+            <div className="mt-3 no-scrollbar flex gap-2 overflow-x-auto px-6 pb-1">
+              {couponChips.map((chip) => (
+                <button
+                  key={chip.code}
+                  type="button"
+                  onClick={() => {
+                    applyPromo(chip.percent, chip.code);
+                    hapticTap();
+                    if (items.length > 0) go({ name: 'checkout' });
+                    else go({ name: 'coupons' });
+                  }}
+                  className="flex shrink-0 items-center gap-1.5 rounded-full border border-border bg-surface px-3 py-2 shadow-card transition active:scale-95"
+                >
+                  <Ticket className="h-3.5 w-3.5 text-coral" strokeWidth={2} />
+                  <span className="text-[12px] font-bold tracking-wide text-ink">{chip.code}</span>
+                  <span className="text-[11px] font-bold text-coral">−{chip.percent}%</span>
+                </button>
+              ))}
             </div>
           </section>
         )}

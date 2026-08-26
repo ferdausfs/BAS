@@ -21,6 +21,7 @@ import { useAuth } from '../hooks/useAuth';
 import PaymentAppPopup from '../components/PaymentAppPopup';
 import UnderlineTabs from '../components/UnderlineTabs';
 import { BD_DISTRICTS } from '../lib/zones';
+import { discountLineLabel, matchDiscountCode } from '../lib/coupons';
 import type { CartItem, Order, SavedAddress } from '../types';
 
 const PAYMENT_METHODS = [
@@ -345,6 +346,10 @@ export default function CheckoutScreen({ onBack, onAuthOpen }: Props) {
   const canRedeem = walletBalance > 0 && subtotal >= WALLET_MIN_ORDER_TO_REDEEM && promoDiscount === 0;
   const [promoInput, setPromoInput] = useState(appliedPromoCode);
   const [promoError, setPromoError] = useState('');
+
+  useEffect(() => {
+    if (appliedPromoCode) setPromoInput(appliedPromoCode);
+  }, [appliedPromoCode]);
 
   // Extras (wallet redeem / promo code / referral code) collapsed by default —
   // keeps the payment step focused on the main task first. Auto-opens if the
@@ -841,11 +846,11 @@ export default function CheckoutScreen({ onBack, onAuthOpen }: Props) {
                 <Tag className="h-4 w-4" strokeWidth={2} />
               </div>
               <span className=" text-[14px] font-bold tracking-tight text-ink">
-                ডিসকাউন্ট / রেফারেল (ঐচ্ছিক)
+                ছাড় / রেফারেল (ঐচ্ছিক)
               </span>
               {extrasAlreadyApplied && (
                 <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10.5px] font-bold text-emerald-600">
-                  Applied
+                  বসানো
                 </span>
               )}
             </div>
@@ -877,7 +882,7 @@ export default function CheckoutScreen({ onBack, onAuthOpen }: Props) {
                       <button
                         onClick={() => {
                           if (promoDiscount > 0) {
-                            setPromoError('Promo code is active — remove it first to use wallet');
+                            setPromoError('আগে কুপন সরান, তারপর ওয়ালেট ব্যবহার করুন');
                             return;
                           }
                           if (maxRedeemable <= 0) return;
@@ -908,13 +913,13 @@ export default function CheckoutScreen({ onBack, onAuthOpen }: Props) {
                   )}
                   {promoDiscount > 0 && pendingLoyaltyRedeem === 0 && (
                     <div className="px-4 pb-2.5 text-[11px] text-coral-700">
-                      Remove the promo code to use wallet balance.
+                      আগে কুপন সরান, তারপর ওয়ালেট ব্যবহার করুন।
                     </div>
                   )}
                 </div>
               )}
 
-              {/* Promo code — ported from CartScreen unchanged */}
+              {/* Discount code — one box for live coupons + legacy admin code */}
               <div className="mb-3">
                 <div className="flex items-center gap-2.5 rounded-2xl border border-dashed border-coral-200 bg-coral-50/40 px-3.5 py-3">
                   <Tag className="h-4 w-4 text-ink-200" />
@@ -924,70 +929,67 @@ export default function CheckoutScreen({ onBack, onAuthOpen }: Props) {
                       setPromoInput(e.target.value);
                       setPromoError('');
                     }}
-                    placeholder="Promo code"
+                    placeholder="ছাড়ের কোড"
                     className="flex-1 bg-transparent text-[13px] font-medium outline-none placeholder:text-ink-200"
                     disabled={pendingLoyaltyRedeem > 0}
                   />
                   <button
                     onClick={() => {
                       if (pendingLoyaltyRedeem > 0) {
-                        setPromoError('Wallet balance is active — remove it first');
+                        setPromoError('আগে ওয়ালেট ছাড় সরান');
                         return;
                       }
-                      const enteredCode = promoInput.trim().toUpperCase();
-
-                      // Check the multi-coupon list first (My Coupons screen), then
-                      // fall back to the legacy single admin promo code.
-                      const matchedCoupon = (settings.coupons ?? []).find((c) => {
-                        if (c.code.trim().toUpperCase() !== enteredCode) return false;
-                        if (!c.active) return false;
-                        if (c.maxUses > 0 && c.usedCount >= c.maxUses) return false;
-                        if (c.expiresAt) {
-                          const exp = new Date(c.expiresAt);
-                          exp.setHours(23, 59, 59, 999);
-                          if (!Number.isNaN(exp.getTime()) && exp.getTime() < Date.now()) return false;
-                        }
-                        return true;
+                      const matched = matchDiscountCode(promoInput, settings.coupons, {
+                        enabled: settings.promoEnabled,
+                        code: settings.promoCode,
+                        percent: settings.promoPercent,
                       });
-
-                      if (matchedCoupon) {
-                        applyPromo(matchedCoupon.discount, matchedCoupon.code);
+                      if (matched) {
+                        applyPromo(matched.percent, matched.code);
+                        setPromoInput(matched.code);
                         hapticTap();
                         setPromoError('');
                         return;
                       }
-
-                      if (!settings.promoEnabled) {
-                        setPromoError('No active promo right now');
-                        clearPromo();
-                        return;
-                      }
-                      if (enteredCode === settings.promoCode.trim().toUpperCase()) {
-                        applyPromo(settings.promoPercent, settings.promoCode);
-                        hapticTap();
-                        setPromoError('');
-                      } else {
-                        setPromoError('Invalid promo code');
-                        clearPromo();
-                      }
+                      setPromoError(promoInput.trim() ? 'কুপন কোড ঠিক নেই' : 'কুপন কোড লিখুন');
+                      clearPromo();
                     }}
                     disabled={pendingLoyaltyRedeem > 0}
                     className="text-[12px] font-bold uppercase tracking-wider text-ink hover:text-coral disabled:opacity-40"
                   >
-                    Apply
+                    প্রয়োগ
                   </button>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => go({ name: 'coupons' })}
+                  className="mt-2 px-1 text-[12px] font-bold text-coral"
+                >
+                  আমার কুপন
+                </button>
                 {promoError && (
                   <p className="mt-1.5 px-3.5 text-red-500 text-[11.5px] font-semibold">{promoError}</p>
                 )}
                 {promoDiscount > 0 && !promoError && (
-                  <p className="mt-1.5 px-3.5 text-emerald-600 text-[11.5px] font-semibold">
-                    Promo code "{promoInput.trim().toUpperCase()}" applied! ({promoDiscount}% discount)
-                  </p>
+                  <div className="mt-1.5 flex items-center justify-between gap-2 px-3.5">
+                    <p className="text-emerald-600 text-[11.5px] font-semibold">
+                      {(appliedPromoCode || promoInput).trim().toUpperCase()} বসানো হয়েছে ({promoDiscount}% ছাড়)
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        clearPromo();
+                        setPromoInput('');
+                      }}
+                      className="text-[11px] text-ink/40 underline"
+                    >
+                      সরান
+                    </button>
+                  </div>
                 )}
                 {pendingLoyaltyRedeem > 0 && (
                   <p className="mt-1.5 px-3.5 text-emerald-600 text-[11.5px] font-semibold">
-                    ৳{walletDiscount} wallet balance redeemed
+                    ৳{walletDiscount} ওয়ালেট ছাড় বসানো হয়েছে
                   </p>
                 )}
               </div>
@@ -1086,15 +1088,15 @@ export default function CheckoutScreen({ onBack, onAuthOpen }: Props) {
             />
             {promoDiscountAmount > 0 && (
               <Row
-                label="প্রোমো ডিসকাউন্ট"
-                value={'-' + formatINR(Math.round(promoDiscountAmount))}
+                label={discountLineLabel(appliedPromoCode, '−' + formatINR(Math.round(promoDiscountAmount)))}
+                value=""
                 positive
               />
             )}
             {walletDiscount > 0 && (
               <Row
-                label="Wallet discount"
-                value={'-৳' + walletDiscount}
+                label={`ওয়ালেট · −৳${walletDiscount}`}
+                value=""
                 positive
               />
             )}
